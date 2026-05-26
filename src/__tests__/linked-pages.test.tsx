@@ -1,0 +1,45 @@
+import type { ComponentType } from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
+const pageModules = import.meta.glob<{ default: ComponentType }>("../app/**/page.tsx", {
+  eager: true,
+});
+
+describe("linked informational pages", () => {
+  const routes = [
+    {
+      path: "../app/login/page.tsx",
+      heading: "조합원 로그인",
+      message: "로그인 서비스는 개통 준비 중입니다.",
+    },
+    {
+      path: "../app/terms/page.tsx",
+      heading: "이용약관",
+      message: "이용약관은 개통 전 게시됩니다.",
+    },
+    {
+      path: "../app/privacy/page.tsx",
+      heading: "개인정보처리방침",
+      message: "개인정보처리방침은 개통 전 게시됩니다.",
+    },
+  ] as const;
+
+  it("provides pages for every link exposed on the landing page", () => {
+    expect(Object.keys(pageModules)).toEqual(expect.arrayContaining(routes.map((route) => route.path)));
+  });
+
+  for (const route of routes) {
+    it(`states the preparation status on ${route.path}`, () => {
+      const Page = pageModules[route.path]?.default;
+
+      expect(Page).toBeDefined();
+      if (!Page) return;
+
+      render(<Page />);
+      expect(screen.getByRole("heading", { name: route.heading })).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(route.message))).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "홈으로 돌아가기" })).toHaveAttribute("href", "/");
+    });
+  }
+});

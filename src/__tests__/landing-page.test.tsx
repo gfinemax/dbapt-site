@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import Home from "@/app/page";
@@ -28,5 +30,22 @@ describe("public landing page", () => {
     expect(
       screen.getByText(/로그인 후 이용할 수 있습니다/),
     ).toBeInTheDocument();
+  });
+
+  it("ships the validated transparent icon asset set", () => {
+    const icons = [
+      "business-info.png",
+      "progress.png",
+      "disclosure.png",
+      "accounting.png",
+      "notices.png",
+      "issues.png",
+      "payment.png",
+      "library.png",
+    ];
+
+    for (const icon of icons) {
+      expect(existsSync(join(process.cwd(), "public", "assets", "icons", icon))).toBe(true);
+    }
   });
 });
