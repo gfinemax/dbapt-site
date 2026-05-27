@@ -2,27 +2,24 @@
 
 ## Selected Approved Specification
 
-- `docs/superpowers/specs/2026-05-26-daebang-role-specific-portal-preview-design.md`
+- `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md` (High-level Portal Design)
+- `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md` (Detailed Auth & Document Disclosure Spec - *Proposed*)
 
 ## Implementation Boundary
 
-- Create three individually addressable, static role preview routes for member, refund-member, and administrator use cases.
-- Reuse a shared portal layout driven by typed static content.
-- Keep `/login` as a preparation page while adding clearly labeled navigation into preview screens.
-- Render only cards and empty/status states that explain future service scope.
-- Preserve the existing public landing navigation and login-gated boundary.
+- Replace the mock credential-less previews on `/login` and `/portal/*` with actual session-based authorization checks.
+- Establish user schemas for Roles: Regular Member (`member`), Refund Member (`refund`), and Administrator (`admin`).
+- Build CRUD APIs and interfaces for administrators to upload and manage documents, and members to search, filter, and view them.
+- Ensure that audit logs are created for every view or download operation of sensitive files.
+- Ensure all public pages (Landing Page, Terms, Privacy Policy) remain fully public and do not require authentication.
 
 ## Conflicts
 
-- None. The requested continuation matches the next target identified by the installed harness and the approved role-specific portal preview specification.
+- None. The requested work aligns with Phase 2 defined in the parent Portal Design spec. However, because the parent spec is high-level, a new detailed specification (`docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`) must be drafted and approved before implementation begins.
 
 ## Planning Decision
 
-- Implementation planning may proceed.
-- Product code must not change until the implementation plan is written and approved for execution.
+- Detailed specification and implementation plan must be drafted.
+- Product code changes will not commence until both the detailed specification and the implementation plan are explicitly approved by the user.
 
-## Subsequent Approved Visual Refinement
-
-- After reviewing the running page, the user directly approved a replacement hero background and compact headline presentation on the public landing page.
-- The later header-to-hero and hero-content spacing reduction is a presentation-only refinement of the same approved hero.
-- The refinement stays within the existing landing visual rules and does not change the role-preview access boundary or functional implementation scope.
+---

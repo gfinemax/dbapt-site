@@ -1,6 +1,15 @@
 import type { ComponentType } from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      push: vi.fn(),
+      refresh: vi.fn(),
+    };
+  },
+}));
 
 const pageModules = import.meta.glob<{ default: ComponentType }>("../app/**/page.tsx", {
   eager: true,

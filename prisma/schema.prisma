@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 1. 사용자 계정 및 권한
+model User {
+  id            String      @id @default(uuid())
+  loginId       String      @unique                  // 로그인 아이디 (조합원 번호 등)
+  passwordHash  String                               // 암호화된 비밀번호
+  name          String                               // 조합원 성명
+  role          String      @default("MEMBER")       // MEMBER, REFUND, ADMIN
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // 관계 정의
+  documentLogs  DocumentLog[]
+  refundInfo    RefundInfo?
+}
+
+// 2. 정보공개 및 회계 보고 문서
+model Document {
+  id           String       @id @default(uuid())
+  title        String                                // 문서 제목
+  description  String?                               // 문서 설명
+  category     String                                // DISCLOSURE, ACCOUNTING, NOTICE
+  filePath     String                                // 업로드된 내부 파일 경로 (보안 저장)
+  fileName     String                                // 원본 파일명
+  fileSize     Int                                   // 파일 용량 (bytes)
+  status       String       @default("PENDING")      // PENDING, APPROVED
+  publishedAt  DateTime?                             // 실제 조합원 대상 공개 일시
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // 관계 정의
+  logs         DocumentLog[]
+}
+
+// 3. 보안 감사 로그 (열람 및 다운로드 이력)
+model DocumentLog {
+  id          String      @id @default(uuid())
+  userId      String
+  documentId  String
+  actionType  String      // VIEW, DOWNLOAD
+  ipAddress   String?     // 열람자 IP
+  userAgent   String?     // 브라우저 정보
+  createdAt   DateTime    @default(now())
+
+  // 관계 정의
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document    Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+// 4. 환불 조합원 전용 환불 정보 (1:1 매핑)
+model RefundInfo {
+  id             String      @id @default(uuid())
+  userId         String      @unique
+  totalPaid      Int         // 총 납부액
+  refundAmount   Int         // 정산금액 (환불예정액)
+  processedState String      // 정산 상태
+  targetDate     DateTime?   // 지급 예정일
+  updatedAt      DateTime    @updatedAt
+
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

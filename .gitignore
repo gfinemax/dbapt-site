@@ -40,3 +40,12 @@ yarn-error.log*
 # typescript generated output
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# SQLite database
+/dev.db
+/prisma/dev.db
+
+# File uploads
+/uploads/

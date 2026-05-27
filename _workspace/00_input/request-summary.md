@@ -2,32 +2,27 @@
 
 ## Requested Feature Slice
 
-- Continue with the next product task after installing the `dbapt-site` minimal harness.
-- Implement role-specific portal preview pages for the approved first UI slice:
-  - `/portal/member`
-  - `/portal/refund`
-  - `/portal/admin`
-- Add clear preview entry links from `/login`.
+- Initiate Phase 2: Authentication, Authorization, and Document Disclosure.
+- Specifically:
+  - Transition from static preview screens to dynamic, role-restricted dashboard routes.
+  - Implement a real authentication mechanism (e.g., custom credential provider or NextAuth.js).
+  - Define user roles (Regular Member, Refund Member, Administrator, etc.) and restrict portal access.
+  - Implement secure information disclosure (notices, accounting reports, total assembly documents) with search, filter, and document view/download capabilities.
+  - Enable administrator upload and control flows for document registration.
 
 ## Explicitly Excluded Scope
 
-- Working login, authentication, authorization, sessions, or role switching
-- Live documents, download/search/posting behavior, accounting data, payments, refund data, notifications, voting, approvals, or administrator mutations
-- Exposing login-gated content through the public landing navigation
-- Fabricated personal amounts, document counts, alert counts, or operational results
+- Phase 3 scope: excel uploads of payment history, auto-calculating outstanding balances, SMS/KakaoTalk integrations, issues board (discussion/comments), and interactive member voting.
+- Exposing unauthorized private files or data to non-members or public endpoints.
 
 ## Candidate Governing Specification
 
-- `docs/superpowers/specs/2026-05-26-daebang-role-specific-portal-preview-design.md`
+- `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md` (High-level design)
+- `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md` (Proposed detailed spec for Phase 2)
 
 ## Decision Status
 
-- User approval to continue: received through the instruction to proceed with the next work after identifying this spec as the next implementation target.
-- Unanswered decision: none.
+- User approval to continue: received through the instruction to proceed with the recommended Phase 2 planning work.
+- Unanswered decision: Choice of database technology (e.g., local SQLite/Prisma or Postgres), authentication provider library, and document storage method.
 
-## Approved Visual Follow-up
-
-- The user selected a revised public landing hero background with the slim six-person composition and landscaped apartment complex.
-- The user requested reduced upper whitespace, no floating decorations, and a desktop headline fixed to two intended lines.
-- The user subsequently requested reducing the remaining whitespace between the header and hero card and tightening the hero's vertical spacing.
-- This follow-up changes only public landing presentation; it does not expose login-gated content or add service behavior.
+---

@@ -1,6 +1,26 @@
 import type { ComponentType } from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      push: vi.fn(),
+      refresh: vi.fn(),
+    };
+  },
+}));
+
+vi.mock("next/headers", () => ({
+  cookies() {
+    return {
+      get() {
+        return undefined;
+      },
+      set() {},
+    };
+  },
+}));
 
 const pageModules = import.meta.glob<{ default: ComponentType }>("../app/**/page.tsx", {
   eager: true,
@@ -14,11 +34,11 @@ function findPage(path: string) {
 }
 
 describe("role-specific portal preview pages", () => {
-  it("renders a truthful member preview with member-facing services", () => {
+  it("renders a truthful member preview with member-facing services", async () => {
     const Page = findPage("../app/portal/member/page.tsx");
     if (!Page) return;
 
-    render(<Page />);
+    render(await (Page as any)());
 
     expect(
       screen.getByRole("heading", { name: "정식 조합원 포털 미리보기" }),
@@ -43,11 +63,11 @@ describe("role-specific portal preview pages", () => {
     );
   });
 
-  it("renders only permitted refund-member preview services", () => {
+  it("renders only permitted refund-member preview services", async () => {
     const Page = findPage("../app/portal/refund/page.tsx");
     if (!Page) return;
 
-    render(<Page />);
+    render(await (Page as any)());
 
     expect(
       screen.getByRole("heading", { name: "환불조합원 포털 미리보기" }),
@@ -59,11 +79,11 @@ describe("role-specific portal preview pages", () => {
     expect(screen.queryByText("투표·설문")).not.toBeInTheDocument();
   });
 
-  it("renders administrator preparation cards without live actions", () => {
+  it("renders administrator preparation cards without live actions", async () => {
     const Page = findPage("../app/portal/admin/page.tsx");
     if (!Page) return;
 
-    render(<Page />);
+    render(await (Page as any)());
 
     expect(
       screen.getByRole("heading", { name: "관리자 포털 미리보기" }),
