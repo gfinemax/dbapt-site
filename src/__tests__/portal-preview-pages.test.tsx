@@ -74,4 +74,28 @@ describe("role-specific portal preview pages", () => {
     expect(screen.queryByRole("button", { name: /승인|발송|업로드/ })).not.toBeInTheDocument();
     expect(screen.getAllByText(/준비 중/).length).toBeGreaterThan(0);
   });
+
+  it("offers clearly labelled preview navigation from the login preparation page", () => {
+    const Page = findPage("../app/login/page.tsx");
+    if (!Page) return;
+
+    render(<Page />);
+
+    expect(screen.getByText("포털 화면 미리보기")).toBeInTheDocument();
+    expect(
+      screen.getByText(/실제 로그인이나 개인 자료 제공이 아닌 준비 화면입니다/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "정식 조합원 화면 보기" })).toHaveAttribute(
+      "href",
+      "/portal/member",
+    );
+    expect(screen.getByRole("link", { name: "환불조합원 화면 보기" })).toHaveAttribute(
+      "href",
+      "/portal/refund",
+    );
+    expect(screen.getByRole("link", { name: "관리자 화면 보기" })).toHaveAttribute(
+      "href",
+      "/portal/admin",
+    );
+  });
 });
