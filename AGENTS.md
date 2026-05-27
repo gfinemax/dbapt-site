@@ -8,6 +8,8 @@
 - Use the selected hero artwork from `public/assets/hero/community-hero-04.png`.
 - Use only validated transparent-background PNGs from `public/assets/icons/` in feature cards.
 - Keep the first implementation slice truthful: it is a public landing page and login-gated service preview, not working authentication, document disclosure, accounting, payment reminder, voting, or messaging integration.
+- Follow `docs/harness/dbapt-site/team-spec.md` when carrying an approved feature from plan through implementation and verification.
+- For visible UI changes or public/login-gated access presentation changes, complete the `dbapt-site-ui-review` gate defined by the harness before reporting the work ready.
 - Use warm canvas `#fbfaf9`, inset stone card outlines, dark pill primary CTA, and restrained colorful accents as defined in `DESIGN.md`.
 - Decorative motion must not interfere with content and must stop under `prefers-reduced-motion: reduce`.
 
