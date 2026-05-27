@@ -29,4 +29,5 @@
 
 - The user selected a revised public landing hero background with the slim six-person composition and landscaped apartment complex.
 - The user requested reduced upper whitespace, no floating decorations, and a desktop headline fixed to two intended lines.
+- The user subsequently requested reducing the remaining whitespace between the header and hero card and tightening the hero's vertical spacing.
 - This follow-up changes only public landing presentation; it does not expose login-gated content or add service behavior.

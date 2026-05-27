@@ -5,7 +5,7 @@ import { heroContent } from "@/content/landing";
 
 export function HeroSection() {
   return (
-    <section className="relative isolate overflow-hidden pb-16 pt-6 sm:pb-20">
+    <section className="relative isolate overflow-hidden pb-8 pt-3 sm:pb-10">
       <div className="site-container relative min-h-[580px] overflow-hidden rounded-[2rem] bg-white sm:min-h-[640px]">
         <Image
           src="/assets/hero/community-hero-04.png"
@@ -16,7 +16,10 @@ export function HeroSection() {
           sizes="(max-width: 768px) 100vw, 1200px"
         />
         <div className="absolute inset-0 flex items-center justify-center px-5">
-          <div className="flex max-w-[920px] -translate-y-4 flex-col items-center text-center sm:-translate-y-7">
+          <div
+            data-hero-content
+            className="flex max-w-[920px] -translate-y-10 flex-col items-center text-center sm:-translate-y-20"
+          >
             <p className="mb-5 rounded-full bg-parchment-card px-4 py-2 text-sm font-medium text-ember-orange">
               {heroContent.badge}
             </p>

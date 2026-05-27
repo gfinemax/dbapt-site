@@ -16,7 +16,7 @@
 
 ## Design And Accessibility Review
 - Finding: The changed screens use the existing warm-canvas, stone-card, pill-link and Pretendard UI conventions with usable responsive navigation and a restrained hero composition.
-- Evidence: The landing hero uses the selected text-free background, removes floating decorations, reduces unused upper space, and fixes the desktop headline to two intended lines. Connected Browser desktop checks showed no horizontal overflow. A local Chrome check at a true 390px viewport with reduced motion enabled showed no horizontal overflow on the landing hero; prior checks cover the portal routes and login page.
+- Evidence: The landing hero uses the selected text-free background, removes floating decorations, reduces unused upper space, and fixes the desktop headline to two intended lines. After the latest vertical-only spacing refinement, connected Browser desktop inspection measured the hero card beginning at 85px and the badge at 143px with no horizontal overflow. The earlier true 390px reduced-motion check remains applicable to horizontal fit because this follow-up changes only vertical padding and vertical translation; prior checks cover the portal routes and login page.
 
 ## Outcome
 - Result: PASS

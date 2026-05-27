@@ -51,6 +51,15 @@ describe("public landing page", () => {
     ]);
   });
 
+  it("uses the compact hero spacing approved for the landing page", () => {
+    const { container } = render(<Home />);
+    const heroSection = container.querySelector("main > section");
+    const heroContent = container.querySelector("[data-hero-content]");
+
+    expect(heroSection).toHaveClass("pt-3", "pb-8", "sm:pb-10");
+    expect(heroContent).toHaveClass("-translate-y-10", "sm:-translate-y-20");
+  });
+
   it("ships the validated transparent icon asset set", () => {
     const icons = [
       "business-info.png",

@@ -24,4 +24,5 @@
 ## Subsequent Approved Visual Refinement
 
 - After reviewing the running page, the user directly approved a replacement hero background and compact headline presentation on the public landing page.
+- The later header-to-hero and hero-content spacing reduction is a presentation-only refinement of the same approved hero.
 - The refinement stays within the existing landing visual rules and does not change the role-preview access boundary or functional implementation scope.
