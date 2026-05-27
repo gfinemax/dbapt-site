@@ -97,5 +97,8 @@ describe("role-specific portal preview pages", () => {
       "href",
       "/portal/admin",
     );
+    expect(screen.getByText("정식 조합원 화면 보기")).toBeVisible();
+    expect(screen.getByText("환불조합원 화면 보기")).toBeVisible();
+    expect(screen.getByText("관리자 화면 보기")).toBeVisible();
   });
 });

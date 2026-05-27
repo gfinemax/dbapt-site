@@ -35,7 +35,7 @@ export default function LoginPage() {
                   aria-label={`${profile.navLabel} 화면 보기`}
                   className="stone-card px-4 py-4 text-center text-sm font-medium text-charcoal-primary hover:bg-parchment-card"
                 >
-                  {profile.navLabel}
+                  {profile.navLabel} 화면 보기
                 </Link>
               );
             })}
