@@ -32,6 +32,25 @@ describe("public landing page", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the hero upper space clear of floating decorations", () => {
+    const { container } = render(<Home />);
+
+    expect(container.querySelector(".float-soft")).not.toBeInTheDocument();
+    expect(container.querySelector(".sparkle")).not.toBeInTheDocument();
+  });
+
+  it("renders the desktop hero headline as two intended lines", () => {
+    const { container } = render(<Home />);
+    const headlineLines = Array.from(container.querySelectorAll("[data-hero-line]")).map(
+      (line) => line.textContent,
+    );
+
+    expect(headlineLines).toEqual([
+      "함께 만드는 새로운 보금자리,",
+      "투명하게 소통하는 우리 조합",
+    ]);
+  });
+
   it("ships the validated transparent icon asset set", () => {
     const icons = [
       "business-info.png",
