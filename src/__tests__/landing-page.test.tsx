@@ -46,8 +46,8 @@ describe("public landing page", () => {
     );
 
     expect(headlineLines).toEqual([
-      "함께 만드는 새로운 보금자리,",
-      "투명하게 소통하는 우리 조합",
+      "함께 만드는 새로운 보금자리",
+      "투명하게 소통하는 우리 조합"
     ]);
   });
 
