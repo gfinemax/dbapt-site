@@ -20,3 +20,8 @@
 
 - Implementation planning may proceed.
 - Product code must not change until the implementation plan is written and approved for execution.
+
+## Subsequent Approved Visual Refinement
+
+- After reviewing the running page, the user directly approved a replacement hero background and compact headline presentation on the public landing page.
+- The refinement stays within the existing landing visual rules and does not change the role-preview access boundary or functional implementation scope.

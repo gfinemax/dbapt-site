@@ -24,3 +24,9 @@
 
 - User approval to continue: received through the instruction to proceed with the next work after identifying this spec as the next implementation target.
 - Unanswered decision: none.
+
+## Approved Visual Follow-up
+
+- The user selected a revised public landing hero background with the slim six-person composition and landscaped apartment complex.
+- The user requested reduced upper whitespace, no floating decorations, and a desktop headline fixed to two intended lines.
+- This follow-up changes only public landing presentation; it does not expose login-gated content or add service behavior.
