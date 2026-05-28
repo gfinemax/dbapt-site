@@ -97,19 +97,20 @@ describe("role-specific portal preview pages", () => {
     expect(screen.getAllByText(/준비 중/).length).toBeGreaterThan(0);
   });
 
-  it("offers clearly labelled preview navigation from the login preparation page", () => {
+  it("hides demo credentials from the login page by default", () => {
     const Page = findPage("../app/login/page.tsx");
     if (!Page) return;
 
     render(<Page />);
 
-    expect(screen.getByText("데모 테스트 계정 정보")).toBeInTheDocument();
+    expect(screen.getByText("로그인 후 이동 경로")).toBeInTheDocument();
     expect(
-      screen.getByText(/사전 발급된 테스트 계정으로 즉시 로그인/),
+      screen.getByText(/발급받은 계정으로 로그인하면 권한에 맞는 전용 화면으로 이동합니다/),
     ).toBeInTheDocument();
-    expect(screen.getByText("member1 / member123")).toBeVisible();
-    expect(screen.getByText("refund1 / refund123")).toBeVisible();
-    expect(screen.getByText("admin / admin123")).toBeVisible();
+    expect(screen.queryByText("데모 테스트 계정 정보")).not.toBeInTheDocument();
+    expect(screen.queryByText("member1 / member123")).not.toBeInTheDocument();
+    expect(screen.queryByText("refund1 / refund123")).not.toBeInTheDocument();
+    expect(screen.queryByText("admin / admin123")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /화면 보기/ })).not.toBeInTheDocument();
   });
 });

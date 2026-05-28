@@ -9,6 +9,7 @@ import { loginAction } from "@/lib/auth";
 export default function LoginPage() {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(loginAction, null);
+  const showDemoCredentials = process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === "true";
 
   useEffect(() => {
     if (state?.success) {
@@ -27,7 +28,11 @@ export default function LoginPage() {
     <StatusPage
       eyebrow="조합원 전용 서비스"
       title="조합원 로그인"
-      description="조합원 전용 포털에 오신 것을 환영합니다. 테스트 계정으로 역할별 포털에 접속할 수 있습니다. 실제 운영 계정 발급 전까지는 데모 데이터만 제공합니다."
+      description={
+        showDemoCredentials
+          ? "조합원 전용 포털에 오신 것을 환영합니다. 테스트 계정으로 역할별 포털에 접속할 수 있습니다. 실제 운영 계정 발급 전까지는 데모 데이터만 제공합니다."
+          : "조합원 전용 포털에 오신 것을 환영합니다. 발급받은 계정으로 로그인하면 권한에 맞는 전용 화면으로 이동합니다."
+      }
       wide
     >
       <div className="mt-8 grid gap-8 md:grid-cols-2">
@@ -77,31 +82,36 @@ export default function LoginPage() {
         </section>
 
         {/* Right Side: Preview Links and Test Accounts */}
-        <section className="flex flex-col gap-5 text-left" aria-label="안내 및 테스트 계정">
-          <div className="soft-panel p-5 bg-[#f8f7f4] border border-dashed border-[#f2f0ed]">
-            <h3 className="text-sm font-semibold text-ember-orange">데모 테스트 계정 정보</h3>
-            <p className="mt-1 text-xs text-graphite">아래의 사전 발급된 테스트 계정으로 즉시 로그인 해보실 수 있습니다.</p>
-            <ul className="mt-3 text-xs leading-6 text-graphite space-y-2">
-              <li className="flex justify-between items-center border-b border-[#f2f0ed] pb-1.5">
-                <span>정식 조합원:</span>
-                <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#f2f0ed]">
-                  member1 / member123
-                </span>
-              </li>
-              <li className="flex justify-between items-center border-b border-[#f2f0ed] pb-1.5">
-                <span>환불 조합원:</span>
-                <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#f2f0ed]">
-                  refund1 / refund123
-                </span>
-              </li>
-              <li className="flex justify-between items-center pb-1">
-                <span>최고 관리자:</span>
-                <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#f2f0ed]">
-                  admin / admin123
-                </span>
-              </li>
-            </ul>
-          </div>
+        <section
+          className="flex flex-col gap-5 text-left"
+          aria-label={showDemoCredentials ? "안내 및 테스트 계정" : "로그인 안내"}
+        >
+          {showDemoCredentials && (
+            <div className="soft-panel p-5 bg-[#f8f7f4] border border-dashed border-[#f2f0ed]">
+              <h3 className="text-sm font-semibold text-ember-orange">데모 테스트 계정 정보</h3>
+              <p className="mt-1 text-xs text-graphite">아래의 사전 발급된 테스트 계정으로 즉시 로그인 해보실 수 있습니다.</p>
+              <ul className="mt-3 text-xs leading-6 text-graphite space-y-2">
+                <li className="flex justify-between items-center border-b border-[#f2f0ed] pb-1.5">
+                  <span>정식 조합원:</span>
+                  <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#f2f0ed]">
+                    member1 / member123
+                  </span>
+                </li>
+                <li className="flex justify-between items-center border-b border-[#f2f0ed] pb-1.5">
+                  <span>환불 조합원:</span>
+                  <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#f2f0ed]">
+                    refund1 / refund123
+                  </span>
+                </li>
+                <li className="flex justify-between items-center pb-1">
+                  <span>최고 관리자:</span>
+                  <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#f2f0ed]">
+                    admin / admin123
+                  </span>
+                </li>
+              </ul>
+            </div>
+          )}
 
           <div className="soft-panel p-5">
             <h3 className="text-sm font-semibold text-charcoal-primary">로그인 후 이동 경로</h3>

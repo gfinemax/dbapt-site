@@ -20,7 +20,7 @@ describe("linked informational pages", () => {
     {
       path: "../app/login/page.tsx",
       heading: "조합원 로그인",
-      message: "테스트 계정으로 역할별 포털에 접속할 수 있습니다.",
+      message: "발급받은 계정으로 로그인하면 권한에 맞는 전용 화면으로 이동합니다.",
     },
     {
       path: "../app/terms/page.tsx",

@@ -55,6 +55,10 @@ async function uploadDemoPdf(filePath: string) {
 }
 
 async function main() {
+  if (process.env.CONFIRM_SEED_RESET !== "true") {
+    throw new Error("Refusing to reset data. Set CONFIRM_SEED_RESET=true to run the destructive seed.");
+  }
+
   console.log("Seeding database...");
 
   // Clean existing data

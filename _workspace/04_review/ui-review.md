@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: Phase 2 stabilization for authentication and secure document disclosure.
-- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-05-28-daebang-phase-2-stabilization.md`
-- Files or pages reviewed: `/login`, `/portal/member`, `src/app/login/page.tsx`, `src/proxy.ts`, `src/app/api/documents/[id]/download/route.ts`
+- Feature: Operational hardening for seed reset safety and login demo credential visibility.
+- Governing spec: Direct user-approved follow-up to the authenticated portal and document disclosure slice.
+- Implementation plan: Conversation-approved scoped change; no new product surface added.
+- Files or pages reviewed: `/login`, `src/app/login/page.tsx`, `prisma/seed.ts`, `src/__tests__/linked-pages.test.tsx`, `src/__tests__/portal-preview-pages.test.tsx`
 
 ## Boundary Review
-- Finding: Protected portal pages remain login-gated and unauthenticated preview links were removed from `/login`.
-- Evidence: CDP browser check redirected unauthenticated `/portal/member` to `/login`; `/login` DOM exposed only `홈으로 돌아가기` as a link.
+- Finding: Public login page no longer exposes seeded demo account credentials unless an explicit build-time demo flag is enabled.
+- Evidence: Browser review at desktop and mobile widths found no `데모 테스트 계정 정보` or `member1 / member123` text with the default environment.
 
 ## Truthful Presentation Review
-- Finding: Login copy now states that demo accounts provide role-specific portal access with demo data only.
-- Evidence: `/login` renders `테스트 계정으로 역할별 포털에 접속할 수 있습니다` and `실제 운영 계정 발급 전까지는 데모 데이터만 제공합니다`.
+- Finding: Login copy now describes issued-account access instead of implying publicly available test access.
+- Evidence: `/login` renders `발급받은 계정으로 로그인하면 권한에 맞는 전용 화면으로 이동합니다`.
 
 ## Design And Accessibility Review
-- Finding: The reviewed login surface keeps the warm canvas, stone cards, dark pill CTA, and readable mobile layout.
-- Evidence: Chrome fallback screenshots reviewed at desktop and CDP mobile viewport. Mobile metrics reported `innerWidth=390`, `scrollWidth=390`.
+- Finding: The login layout remains within the existing warm canvas, stone panel, and dark pill CTA rules, with no mobile horizontal overflow.
+- Evidence: Local browser check covered 1440px desktop and 390px mobile viewports; mobile overflow check passed.
 
 ## Outcome
 - Result: PASS
