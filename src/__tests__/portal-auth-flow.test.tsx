@@ -84,11 +84,20 @@ describe("Phase 2 Authentication and Session Logic", () => {
       expect(pending).toBeDefined();
     });
 
-    it("should point seeded documents to local demo files for secure download tests", async () => {
+    it("should point seeded documents to safe file object paths", async () => {
       const documents = await prisma.document.findMany();
 
       for (const document of documents) {
-        expect(existsSync(join(process.cwd(), document.filePath))).toBe(true);
+        const isStoragePath = document.filePath.startsWith("documents/");
+        const isLegacyLocalPath = document.filePath.startsWith("uploads/");
+
+        expect(isStoragePath || isLegacyLocalPath).toBe(true);
+        expect(document.filePath).not.toContain("..");
+        expect(document.filePath).not.toMatch(/^[A-Za-z]:\\/);
+
+        if (isLegacyLocalPath) {
+          expect(existsSync(join(process.cwd(), document.filePath))).toBe(true);
+        }
       }
     });
   });

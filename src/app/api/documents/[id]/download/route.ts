@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { readFile } from "fs/promises";
-import { basename, join } from "path";
+import { downloadDocumentFile } from "@/lib/document-storage";
 
 export async function GET(
   request: Request,
@@ -30,10 +29,7 @@ export async function GET(
       return NextResponse.json({ error: "해당 문서를 볼 수 있는 권한이 없습니다." }, { status: 403 });
     }
 
-    // 3. Resolve absolute path
-    const absolutePath = join(process.cwd(), "uploads", basename(document.filePath));
-
-    // 4. Create Audit Log (Append-only)
+    // 3. Create Audit Log (Append-only)
     const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
     const userAgent = request.headers.get("user-agent") || "Unknown";
 
@@ -47,12 +43,13 @@ export async function GET(
       },
     });
 
-    // 5. Read file and return as streaming Response
-    const fileBuffer = await readFile(absolutePath);
+    // 4. Download from private Supabase Storage and return through the gated API.
+    const file = await downloadDocumentFile(document.filePath);
+    const fileBuffer = await file.arrayBuffer();
 
     return new Response(fileBuffer, {
       headers: {
-        "Content-Type": "application/pdf",
+        "Content-Type": file.type || "application/pdf",
         "Content-Disposition": `attachment; filename="${encodeURIComponent(document.fileName)}"`,
       },
     });

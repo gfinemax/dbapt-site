@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { mkdir, writeFile } from "fs/promises";
-import { join } from "path";
+import { uploadDocumentFile } from "@/lib/document-storage";
 
 // 1. GET: List documents (gated by session and role)
 export async function GET(request: Request) {
@@ -58,19 +57,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 카테고리, 파일)이 누락되었습니다." }, { status: 400 });
     }
 
-    // Read and save file safely
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const uploadDir = join(process.cwd(), "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
-    // Sanitize file name to avoid path traversal
-    const safeFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    const relativePath = join("uploads", safeFileName);
-    const absolutePath = join(uploadDir, safeFileName);
-
-    await writeFile(absolutePath, buffer);
+    const storagePath = await uploadDocumentFile(file);
 
     // Save record to DB
     const document = await prisma.document.create({
@@ -78,7 +65,7 @@ export async function POST(request: Request) {
         title,
         description: description || null,
         category,
-        filePath: relativePath,
+        filePath: storagePath,
         fileName: file.name,
         fileSize: file.size,
         status: "APPROVED", // Auto-approved by default in this implementation slice

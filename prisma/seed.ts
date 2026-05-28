@@ -1,8 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { uploadDocumentBytes } from "../src/lib/document-storage.ts";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -47,10 +46,12 @@ startxref
 %%EOF
 `;
 
-async function writeDemoPdf(filePath: string) {
-  const absolutePath = join(process.cwd(), filePath);
-  await mkdir(join(process.cwd(), "uploads"), { recursive: true });
-  await writeFile(absolutePath, demoPdf);
+async function uploadDemoPdf(filePath: string) {
+  await uploadDocumentBytes({
+    path: filePath,
+    bytes: Buffer.from(demoPdf),
+    contentType: "application/pdf",
+  });
 }
 
 async function main() {
@@ -110,9 +111,13 @@ async function main() {
   console.log("Created RefundInfo for refund user.");
 
   // 3. Create Documents
-  await writeDemoPdf("uploads/disclosure_founding_meeting.pdf");
-  await writeDemoPdf("uploads/accounting_2026_q1.pdf");
-  await writeDemoPdf("uploads/disclosure_rules_draft_pending.pdf");
+  const foundingMeetingPath = "documents/demo/disclosure_founding_meeting.pdf";
+  const accountingQ1Path = "documents/demo/accounting_2026_q1.pdf";
+  const rulesDraftPath = "documents/demo/disclosure_rules_draft_pending.pdf";
+
+  await uploadDemoPdf(foundingMeetingPath);
+  await uploadDemoPdf(accountingQ1Path);
+  await uploadDemoPdf(rulesDraftPath);
 
   // - Approved Documents (Visible to authorized members)
   await prisma.document.create({
@@ -120,7 +125,7 @@ async function main() {
       title: "대방동 지역주택조합 창립총회 의사록",
       description: "2026년 창립총회 진행 결과 및 규약 제정 결의록 파일입니다.",
       category: "DISCLOSURE",
-      filePath: "uploads/disclosure_founding_meeting.pdf",
+      filePath: foundingMeetingPath,
       fileName: "창립총회의사록_최종.pdf",
       fileSize: 1048576, // 1MB
       status: "APPROVED",
@@ -133,7 +138,7 @@ async function main() {
       title: "2026년도 1분기 수입 및 지출 자금집행 실적 보고서",
       description: "1분기 수입/지출 세부 내역 및 이사회 승인 보고서입니다.",
       category: "ACCOUNTING",
-      filePath: "uploads/accounting_2026_q1.pdf",
+      filePath: accountingQ1Path,
       fileName: "2026_1분기_자금집행보고서.pdf",
       fileSize: 2048576, // 2MB
       status: "APPROVED",
@@ -147,7 +152,7 @@ async function main() {
       title: "대방동 지역주택조합 규약 개정 초안 (검토 대기)",
       description: "규약 개정 심의를 위해 법률 대리인이 작성한 임시 개정 초안입니다.",
       category: "DISCLOSURE",
-      filePath: "uploads/disclosure_rules_draft_pending.pdf",
+      filePath: rulesDraftPath,
       fileName: "규약개정초안_대기.pdf",
       fileSize: 512000, // 500KB
       status: "PENDING",
