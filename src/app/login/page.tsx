@@ -1,11 +1,9 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StatusPage } from "@/components/landing/status-page";
-import { portalProfiles, portalRoleOrder } from "@/content/portal";
 import { loginAction } from "@/lib/auth";
 
 export default function LoginPage() {
@@ -29,7 +27,7 @@ export default function LoginPage() {
     <StatusPage
       eyebrow="조합원 전용 서비스"
       title="조합원 로그인"
-      description="조합원 전용 포털에 오신 것을 환영합니다. 로그인 서비스는 개통 준비 중입니다. 인증과 권한 정책이 확정된 뒤 안전하게 제공하겠습니다."
+      description="조합원 전용 포털에 오신 것을 환영합니다. 테스트 계정으로 역할별 포털에 접속할 수 있습니다. 실제 운영 계정 발급 전까지는 데모 데이터만 제공합니다."
       wide
     >
       <div className="mt-8 grid gap-8 md:grid-cols-2">
@@ -106,24 +104,21 @@ export default function LoginPage() {
           </div>
 
           <div className="soft-panel p-5">
-            <h3 className="text-sm font-semibold text-charcoal-primary">포털 화면 미리보기</h3>
+            <h3 className="text-sm font-semibold text-charcoal-primary">로그인 후 이동 경로</h3>
             <p className="mt-1 text-xs text-graphite">
-              실제 로그인이나 개인 자료 제공이 아닌 준비 화면입니다. 역할별 화면 구성을 먼저 확인할 수 있습니다.
+              보호된 포털 화면은 로그인 후 권한에 맞춰 자동으로 연결됩니다.
             </p>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {portalRoleOrder.map((role) => {
-                const profile = portalProfiles[role];
-                return (
-                  <Link
-                    key={role}
-                    href={profile.href}
-                    className="stone-card px-2 py-3 text-center text-xs font-semibold text-charcoal-primary hover:bg-[#f8f7f4] transition"
-                  >
-                    {profile.navLabel} 화면 보기
-                  </Link>
-                );
-              })}
-            </div>
+            <ul className="mt-4 space-y-2 text-xs leading-6 text-graphite">
+              <li className="rounded-xl bg-white px-3 py-2 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                정식 조합원 계정은 정보공개 자료실로 이동합니다.
+              </li>
+              <li className="rounded-xl bg-white px-3 py-2 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                환불 조합원 계정은 환불/정산 현황으로 이동합니다.
+              </li>
+              <li className="rounded-xl bg-white px-3 py-2 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                관리자 계정은 문서 등록과 감사 로그 화면으로 이동합니다.
+              </li>
+            </ul>
           </div>
         </section>
       </div>

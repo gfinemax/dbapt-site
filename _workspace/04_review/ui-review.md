@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: role-specific portal preview pages, login preview entry navigation, and user-selected landing hero refinement
-- Governing spec: `docs/superpowers/specs/2026-05-26-daebang-role-specific-portal-preview-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-05-27-daebang-role-specific-portal-preview.md`
-- Files or pages reviewed: `/`, `/login`, `/portal/member`, `/portal/refund`, `/portal/admin`, portal content and shared portal components
+- Feature: Phase 2 stabilization for authentication and secure document disclosure.
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-28-daebang-phase-2-stabilization.md`
+- Files or pages reviewed: `/login`, `/portal/member`, `src/app/login/page.tsx`, `src/proxy.ts`, `src/app/api/documents/[id]/download/route.ts`
 
 ## Boundary Review
-- Finding: The implementation keeps role-only services inside login-oriented preview routes and does not add them to public navigation.
-- Evidence: The three new routes are reached from the login preparation page; their content remains static preparation UI. The landing follow-up changes only its hero imagery and typography layout.
+- Finding: Protected portal pages remain login-gated and unauthenticated preview links were removed from `/login`.
+- Evidence: CDP browser check redirected unauthenticated `/portal/member` to `/login`; `/login` DOM exposed only `홈으로 돌아가기` as a link.
 
 ## Truthful Presentation Review
-- Finding: The pages identify themselves as previews and do not imply live authentication, document access, personal balances, approvals, or delivery actions.
-- Evidence: Cards expose text-only preparation statuses and empty states; no operational action controls or fabricated data are rendered. Review corrected the `/login` visible link labels to state that each route is a screen preview.
+- Finding: Login copy now states that demo accounts provide role-specific portal access with demo data only.
+- Evidence: `/login` renders `테스트 계정으로 역할별 포털에 접속할 수 있습니다` and `실제 운영 계정 발급 전까지는 데모 데이터만 제공합니다`.
 
 ## Design And Accessibility Review
-- Finding: The changed screens use the existing warm-canvas, stone-card, pill-link and Pretendard UI conventions with usable responsive navigation and a restrained hero composition.
-- Evidence: The landing hero uses the selected text-free background, removes floating decorations, reduces unused upper space, and fixes the desktop headline to two intended lines. After the latest vertical-only spacing refinement, connected Browser desktop inspection measured the hero card beginning at 85px and the badge at 143px with no horizontal overflow. The earlier true 390px reduced-motion check remains applicable to horizontal fit because this follow-up changes only vertical padding and vertical translation; prior checks cover the portal routes and login page.
+- Finding: The reviewed login surface keeps the warm canvas, stone cards, dark pill CTA, and readable mobile layout.
+- Evidence: Chrome fallback screenshots reviewed at desktop and CDP mobile viewport. Mobile metrics reported `innerWidth=390`, `scrollWidth=390`.
 
 ## Outcome
 - Result: PASS

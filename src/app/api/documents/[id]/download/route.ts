@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { readFile } from "fs/promises";
-import { join } from "path";
+import { basename, join } from "path";
 
 export async function GET(
   request: Request,
@@ -31,7 +31,7 @@ export async function GET(
     }
 
     // 3. Resolve absolute path
-    const absolutePath = join(process.cwd(), document.filePath);
+    const absolutePath = join(process.cwd(), "uploads", basename(document.filePath));
 
     // 4. Create Audit Log (Append-only)
     const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";

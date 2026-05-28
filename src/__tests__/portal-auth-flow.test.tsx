@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { encrypt, decrypt } from "../lib/auth";
 import { prisma } from "../lib/db";
@@ -80,6 +82,14 @@ describe("Phase 2 Authentication and Session Logic", () => {
 
       expect(approved).toBeDefined();
       expect(pending).toBeDefined();
+    });
+
+    it("should point seeded documents to local demo files for secure download tests", async () => {
+      const documents = await prisma.document.findMany();
+
+      for (const document of documents) {
+        expect(existsSync(join(process.cwd(), document.filePath))).toBe(true);
+      }
     });
   });
 });

@@ -3,10 +3,10 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || "default-secret-key-at-least-32-characters-long-dbapt"
+  process.env.JWT_SECRET || "default-secret-key-at-least-32-characters-long-dbapt",
 );
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = request.cookies.get("session")?.value;
 
@@ -18,11 +18,10 @@ export async function middleware(request: NextRequest) {
       });
       decoded = payload as { id: string; loginId: string; name: string; role: string };
     } catch {
-      // Token is invalid/expired
+      // Token is invalid/expired.
     }
   }
 
-  // 1. Route Protection for /portal
   if (pathname.startsWith("/portal")) {
     if (!decoded) {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -30,7 +29,6 @@ export async function middleware(request: NextRequest) {
 
     const { role } = decoded;
 
-    // Check role authorization for portal pages
     if (pathname.startsWith("/portal/member") && role !== "MEMBER" && role !== "ADMIN") {
       if (role === "REFUND") {
         return NextResponse.redirect(new URL("/portal/refund", request.url));
@@ -55,7 +53,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Redirect logged-in users away from /login
   if (pathname === "/login" && decoded) {
     const { role } = decoded;
     if (role === "MEMBER") {

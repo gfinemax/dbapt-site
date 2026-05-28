@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -22,7 +22,9 @@ vi.mock("next/headers", () => ({
   },
 }));
 
-const pageModules = import.meta.glob<{ default: ComponentType }>("../app/**/page.tsx", {
+type PageComponent = () => ReactNode | Promise<ReactNode>;
+
+const pageModules = import.meta.glob<{ default: PageComponent }>("../app/**/page.tsx", {
   eager: true,
 });
 
@@ -38,7 +40,7 @@ describe("role-specific portal preview pages", () => {
     const Page = findPage("../app/portal/member/page.tsx");
     if (!Page) return;
 
-    render(await (Page as any)());
+    render(await Page());
 
     expect(
       screen.getByRole("heading", { name: "정식 조합원 포털 미리보기" }),
@@ -67,7 +69,7 @@ describe("role-specific portal preview pages", () => {
     const Page = findPage("../app/portal/refund/page.tsx");
     if (!Page) return;
 
-    render(await (Page as any)());
+    render(await Page());
 
     expect(
       screen.getByRole("heading", { name: "환불조합원 포털 미리보기" }),
@@ -83,7 +85,7 @@ describe("role-specific portal preview pages", () => {
     const Page = findPage("../app/portal/admin/page.tsx");
     if (!Page) return;
 
-    render(await (Page as any)());
+    render(await Page());
 
     expect(
       screen.getByRole("heading", { name: "관리자 포털 미리보기" }),
@@ -101,24 +103,13 @@ describe("role-specific portal preview pages", () => {
 
     render(<Page />);
 
-    expect(screen.getByText("포털 화면 미리보기")).toBeInTheDocument();
+    expect(screen.getByText("데모 테스트 계정 정보")).toBeInTheDocument();
     expect(
-      screen.getByText(/실제 로그인이나 개인 자료 제공이 아닌 준비 화면입니다/),
+      screen.getByText(/사전 발급된 테스트 계정으로 즉시 로그인/),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "정식 조합원 화면 보기" })).toHaveAttribute(
-      "href",
-      "/portal/member",
-    );
-    expect(screen.getByRole("link", { name: "환불조합원 화면 보기" })).toHaveAttribute(
-      "href",
-      "/portal/refund",
-    );
-    expect(screen.getByRole("link", { name: "관리자 화면 보기" })).toHaveAttribute(
-      "href",
-      "/portal/admin",
-    );
-    expect(screen.getByText("정식 조합원 화면 보기")).toBeVisible();
-    expect(screen.getByText("환불조합원 화면 보기")).toBeVisible();
-    expect(screen.getByText("관리자 화면 보기")).toBeVisible();
+    expect(screen.getByText("member1 / member123")).toBeVisible();
+    expect(screen.getByText("refund1 / refund123")).toBeVisible();
+    expect(screen.getByText("admin / admin123")).toBeVisible();
+    expect(screen.queryByRole("link", { name: /화면 보기/ })).not.toBeInTheDocument();
   });
 });
