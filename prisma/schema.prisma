@@ -16,6 +16,7 @@ model User {
   passwordHash  String                               // 암호화된 비밀번호
   name          String                               // 조합원 성명
   role          String      @default("MEMBER")       // MEMBER, REFUND, ADMIN
+  isActive      Boolean     @default(true)           // 계정 활성 상태
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   

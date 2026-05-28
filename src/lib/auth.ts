@@ -48,7 +48,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       where: { loginId },
     });
 
-    if (!user) {
+    if (!user || !user.isActive) {
       return { error: "아이디 또는 비밀번호가 올바르지 않습니다." };
     }
 

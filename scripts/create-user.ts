@@ -11,6 +11,7 @@ type CreateUserInput = {
   password: string;
   name: string;
   role: Role;
+  isActive: boolean;
   updateExisting: boolean;
   dryRun: boolean;
   refund: {
@@ -121,6 +122,7 @@ function parseInput(argv: string[]): CreateUserInput {
     password,
     name,
     role: role as Role,
+    isActive: !getFlag(args, "inactive", "DBAPT_USER_INACTIVE"),
     updateExisting: getFlag(args, "update-existing", "DBAPT_UPDATE_EXISTING"),
     dryRun: getFlag(args, "dry-run", "DBAPT_DRY_RUN"),
     refund: {
@@ -139,6 +141,7 @@ pnpm user:create -- --login-id <id> --password <password> --name <name> --role M
 Options:
   --update-existing       Update an existing account instead of failing
   --dry-run               Validate inputs without writing to the database
+  --inactive              Create or update the account as inactive
   --total-paid <number>   REFUND role only, defaults to 0
   --refund-amount <num>   REFUND role only, defaults to 0
   --processed-state <txt> REFUND role only, defaults to 정산 정보 등록 대기
@@ -158,7 +161,7 @@ async function main() {
   const input = parseInput(process.argv.slice(2));
 
   if (input.dryRun) {
-    console.log(`DRY_RUN_OK loginId=${input.loginId} role=${input.role} name=${input.name}`);
+    console.log(`DRY_RUN_OK loginId=${input.loginId} role=${input.role} active=${input.isActive} name=${input.name}`);
     return;
   }
 
@@ -187,6 +190,7 @@ async function main() {
           data: {
             name: input.name,
             role: input.role,
+            isActive: input.isActive,
             passwordHash,
           },
         })
@@ -195,6 +199,7 @@ async function main() {
             loginId: input.loginId,
             name: input.name,
             role: input.role,
+            isActive: input.isActive,
             passwordHash,
           },
         });
@@ -222,7 +227,7 @@ async function main() {
       });
     }
 
-    console.log(`${existing ? "UPDATED" : "CREATED"} loginId=${user.loginId} role=${user.role}`);
+    console.log(`${existing ? "UPDATED" : "CREATED"} loginId=${user.loginId} role=${user.role} active=${user.isActive}`);
   } finally {
     await prisma.$disconnect();
   }

@@ -41,10 +41,27 @@ Remove-Item Env:\DBAPT_USER_LOGIN_ID, Env:\DBAPT_USER_PASSWORD, Env:\DBAPT_USER_
 pnpm user:create -- --login-id member1001 --password "new-password" --name "홍길동" --role MEMBER --update-existing
 ```
 
+## Disable Or Enable An Account
+
+외부 공유 전 demo 계정을 잠그거나, 더 이상 접근하면 안 되는 계정을 비활성화할 때 사용한다. 비활성 계정은 비밀번호가 맞아도 로그인할 수 없다.
+
+```powershell
+pnpm user:status -- --login-id member1 --inactive
+pnpm user:status -- --login-id refund1 --inactive
+pnpm user:status -- --login-id admin --inactive
+```
+
+다시 활성화해야 하면:
+
+```powershell
+pnpm user:status -- --login-id member1 --active
+```
+
 ## Dry Run
 
 DB에 쓰지 않고 입력값만 검증한다.
 
 ```powershell
 pnpm user:create -- --login-id test1001 --password "change-this-password" --name "테스트" --role MEMBER --dry-run
+pnpm user:status -- --login-id member1 --inactive --dry-run
 ```
