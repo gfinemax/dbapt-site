@@ -219,7 +219,8 @@ export function MeetingsTable({
 
       {/* ── 데이터 테이블 ── */}
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {/* 데스크톱/태블릿 격자형 테이블 */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-[#f7f6f3] border-b border-stone-surface">
               <tr>
@@ -282,6 +283,54 @@ export function MeetingsTable({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* 모바일 전용 카드형 리스트 */}
+        <div className="block md:hidden divide-y divide-stone-surface/60">
+          {paged.length === 0 ? (
+            <div className="px-5 py-16 text-center text-sm text-graphite">
+              검색 조건에 맞는 문서가 없습니다.
+            </div>
+          ) : (
+            paged.map((doc, idx) => (
+              <div
+                key={doc.id}
+                onClick={handleRowClick}
+                className={cn(
+                  "cursor-pointer p-4 transition-colors hover:bg-sky-blue/[0.04] space-y-2",
+                  idx % 2 === 1 ? "bg-[#fdfcfa]" : "bg-white"
+                )}
+              >
+                {/* 상단 메타 행 */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-ash tracking-tight">No. {doc.id}</span>
+                  <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap", categoryBadge(doc.category))}>
+                    {doc.category}
+                  </span>
+                </div>
+                {/* 중앙 제목 행 */}
+                <div className="text-charcoal-primary font-semibold text-[13px] leading-snug">
+                  {doc.isImportant && (
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-ember-orange/15 text-ember-orange text-[9px] font-black mr-1.5 align-text-bottom">★</span>
+                  )}
+                  {doc.title}
+                </div>
+                {/* 하단 등록일 및 열람 행 */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] text-ash font-mono">{doc.date}</span>
+                  {isLoggedIn ? (
+                    <span className="inline-flex items-center gap-1 text-meadow-green text-[10px] font-bold bg-meadow-green/10 px-2.5 py-1 rounded-full">
+                      🔓 열람
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-ember-orange text-[10px] font-bold bg-ember-orange/10 px-2.5 py-1 rounded-full">
+                      🔒 보안
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* ── 페이지네이션 ── */}

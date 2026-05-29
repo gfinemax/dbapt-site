@@ -1,13 +1,14 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 공개자료실 서브 메뉴 모바일 짤림 개선 (1안: 가로 스크롤링 + 우측 그라데이션 페이드 오버레이 마스크 연동)
+- Feature: 공개자료실 서브 메뉴 모바일 짤림 개선 (1안) 및 모바일 문서 목록 레이아웃 최적화 (1안: 모바일 전용 카드형 리스트 스위칭)
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md` 및 `DESIGN.md`
-- Implementation plan: `docs/superpowers/plans/2026-05-28-daebang-phase-2-stabilization.md` (기존 안정화 계획의 서브메뉴 레이아웃 개선)
+- Implementation plan: `docs/superpowers/plans/2026-05-28-daebang-phase-2-stabilization.md` (기존 안정화 계획의 레이아웃 개선)
 - Files or pages reviewed:
   - [disclosure-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/disclosure-client.tsx)
   - [site-header.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/site-header.tsx)
   - [layout.tsx](file:///c:/workspace/antigravity/dbapt-site/src/app/layout.tsx)
+  - [meetings-table.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/meetings-table.tsx)
 
 ## Boundary Review
 - Finding: PASS
@@ -26,6 +27,10 @@
     - 공개자료실 메인 탭바(`tabs`)와 서브 카테고리 탭바(`subMenus`)의 스크롤 컨테이너 외곽을 `relative`로 지정하고, 우측 가장자리에 투명도가 가미된 Warm Canvas 그라데이션 오버레이 마스크(`bg-gradient-to-l from-warm-canvas via-warm-canvas/60 to-transparent z-10 md:hidden`)를 입혔습니다.
     - 이를 통해 모바일 좁은 화면에서 글씨 끝부분이 부드럽게 흐려지는 정교한 비주얼 힌트가 가동되어, 가로 스와이프가 가능한 구역임을 자연스럽게 유도해 글씨 짤림 현상을 완전히 해소하였습니다.
     - 최후미 탭 아이템이 그라데이션 마스크에 영구적으로 가려져 가독성이 해치는 문제를 방지하고자, 컨테이너에 우측 여유 패딩(`pr-12 md:pr-0`)을 보강해 끝단 드래그 마감을 완벽히 최적화했습니다.
+  - **모바일 문서 목록 레이아웃 최적화 (1안: 모바일 전용 카드형 리스트 스위칭)**:
+    - 360px~390px 내외의 모바일 화면에서 5개 고정 너비 컬럼(No., 분류, 제목, 등록일, 열람)이 찌그러지며 제목 글씨가 세로로 찢어지던 현상을 완벽히 해결했습니다.
+    - 모바일 해상도(768px 미만)에서는 기존 `<table>`을 숨기고, 둥근 모서리와 스톤 아웃라인(`border-stone-surface/60`), 지브라 대비 색상 교차가 가미된 **모바일 전용 카드형 리스트**로 전환해 렌더링하도록 뷰포트 스위처(`hidden md:block` / `block md:hidden`)를 구현했습니다.
+    - 각 문서 카드는 상단에 No.와 분류 배지, 중앙에 13px 볼드 스타일의 온전한 문서 제목(중요 표시 별표 `★` 포함), 하단에 등록일과 열람 가능 여부 배지(🔓열람 / 🔒보안)를 레이아웃하여 모바일에서의 한 손 터치 및 가독성 완성도를 비약적으로 완성했습니다.
   - **드로어 및 헤더/하단 바 전역 레이아웃**: 모든 z-index(헤더 `z-50`, 드로어 `z-40`, 바텀 바 `z-45`) 및 바텀 패딩(`pb-16`)이 완벽히 조율되어 뛰어난 비주얼 완성도를 실현했습니다.
 
 ## Outcome

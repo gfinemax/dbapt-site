@@ -2,7 +2,7 @@
 
 ## Implemented Feature and Changed File Summary
 
-**Feature**: Google OAuth 2.0 (구글 로그인) 및 가입 승인 대기 프리뷰 연동 & 모바일 하이브리드 네비게이션 고도화 (슬라이드인 드로어 + 하단 고정 네비게이션 바 전역 통합 및 서브메뉴 가로 드래그 페이드 마스크 적용 완료)
+**Feature**: Google OAuth 2.0 (구글 로그인) 및 가입 승인 대기 프리뷰 연동 & 모바일 하이브리드 네비게이션 고도화 (슬라이드인 드로어 + 하단 고정 네비게이션 바 전역 통합, 서브메뉴 가로 드래그 페이드 마스크, 그리고 모바일 문서 목록 전용 카드형 리스트 스위칭 최적화 완료)
 * **구글 로그인 버튼 연동**: `DESIGN.md` 가이드를 완벽히 충족하는 세련된 `Pill Light` 스타일로 `/login` 화면에 소셜 로그인 진입점 마련.
 * **구글 모의 로그인 서버 액션 구현**: 외부 Google Client ID 등 복잡한 자격 증명 설정 없이도 로컬에서 완벽하게 구글 인증 및 회원 가입 흐름을 안전하게 검증 가능한 `googleMockLoginAction` 구현.
 * **소셜 승인 대기 전용 포털 페이지 추가**: 최초 구글 가입자의 권한을 `PENDING`으로 격리하여 `/portal/pending` 전용 안내 화면으로 리다이렉트하는 이중 보안 가드 연동.
@@ -15,6 +15,9 @@
   - 모바일 해상도에서 공개자료실 메인 탭바(`tabs`) 및 서브 카테고리 탭바(`subMenus`)의 스크롤 컨테이너 외곽에 우측 그라데이션 오버레이 마스크(`bg-gradient-to-l from-warm-canvas via-warm-canvas/60 to-transparent z-10 md:hidden pointer-events-none`)를 결합하였습니다.
   - 이를 통해 모바일 좁은 화면에서 글씨 끝단이 부드럽게 흐려지는 비주얼 힌트가 작동하여 탭 짤림 문제를 해결하고 가로 드래그 스와이핑 조작을 자연스럽게 유도합니다.
   - 스크롤을 끝까지 보냈을 때 글자가 마스크에 영구적으로 가리는 현상을 방지하도록 가로 여유 패딩(`pr-12 md:pr-0`)을 완벽 설계했습니다.
+* **모바일 문서 목록 레이아웃 최적화 (1안: 모바일 전용 카드형 리스트 스위칭)**:
+  - 360px~390px 내외의 모바일 화면에서 5개 고정 너비 컬럼(No., 분류, 제목, 등록일, 열람)이 찌그러지며 제목 글씨가 세로로 찢어지던 현상을 해소했습니다.
+  - 모바일 해상도(768px 미만)에서는 `hidden md:block` / `block md:hidden` 분기 처리를 통해 기존 격자형 테이블 대신 둥근 모서리, 스톤 아웃라인, 지브라 교차 스타일을 품은 **모바일 전용 카드형 리스트**로 자동 스위칭해 가독성과 터치 최적화를 대폭 개선했습니다.
 
 ### Changed Files
 - [prisma/schema.prisma](file:///c:/workspace/antigravity/dbapt-site/prisma/schema.prisma) (구글 소셜 연동을 위한 데이터 모델 확장)
@@ -27,6 +30,7 @@
 - [src/components/landing/site-header.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/site-header.tsx) (Z-index/여백 보정, 불투명 solid bg 설정, 모바일 헤더 프로필 숨김, 포털 라우트 조건 분기 장착)
 - [src/app/layout.tsx](file:///c:/workspace/antigravity/dbapt-site/src/app/layout.tsx) (하단 네비게이션 바로 인해 모바일 본문 콘텐츠가 가려지는 것을 막기 위해 `pb-16 md:pb-0` 선언 확보)
 - [src/components/disclosure/disclosure-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/disclosure-client.tsx) (가로 스크롤링 및 우측 그라데이션 페이드 오버레이 마스크 장착, 드래그 마진 패딩 보완)
+- [src/components/disclosure/meetings-table.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/meetings-table.tsx) (모바일 전용 카드형 리스트 뷰포트 스위처 반응형 마감)
 
 ---
 
