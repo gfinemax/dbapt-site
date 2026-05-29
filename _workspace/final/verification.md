@@ -2,7 +2,7 @@
 
 ## Implemented Feature and Changed File Summary
 
-**Feature**: Google OAuth 2.0 (구글 로그인) 및 가입 승인 대기 프리뷰 연동 & 모바일 하이브리드 네비게이션 고도화 (슬라이드인 드로어 + 하단 고정 네비게이션 바 전역 통합, 서브메뉴 가로 드래그 페이드 마스크, 그리고 모바일 문서 목록 전용 카드형 리스트 스위칭 최적화 완료)
+**Feature**: Google OAuth 2.0 (구글 로그인) 및 가입 승인 대기 프리뷰 연동 & 모바일 하이브리드 네비게이션 고도화 (슬라이드인 드로어 + 하단 고정 네비게이션 바 전역 통합, 서브메뉴 가로 드래그 페이드 마스크, 모바일 문서 목록 카드형 리스트 스위칭, 그리고 조합원 전용 자료실 드로어 상 모바일 하단 네비게이션 바 연동 완료)
 * **구글 로그인 버튼 연동**: `DESIGN.md` 가이드를 완벽히 충족하는 세련된 `Pill Light` 스타일로 `/login` 화면에 소셜 로그인 진입점 마련.
 * **구글 모의 로그인 서버 액션 구현**: 외부 Google Client ID 등 복잡한 자격 증명 설정 없이도 로컬에서 완벽하게 구글 인증 및 회원 가입 흐름을 안전하게 검증 가능한 `googleMockLoginAction` 구현.
 * **소셜 승인 대기 전용 포털 페이지 추가**: 최초 구글 가입자의 권한을 `PENDING`으로 격리하여 `/portal/pending` 전용 안내 화면으로 리다이렉트하는 이중 보안 가드 연동.
@@ -18,6 +18,10 @@
 * **모바일 문서 목록 레이아웃 최적화 (1안: 모바일 전용 카드형 리스트 스위칭)**:
   - 360px~390px 내외의 모바일 화면에서 5개 고정 너비 컬럼(No., 분류, 제목, 등록일, 열람)이 찌그러지며 제목 글씨가 세로로 찢어지던 현상을 해소했습니다.
   - 모바일 해상도(768px 미만)에서는 `hidden md:block` / `block md:hidden` 분기 처리를 통해 기존 격자형 테이블 대신 둥근 모서리, 스톤 아웃라인, 지브라 교차 스타일을 품은 **모바일 전용 카드형 리스트**로 자동 스위칭해 가독성과 터치 최적화를 대폭 개선했습니다.
+* **조합원 전용 자료실 드로어 상 모바일 하단 네비게이션 바 노출 및 동기화**:
+  - 모바일 해상도에서 조합원 전용 자료실 드로어(`z-50`)가 활성화되어 있을 때도 하단 네비게이션 바가 항상 가려지지 않고 온전히 접근 가능하도록 하단 바의 레이어를 `z-55`로 격상하였습니다.
+  - 모바일 하단 바에 내용이 가려지지 않고 끝까지 올바르게 스크롤될 수 있도록 드로어 바디 컨테이너의 모바일 하단 패딩을 `pt-6 px-6 pb-20 sm:p-8`로 안전하게 확장하였습니다.
+  - 하단 바의 탭 이동을 클릭할 때 열려 있던 드로어가 실시간 감지하여 부드럽게 닫히도록 윈도우 커스텀 이벤트(`close-portal`) 연동 체계를 구현했습니다.
 
 ### Changed Files
 - [prisma/schema.prisma](file:///c:/workspace/antigravity/dbapt-site/prisma/schema.prisma) (구글 소셜 연동을 위한 데이터 모델 확장)
@@ -27,10 +31,13 @@
 - [src/components/portal/portal-shell.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/portal/portal-shell.tsx) (관리자 페이지 내 승인 대기 유저 리스트 및 원클릭 승인 테이블 연동)
 - [src/app/portal/admin/page.tsx](file:///c:/workspace/antigravity/dbapt-site/src/app/portal/admin/page.tsx) (대기 계정 prisma 조회 바인딩)
 - [src/components/landing/global-header.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/global-header.tsx) (포털 경로 숨김 처리 로직을 제거해 하단 바가 전역 포털 화면에서도 노출되도록 활성화)
-- [src/components/landing/site-header.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/site-header.tsx) (Z-index/여백 보정, 불투명 solid bg 설정, 모바일 헤더 프로필 숨김, 포털 라우트 조건 분기 장착)
+- [src/components/landing/site-header.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/site-header.tsx) (Z-index/여백 보정, 불투명 solid bg 설정, 모바일 헤더 프로필 숨김, 포털 라우트 조건 분기 장착, 하단 바 z-index 격상 및 close-portal 이벤트 디스패치 적용)
 - [src/app/layout.tsx](file:///c:/workspace/antigravity/dbapt-site/src/app/layout.tsx) (하단 네비게이션 바로 인해 모바일 본문 콘텐츠가 가려지는 것을 막기 위해 `pb-16 md:pb-0` 선언 확보)
 - [src/components/disclosure/disclosure-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/disclosure-client.tsx) (가로 스크롤링 및 우측 그라데이션 페이드 오버레이 마스크 장착, 드래그 마진 패딩 보완)
 - [src/components/disclosure/meetings-table.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/meetings-table.tsx) (모바일 전용 카드형 리스트 뷰포트 스위처 반응형 마감)
+- [src/components/landing/home-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/home-client.tsx) (자료실 드로어 하단 패딩 pb-20 확보 및 close-portal 연동 추가)
+- [src/components/disclosure/disclosure-page-client-shell.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/disclosure-page-client-shell.tsx) (자료실 드로어 하단 패딩 pb-20 확보 및 close-portal 연동 추가)
+- [src/components/about/about-page-client-shell.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/about/about-page-client-shell.tsx) (자료실 드로어 하단 패딩 pb-20 확보 및 close-portal 연동 추가)
 
 ---
 

@@ -1,7 +1,7 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 공개자료실 서브 메뉴 모바일 짤림 개선 (1안) 및 모바일 문서 목록 레이아웃 최적화 (1안: 모바일 전용 카드형 리스트 스위칭)
+- Feature: 공개자료실 서브 메뉴 모바일 짤림 개선 (1안), 모바일 문서 목록 레이아웃 최적화 (1안), 그리고 조합원 전용 자료실 드로어 내 모바일 하단 네비게이션 바 노출 및 동기화 완비
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md` 및 `DESIGN.md`
 - Implementation plan: `docs/superpowers/plans/2026-05-28-daebang-phase-2-stabilization.md` (기존 안정화 계획의 레이아웃 개선)
 - Files or pages reviewed:
@@ -9,6 +9,9 @@
   - [site-header.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/site-header.tsx)
   - [layout.tsx](file:///c:/workspace/antigravity/dbapt-site/src/app/layout.tsx)
   - [meetings-table.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/meetings-table.tsx)
+  - [home-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/landing/home-client.tsx)
+  - [disclosure-page-client-shell.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/disclosure-page-client-shell.tsx)
+  - [about-page-client-shell.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/about/about-page-client-shell.tsx)
 
 ## Boundary Review
 - Finding: PASS
@@ -31,7 +34,11 @@
     - 360px~390px 내외의 모바일 화면에서 5개 고정 너비 컬럼(No., 분류, 제목, 등록일, 열람)이 찌그러지며 제목 글씨가 세로로 찢어지던 현상을 완벽히 해결했습니다.
     - 모바일 해상도(768px 미만)에서는 기존 `<table>`을 숨기고, 둥근 모서리와 스톤 아웃라인(`border-stone-surface/60`), 지브라 대비 색상 교차가 가미된 **모바일 전용 카드형 리스트**로 전환해 렌더링하도록 뷰포트 스위처(`hidden md:block` / `block md:hidden`)를 구현했습니다.
     - 각 문서 카드는 상단에 No.와 분류 배지, 중앙에 13px 볼드 스타일의 온전한 문서 제목(중요 표시 별표 `★` 포함), 하단에 등록일과 열람 가능 여부 배지(🔓열람 / 🔒보안)를 레이아웃하여 모바일에서의 한 손 터치 및 가독성 완성도를 비약적으로 완성했습니다.
-  - **드로어 및 헤더/하단 바 전역 레이아웃**: 모든 z-index(헤더 `z-50`, 드로어 `z-40`, 바텀 바 `z-45`) 및 바텀 패딩(`pb-16`)이 완벽히 조율되어 뛰어난 비주얼 완성도를 실현했습니다.
+  - **조합원 전용 자료실 드로어 내 모바일 하단 네비게이션 바 노출 및 동기화**:
+    - 모바일 해상도에서 조합원 전용 자료실 드로어(`z-50`)가 열려 있을 때도 하단 네비게이션 바가 항상 가려지지 않고 그 위에 노출되도록 하단 바의 레이어를 `z-55`로 격상하였습니다.
+    - 하단 네비게이션 바가 드로어 하단 본체 영역을 덮더라도 내부 내용물이 가려지지 않도록, 모바일 드로어 바디 컨테이너의 하단 패딩을 `pt-6 px-6 pb-20 sm:p-8`로 보강하여 스크롤 시 모든 자료가 안전하게 확보됩니다.
+    - 하단 바의 다른 탭을 클릭하여 이동 시, 현재 활성화되어 있는 드로어가 즉각 감지하여 닫힐 수 있도록 윈도우 커스텀 이벤트(`close-portal`) 연동 체계를 구현해 완벽한 네비게이션 순환을 이룩했습니다.
+  - **드로어 및 헤더/하단 바 전역 레이아웃**: 모든 z-index(헤더 `z-50`, 드로어 `z-40`, 바텀 바 `z-55`) 및 바텀 패딩(`pb-16`)이 완벽히 조율되어 뛰어난 비주얼 완성도를 실현했습니다.
 
 ## Outcome
 - Result: PASS

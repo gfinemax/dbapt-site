@@ -66,11 +66,16 @@ export function HomeClient({
     };
   }, [isDrawerOpen, showAnnouncePopup]);
 
-  // 커스텀 이벤트 리스너: 글로벌 헤더에서 포털 열기 요청 수신
+  // 커스텀 이벤트 리스너: 글로벌 헤더에서 포털 열기 및 닫기 요청 수신
   useEffect(() => {
     const handleOpenPortal = () => setIsDrawerOpen(true);
+    const handleClosePortal = () => setIsDrawerOpen(false);
     window.addEventListener('open-portal', handleOpenPortal);
-    return () => window.removeEventListener('open-portal', handleOpenPortal);
+    window.addEventListener('close-portal', handleClosePortal);
+    return () => {
+      window.removeEventListener('open-portal', handleOpenPortal);
+      window.removeEventListener('close-portal', handleClosePortal);
+    };
   }, []);
 
   // 로그인 성공 조합원을 위한 안내 팝업 자동 트리거 (오늘 하루 보지 않기 여부 체크)
@@ -147,7 +152,7 @@ export function HomeClient({
       {/* 드로어 컨테이너 (DESIGN.md 규격: Stone surface border, Warm Canvas 배경, Drawer transition) */}
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto",
+          "fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
         aria-label="조합원 전용 자료실 드로어"

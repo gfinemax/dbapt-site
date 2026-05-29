@@ -470,10 +470,14 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
       )}
 
     {/* 6. 모바일 앱 스타일 하단 고정 바 (DESIGN.md 규격: Warm Canvas, Stone Border, active Ember Orange) */}
-    <div className="fixed bottom-0 left-0 right-0 h-16 bg-warm-canvas/95 backdrop-blur-md border-t border-stone-surface/90 shadow-[rgba(0,0,0,0.04)_0px_-4px_16px_0px] flex items-center justify-around z-45 md:hidden pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 h-16 bg-warm-canvas/95 backdrop-blur-md border-t border-stone-surface/90 shadow-[rgba(0,0,0,0.04)_0px_-4px_16px_0px] flex items-center justify-around z-55 md:hidden pb-safe">
         {/* 홈 탭 */}
         <Link 
           href="/" 
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('close-portal'));
+            setIsMobileMenuOpen(false);
+          }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
             pathname === "/" ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
@@ -488,6 +492,10 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         {/* 조합소개 탭 */}
         <Link 
           href="/about" 
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('close-portal'));
+            setIsMobileMenuOpen(false);
+          }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
             pathname?.startsWith("/about") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
@@ -502,6 +510,10 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         {/* 공개자료 탭 */}
         <Link 
           href="/disclosure" 
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('close-portal'));
+            setIsMobileMenuOpen(false);
+          }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
             pathname?.startsWith("/disclosure") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
@@ -529,7 +541,10 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
 
         {/* 조합원 마이룸/로그인 탭 */}
         <button 
-          onClick={handleMyRoomClick}
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('close-portal'));
+            handleMyRoomClick();
+          }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
             (pathname === "/login" || (pathname?.startsWith("/portal") && (pathname === "/portal/admin" || pathname === "/portal/pending" || pathname === "/portal/refund" || pathname === "/portal/member"))) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
