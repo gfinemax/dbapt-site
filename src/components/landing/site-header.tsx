@@ -75,8 +75,12 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
 
   const handleLibraryClick = () => {
     if (isLoggedIn) {
-      if (onOpenPortal) onOpenPortal();
-      else window.dispatchEvent(new CustomEvent('open-portal'));
+      if (isDrawerSupportedPage) {
+        if (onOpenPortal) onOpenPortal();
+        else window.dispatchEvent(new CustomEvent('open-portal'));
+      } else {
+        handleMyRoomClick();
+      }
     } else {
       alert("이 정보는 대방동 지역주택조합원 전용 비공개 자료입니다.\n안전한 정보 보호를 위해 조합원 계정 로그인 후 열람하실 수 있습니다.");
       router.push("/login");
@@ -109,6 +113,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   };
 
   const isPortalRoute = pathname?.startsWith("/portal");
+  const isDrawerSupportedPage = pathname === "/" || pathname?.startsWith("/about") || pathname?.startsWith("/disclosure");
 
   return (
     <>
@@ -514,7 +519,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         <Link 
           href="/about" 
           onClick={(e) => {
-            if (window.innerWidth < 768) {
+            if (window.innerWidth < 768 && isDrawerSupportedPage) {
               e.preventDefault();
               window.dispatchEvent(new CustomEvent('open-about'));
             } else {
@@ -537,7 +542,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         <Link 
           href="/disclosure" 
           onClick={(e) => {
-            if (window.innerWidth < 768) {
+            if (window.innerWidth < 768 && isDrawerSupportedPage) {
               e.preventDefault();
               window.dispatchEvent(new CustomEvent('open-disclosure'));
             } else {
