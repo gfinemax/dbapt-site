@@ -40,6 +40,27 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [activeMobileTab, setActiveMobileTab] = useState<string | null>(null);
+
+  // 모바일 하단 네비게이션 드로어 탭 활성화 상태 동기화 리스너
+  useEffect(() => {
+    const onOpenPortal = () => setActiveMobileTab("portal");
+    const onOpenAbout = () => setActiveMobileTab("about");
+    const onOpenDisclosure = () => setActiveMobileTab("disclosure");
+    const onClosePortal = () => setActiveMobileTab(null);
+
+    window.addEventListener('open-portal', onOpenPortal);
+    window.addEventListener('open-about', onOpenAbout);
+    window.addEventListener('open-disclosure', onOpenDisclosure);
+    window.addEventListener('close-portal', onClosePortal);
+    
+    return () => {
+      window.removeEventListener('open-portal', onOpenPortal);
+      window.removeEventListener('open-about', onOpenAbout);
+      window.removeEventListener('open-disclosure', onOpenDisclosure);
+      window.removeEventListener('close-portal', onClosePortal);
+    };
+  }, []);
 
   // 드롭다운 외부 클릭 감지 클로저
   useEffect(() => {
@@ -480,7 +501,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
           }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
-            pathname === "/" ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+            (activeMobileTab === "home" || (activeMobileTab === null && pathname === "/")) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
           )}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -492,13 +513,18 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         {/* 조합소개 탭 */}
         <Link 
           href="/about" 
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('close-portal'));
+          onClick={(e) => {
+            if (window.innerWidth < 768) {
+              e.preventDefault();
+              window.dispatchEvent(new CustomEvent('open-about'));
+            } else {
+              window.dispatchEvent(new CustomEvent('close-portal'));
+            }
             setIsMobileMenuOpen(false);
           }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
-            pathname?.startsWith("/about") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+            (activeMobileTab === "about" || (activeMobileTab === null && pathname?.startsWith("/about"))) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
           )}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -510,13 +536,18 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         {/* 공개자료 탭 */}
         <Link 
           href="/disclosure" 
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('close-portal'));
+          onClick={(e) => {
+            if (window.innerWidth < 768) {
+              e.preventDefault();
+              window.dispatchEvent(new CustomEvent('open-disclosure'));
+            } else {
+              window.dispatchEvent(new CustomEvent('close-portal'));
+            }
             setIsMobileMenuOpen(false);
           }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
-            pathname?.startsWith("/disclosure") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+            (activeMobileTab === "disclosure" || (activeMobileTab === null && pathname?.startsWith("/disclosure"))) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
           )}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -530,7 +561,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
           onClick={handleLibraryClick}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
-            (pathname?.startsWith("/portal") && pathname !== "/portal/admin" && pathname !== "/portal/pending" && pathname !== "/portal/refund") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+            (activeMobileTab === "portal" || (activeMobileTab === null && pathname?.startsWith("/portal") && pathname !== "/portal/admin" && pathname !== "/portal/pending" && pathname !== "/portal/refund")) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
           )}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -547,7 +578,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
           }}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
-            (pathname === "/login" || (pathname?.startsWith("/portal") && (pathname === "/portal/admin" || pathname === "/portal/pending" || pathname === "/portal/refund" || pathname === "/portal/member"))) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+            (activeMobileTab === "myroom" || (activeMobileTab === null && (pathname === "/login" || (pathname?.startsWith("/portal") && (pathname === "/portal/admin" || pathname === "/portal/pending" || pathname === "/portal/refund" || pathname === "/portal/member"))))) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
           )}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

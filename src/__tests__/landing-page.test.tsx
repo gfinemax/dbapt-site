@@ -11,6 +11,11 @@ vi.mock("next/navigation", () => ({
       refresh: vi.fn(),
     };
   },
+  useSearchParams() {
+    return {
+      get: vi.fn().mockReturnValue(null),
+    };
+  },
 }));
 
 describe("public landing page", () => {
