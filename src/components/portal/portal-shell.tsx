@@ -10,6 +10,7 @@ import { logoutAction, approveUserAction } from "@/lib/auth";
 import { DocumentTable, type Document } from "./document-table";
 import { DocumentUploadForm } from "./document-upload-form";
 import { AuditLogsTable, type LogEntry } from "./audit-logs-table";
+import { PortalHamburger } from "./portal-hamburger";
 
 // 헬퍼 함수 파일 레벨 최상단 배치 (ESLint 선언 순서 및 렌더링 낭비 방지)
 const getRoleLabel = (r: string) => {
@@ -266,6 +267,7 @@ export function PortalShell({
                 </Button>
               </div>
             )}
+            <PortalHamburger />
           </div>
         </nav>
       )}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession, logoutAction } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { PortalHamburger } from "@/components/portal/portal-hamburger";
 
 export const metadata: Metadata = {
   title: "승인 대기 안내 | 대방동 지역주택조합",
@@ -53,6 +54,7 @@ export default async function PendingPortalPage() {
               </Button>
             </form>
           </div>
+          <PortalHamburger />
         </div>
       </nav>
 

@@ -48,17 +48,23 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
     const onOpenAbout = () => setActiveMobileTab("about");
     const onOpenDisclosure = () => setActiveMobileTab("disclosure");
     const onClosePortal = () => setActiveMobileTab(null);
+    const onOpenSitemap = () => setIsMobileMenuOpen(true);
+    const onCloseSitemap = () => setIsMobileMenuOpen(false);
 
     window.addEventListener('open-portal', onOpenPortal);
     window.addEventListener('open-about', onOpenAbout);
     window.addEventListener('open-disclosure', onOpenDisclosure);
     window.addEventListener('close-portal', onClosePortal);
+    window.addEventListener('open-sitemap', onOpenSitemap);
+    window.addEventListener('close-sitemap', onCloseSitemap);
     
     return () => {
       window.removeEventListener('open-portal', onOpenPortal);
       window.removeEventListener('open-about', onOpenAbout);
       window.removeEventListener('open-disclosure', onOpenDisclosure);
       window.removeEventListener('close-portal', onClosePortal);
+      window.removeEventListener('open-sitemap', onOpenSitemap);
+      window.removeEventListener('close-sitemap', onCloseSitemap);
     };
   }, []);
 
@@ -270,11 +276,11 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
             </Button>
           )}
 
-          {/* 모바일 햄버거 토글 버튼 (md 해상도 미만 노출) */}
+          {/* 모바일/데스크톱 햄버거 토글 버튼 (전역 노출) */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={cn(
-              "flex md:hidden items-center justify-center p-2 rounded-full transition-all duration-200 cursor-pointer active:scale-95",
+              "flex items-center justify-center p-2 rounded-full transition-all duration-200 cursor-pointer active:scale-95",
               isMobileMenuOpen
                 ? "bg-midnight text-white"
                 : "bg-white hover:bg-stone-surface border border-stone-surface text-graphite shadow-sm"
@@ -363,18 +369,21 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         </div>
       )}
 
-      {/* 5. 모바일 네비게이션 드로어 (DESIGN.md 규격: Warm Canvas, Inset Stone, Expressive spring motion) */}
+      </header>
+      )}
+ 
+      {/* 5. 모바일/데스크톱 네비게이션 드로어 (사이트맵) - 전역 노출 가능하도록 header 외부 배치 및 md:hidden 해제 */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-x-0 bottom-16 top-18 z-40 md:hidden animate-in fade-in duration-200">
+        <div className="fixed inset-x-0 bottom-16 md:bottom-0 top-0 z-40 animate-in fade-in duration-200">
           {/* 어두운 백드롭 오버레이 (클릭 시 닫힘) */}
           <div 
             className="absolute inset-0 bg-midnight/35 backdrop-blur-xs transition-opacity duration-200"
             onClick={() => setIsMobileMenuOpen(false)}
           />
           
-          {/* 드로어 바디: warm-canvas (#fbfaf9), left to right slide-in (뒷배경 글씨 겹침 해결을 위해 bg-[#fbfaf9] 100% 불투명 적용) */}
+          {/* 드로어 바디: warm-canvas (#fbfaf9), left to right slide-in */}
           <div 
-            className="absolute right-0 top-0 bottom-0 w-[300px] bg-[#fbfaf9] border-l border-stone-surface flex flex-col z-50 animate-in slide-in-from-right duration-300 ease-out"
+            className="absolute right-0 top-0 bottom-0 w-[300px] sm:w-[350px] bg-[#fbfaf9] border-l border-stone-surface flex flex-col z-50 animate-in slide-in-from-right duration-300 ease-out"
             style={{ 
               boxShadow: "rgba(0, 0, 0, 0.08) -4px 0px 24px 0px"
             }}
@@ -382,7 +391,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
             {/* 드로어 상단부: 타이틀 및 닫기 버튼 (글씨 비침 방지를 위해 bg-[#fbfaf9] 솔리드 적용) */}
             <div className="flex h-18 items-center justify-between px-6 border-b border-stone-surface/80 bg-[#fbfaf9]">
               <span className="text-[13px] font-bold text-charcoal-primary tracking-[-0.03em]">
-                전체 메뉴
+                전체 메뉴 (사이트맵)
               </span>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -491,8 +500,6 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
             </div>
           </div>
         </div>
-      )}
-      </header>
       )}
 
     {/* 6. 모바일 앱 스타일 하단 고정 바 (DESIGN.md 규격: Warm Canvas, Stone Border, active Ember Orange) */}
