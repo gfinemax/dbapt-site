@@ -12,13 +12,20 @@ datasource db {
 // 1. 사용자 계정 및 권한
 model User {
   id            String      @id @default(uuid())
-  loginId       String      @unique                  // 로그인 아이디 (조합원 번호 등)
-  passwordHash  String                               // 암호화된 비밀번호
-  name          String                               // 조합원 성명
-  role          String      @default("MEMBER")       // MEMBER, REFUND, ADMIN
+  loginId       String?     @unique                  // 로그인 아이디 (구글 로그인 유저는 null 가능)
+  passwordHash  String?                              // 암호화된 비밀번호 (구글 로그인 유저는 null 가능)
+  name          String?                              // 조합원 성명 (구글 이름 자동 매핑)
+  email         String?     @unique                  // 구글 로그인 이메일
+  emailVerified DateTime?
+  image         String?                              // 구글 프로필 이미지 URL
+  role          String      @default("PENDING")      // PENDING(대기), MEMBER(정식), REFUND(환불), ADMIN(관리자)
   isActive      Boolean     @default(true)           // 계정 활성 상태
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  
+  // NextAuth 관계
+  accounts      Account[]
+  sessions      Session[]
   
   // 관계 정의
   documentLogs  DocumentLog[]
@@ -70,3 +77,33 @@ model RefundInfo {
 
   user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// OAuth 계정 정보 저장 테이블 (NextAuth 표준)
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// 데이터베이스 세션 관리 시 필요한 테이블
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+

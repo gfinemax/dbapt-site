@@ -15,6 +15,8 @@ export default async function AdminPortalPage() {
 
   let documents: Document[] = [];
   let logs: LogEntry[] = [];
+  let pendingUsers: { id: string; name: string; email: string; createdAt: string }[] = [];
+  let approvedSocialUsers: { id: string; name: string; email: string; role: string; createdAt: string }[] = [];
 
   if (session) {
     try {
@@ -52,6 +54,39 @@ export default async function AdminPortalPage() {
       logs = docLogs.map(log => ({
         ...log,
         createdAt: log.createdAt.toISOString(),
+        user: {
+          ...log.user,
+          name: log.user.name || "이름 없음",
+          loginId: log.user.loginId || "소셜회원",
+        }
+      }));
+
+      // 3. Fetch pending registration users (Google OAuth signup simulation)
+      const pUsers = await prisma.user.findMany({
+        where: { role: "PENDING" },
+        orderBy: { createdAt: "desc" },
+      });
+      pendingUsers = pUsers.map(u => ({
+        id: u.id,
+        name: u.name || "이름 없음",
+        email: u.email || "이메일 없음",
+        createdAt: u.createdAt.toISOString(),
+      }));
+
+      // 4. Fetch already approved social users (MEMBER or REFUND who have email)
+      const approvedUsersRaw = await prisma.user.findMany({
+        where: {
+          email: { not: null },
+          role: { in: ["MEMBER", "REFUND"] },
+        },
+        orderBy: { updatedAt: "desc" },
+      });
+      approvedSocialUsers = approvedUsersRaw.map(u => ({
+        id: u.id,
+        name: u.name || "이름 없음",
+        email: u.email || "이메일 없음",
+        role: u.role,
+        createdAt: u.createdAt.toISOString(),
       }));
     } catch (e) {
       console.error("Error loading admin portal data:", e);
@@ -64,6 +99,8 @@ export default async function AdminPortalPage() {
       session={session}
       documents={documents}
       logs={logs}
+      pendingUsers={pendingUsers}
+      approvedSocialUsers={approvedSocialUsers}
     />
   );
 }

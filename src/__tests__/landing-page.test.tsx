@@ -1,12 +1,21 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import Home from "@/app/page";
+import { describe, expect, it, vi } from "vitest";
+import { HomeClient } from "@/components/landing/home-client";
+
+vi.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      push: vi.fn(),
+      refresh: vi.fn(),
+    };
+  },
+}));
 
 describe("public landing page", () => {
   it("introduces the cooperative with member and business entry actions", () => {
-    render(<Home />);
+    render(<HomeClient />);
 
     expect(
       screen.getByRole("heading", { name: /함께 만드는 새로운 보금자리/ }),
@@ -23,7 +32,7 @@ describe("public landing page", () => {
   });
 
   it("presents protected services as login-only access", () => {
-    render(<Home />);
+    render(<HomeClient />);
 
     expect(screen.getByText("정보공개")).toBeInTheDocument();
     expect(screen.getByText("회계·실적보고")).toBeInTheDocument();
@@ -33,14 +42,14 @@ describe("public landing page", () => {
   });
 
   it("keeps the hero upper space clear of floating decorations", () => {
-    const { container } = render(<Home />);
+    const { container } = render(<HomeClient />);
 
     expect(container.querySelector(".float-soft")).not.toBeInTheDocument();
     expect(container.querySelector(".sparkle")).not.toBeInTheDocument();
   });
 
   it("renders the desktop hero headline as two intended lines", () => {
-    const { container } = render(<Home />);
+    const { container } = render(<HomeClient />);
     const headlineLines = Array.from(container.querySelectorAll("[data-hero-line]")).map(
       (line) => line.textContent,
     );
@@ -52,7 +61,7 @@ describe("public landing page", () => {
   });
 
   it("uses the compact hero spacing approved for the landing page", () => {
-    const { container } = render(<Home />);
+    const { container } = render(<HomeClient />);
     const heroSection = container.querySelector("main > section");
     const heroContent = container.querySelector("[data-hero-content]");
 

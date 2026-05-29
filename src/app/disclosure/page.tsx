@@ -1,10 +1,10 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { HomeClient } from "@/components/landing/home-client";
+import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 
-export default async function Home() {
+export default async function DisclosurePage() {
   const session = (await getSession()) as {
     id: string;
     loginId: string | null;
@@ -26,12 +26,11 @@ export default async function Home() {
 
   if (session) {
     try {
-      // 1. MEMBER, ADMIN, REFUND 에 따라 문서 조회 (MEMBER/ADMIN은 전체, REFUND는 공통)
+      // 1. MEMBER, ADMIN, REFUND 에 따라 문서 조회
       const docs = await prisma.document.findMany({
         orderBy: { createdAt: "desc" },
       });
       
-      // Convert Date objects to ISO string safely
       documents = docs.map(doc => ({
         ...doc,
         publishedAt: doc.publishedAt ? doc.publishedAt.toISOString() : null,
@@ -56,7 +55,6 @@ export default async function Home() {
 
       // 3. ADMIN 전용 보안 로그 및 가입 승인 대기 명세 수집
       if (session.role === "ADMIN") {
-        // 보안 감사 로그 수집
         const docLogs = await prisma.documentLog.findMany({
           include: {
             user: {
@@ -86,7 +84,6 @@ export default async function Home() {
           }
         }));
 
-        // 가입 승인 대기 유저 수집
         const pUsers = await prisma.user.findMany({
           where: { role: "PENDING" },
           orderBy: { createdAt: "desc" },
@@ -98,7 +95,6 @@ export default async function Home() {
           createdAt: u.createdAt.toISOString(),
         }));
 
-        // 이미 승인된 소셜 유저 수집
         const approvedUsersRaw = await prisma.user.findMany({
           where: {
             email: { not: null },
@@ -115,12 +111,12 @@ export default async function Home() {
         }));
       }
     } catch (e) {
-      console.error("Error loading homepage session data:", e);
+      console.error("Error loading disclosure page session data:", e);
     }
   }
 
   return (
-    <HomeClient
+    <DisclosurePageClientShell
       session={session}
       documents={documents}
       logs={logs}

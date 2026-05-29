@@ -8,10 +8,77 @@ export const heroContent = {
 } as const;
 
 export const publicNavigation = [
-  { label: "조합소개", href: "#about" },
-  { label: "사업정보", href: "#business" },
-  { label: "조합소식", href: "#notices" },
-  { label: "자료실", href: "#library" },
+  { label: "조합소개", href: "/about" },
+  { label: "사업개요", href: "/#business" },
+  { label: "공개자료", href: "/disclosure" },
+  { label: "조합소식", href: "/#notices" },
+  { label: "자료실", href: "/#library" },
+] as const;
+
+export const megaMenuNavigation = [
+  {
+    title: "조합소개",
+    href: "/about",
+    subItems: [
+      { label: "인사말", href: "/about?tab=greetings" },
+      { label: "연혁", href: "/about?tab=history" },
+      { label: "조합조직도", href: "/about?tab=organization" },
+      { label: "오시는 길", href: "/about?tab=location" },
+    ],
+  },
+  {
+    title: "사업개요",
+    href: "/#business",
+    subItems: [
+      { label: "건축개요", href: "/#business" },
+      { label: "건축심의 자료", href: "/#business" },
+      { label: "조감도 / 배치도", href: "/#business" },
+      { label: "평형별 평면도", href: "/#business" },
+      { label: "주변 개발 현황", href: "/#business" },
+    ],
+  },
+  {
+    title: "공개자료",
+    href: "/disclosure",
+    subItems: [
+      { label: "조합규약", href: "/disclosure?tab=rules", isPortalGated: true },
+      { label: "조합연명부", href: "/disclosure?tab=rules", isPortalGated: true },
+      { label: "시공자와의 협약서", href: "/disclosure?tab=rules", isPortalGated: true },
+      { label: "회의록", href: "/disclosure?tab=meetings", isPortalGated: true },
+      { label: "공문서", href: "/disclosure?tab=meetings", isPortalGated: true },
+      { label: "사업시행계획서", href: "/disclosure?tab=meetings", isPortalGated: true },
+      { label: "회계감사보고서", href: "/disclosure?tab=accounting", isPortalGated: true },
+      { label: "내부감사보고서", href: "/disclosure?tab=accounting", isPortalGated: true },
+      { label: "연간 자금운용계획서", href: "/disclosure?tab=accounting", isPortalGated: true },
+      { label: "월별자금입출금명세서", href: "/disclosure?tab=accounting", isPortalGated: true },
+      { label: "계약서", href: "/disclosure?tab=operations", isPortalGated: true },
+      { label: "월별 공사진행 상황", href: "/disclosure?tab=operations", isPortalGated: true },
+      { label: "실적보고서", href: "/disclosure?tab=operations", isPortalGated: true },
+      { label: "월간감리업무실적보고", href: "/disclosure?tab=operations", isPortalGated: true },
+    ],
+  },
+  {
+    title: "조합소식",
+    href: "/#notices",
+    subItems: [
+      { label: "공지사항", href: "/#notices" },
+      { label: "부동산 관련 기사", href: "/#notices" },
+      { label: "자유게시판", href: "/disclosure?tab=meetings", isPortalGated: true },
+      { label: "영수증 요청", href: "/disclosure?tab=accounting", isPortalGated: true },
+      { label: "평형 변경", href: "/disclosure?tab=operations", isPortalGated: true },
+      { label: "사진첩", href: "/disclosure?tab=operations", isPortalGated: true },
+      { label: "FAQ", href: "/disclosure?tab=meetings", isPortalGated: true },
+    ],
+  },
+  {
+    title: "자료실",
+    href: "/#library",
+    subItems: [
+      { label: "주택법(개정법령)", href: "/#library" },
+      { label: "총회책자(안내문)", href: "/#library" },
+      { label: "서식·양식", href: "/#library" },
+    ],
+  },
 ] as const;
 
 export const featureLinks = [

@@ -1,10 +1,10 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { HomeClient } from "@/components/landing/home-client";
+import { AboutPageClientShell } from "@/components/about/about-page-client-shell";
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 
-export default async function Home() {
+export default async function AboutPage() {
   const session = (await getSession()) as {
     id: string;
     loginId: string | null;
@@ -115,12 +115,12 @@ export default async function Home() {
         }));
       }
     } catch (e) {
-      console.error("Error loading homepage session data:", e);
+      console.error("Error loading about page session data:", e);
     }
   }
 
   return (
-    <HomeClient
+    <AboutPageClientShell
       session={session}
       documents={documents}
       logs={logs}

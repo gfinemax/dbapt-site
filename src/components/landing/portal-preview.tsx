@@ -3,7 +3,19 @@ import { LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { memberServices } from "@/content/landing";
 
-export function PortalPreview() {
+type PortalPreviewProps = {
+  session?: {
+    id: string;
+    loginId: string | null;
+    name: string;
+    role: string;
+  } | null;
+  onOpenPortal?: () => void;
+};
+
+export function PortalPreview({ session, onOpenPortal }: PortalPreviewProps) {
+  const isLoggedIn = !!session;
+
   return (
     <section className="site-container py-14 sm:py-24">
       <div className="rounded-[2rem] bg-midnight px-6 py-10 text-white sm:px-12 sm:py-14">
@@ -16,12 +28,27 @@ export function PortalPreview() {
               한곳에서 준비합니다
             </h2>
             <p className="mt-5 text-[15px] leading-7 text-white/72">
-              아래 서비스는 조합원 로그인 후 이용할 수 있습니다.
+              {isLoggedIn 
+                ? "현재 조합원 전용 세션이 안전하게 활성화되어 있습니다."
+                : "아래 서비스는 조합원 로그인 후 이용할 수 있습니다."}
             </p>
           </div>
-          <Button asChild variant="secondary" size="lg">
-            <Link href="/login">조합원 로그인</Link>
-          </Button>
+          
+          {isLoggedIn ? (
+            <Button 
+              type="button" 
+              onClick={onOpenPortal} 
+              variant="secondary" 
+              size="lg"
+              className="rounded-full bg-white hover:bg-stone-surface text-charcoal-primary cursor-pointer font-bold"
+            >
+              조합원 자료실 열기
+            </Button>
+          ) : (
+            <Button asChild variant="secondary" size="lg" className="rounded-full">
+              <Link href="/login">조합원 로그인</Link>
+            </Button>
+          )}
         </div>
         <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {memberServices.map((service) => (
