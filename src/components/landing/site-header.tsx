@@ -38,6 +38,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   const isLoggedIn = !!session;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 드롭다운 외부 클릭 감지 클로저
@@ -51,6 +52,32 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleLibraryClick = () => {
+    if (isLoggedIn) {
+      if (onOpenPortal) onOpenPortal();
+      else window.dispatchEvent(new CustomEvent('open-portal'));
+    } else {
+      alert("이 정보는 대방동 지역주택조합원 전용 비공개 자료입니다.\n안전한 정보 보호를 위해 조합원 계정 로그인 후 열람하실 수 있습니다.");
+      router.push("/login");
+    }
+  };
+
+  const handleMyRoomClick = () => {
+    if (isLoggedIn && session) {
+      if (session.role === "ADMIN") {
+        router.push("/portal/admin");
+      } else if (session.role === "PENDING") {
+        router.push("/portal/pending");
+      } else if (session.role === "REFUND") {
+        router.push("/portal/refund");
+      } else {
+        router.push("/portal/member");
+      }
+    } else {
+      router.push("/login");
+    }
+  };
+
   const handleLogout = async () => {
     // 로그아웃 시 세션 웰컴 여부 클리어
     sessionStorage.removeItem("dbapt_login_welcomed");
@@ -60,13 +87,17 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
     router.refresh();
   };
 
+  const isPortalRoute = pathname?.startsWith("/portal");
+
   return (
-    <header 
-      className="sticky top-0 z-20 border-b border-stone-surface/80 bg-warm-canvas/90 backdrop-blur"
-      onMouseLeave={() => setIsMegaMenuOpen(false)}
-    >
+    <>
+      {!isPortalRoute && (
+        <header 
+          className="sticky top-0 z-50 border-b border-stone-surface/80 bg-warm-canvas/90 backdrop-blur"
+          onMouseLeave={() => setIsMegaMenuOpen(false)}
+        >
       <div className="site-container flex h-18 items-center justify-between gap-6">
-        <Link href="/" className="flex items-center gap-3 text-charcoal-primary">
+        <Link href="/" className="flex items-center gap-3 text-charcoal-primary" onClick={() => setIsMobileMenuOpen(false)}>
           <span className="flex size-9 items-center justify-center rounded-full bg-sky-blue text-sm font-semibold text-white">
             D
           </span>
@@ -143,8 +174,8 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
                 조합원 전용 자료실
               </button>
 
-              {/* 미니 프로필 드롭다운 위젯 */}
-              <div className="relative" ref={dropdownRef}>
+              {/* 미니 프로필 드롭다운 위젯 (데스크톱 md 해상도 이상에서만 노출) */}
+              <div className="hidden md:block relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white hover:bg-stone-surface border border-stone-surface shadow-sm text-xs text-graphite font-semibold transition cursor-pointer"
@@ -212,6 +243,26 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
               <Link href="/login">조합원 로그인</Link>
             </Button>
           )}
+
+          {/* 모바일 햄버거 토글 버튼 (md 해상도 미만 노출) */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={cn(
+              "flex md:hidden items-center justify-center p-2 rounded-full transition-all duration-200 cursor-pointer active:scale-95",
+              isMobileMenuOpen
+                ? "bg-midnight text-white"
+                : "bg-white hover:bg-stone-surface border border-stone-surface text-graphite shadow-sm"
+            )}
+            aria-label="모바일 메뉴"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              {isMobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -285,6 +336,213 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
           </div>
         </div>
       )}
-    </header>
+
+      {/* 5. 모바일 네비게이션 드로어 (DESIGN.md 규격: Warm Canvas, Inset Stone, Expressive spring motion) */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-x-0 bottom-16 top-18 z-40 md:hidden animate-in fade-in duration-200">
+          {/* 어두운 백드롭 오버레이 (클릭 시 닫힘) */}
+          <div 
+            className="absolute inset-0 bg-midnight/35 backdrop-blur-xs transition-opacity duration-200"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* 드로어 바디: warm-canvas (#fbfaf9), left to right slide-in (뒷배경 글씨 겹침 해결을 위해 bg-[#fbfaf9] 100% 불투명 적용) */}
+          <div 
+            className="absolute right-0 top-0 bottom-0 w-[300px] bg-[#fbfaf9] border-l border-stone-surface flex flex-col z-50 animate-in slide-in-from-right duration-300 ease-out"
+            style={{ 
+              boxShadow: "rgba(0, 0, 0, 0.08) -4px 0px 24px 0px"
+            }}
+          >
+            {/* 드로어 상단부: 타이틀 및 닫기 버튼 (글씨 비침 방지를 위해 bg-[#fbfaf9] 솔리드 적용) */}
+            <div className="flex h-18 items-center justify-between px-6 border-b border-stone-surface/80 bg-[#fbfaf9]">
+              <span className="text-[13px] font-bold text-charcoal-primary tracking-[-0.03em]">
+                전체 메뉴
+              </span>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 rounded-full hover:bg-stone-surface/80 text-ash transition cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* 중간: 스크롤 영역 네비게이션 메뉴 */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {megaMenuNavigation.map((category) => (
+                <div key={category.title} className="space-y-2">
+                  <h3 className="text-xs font-bold text-ash/80 tracking-wider uppercase border-b border-stone-surface/60 pb-1.5">
+                    {category.title}
+                  </h3>
+                  <ul className="space-y-1">
+                    {category.subItems.map((sub) => {
+                      const subGated = (sub as { isPortalGated?: boolean }).isPortalGated;
+                      const isGated = subGated && !isLoggedIn;
+                      
+                      return (
+                        <li key={sub.label}>
+                          {isGated ? (
+                            <button
+                              onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                alert("이 정보는 대방동 지역주택조합원 전용 비공개 자료입니다.\n안전한 정보 보호를 위해 조합원 계정 로그인 후 열람하실 수 있습니다.");
+                                router.push("/login");
+                              }}
+                              className="text-[13.5px] font-medium text-graphite/90 hover:text-ember-orange flex items-center justify-between w-full text-left py-1.5 transition cursor-pointer"
+                            >
+                              <span>{sub.label}</span>
+                              <span className="text-[10px] text-ash">🔒</span>
+                            </button>
+                          ) : subGated ? (
+                            <button
+                              onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                if (onOpenPortal) onOpenPortal();
+                                else window.dispatchEvent(new CustomEvent('open-portal'));
+                              }}
+                              className="text-[13.5px] font-medium text-graphite/90 hover:text-ember-orange flex items-center justify-between w-full text-left py-1.5 transition cursor-pointer"
+                            >
+                              <span>{sub.label}</span>
+                              <span className="text-[10px] text-ember-orange">🔓</span>
+                            </button>
+                          ) : (
+                            <Link
+                              href={sub.href}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className="text-[13.5px] font-medium text-graphite/90 hover:text-ember-orange flex items-center justify-between py-1.5 transition cursor-pointer"
+                            >
+                              <span>{sub.label}</span>
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            
+            {/* 하단: 로그인 상태 액션바 (글씨 비침 방지를 위해 bg-[#fbfaf9] 솔리드 적용) */}
+            <div className="p-6 border-t border-stone-surface/80 bg-[#fbfaf9] flex flex-col gap-3">
+              {isLoggedIn && session ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[13px] font-bold text-charcoal-primary">{session.name}님</p>
+                      <p className="text-[10px] text-ash mt-0.5">{getRoleLabel(session.role)}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="text-[11px] font-bold text-ember-orange hover:bg-ember-orange/5 px-3 py-1.5 rounded-full border border-ember-orange/10 transition cursor-pointer"
+                    >
+                      로그아웃
+                    </button>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      if (onOpenPortal) onOpenPortal();
+                      else window.dispatchEvent(new CustomEvent('open-portal'));
+                    }}
+                    className="w-full inline-flex items-center justify-center rounded-full bg-ember-orange text-white py-2.5 text-xs font-bold shadow-md hover:bg-[#e03700] active:scale-98 transition duration-200 cursor-pointer"
+                  >
+                    조합원 전용 자료실 열기
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-ash text-center mb-1">안전한 정보 보호를 위해 로그인이 필요합니다.</p>
+                  <Button asChild variant="secondary" className="w-full rounded-full cursor-pointer py-2.5" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link href="/login">조합원 로그인</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      </header>
+      )}
+
+    {/* 6. 모바일 앱 스타일 하단 고정 바 (DESIGN.md 규격: Warm Canvas, Stone Border, active Ember Orange) */}
+    <div className="fixed bottom-0 left-0 right-0 h-16 bg-warm-canvas/95 backdrop-blur-md border-t border-stone-surface/90 shadow-[rgba(0,0,0,0.04)_0px_-4px_16px_0px] flex items-center justify-around z-45 md:hidden pb-safe">
+        {/* 홈 탭 */}
+        <Link 
+          href="/" 
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
+            pathname === "/" ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+          )}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span className="text-[10px] font-bold mt-1 tracking-tight">홈</span>
+        </Link>
+
+        {/* 조합소개 탭 */}
+        <Link 
+          href="/about" 
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
+            pathname?.startsWith("/about") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+          )}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-[10px] font-bold mt-1 tracking-tight">조합소개</span>
+        </Link>
+
+        {/* 공개자료 탭 */}
+        <Link 
+          href="/disclosure" 
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
+            pathname?.startsWith("/disclosure") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+          )}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span className="text-[10px] font-bold mt-1 tracking-tight">공개자료</span>
+        </Link>
+
+        {/* 자료실 탭 (클릭 시 세션 체크) */}
+        <button 
+          onClick={handleLibraryClick}
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
+            (pathname?.startsWith("/portal") && pathname !== "/portal/admin" && pathname !== "/portal/pending" && pathname !== "/portal/refund") ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+          )}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+          </svg>
+          <span className="text-[10px] font-bold mt-1 tracking-tight">자료실</span>
+        </button>
+
+        {/* 조합원 마이룸/로그인 탭 */}
+        <button 
+          onClick={handleMyRoomClick}
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
+            (pathname === "/login" || (pathname?.startsWith("/portal") && (pathname === "/portal/admin" || pathname === "/portal/pending" || pathname === "/portal/refund" || pathname === "/portal/member"))) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+          )}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span className="text-[10px] font-bold mt-1 tracking-tight">
+            {isLoggedIn ? "조합원룸" : "로그인"}
+          </span>
+        </button>
+      </div>
+    </>
   );
 }

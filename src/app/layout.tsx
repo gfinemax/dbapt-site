@@ -24,7 +24,7 @@ export default async function RootLayout({
 
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="flex min-h-full flex-col font-sans pb-16 md:pb-0">
         <GlobalHeader session={session} />
         {children}
       </body>

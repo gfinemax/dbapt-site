@@ -290,8 +290,11 @@ export function DisclosureClient({ onOpenPortal, session }: DisclosureClientProp
 
       {/* 2. 스티키 서브 내비게이션 탭 바 (Sticky Sub Nav) */}
       <nav className="sticky top-18 z-10 bg-warm-canvas/90 backdrop-blur border-b border-stone-surface shadow-xs transition-all duration-200 py-2 space-y-2">
-        <div className="site-container max-w-4xl px-4">
-          <div className="flex justify-start md:justify-center items-center gap-1 sm:gap-4 overflow-x-auto whitespace-nowrap scrollbar-none py-1.5 text-sm font-semibold">
+        <div className="site-container max-w-4xl px-4 relative">
+          {/* 우측 페이드 아웃 그라데이션 오버레이 (모바일용 가로 스크롤 시각 유도) */}
+          <div className="absolute right-4 top-0 bottom-0 w-12 bg-gradient-to-l from-warm-canvas via-warm-canvas/60 to-transparent pointer-events-none z-10 md:hidden animate-in fade-in" />
+          
+          <div className="flex justify-start md:justify-center items-center gap-1 sm:gap-4 overflow-x-auto whitespace-nowrap scrollbar-none py-1.5 text-sm font-semibold pr-12 md:pr-0">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -316,8 +319,11 @@ export function DisclosureClient({ onOpenPortal, session }: DisclosureClientProp
         </div>
 
         {/* 서브메뉴 피처 라인 (Submenu Feature Row) */}
-        <div className="site-container max-w-4xl px-4 border-t border-stone-surface/50 pt-2">
-          <div className="flex justify-start md:justify-center items-center gap-1.5 sm:gap-2 overflow-x-auto whitespace-nowrap scrollbar-none py-1 text-xs">
+        <div className="site-container max-w-4xl px-4 border-t border-stone-surface/50 pt-2 relative">
+          {/* 우측 페이드 아웃 그라데이션 오버레이 (모바일용 가로 스크롤 시각 유도) */}
+          <div className="absolute right-4 top-2 bottom-0 w-12 bg-gradient-to-l from-warm-canvas via-warm-canvas/60 to-transparent pointer-events-none z-10 md:hidden animate-in fade-in" />
+          
+          <div className="flex justify-start md:justify-center items-center gap-1.5 sm:gap-2 overflow-x-auto whitespace-nowrap scrollbar-none py-1 text-xs pr-12 md:pr-0">
             {subMenus[activeTab].map((sub) => {
               const isActive = activeSubTab === sub.id;
               return (
