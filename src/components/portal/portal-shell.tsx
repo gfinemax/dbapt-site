@@ -88,6 +88,17 @@ export function PortalShell({
   const profile = portalProfiles[role];
   const isLoggedIn = !!session;
 
+  // 문서 목록을 로컬 상태로 관리하여 삭제/별표 변경 시 즉각 반영
+  const [managedDocs, setManagedDocs] = useState<Document[]>(documents);
+
+  const handleDocumentDeleted = (id: string) => {
+    setManagedDocs(prev => prev.filter(d => d.id !== id));
+  };
+
+  const handleDocumentStarToggled = (id: string, isStarred: boolean) => {
+    setManagedDocs(prev => prev.map(d => d.id === id ? { ...d, isStarred } : d));
+  };
+
   // 알림 아키텍처 상태 정의
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -572,11 +583,13 @@ export function PortalShell({
                 <h3 className="text-lg font-semibold text-charcoal-primary mb-2">공개 자료실</h3>
                 <p className="text-xs text-graphite mb-6">검색 및 카테고리 필터를 활용하여 해당 문서의 원본 PDF 파일을 안전하게 조회/다운로드할 수 있습니다.</p>
                 <DocumentTable 
-                  documents={documents} 
+                  documents={managedDocs} 
                   role={role} 
                   isDrawerMode={isDrawerMode} 
                   initialCategory={initialCategory}
                   initialSearch={initialSearch}
+                  onDocumentDeleted={handleDocumentDeleted}
+                  onDocumentStarToggled={handleDocumentStarToggled}
                 />
               </section>
             )}
@@ -587,11 +600,13 @@ export function PortalShell({
                 <h3 className="text-lg font-semibold text-charcoal-primary mb-2">전체 등록 문서 목록</h3>
                 <p className="text-xs text-graphite mb-6">등록된 전체 문서들의 세부 정보 및 상태입니다.</p>
                 <DocumentTable 
-                  documents={documents} 
+                  documents={managedDocs} 
                   role={role} 
                   isDrawerMode={isDrawerMode} 
                   initialCategory={initialCategory}
                   initialSearch={initialSearch}
+                  onDocumentDeleted={handleDocumentDeleted}
+                  onDocumentStarToggled={handleDocumentStarToggled}
                 />
               </section>
             )}

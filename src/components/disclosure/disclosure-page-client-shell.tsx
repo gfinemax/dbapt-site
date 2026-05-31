@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { AboutClient } from "@/components/about/about-client";
+import { PdfViewerModal } from "../portal/pdf-viewer-modal";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { DisclosureClient } from "./disclosure-client";
 import { PortalShell } from "@/components/portal/portal-shell";
-import { type Document } from "@/components/portal/document-table";
+import { type Document, type Attachment } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,18 @@ export function DisclosurePageClientShell({
   const [isDisclosureDrawerOpen, setIsDisclosureDrawerOpen] = useState(false);
   const [portalCategory, setPortalCategory] = useState<string>("all");
   const [portalSearch, setPortalSearch] = useState<string>("");
+  const [activeViewDoc, setActiveViewDoc] = useState<{ 
+    id: string; 
+    title: string; 
+    documentDate?: string;
+    fileSize?: number;
+    category?: string;
+    subCategory?: string | null;
+    description?: string | null;
+    attachmentName?: string | null;
+    attachments?: Attachment[];
+    publishedAt?: string | null;
+  } | null>(null);
 
   // 드로어 활성화 시 본문 스크롤 차단 처리 (디테일한 UX 보장)
   useEffect(() => {
@@ -133,6 +146,26 @@ export function DisclosurePageClientShell({
             setIsDrawerOpen(true);
           }} 
           session={session} 
+          documents={documents}
+          onViewDocument={(id, title) => {
+            const matched = documents.find(d => d.id === id);
+            if (matched) {
+              setActiveViewDoc({
+                id,
+                title,
+                documentDate: matched.documentDate || matched.publishedAt || matched.createdAt || undefined,
+                fileSize: matched.fileSize,
+                category: matched.category,
+                subCategory: matched.subCategory,
+                description: matched.description,
+                attachmentName: matched.attachmentName,
+                attachments: matched.attachments,
+                publishedAt: matched.publishedAt
+              });
+            } else {
+              setActiveViewDoc({ id, title });
+            }
+          }}
         />
       </main>
 
@@ -282,6 +315,27 @@ export function DisclosurePageClientShell({
         <div className="flex-1 mt-6">
           <DisclosureClient
             session={session}
+            documents={documents}
+            onViewDocument={(id, title) => {
+              setIsDisclosureDrawerOpen(false);
+              const matched = documents.find(d => d.id === id);
+              if (matched) {
+                setActiveViewDoc({
+                  id,
+                  title,
+                  documentDate: matched.documentDate || matched.publishedAt || matched.createdAt || undefined,
+                  fileSize: matched.fileSize,
+                  category: matched.category,
+                  subCategory: matched.subCategory,
+                  description: matched.description,
+                  attachmentName: matched.attachmentName,
+                  attachments: matched.attachments,
+                  publishedAt: matched.publishedAt
+                });
+              } else {
+                setActiveViewDoc({ id, title });
+              }
+            }}
             onOpenPortal={(cat, search) => {
               setIsDisclosureDrawerOpen(false);
               setPortalCategory(cat || "all");
@@ -291,6 +345,22 @@ export function DisclosurePageClientShell({
           />
         </div>
       </div>
+
+      {/* 실시간 보안 인라인 PDF 뷰어 모달 */}
+      {activeViewDoc && (
+        <PdfViewerModal
+          documentId={activeViewDoc.id}
+          documentTitle={activeViewDoc.title}
+          onClose={() => setActiveViewDoc(null)}
+          documentDate={activeViewDoc.documentDate}
+          fileSize={activeViewDoc.fileSize}
+          category={activeViewDoc.category}
+          subCategory={activeViewDoc.subCategory}
+          description={activeViewDoc.description}
+          publishedAt={activeViewDoc.publishedAt || undefined}
+          attachments={activeViewDoc.attachments}
+        />
+      )}
     </div>
   );
 }

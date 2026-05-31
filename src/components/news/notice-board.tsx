@@ -1,0 +1,420 @@
+"use client";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type NoticeBoardProps = {
+  isLoggedIn: boolean;
+  isAdmin: boolean;
+  newsList: any[];
+  onViewNotice?: (notice: any) => void;
+  onRefresh: () => Promise<void>;
+};
+
+const MOCK_NOTICES = [
+  {
+    id: "mock-notice-1",
+    title: "대방동 지역주택조합 공식 홈페이지 론칭 안내",
+    content: "당 조합은 주택법령의 의무 정보공개 대상 자료 일체를 투명하게 개방하고, 조합원 간의 신속한 양방향 소통을 보장하기 위해 본 정식 홈페이지를 론칭하였습니다. 앞으로 모든 공지사항과 사업 진행 과정이 본 창구를 통해 공정하게 공개됩니다. 조합원 동지 여러분의 적극적인 참여와 성원을 부탁드립니다.",
+    viewCount: 142,
+    isStarred: true,
+    author: { name: "사무국" },
+    createdAt: "2026.05.26",
+  },
+  {
+    id: "mock-notice-2",
+    title: "조합원 전용 정보공개 및 에스크로 자금보고 운영 규정",
+    content: "조합원님의 자산 가치 보호와 분담금 임의 유출 방지를 수호하기 위한 에스크로 계좌 실시간 입출금 명세서 및 외부감사 법인 감사보고서 열람이 조합원 전용 로그인 세션 내에서 안전하게 가동 중입니다. 승인된 조합원 락 권한 내에서 안심하고 투명하게 조회하십시오.",
+    viewCount: 95,
+    isStarred: false,
+    author: { name: "감사단" },
+    createdAt: "2026.05.25",
+  },
+  {
+    id: "mock-notice-3",
+    title: "사업시행인가 대비 설계·용역 실무 보고서 공람 안내",
+    content: "서울시 지구단위계획 결정 고시 완수 이후, 2026년 상반기 사업시행인가 본신청 및 건축심의 통과를 위해 협력사(하우드엔지니어링, 솔롱고스대행사 등)와 공조하여 작성한 설계 도면 부속서 및 월별 상황판을 공개자료실에 정밀 등재하였습니다.",
+    viewCount: 78,
+    isStarred: false,
+    author: { name: "사무국" },
+    createdAt: "2026.04.15",
+  },
+] as const;
+
+export function NoticeBoard({
+  isLoggedIn,
+  newsList = [],
+  onViewNotice,
+  onRefresh,
+}: NoticeBoardProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [activeViewNotice, setActiveViewNotice] = useState<any | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (showUploadModal || activeViewNotice) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showUploadModal, activeViewNotice]);
+
+  // Upload Form State
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploadContent, setUploadContent] = useState("");
+  const [uploadIsStarred, setUploadIsStarred] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Combine real database data with simulated demonstration mocks
+  const combinedData = useMemo(() => {
+    const realNotices = newsList.map((item) => ({
+      id: item.id,
+      title: item.title,
+      content: item.content,
+      viewCount: item.viewCount,
+      isStarred: item.isStarred,
+      author: item.author,
+      createdAt: item.createdAt.slice(0, 10).replace(/-/g, "."),
+      isReal: true,
+    }));
+
+    let filteredReal = realNotices;
+    let filteredMock = [...MOCK_NOTICES].map((n) => ({ ...n, isReal: false }));
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      filteredReal = filteredReal.filter((n) => n.title.toLowerCase().includes(q));
+      filteredMock = filteredMock.filter((n) => n.title.toLowerCase().includes(q));
+    }
+
+    // Starred notices go on top
+    const sortedReal = filteredReal.sort((a, b) => {
+      if (a.isStarred && !b.isStarred) return -1;
+      if (!a.isStarred && b.isStarred) return 1;
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+
+    return [...sortedReal, ...filteredMock];
+  }, [newsList, searchQuery]);
+
+  const starredNotices = useMemo(() => {
+    return combinedData.filter((n) => n.isStarred);
+  }, [combinedData]);
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadTitle.trim() || !uploadContent.trim()) {
+      alert("공지 제목과 본문 내용을 모두 입력해 주세요.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/news", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: uploadTitle,
+          content: uploadContent,
+          category: "NOTICE",
+          isStarred: uploadIsStarred,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        alert(errData.error || "공지사항 등록에 실패했습니다.");
+        return;
+      }
+
+      setUploadTitle("");
+      setUploadContent("");
+      setUploadIsStarred(false);
+      setShowUploadModal(false);
+      await onRefresh();
+    } catch (err) {
+      console.error(err);
+      alert("공지사항 등록 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* ★ 중요 공지사항 카드 덱 */}
+      {starredNotices.length > 0 && (
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <span className="text-[11px] font-bold text-[#ff3e00] tracking-wider uppercase font-mono flex items-center gap-1.5 select-none">
+            <span className="size-2 rounded-full bg-ember-orange animate-ping"></span>
+            ★ 중요 필독 공지사항
+          </span>
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {starredNotices.map((notice) => (
+              <div
+                key={notice.id}
+                onClick={() => {
+                  if (onViewNotice) {
+                    onViewNotice(notice);
+                  } else {
+                    setActiveViewNotice(notice);
+                  }
+                }}
+                className="stone-card bg-white p-5 rounded-2xl border border-stone-surface border-l-4 border-l-ember-orange hover:border-ember-orange hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono select-none mb-3">
+                    <span>📢 중요 공지</span>
+                    <span>{notice.createdAt}</span>
+                  </div>
+                  <h4 className="text-[13px] font-extrabold text-charcoal-primary leading-snug line-clamp-2">
+                    {notice.title}
+                  </h4>
+                  <p className="text-[11px] text-graphite/90 font-normal leading-relaxed line-clamp-3 pt-2">
+                    {notice.content}
+                  </p>
+                </div>
+                <div className="mt-5 pt-3 border-t border-stone-surface/60 flex items-center justify-between select-none">
+                  <span className="text-[9.5px] font-bold text-ash flex items-center gap-1">
+                    <span>👤</span> {notice.author?.name || "사무국"}
+                  </span>
+                  <span className="text-[10px] font-extrabold text-ember-orange hover:underline">
+                    열람하기 →
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 검색 바 & 신규 등록 (관리자용) */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="공지사항 제목 검색…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-stone-surface bg-white pl-10 pr-4 py-2.5 text-xs text-charcoal-primary placeholder:text-ash shadow-2xs focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue"
+          />
+        </div>
+
+        {isLoggedIn && (
+          <Button
+            onClick={() => setShowUploadModal(true)}
+            className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
+          >
+            + 신규 공지사항 등록
+          </Button>
+        )}
+      </div>
+
+      {/* 공지사항 목록 테이블 */}
+      <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-[#f7f6f3] border-b border-stone-surface text-xs font-bold text-ash">
+              <tr>
+                <th className="px-5 py-3.5 w-14 text-center">No.</th>
+                <th className="px-5 py-3.5">제목</th>
+                <th className="px-5 py-3.5 w-24 text-center">등록자</th>
+                <th className="px-5 py-3.5 w-28 text-center">작성일</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
+              {combinedData.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                    검색 조건에 맞는 공지사항이 존재하지 않습니다.
+                  </td>
+                </tr>
+              ) : (
+                combinedData.map((notice, idx) => (
+                  <tr
+                    key={notice.id}
+                    onClick={() => {
+                      if (onViewNotice) {
+                        onViewNotice(notice);
+                      } else {
+                        setActiveViewNotice(notice);
+                      }
+                    }}
+                    className={cn(
+                      "cursor-pointer transition-all duration-150 hover:bg-sky-blue/[0.03]",
+                      idx % 2 === 1 ? "bg-[#fdfcfa]" : "bg-white"
+                    )}
+                  >
+                    <td className="px-5 py-4 text-center text-xs text-ash font-mono tabular-nums">
+                      {idx + 1}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="text-[13px] leading-snug flex items-center gap-1.5 flex-wrap">
+                        {notice.isStarred && (
+                          <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                            ★ 중요
+                          </span>
+                        )}
+                        <span className={cn(notice.isStarred ? "font-bold text-charcoal-primary" : "text-charcoal-primary/90")}>
+                          {notice.title}
+                        </span>
+                        {notice.isReal && (
+                          <span className="bg-sky-blue/10 border border-sky-blue/20 text-sky-blue text-[8px] font-black scale-90 rounded px-1 shrink-0 select-none">실제자료</span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-center text-xs text-graphite/80 font-normal">
+                      {notice.author.name}
+                    </td>
+                    <td className="px-5 py-4 text-center text-xs text-ash font-mono">
+                      {notice.createdAt}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 1. 공지사항 상세 열람 모달 */}
+      {activeViewNotice && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0" onClick={() => setActiveViewNotice(null)} />
+          <div className="relative w-full max-w-xl rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
+              <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold text-sky-blue uppercase tracking-wider">
+                Official Notice
+              </span>
+              <button
+                onClick={() => setActiveViewNotice(null)}
+                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
+                {activeViewNotice.isStarred && (
+                  <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                    ★ 중요
+                  </span>
+                )}
+                {activeViewNotice.title}
+              </h3>
+              
+              <div className="flex items-center gap-3 text-[10.5px] font-bold text-ash font-mono border-y border-stone-surface/60 py-2">
+                <span>📂 분류: 조합 공지사항</span>
+                <span>•</span>
+                <span>작성자: {activeViewNotice.author.name}</span>
+                <span>•</span>
+                <span>등록일: {activeViewNotice.createdAt}</span>
+              </div>
+
+              <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal whitespace-pre-wrap pt-2">
+                {activeViewNotice.content}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. 신규 공지사항 등록 드로어 (관리자용) */}
+      {mounted && showUploadModal && createPortal(
+        <>
+          <div
+            onClick={() => setShowUploadModal(false)}
+            className="fixed inset-0 z-[120] bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+          />
+          <div
+            className="fixed inset-y-0 right-0 z-[130] w-full max-w-lg bg-warm-canvas border-l border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 ease-out"
+            aria-label="신규 공지 작성 드로어"
+          >
+            <div className="flex items-center justify-between pb-6 border-b border-stone-surface mb-6">
+              <h3 className="text-base font-black text-charcoal-primary flex items-center gap-1.5">
+                <span>📢</span> 신규 공지사항 작성
+              </h3>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-xs font-medium text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+
+            <form onSubmit={handleUploadSubmit} className="space-y-5 flex-1">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  공지 제목 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="공지사항의 제목을 입력하십시오."
+                  value={uploadTitle}
+                  onChange={(e) => setUploadTitle(e.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  공지 내용 *
+                </label>
+                <textarea
+                  required
+                  rows={8}
+                  placeholder="공지사항 세부 내용을 상세히 기술해 주십시오."
+                  value={uploadContent}
+                  onChange={(e) => setUploadContent(e.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30 resize-none leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center gap-2.5 py-1 select-none">
+                <input
+                  type="checkbox"
+                  id="star-checkbox"
+                  checked={uploadIsStarred}
+                  onChange={(e) => setUploadIsStarred(e.target.checked)}
+                  className="size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
+                />
+                <label htmlFor="star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
+                  중요 공지사항으로 상단 고정 표시 (★)
+                </label>
+              </div>
+
+              <div className="pt-5 border-t border-stone-surface flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-6 h-10 cursor-pointer disabled:opacity-50 transition-all duration-200 active:scale-95"
+                >
+                  {isSubmitting ? "등록 중…" : "공지사항 즉시 등록"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </>,
+        document.body
+      )}
+    </div>
+  );
+}

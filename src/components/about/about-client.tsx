@@ -8,7 +8,7 @@ type AboutClientProps = {
   onOpenPortal?: () => void;
 };
 
-type TabId = "greetings" | "history" | "organization" | "commitment" | "location";
+type TabId = "greetings" | "commitment" | "history" | "organization" | "location";
 
 // [사업추진 전체 경과보고 일람 데이터 전문]
 const fullHistoryData = [
@@ -102,9 +102,9 @@ const fullHistoryData = [
 
 const tabs = [
   { id: "greetings", label: "조합장 인사말" },
+  { id: "commitment", label: "조합의 3대 약속" },
   { id: "history", label: "조합 연혁" },
   { id: "organization", label: "조직 및 협력사" },
-  { id: "commitment", label: "조합의 3대 약속" },
   { id: "location", label: "찾아오시는 길" },
 ] as const;
 
@@ -251,6 +251,64 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                   대방동 지역주택조합 조합장  <span className="font-mono text-base ml-2 text-charcoal-primary">안동연(인)</span>
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section D: 조합의 3대 약속 */}
+        <section id="section-commitment" className="scroll-mt-36">
+          <div className="text-center max-w-xl mx-auto mb-12 sm:mb-16">
+            <p className="text-xs font-bold text-ember-orange tracking-widest uppercase">OUR COMMITMENT</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal-primary tracking-tight leading-tight mt-3">
+              오직 조합원만을 바라보는 3대 핵심 서약
+            </h2>
+            <p className="text-xs sm:text-sm text-graphite mt-3">
+              그 어떤 유혹과 난관 속에서도 흔들리지 않고 준수할 당 조합의 청렴 원칙입니다.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* 약속 1 */}
+            <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex flex-col justify-between text-center relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-1 bg-ember-orange" />
+              <span className="text-3xl mx-auto select-none mt-2">🛡️</span>
+              <h3 className="text-base font-bold text-charcoal-primary mt-4">100% 투명성 원칙</h3>
+              <p className="text-xs text-graphite mt-3 leading-5">
+                당 조합은 법률 규정을 넘어 분기별 자금 흐름과 시공 및 설계 일체의 계약 원본을 보안 자료실에 남김없이 공유하여 모든 불합리한 밀실 담합 의구심을 원천적으로 불식시킵니다.
+              </p>
+              {onOpenPortal && (
+                <Button 
+                  onClick={onOpenPortal} 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3 mx-auto rounded-full text-[10px] font-bold border-ember-orange text-ember-orange hover:bg-ember-orange/5 cursor-pointer h-7 px-3 shrink-0"
+                >
+                  보안 자료실 열기
+                </Button>
+              )}
+              <div className="mt-5 text-[10px] text-ash font-medium">자금 공개 준수 서약</div>
+            </div>
+
+            {/* 약속 2 */}
+            <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex flex-col justify-between text-center relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-1 bg-midnight" />
+              <span className="text-3xl mx-auto select-none mt-2">⚡</span>
+              <h3 className="text-base font-bold text-charcoal-primary mt-4">안정적 신속 추진</h3>
+              <p className="text-xs text-graphite mt-3 leading-5">
+                토지 소유자 동의 확보 및 인허가 유관 부서와의 실시간 핫라인 소통 행정을 실현하여, 사업 지연에 따른 조합원님들의 추가 분담금 가중 피로를 사전에 예방하고 빠르게 전진합니다.
+              </p>
+              <div className="mt-5 text-[10px] text-ash font-medium">사업 마일스톤 준수</div>
+            </div>
+
+            {/* 약속 3 */}
+            <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex flex-col justify-between text-center relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-1 bg-sky-blue" />
+              <span className="text-3xl mx-auto select-none mt-2">💬</span>
+              <h3 className="text-base font-bold text-charcoal-primary mt-4">민주적인 양방향 소통</h3>
+              <p className="text-xs text-graphite mt-3 leading-5">
+                형식적인 공청회에 머무르지 않고 모바일 건의 창구 및 조합원 정기 소통 서면/투표 서비스를 안전 가동하여 조합원님들의 뜻을 100% 실시간 집행부 행정에 전폭 반영하겠습니다.
+              </p>
+              <div className="mt-5 text-[10px] text-ash font-medium">열린 소통 창구 개방</div>
             </div>
           </div>
         </section>
@@ -527,64 +585,6 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                   대방동의 우수한 남향형 일조 가치 및 통풍성 극대화를 위해 4-Bay 판상형 및 혁신적인 수납 강화 특화 설계를 입체적으로 조율하여, 일반 재건축에 필적하는 명품 평면 레이아웃 도면 작성을 완수하고 있습니다.
                 </p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Section D: 조합의 3대 약속 */}
-        <section id="section-commitment" className="scroll-mt-36">
-          <div className="text-center max-w-xl mx-auto mb-12 sm:mb-16">
-            <p className="text-xs font-bold text-ember-orange tracking-widest uppercase">OUR COMMITMENT</p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal-primary tracking-tight leading-tight mt-3">
-              오직 조합원만을 바라보는 3대 핵심 서약
-            </h2>
-            <p className="text-xs sm:text-sm text-graphite mt-3">
-              그 어떤 유혹과 난관 속에서도 흔들리지 않고 준수할 당 조합의 청렴 원칙입니다.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {/* 약속 1 */}
-            <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex flex-col justify-between text-center relative overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-1 bg-ember-orange" />
-              <span className="text-3xl mx-auto select-none mt-2">🛡️</span>
-              <h3 className="text-base font-bold text-charcoal-primary mt-4">100% 투명성 원칙</h3>
-              <p className="text-xs text-graphite mt-3 leading-5">
-                당 조합은 법률 규정을 넘어 분기별 자금 흐름과 시공 및 설계 일체의 계약 원본을 보안 자료실에 남김없이 공유하여 모든 불합리한 밀실 담합 의구심을 원천적으로 불식시킵니다.
-              </p>
-              {onOpenPortal && (
-                <Button 
-                  onClick={onOpenPortal} 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-3 mx-auto rounded-full text-[10px] font-bold border-ember-orange text-ember-orange hover:bg-ember-orange/5 cursor-pointer h-7 px-3 shrink-0"
-                >
-                  보안 자료실 열기
-                </Button>
-              )}
-              <div className="mt-5 text-[10px] text-ash font-medium">자금 공개 준수 서약</div>
-            </div>
-
-            {/* 약속 2 */}
-            <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex flex-col justify-between text-center relative overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-1 bg-midnight" />
-              <span className="text-3xl mx-auto select-none mt-2">⚡</span>
-              <h3 className="text-base font-bold text-charcoal-primary mt-4">안정적 신속 추진</h3>
-              <p className="text-xs text-graphite mt-3 leading-5">
-                토지 소유자 동의 확보 및 인허가 유관 부서와의 실시간 핫라인 소통 행정을 실현하여, 사업 지연에 따른 조합원님들의 추가 분담금 가중 피로를 사전에 예방하고 빠르게 전진합니다.
-              </p>
-              <div className="mt-5 text-[10px] text-ash font-medium">사업 마일스톤 준수</div>
-            </div>
-
-            {/* 약속 3 */}
-            <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex flex-col justify-between text-center relative overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-1 bg-sky-blue" />
-              <span className="text-3xl mx-auto select-none mt-2">💬</span>
-              <h3 className="text-base font-bold text-charcoal-primary mt-4">민주적인 양방향 소통</h3>
-              <p className="text-xs text-graphite mt-3 leading-5">
-                형식적인 공청회에 머무르지 않고 모바일 건의 창구 및 조합원 정기 소통 서면/투표 서비스를 안전 가동하여 조합원님들의 뜻을 100% 실시간 집행부 행정에 전폭 반영하겠습니다.
-              </p>
-              <div className="mt-5 text-[10px] text-ash font-medium">열린 소통 창구 개방</div>
             </div>
           </div>
         </section>

@@ -30,24 +30,46 @@ model User {
   // 관계 정의
   documentLogs  DocumentLog[]
   refundInfo    RefundInfo?
+  coopNews      CoopNews[]
+  freePosts     FreePost[]
+  freeComments  FreeComment[]
 }
 
 // 2. 정보공개 및 회계 보고 문서
 model Document {
-  id           String       @id @default(uuid())
-  title        String                                // 문서 제목
-  description  String?                               // 문서 설명
-  category     String                                // DISCLOSURE, ACCOUNTING, NOTICE
-  filePath     String                                // 업로드된 내부 파일 경로 (보안 저장)
-  fileName     String                                // 원본 파일명
-  fileSize     Int                                   // 파일 용량 (bytes)
-  status       String       @default("PENDING")      // PENDING, APPROVED
-  publishedAt  DateTime?                             // 실제 조합원 대상 공개 일시
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id             String       @id @default(uuid())
+  title          String                                // 문서 제목
+  description    String?                               // 문서 설명
+  category       String                                // DISCLOSURE, ACCOUNTING, NOTICE
+  subCategory    String?                               // 세부 카테고리 (예: 총회 의사록, 이사회 회의록 등)
+  filePath       String                                // 업로드된 내부 파일 경로 (보안 저장)
+  fileName       String                                // 원본 파일명
+  fileSize       Int                                   // 파일 용량 (bytes)
+  attachmentPath String?                               // 추가 첨부파일 저장 경로
+  attachmentName String?                               // 추가 첨부파일 원본 파일명
+  attachmentSize Int?                                  // 추가 첨부파일 용량 (bytes)
+  isStarred      Boolean      @default(false)           // 중요 문서 별표 마킹
+  status         String       @default("PENDING")      // PENDING, APPROVED
+  publishedAt    DateTime?                             // 실제 조합원 대상 공개 일시
+  documentDate   DateTime     @default(now())          // 실제 총회 개최일 / 이사회 개최일 / 공문 발생일
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   // 관계 정의
   logs         DocumentLog[]
+  attachments  Attachment[]
+}
+
+// 2.5. 문서 추가 첨부파일 정보 (1:N 관계)
+model Attachment {
+  id         String   @id @default(uuid())
+  documentId String
+  filePath   String                                // 업로드된 내부 파일 경로 (보안 저장)
+  fileName   String                                // 원본 파일명
+  fileSize   Int                                   // 파일 용량 (bytes)
+  createdAt  DateTime @default(now())
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
 
 // 3. 보안 감사 로그 (열람 및 다운로드 이력)
@@ -105,5 +127,52 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// 5. 조합소식 (공지사항 및 주/월간소식)
+model CoopNews {
+  id           String      @id @default(uuid())
+  category     String      // NOTICE (공지사항), WEEKLY_MONTHLY (주/월간소식)
+  title        String
+  content      String      // markdown or HTML text
+  viewCount    Int         @default(0)
+  isStarred    Boolean     @default(false)
+  imagePath    String?     // 주/월간소식 메인 썸네일
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  authorId     String
+  author       User        @relation(fields: [authorId], references: [id])
+}
+
+// 6. 자유게시판 글
+model FreePost {
+  id           String      @id @default(uuid())
+  title        String
+  content      String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  authorId     String
+  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments     FreeComment[]
+}
+
+// 7. 자유게시판 댓글
+model FreeComment {
+  id           String      @id @default(uuid())
+  content      String
+  createdAt    DateTime    @default(now())
+  postId       String
+  post         FreePost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// 8. FAQ 자주 묻는 질문
+model FAQ {
+  id           String      @id @default(uuid())
+  question     String
+  answer       String
+  category     String      // LOAN (중도금대출), TAX (세무), ADMIN (조합행정)
+  createdAt    DateTime    @default(now())
 }
 

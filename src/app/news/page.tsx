@@ -1,0 +1,121 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { Suspense } from "react";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { NewsClient } from "@/components/news/news-client";
+
+export default async function NewsPage() {
+  const session = (await getSession()) as {
+    id: string;
+    loginId: string | null;
+    name: string;
+    role: string;
+    email?: string;
+  } | null;
+
+  let newsList: any[] = [];
+  let freePosts: any[] = [];
+  let faqs: any[] = [];
+
+  try {
+    // 1. 공지사항 및 조합뉴스(주/월간소식) 조회 (Public)
+    const newsData = await prisma.coopNews.findMany({
+      include: {
+        author: {
+          select: {
+            name: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    newsList = newsData.map((item) => ({
+      ...item,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+      author: {
+        name: item.author.name || "관리자",
+        role: item.author.role,
+      },
+    }));
+
+    // 2. 로그인 세션이 있을 경우 자유게시판 및 FAQ 수집 (MEMBER, ADMIN, REFUND 전용)
+    if (session) {
+      const postsData = await prisma.freePost.findMany({
+        include: {
+          author: {
+            select: {
+              name: true,
+              loginId: true,
+              role: true,
+            },
+          },
+          comments: {
+            include: {
+              author: {
+                select: {
+                  name: true,
+                  loginId: true,
+                  role: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      freePosts = postsData.map((post) => ({
+        ...post,
+        createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
+        author: {
+          name: post.author.name || "조합원",
+          loginId: post.author.loginId || "social",
+          role: post.author.role,
+        },
+        comments: post.comments.map((c) => ({
+          ...c,
+          createdAt: c.createdAt.toISOString(),
+          author: {
+            name: c.author.name || "조합원",
+            loginId: c.author.loginId || "social",
+            role: c.author.role,
+          },
+        })),
+      }));
+
+      const faqData = await prisma.fAQ.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+
+      faqs = faqData.map((faq) => ({
+        ...faq,
+        createdAt: faq.createdAt.toISOString(),
+      }));
+    }
+  } catch (e) {
+    console.error("Error loading news page server data:", e);
+  }
+
+  return (
+    <main className="flex-1 animate-page-in min-h-screen bg-warm-canvas">
+      <Suspense fallback={
+        <div className="w-full min-h-[400px] flex items-center justify-center bg-warm-canvas">
+          <div className="text-xs font-bold text-graphite/60 animate-pulse">정보를 로드하고 있습니다...</div>
+        </div>
+      }>
+        <NewsClient
+          session={session}
+          initialNewsList={newsList}
+          initialFreePosts={freePosts}
+          initialFaqs={faqs}
+        />
+      </Suspense>
+    </main>
+  );
+}

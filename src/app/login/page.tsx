@@ -9,7 +9,7 @@ import { loginAction, googleMockLoginAction } from "@/lib/auth";
 export default function LoginPage() {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(loginAction, null);
-  const showDemoCredentials = process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === "true";
+  const showDemoCredentials = process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === "true" || process.env.NODE_ENV === "development";
 
   const handleGoogleLogin = async () => {
     const res = await googleMockLoginAction();

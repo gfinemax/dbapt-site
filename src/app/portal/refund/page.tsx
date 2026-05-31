@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { serializeDocuments } from "@/lib/document-serializer";
 
 import { type Document } from "@/components/portal/document-table";
 
@@ -26,14 +27,12 @@ export default async function RefundPortalPage() {
       // 1. Fetch approved documents
       const docs = await prisma.document.findMany({
         where: { status: "APPROVED" },
-        orderBy: { createdAt: "desc" },
+        include: {
+          attachments: true,
+        },
+        orderBy: { documentDate: "desc" },
       });
-      documents = docs.map(doc => ({
-        ...doc,
-        publishedAt: doc.publishedAt ? doc.publishedAt.toISOString() : null,
-        createdAt: doc.createdAt.toISOString(),
-        updatedAt: doc.updatedAt.toISOString(),
-      }));
+      documents = serializeDocuments(docs);
 
       // 2. Fetch refundInfo linked to user
       const refundRecord = await prisma.refundInfo.findUnique({

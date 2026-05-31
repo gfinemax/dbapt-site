@@ -1,25 +1,52 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 type DocumentUploadFormProps = {
   onSuccess?: () => void;
+  defaultCategory?: string;
+  defaultSubCategory?: string;
 };
 
-export function DocumentUploadForm({ onSuccess }: DocumentUploadFormProps) {
+export function DocumentUploadForm({ 
+  onSuccess, 
+  defaultCategory = "DISCLOSURE", 
+  defaultSubCategory = "총회 의사록" 
+}: DocumentUploadFormProps) {
+  // 오늘 날짜 구하기 (KST 기준 YYYY-MM-DD)
+  const getTodayString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("DISCLOSURE");
+  const [category, setCategory] = useState(defaultCategory);
+  const [subCategory, setSubCategory] = useState(defaultSubCategory);
+  const [documentDate, setDocumentDate] = useState(getTodayString());
+  const [publishedAt, setPublishedAt] = useState(getTodayString());
   const [file, setFile] = useState<File | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isStarred, setIsStarred] = useState(false);
+
+  // 폴더 카드 변경 시 기본값이 실시간으로 폼에 반영되도록 보장
+  useEffect(() => {
+    setCategory(defaultCategory);
+    setSubCategory(defaultSubCategory);
+  }, [defaultCategory, defaultSubCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !category || !file) {
-      setError("필수 항목(제목, 카테고리, 파일)을 채워주세요.");
+    if (!title || !category || !file || !documentDate || !publishedAt) {
+      setError("필수 항목(제목, 카테고리, 발생일, 등록일, 파일)을 채워주세요.");
       return;
     }
 
@@ -31,7 +58,19 @@ export function DocumentUploadForm({ onSuccess }: DocumentUploadFormProps) {
     formData.append("title", title);
     formData.append("description", description);
     formData.append("category", category);
+    if (category === "DISCLOSURE") {
+      formData.append("subCategory", subCategory);
+    }
+    formData.append("documentDate", documentDate);
+    formData.append("publishedAt", publishedAt);
     formData.append("file", file);
+    formData.append("isStarred", String(isStarred));
+    
+    if (attachments.length > 0) {
+      attachments.forEach((att) => {
+        formData.append("attachments", att);
+      });
+    }
 
     try {
       const res = await fetch("/api/documents", {
@@ -48,11 +87,19 @@ export function DocumentUploadForm({ onSuccess }: DocumentUploadFormProps) {
       setSuccess(true);
       setTitle("");
       setDescription("");
+      setSubCategory(defaultSubCategory);
+      setDocumentDate(getTodayString());
+      setPublishedAt(getTodayString());
       setFile(null);
+      setAttachments([]);
+      setIsStarred(false);
       
       // Reset file input element
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
+
+      const attachmentInput = document.getElementById("attachment-upload") as HTMLInputElement;
+      if (attachmentInput) attachmentInput.value = "";
 
       if (onSuccess) onSuccess();
     } catch (e) {
@@ -109,14 +156,22 @@ export function DocumentUploadForm({ onSuccess }: DocumentUploadFormProps) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+          <div className={category === "DISCLOSURE" ? "" : "sm:col-span-2"}>
             <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-cat">
               카테고리 *
             </label>
             <select
               id="upload-cat"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCategory(val);
+                if (val !== "DISCLOSURE") {
+                  setSubCategory("");
+                } else {
+                  setSubCategory("총회 의사록");
+                }
+              }}
               className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
             >
               <option value="DISCLOSURE">의무 정보 공개 자료</option>
@@ -125,7 +180,54 @@ export function DocumentUploadForm({ onSuccess }: DocumentUploadFormProps) {
             </select>
           </div>
 
+          {category === "DISCLOSURE" && (
+            <div>
+              <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-subcat">
+                문서함 세부 분류 *
+              </label>
+              <select
+                id="upload-subcat"
+                value={subCategory}
+                onChange={(e) => setSubCategory(e.target.value)}
+                className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
+              >
+                <option value="총회 의사록">총회 의사록</option>
+                <option value="이사회 회의록">이사회 회의록</option>
+                <option value="수발신 공문">수발신 공문</option>
+                <option value="사업시행계획">사업시행계획</option>
+              </select>
+            </div>
+          )}
+
           <div>
+            <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-date">
+              발생일 / 개최일 / 수발신일 *
+            </label>
+            <input
+              id="upload-date"
+              type="date"
+              value={documentDate}
+              onChange={(e) => setDocumentDate(e.target.value)}
+              required
+              className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-published-at">
+              등록일 (공개일) *
+            </label>
+            <input
+              id="upload-published-at"
+              type="date"
+              value={publishedAt}
+              onChange={(e) => setPublishedAt(e.target.value)}
+              required
+              className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
             <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="file-upload">
               첨부 파일 (PDF) *
             </label>
@@ -141,6 +243,62 @@ export function DocumentUploadForm({ onSuccess }: DocumentUploadFormProps) {
               }}
               className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
             />
+          </div>
+
+          <div className="sm:col-span-2 flex items-center gap-2 py-1">
+            <input
+              id="upload-starred"
+              type="checkbox"
+              checked={isStarred}
+              onChange={(e) => setIsStarred(e.target.checked)}
+              className="size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+            />
+            <label className="text-xs font-semibold text-charcoal-primary select-none cursor-pointer" htmlFor="upload-starred">
+              중요 문서로 표시
+            </label>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="attachment-upload">
+              추가 첨부파일 (선택, 최대 10개)
+            </label>
+            <input
+              id="attachment-upload"
+              type="file"
+              multiple
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  const filesArray = Array.from(e.target.files);
+                  if (filesArray.length > 10) {
+                    setError("추가 첨부파일은 최대 10개까지만 등록 가능합니다.");
+                    setAttachments([]);
+                    e.target.value = "";
+                    return;
+                  }
+                  setError("");
+                  setAttachments(filesArray);
+                } else {
+                  setAttachments([]);
+                }
+              }}
+              className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
+            />
+            {/* 선택된 다중 파일 목록 */}
+            {attachments.length > 0 && (
+              <div className="mt-2.5 rounded-xl border border-stone-surface bg-[#f8f7f4] p-3 space-y-1.5">
+                <span className="text-[11px] font-bold text-charcoal-primary select-none block">
+                  📎 선택된 첨부파일 ({attachments.length}개):
+                </span>
+                <ul className="text-[10px] text-graphite space-y-1 list-disc list-inside">
+                  {attachments.map((att, idx) => (
+                    <li key={idx} className="truncate">
+                      <span className="font-medium text-graphite/90">{att.name}</span>
+                      <span className="text-ash font-mono text-[9px] ml-1">({(att.size / 1024).toFixed(1)} KB)</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 

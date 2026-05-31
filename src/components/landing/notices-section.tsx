@@ -10,7 +10,7 @@ export function NoticesSection() {
             <p className="mb-2 text-sm font-medium text-ember-orange">조합소식</p>
             <h2 className="text-3xl">공지사항</h2>
           </div>
-          <Link href="#notices" className="text-sm font-medium text-graphite hover:text-ember-orange">
+          <Link href="/news?tab=notice" className="text-sm font-medium text-graphite hover:text-ember-orange">
             전체보기
           </Link>
         </div>

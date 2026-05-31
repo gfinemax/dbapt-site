@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { serializeDocuments } from "@/lib/document-serializer";
 import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
@@ -26,17 +27,20 @@ export default async function DisclosurePage() {
 
   if (session) {
     try {
-      // 1. MEMBER, ADMIN, REFUND 에 따라 문서 조회
+      const whereClause: { status?: string } = {};
+      if (session.role !== "ADMIN") {
+        whereClause.status = "APPROVED";
+      }
+
       const docs = await prisma.document.findMany({
-        orderBy: { createdAt: "desc" },
+        where: whereClause,
+        include: {
+          attachments: true,
+        },
+        orderBy: { documentDate: "desc" },
       });
       
-      documents = docs.map(doc => ({
-        ...doc,
-        publishedAt: doc.publishedAt ? doc.publishedAt.toISOString() : null,
-        createdAt: doc.createdAt.toISOString(),
-        updatedAt: doc.updatedAt.toISOString(),
-      }));
+      documents = serializeDocuments(docs);
 
       // 2. REFUND 전용 정산 데이터 수집
       if (session.role === "REFUND") {

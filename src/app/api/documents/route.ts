@@ -29,7 +29,10 @@ export async function GET(request: Request) {
 
     const documents = await prisma.document.findMany({
       where: whereClause,
-      orderBy: { createdAt: "desc" },
+      include: {
+        attachments: true,
+      },
+      orderBy: { documentDate: "desc" },
     });
 
     return NextResponse.json({ documents });
@@ -51,7 +54,13 @@ export async function POST(request: Request) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const category = formData.get("category") as string;
+    const subCategory = formData.get("subCategory") as string;
+    const documentDateStr = formData.get("documentDate") as string;
+    const publishedAtStr = formData.get("publishedAt") as string;
     const file = formData.get("file") as File | null;
+    const attachments = formData.getAll("attachments") as File[];
+    const isStarredStr = formData.get("isStarred") as string;
+    const isStarred = isStarredStr === "true";
 
     if (!title || !category || !file) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 카테고리, 파일)이 누락되었습니다." }, { status: 400 });
@@ -59,17 +68,43 @@ export async function POST(request: Request) {
 
     const storagePath = await uploadDocumentFile(file);
 
+    const attachmentsData: { filePath: string; fileName: string; fileSize: number }[] = [];
+    const validAttachments = attachments.slice(0, 10);
+
+    for (const att of validAttachments) {
+      if (att && att.size > 0) {
+        const attPath = await uploadDocumentFile(att);
+        attachmentsData.push({
+          filePath: attPath,
+          fileName: att.name,
+          fileSize: att.size,
+        });
+      }
+    }
+
+    const documentDate = documentDateStr ? new Date(documentDateStr) : new Date();
+    const publishedAt = publishedAtStr ? new Date(publishedAtStr) : new Date();
+
     // Save record to DB
     const document = await prisma.document.create({
       data: {
         title,
         description: description || null,
         category,
+        subCategory: subCategory || null,
         filePath: storagePath,
         fileName: file.name,
         fileSize: file.size,
         status: "APPROVED", // Auto-approved by default in this implementation slice
-        publishedAt: new Date(),
+        isStarred,
+        publishedAt,
+        documentDate,
+        attachments: {
+          create: attachmentsData,
+        },
+      },
+      include: {
+        attachments: true,
       },
     });
 

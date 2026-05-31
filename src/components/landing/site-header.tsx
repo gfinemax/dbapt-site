@@ -37,7 +37,6 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   const pathname = usePathname();
   const isLoggedIn = !!session;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<string | null>(null);
@@ -124,10 +123,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   return (
     <>
       {!isPortalRoute && (
-        <header 
-          className="sticky top-0 z-50 border-b border-stone-surface/80 bg-warm-canvas/90 backdrop-blur"
-          onMouseLeave={() => setIsMegaMenuOpen(false)}
-        >
+        <header className="sticky top-0 z-50 border-b border-stone-surface/80 bg-warm-canvas/90 backdrop-blur">
       <div className="site-container flex h-18 items-center justify-between gap-6">
         <Link href="/" className="flex items-center gap-3 text-charcoal-primary" onClick={() => setIsMobileMenuOpen(false)}>
           <span className="flex size-9 items-center justify-center rounded-full bg-sky-blue text-sm font-semibold text-white">
@@ -165,30 +161,6 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
               );
             })}
           </nav>
-          
-          {/* 구분용 실선 피처 */}
-          <div className="h-4 w-px bg-stone-surface" />
-
-          {/* 사이트맵 전용 액션 단추 (DESIGN.md 규격: Pill shape, Border-stone-surface, active midnight) */}
-          <button
-            onMouseEnter={() => setIsMegaMenuOpen(true)}
-            onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all duration-200 cursor-pointer shadow-xs active:scale-95",
-              isMegaMenuOpen
-                ? "bg-midnight text-white border-midnight"
-                : "bg-white hover:bg-stone-surface border-stone-surface text-graphite hover:text-charcoal-primary"
-            )}
-          >
-            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              {isMegaMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-            <span>사이트맵</span>
-          </button>
         </div>
         
         {/* 우측 인증 액션 셸 */}
@@ -297,78 +269,6 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
           </button>
         </div>
       </div>
-
-      {/* 4. 메가메뉴 대형 드롭다운 패널 (DESIGN.md 규격에 맞게 화이트 백그라운드 + 인셋 스톤 보더 느낌) */}
-      {isMegaMenuOpen && (
-        <div
-          onMouseEnter={() => setIsMegaMenuOpen(true)}
-          onMouseLeave={() => setIsMegaMenuOpen(false)}
-          className="absolute left-0 right-0 top-full bg-white/98 backdrop-blur-md border-b border-stone-surface/85 shadow-xl animate-in slide-in-from-top-1.5 fade-in duration-200"
-          style={{ zIndex: 19 }}
-        >
-          <div className="site-container max-w-5xl py-8 px-6 grid grid-cols-5 gap-8">
-            {megaMenuNavigation.map((category) => (
-              <div key={category.title} className="flex flex-col">
-                {/* 대분류 타이틀 */}
-                <Link
-                  href={category.href}
-                  className="font-extrabold text-[13.5px] text-charcoal-primary pb-2 mb-3.5 border-b border-stone-surface/75 inline-block hover:text-ember-orange transition-colors cursor-pointer"
-                  onClick={() => setIsMegaMenuOpen(false)}
-                >
-                  {category.title}
-                </Link>
-                
-                {/* 소분류 리스트 */}
-                <ul className="space-y-1.5 flex flex-col">
-                  {category.subItems.map((sub) => {
-                    const subGated = (sub as { isPortalGated?: boolean }).isPortalGated;
-                    const isGated = subGated && !isLoggedIn;
-                    
-                    return (
-                      <li key={sub.label}>
-                        {isGated ? (
-                          <button
-                            onClick={() => {
-                              setIsMegaMenuOpen(false);
-                              alert("이 정보는 대방동 지역주택조합원 전용 비공개 자료입니다.\n안전한 정보 보호를 위해 조합원 계정 로그인 후 열람하실 수 있습니다.");
-                              router.push("/login");
-                            }}
-                            className="text-[12.5px] font-medium text-graphite/85 hover:text-ember-orange active:translate-x-0.5 transition-all duration-150 block text-left w-full cursor-pointer py-1"
-                          >
-                            {sub.label}
-                            <span className="ml-1 text-[10px] text-ash select-none">🔒</span>
-                          </button>
-                        ) : subGated ? (
-                          <button
-                            onClick={() => {
-                              setIsMegaMenuOpen(false);
-                              if (onOpenPortal) onOpenPortal();
-                              else window.dispatchEvent(new CustomEvent('open-portal'));
-                            }}
-                            className="text-[12.5px] font-medium text-graphite/85 hover:text-ember-orange active:translate-x-0.5 transition-all duration-150 block text-left w-full cursor-pointer py-1"
-                          >
-                            {sub.label}
-                            <span className="ml-1 text-[10px] text-ember-orange select-none">🔓</span>
-                          </button>
-                        ) : (
-                          <Link
-                            href={sub.href}
-                            onClick={() => setIsMegaMenuOpen(false)}
-                            className="text-[12.5px] font-medium text-graphite/85 hover:text-ember-orange active:translate-x-0.5 transition-all duration-150 block py-1"
-                          >
-                            {sub.label}
-                          </Link>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       </header>
       )}
  

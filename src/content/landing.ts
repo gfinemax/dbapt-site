@@ -11,7 +11,7 @@ export const publicNavigation = [
   { label: "조합소개", href: "/about" },
   { label: "사업개요", href: "/#business" },
   { label: "공개자료", href: "/disclosure" },
-  { label: "조합소식", href: "/#notices" },
+  { label: "조합소식", href: "/news" },
   { label: "자료실", href: "/#library" },
 ] as const;
 
@@ -59,15 +59,12 @@ export const megaMenuNavigation = [
   },
   {
     title: "조합소식",
-    href: "/#notices",
+    href: "/news",
     subItems: [
-      { label: "공지사항", href: "/#notices" },
-      { label: "부동산 관련 기사", href: "/#notices" },
-      { label: "자유게시판", href: "/disclosure?tab=meetings", isPortalGated: true },
-      { label: "영수증 요청", href: "/disclosure?tab=accounting", isPortalGated: true },
-      { label: "평형 변경", href: "/disclosure?tab=operations", isPortalGated: true },
-      { label: "사진첩", href: "/disclosure?tab=operations", isPortalGated: true },
-      { label: "FAQ", href: "/disclosure?tab=meetings", isPortalGated: true },
+      { label: "공지사항", href: "/news?tab=notice" },
+      { label: "조합뉴스 (주/월간소식)", href: "/news?tab=newsletter" },
+      { label: "자유게시판", href: "/news?tab=free" },
+      { label: "FAQ", href: "/news?tab=faq" },
     ],
   },
   {
@@ -97,7 +94,7 @@ export const featureLinks = [
   {
     title: "조합소식",
     description: "조합의 새 공지와 일정을 전합니다.",
-    href: "#notices",
+    href: "/news",
     icon: "/assets/icons/notices.png",
   },
   {

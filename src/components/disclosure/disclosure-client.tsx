@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { MeetingsTable, type MeetingCategory } from "./meetings-table";
+import { type Document } from "@/components/portal/document-table";
 
 type DisclosureClientProps = {
   onOpenPortal?: (category?: string, search?: string) => void;
@@ -16,6 +17,8 @@ type DisclosureClientProps = {
     role: string;
     email?: string;
   } | null;
+  documents?: Document[];
+  onViewDocument?: (id: string, title: string) => void;
 };
 
 type TabId = "rules" | "meetings" | "accounting" | "operations";
@@ -141,7 +144,7 @@ const subMenus = {
   ],
 } as const;
 
-export function DisclosureClient({ onOpenPortal, session }: DisclosureClientProps) {
+export function DisclosureClient({ onOpenPortal, session, documents = [], onViewDocument }: DisclosureClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isLoggedIn = !!session;
@@ -374,103 +377,148 @@ export function DisclosureClient({ onOpenPortal, session }: DisclosureClientProp
                   {data.items
                     .map((item) => {
                       const folderItem = item as {
-                      id: string;
-                      title: string;
-                      desc: string;
-                      date: string;
-                      count: number;
-                      searchKey: string;
-                      categoryKey: string;
-                      bbsCategory: string;
-                      preview: string[];
-                    };
-                    const isSelected = activeSubTab === folderItem.id;
-                    const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
-                    
-                    return (
-                      <div 
-                        key={folderItem.id}
-                        className={cn(
-                          "stone-card bg-white p-6 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
-                          isAnySelectedInThisSection
-                            ? isSelected
-                              ? "border-sky-blue ring-1 ring-sky-blue/30 shadow-lg scale-[1.02] z-2 opacity-100 bg-[#fdfdfc]"
-                              : "opacity-45 scale-[0.98] blur-[0.2px] border-stone-surface"
-                            : "border-stone-surface hover:shadow-md hover:scale-[1.01] opacity-100"
-                        )}
-                      >
-                        <div>
-                          {/* Folder Top Meta */}
-                          <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono">
-                            <span className="flex items-center gap-1.5 text-sky-blue font-bold">
-                              <span>📂</span> 문서 보존함
-                            </span>
-                            <span className="bg-stone-surface px-2.5 py-0.5 rounded-full text-[9px] font-bold text-charcoal-primary font-mono">
-                              총 {folderItem.count}건 보관
-                            </span>
-                          </div>
+                        id: string;
+                        title: string;
+                        desc: string;
+                        date: string;
+                        count: number;
+                        searchKey: string;
+                        categoryKey: string;
+                        bbsCategory: string;
+                        preview: string[];
+                      };
 
-                          <h3 className="text-[14.5px] font-bold text-charcoal-primary mt-3.5 leading-snug">
-                            {folderItem.title}
-                          </h3>
-                          <p className="text-xs text-graphite mt-2 leading-5 font-normal">
-                            {folderItem.desc}
-                          </p>
+                      // 1. 실제 DB 문서 중 해당 카테고리의 문서 필터링
+                      const realDocs = documents.filter(
+                        (d) => d.category === "DISCLOSURE" && d.subCategory === folderItem.bbsCategory
+                      );
 
-                          {/* 문서함 미리보기 리스트 */}
-                          <div className="mt-4 p-4 rounded-xl bg-parchment-card border border-stone-surface/60 border-dashed relative overflow-hidden">
-                            <p className="text-[10px] font-bold text-ash uppercase tracking-wider mb-2 font-mono flex items-center gap-1.5 select-none">
-                              <span className="size-1.5 rounded-full bg-sky-blue animate-pulse"></span>
-                              문서함 내부 수납 목록
-                            </p>
-                            <ul className="space-y-1.5 text-[11px] text-graphite/90 font-medium">
-                              {folderItem.preview.map((p, idx) => (
-                                <li key={idx} className="flex items-center gap-1.5 truncate">
-                                  <span className="text-[10px] text-sky-blue">•</span>
-                                  <span className="truncate">{p}</span>
-                                </li>
-                              ))}
-                            </ul>
-                            
-                            {/* 비로그인 시 블러 및 락 처리 */}
-                            {!isLoggedIn && (
-                              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-parchment-card/30 to-parchment-card backdrop-blur-[1.5px] flex items-center justify-center">
-                                <span className="text-[10px] text-ember-orange font-bold bg-white/95 border border-stone-surface px-3 py-1.5 rounded-full shadow-xs flex items-center gap-1 select-none">
-                                  <span>🔒</span> 로그인 후 {folderItem.count}건 전체 조회
+                      // 2. 중요 표시 문서가 있는지 계산
+                      const hasStarred = realDocs.some(d => d.isStarred);
+
+                      // 3. 총 보관 건수 = 기본 목 데이터 개수 + 실제 업로드 개수
+                      const totalCount = folderItem.count + realDocs.length;
+
+                      // 4. 미리보기 프리뷰 구성 (실제 DB 문서 최신순 우선 -> mock previews 보완)
+                      const displayPreviews = [
+                        ...realDocs.map(d => ({ title: d.title, isStarred: !!d.isStarred, isReal: true })),
+                        ...folderItem.preview.map(p => ({ title: p, isStarred: false, isReal: false }))
+                      ].slice(0, 3);
+
+                      // 5. 최근 업로드 문서 발생일 포맷팅
+                      const latestDocDate = realDocs.length > 0 
+                        ? realDocs[0].documentDate?.slice(0, 10).replace(/-/g, ".") || realDocs[0].createdAt.slice(0, 10).replace(/-/g, ".")
+                        : null;
+
+                      const isSelected = activeSubTab === folderItem.id;
+                      const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
+                      
+                      return (
+                        <div 
+                          key={folderItem.id}
+                          className={cn(
+                            "stone-card bg-white p-6 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
+                            isAnySelectedInThisSection
+                              ? isSelected
+                                ? "border-sky-blue ring-1 ring-sky-blue/30 shadow-lg scale-[1.02] z-2 opacity-100 bg-[#fdfdfc]"
+                                : "opacity-45 scale-[0.98] blur-[0.2px] border-stone-surface"
+                              : "border-stone-surface hover:shadow-md hover:scale-[1.01] opacity-100"
+                          )}
+                        >
+                          <div>
+                            {/* Folder Top Meta */}
+                            <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono">
+                              <span className="flex items-center gap-1.5 text-sky-blue font-bold">
+                                <span>📂</span> 문서 보존함
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {hasStarred && (
+                                  <span className="bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[9px] font-extrabold text-amber-600 flex items-center gap-0.5 select-none shadow-2xs">
+                                    ⭐ 중요 자료 보유
+                                  </span>
+                                )}
+                                <span className="bg-stone-surface px-2.5 py-0.5 rounded-full text-[9px] font-bold text-charcoal-primary font-mono">
+                                  총 {totalCount}건 보관
                                 </span>
                               </div>
-                            )}
-                          </div>
-                        </div>
+                            </div>
 
-                        {/* 문서함 열기 클릭 시 좌측 드로어 열고 세부 데이터 세팅 */}
-                        <div className="mt-6 pt-4 border-t border-stone-surface/60">
-                          <div className="flex items-center justify-between">
-                            <span className={cn(
-                              "text-[10px] font-bold flex items-center gap-1",
-                              isLoggedIn ? "text-meadow-green" : "text-ember-orange"
-                            )}>
-                              {isLoggedIn ? (
-                                <><span>🔓</span> 자료실 연동 가동 중</>
-                              ) : (
-                                <><span>🔒</span> 기밀 보안 그룹</>
+                            <h3 className="text-[14.5px] font-bold text-charcoal-primary mt-3.5 leading-snug">
+                              {folderItem.title}
+                            </h3>
+                            <p className="text-xs text-graphite mt-2 leading-5 font-normal">
+                              {folderItem.desc}
+                            </p>
+
+                            {/* 문서함 미리보기 리스트 */}
+                            <div className="mt-4 p-4 rounded-xl bg-parchment-card border border-stone-surface/60 border-dashed relative overflow-hidden">
+                              <p className="text-[10px] font-bold text-ash uppercase tracking-wider mb-2 font-mono flex items-center justify-between select-none">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="size-1.5 rounded-full bg-sky-blue animate-pulse"></span>
+                                  문서함 내부 수납 목록
+                                </span>
+                                {latestDocDate && (
+                                  <span className="text-[9px] text-graphite/60 font-mono font-normal">
+                                    최근 업로드: {latestDocDate}
+                                  </span>
+                                )}
+                              </p>
+                              <ul className="space-y-1.5 text-[11px] text-graphite/90 font-medium">
+                                {displayPreviews.map((p, idx) => (
+                                  <li key={idx} className="flex items-center gap-1.5 truncate">
+                                    <span className="text-[10px] text-sky-blue">•</span>
+                                    {p.isReal && p.isStarred && (
+                                      <span className="text-amber-500 font-bold select-none shrink-0" title="중요 문서">★</span>
+                                    )}
+                                    <span className={cn("truncate", p.isReal ? "font-semibold text-charcoal-primary" : "text-graphite/85")}>
+                                      {p.title}
+                                    </span>
+                                    {p.isReal && (
+                                      <span className="bg-sky-blue/10 border border-sky-blue/20 text-sky-blue text-[8px] font-black scale-90 rounded px-1 shrink-0 select-none">실제자료</span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                              
+                              {/* 비로그인 시 블러 및 락 처리 */}
+                              {!isLoggedIn && (
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-parchment-card/30 to-parchment-card backdrop-blur-[1.5px] flex items-center justify-center">
+                                  <span className="text-[10px] text-ember-orange font-bold bg-white/95 border border-stone-surface px-3 py-1.5 rounded-full shadow-xs flex items-center gap-1 select-none">
+                                    <span>🔒</span> 로그인 후 {totalCount}건 전체 조회
+                                  </span>
+                                </div>
                               )}
-                            </span>
-                            <Button
-                              onClick={() => {
-                                setSelectedFolder(folderItem);
-                                setIsLeftDrawerOpen(true);
-                              }}
-                              size="sm"
-                              className="rounded-full text-[11px] font-bold bg-midnight hover:bg-midnight/90 text-white cursor-pointer h-8 px-4"
-                            >
-                              문서함 열기
-                            </Button>
+                            </div>
+                          </div>
+
+                          {/* 문서함 열기 클릭 시 좌측 드로어 열고 세부 데이터 세팅 */}
+                          <div className="mt-6 pt-4 border-t border-stone-surface/60">
+                            <div className="flex items-center justify-between">
+                              <span className={cn(
+                                "text-[10px] font-bold flex items-center gap-1",
+                                isLoggedIn ? "text-meadow-green" : "text-ember-orange"
+                              )}>
+                                {isLoggedIn ? (
+                                  <><span>🔓</span> 자료실 연동 가동 중</>
+                                ) : (
+                                  <><span>🔒</span> 기밀 보안 그룹</>
+                                )}
+                              </span>
+                              <Button
+                                onClick={() => {
+                                  setSelectedFolder(folderItem);
+                                  setIsLeftDrawerOpen(true);
+                                }}
+                                size="sm"
+                                className="rounded-full text-[11px] font-bold bg-midnight hover:bg-midnight/90 text-white cursor-pointer h-8 px-4"
+                              >
+                                문서함 열기
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               ) : (
                 <div className="grid gap-6 md:grid-cols-2">
@@ -619,11 +667,14 @@ export function DisclosureClient({ onOpenPortal, session }: DisclosureClientProp
               {selectedFolder && (
                 <MeetingsTable
                   isLoggedIn={isLoggedIn}
+                  role={session?.role}
                   onOpenPortal={onOpenPortal}
                   router={router}
                   initialFilterCat={selectedFolder.bbsCategory as MeetingCategory}
                   initialSearchQuery=""
                   onBackToFolders={() => setIsLeftDrawerOpen(false)}
+                  documents={documents}
+                  onViewDocument={onViewDocument}
                 />
               )}
             </div>
