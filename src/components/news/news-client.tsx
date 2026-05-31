@@ -159,13 +159,14 @@ export function NewsClient({
     setActiveTab(tabId);
     router.push(`/news?tab=${tabId}`, { scroll: false });
 
-    // 스크롤이 고정 스티키 영역 아래로 내려갔을 때, 탭 클릭 시 서브배지 위치로 고정 스냅 처리
+    // 탭 클릭 시, 서브배지 바가 상단 글로벌 헤더(72px) 밑에 정밀하게 스티키 고정되도록 부드러운 스크롤 스냅 처리
     const navElement = document.getElementById("news-sub-nav");
     if (navElement) {
       const stickyThreshold = navElement.offsetTop - 72; // 상단 헤더 높이(72px) 보정
-      if (window.scrollY > stickyThreshold) {
-        window.scrollTo(0, stickyThreshold);
-      }
+      window.scrollTo({
+        top: stickyThreshold,
+        behavior: "smooth"
+      });
     }
   };
 

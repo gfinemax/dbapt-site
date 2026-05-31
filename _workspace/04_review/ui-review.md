@@ -6,6 +6,7 @@
   - 최상단 배너 아래에 실시간 통계 및 인허가 게이지바를 갖춘 **3열 통합 소식 대시보드 그리드** 탑재
   - 비로그인 조합원에게 제공되는 자유게시판/FAQ 락(Lock) 화면 디자인을 공개자료실 수준의 Parchment Card & AES/SHA Hash 데코 테마로 일치화
   - **서브 메뉴 배지 바 스크롤 고정(Sticky) 유지 및 탭 교체 시 스크롤 점프 방지를 위한 고정 뷰 스냅/최소 높이(`min-h-[75vh]`) 보완**
+  - **탭 클릭 시 배너 영역을 스무스하게 올리며 배지 바를 상단 고정 위치로 자동 포커싱(Smooth Scroll Snap to Sticky Threshold) 고도화**
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
 - Implementation plan: [implementation_plan.md](file:///C:/Users/finemax/.gemini/antigravity-ide/brain/3b761796-e3be-416a-a329-7993f6a30aa8/implementation_plan.md)
 - Files or pages reviewed:
@@ -24,9 +25,9 @@
 ## Design And Accessibility Review
 - Finding: PASS
 - Evidence:
-  - 탭 클릭 시 스크롤 위치가 스티키 영역(`offsetTop - 72px`) 이하인 경우 해당 고정 임계값으로 브라우저 뷰를 자동 스냅하여, 화면이 위아래로 튕기는 스크롤 점프 부작용을 원천 차단했습니다.
-  - 본문 높이가 급감하는 것을 막기 위해 `min-h-[75vh]` 안전 영역을 지정하여 탭 스왑 시 브라우저가 최상단으로 강제 이동하지 않도록 하였습니다.
-  - 디자인 시스템(`DESIGN.md`)의 고유 테마 컬러(Ember Orange `#ff3e00`, Meadow Green `#00ca48`, Sky Blue `#0090ff`)와 Warm Canvas 배경, Pretendard 글꼴 규정을 완전하게 준수하고 있습니다.
+  - 사용자가 페이지 최상단 등 배지 고정 기준 위에 있는 상태에서 배지 탭을 누르면, **글로벌 헤더 높이를 제외한 스티키 기준값(`navElement.offsetTop - 72`)으로 부드럽게 자동 스크롤(`behavior: "smooth"`)**되어 대형 히어로 영역을 깔끔하게 화면 밖으로 보내고 서브메뉴 콘텐츠가 즉각 눈에 가득 차도록 설계했습니다.
+  - 본문 높이가 갑작스럽게 작아질 때 브라우저 뷰포트가 최상단으로 강제 복원되는 오작동을 차단하고자 본문 통합부 높이를 `min-h-[75vh]`로 항시 고정 보완했습니다.
+  - 디자인 시스템(`DESIGN.md`) 테마 규격(Warm Canvas배경, Pretendard 폰트 단일 사용 등)을 완전하게 준수하고 있습니다.
 
 ## Outcome
 - Result: PASS
