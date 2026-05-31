@@ -149,6 +149,7 @@ model FreePost {
   id           String      @id @default(uuid())
   title        String
   content      String
+  imagePath    String?     // 첨부 이미지 경로
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   authorId     String
