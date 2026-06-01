@@ -138,6 +138,9 @@ model CoopNews {
   viewCount    Int         @default(0)
   isStarred    Boolean     @default(false)
   imagePath    String?     // 주/월간소식 메인 썸네일
+  attachmentPath String?   // 공지/조합뉴스 공개 첨부파일 경로
+  attachmentName String?   // 공지/조합뉴스 공개 첨부파일 원본명
+  attachmentSize Int?      // 공지/조합뉴스 공개 첨부파일 크기(bytes)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   authorId     String
@@ -150,6 +153,7 @@ model FreePost {
   title        String
   content      String
   imagePath    String?     // 첨부 이미지 경로
+  isStarred    Boolean     @default(false)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   authorId     String
@@ -164,8 +168,13 @@ model FreeComment {
   createdAt    DateTime    @default(now())
   postId       String
   post         FreePost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId     String?
+  parent       FreeComment? @relation("FreeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      FreeComment[] @relation("FreeCommentReplies")
   authorId     String
   author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, parentId])
 }
 
 // 8. FAQ 자주 묻는 질문
@@ -176,4 +185,3 @@ model FAQ {
   category     String      // LOAN (중도금대출), TAX (세무), ADMIN (조합행정)
   createdAt    DateTime    @default(now())
 }
-

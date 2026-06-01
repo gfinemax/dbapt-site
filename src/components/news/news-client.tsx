@@ -12,6 +12,7 @@ import { NoticeBoard } from "./notice-board";
 import { FreeBoard } from "./free-board";
 import { FaqAccordion } from "./faq-accordion";
 import { CoopNewsletter } from "./coop-newsletter";
+import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
 type NewsClientProps = {
   session?: {
@@ -34,6 +35,11 @@ const menuItems = [
   { id: "faq", label: "FAQ", isSecure: true },
   { id: "newsletter", label: "조합뉴스 (주/월간소식)", isSecure: false },
 ] as const;
+
+function legacyNoticeImageHtml(imagePath: string) {
+  const src = imagePath.replace(/"/g, "&quot;");
+  return `<p><img src="${src}" alt="본문 이미지" data-width="100" style="width:100%;max-width:100%;height:auto;" /></p>`;
+}
 
 function NewsSectionLockTab({ label, router }: { label: string; router: any }) {
   return (
@@ -97,6 +103,15 @@ export function NewsClient({
   const [faqs, setFaqs] = useState<any[]>(initialFaqs);
 
   const [activeViewNotice, setActiveViewNotice] = useState<any | null>(null);
+  const [isEditingNotice, setIsEditingNotice] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editAttachmentPath, setEditAttachmentPath] = useState<string | null>(null);
+  const [editAttachmentName, setEditAttachmentName] = useState<string | null>(null);
+  const [editAttachmentSize, setEditAttachmentSize] = useState<number | null>(null);
+  const [editAttachmentFile, setEditAttachmentFile] = useState<File | null>(null);
+  const [editIsStarred, setEditIsStarred] = useState(false);
+  const [isSavingNotice, setIsSavingNotice] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -108,11 +123,125 @@ export function NewsClient({
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
+      setIsEditingNotice(false);
     }
     return () => {
       document.body.style.overflow = "";
     };
   }, [activeViewNotice]);
+
+  const isEditableNotice = !!activeViewNotice?.id && !String(activeViewNotice.id).startsWith("mock-") && isAdmin;
+
+  const refreshNoticeList = async () => {
+    const res = await fetch("/api/news?category=NOTICE");
+    const data = await res.json();
+    if (data.newsList) {
+      setNewsList((prev) => [
+        ...data.newsList,
+        ...prev.filter((n) => n.category !== "NOTICE"),
+      ]);
+    }
+  };
+
+  const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
+    const formData = new FormData();
+    formData.set("file", file);
+    formData.set("kind", kind);
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) {
+      throw new Error(uploadData.error || "파일 업로드에 실패했습니다.");
+    }
+    return uploadData as { url: string; name: string; size: number };
+  };
+
+  const beginNoticeEdit = () => {
+    if (!activeViewNotice) return;
+    const currentContent = activeViewNotice.content || "";
+    setEditTitle(activeViewNotice.title || "");
+    setEditContent(
+      activeViewNotice.imagePath && !currentContent.includes(activeViewNotice.imagePath)
+        ? `${legacyNoticeImageHtml(activeViewNotice.imagePath)}${currentContent}`
+        : currentContent,
+    );
+    setEditAttachmentPath(activeViewNotice.attachmentPath || null);
+    setEditAttachmentName(activeViewNotice.attachmentName || null);
+    setEditAttachmentSize(activeViewNotice.attachmentSize || null);
+    setEditAttachmentFile(null);
+    setEditIsStarred(!!activeViewNotice.isStarred);
+    setIsEditingNotice(true);
+  };
+
+  const saveNoticeEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeViewNotice) return;
+    if (!editTitle.trim() || !getPlainNoticeText(editContent).trim()) {
+      alert("공지 제목과 본문 내용을 모두 입력해 주세요.");
+      return;
+    }
+
+    setIsSavingNotice(true);
+    try {
+      let attachmentPath = editAttachmentPath;
+      let attachmentName = editAttachmentName;
+      let attachmentSize = editAttachmentSize;
+
+      if (editAttachmentFile) {
+        const uploadData = await uploadPublicFile(editAttachmentFile, "attachment");
+        attachmentPath = uploadData.url;
+        attachmentName = uploadData.name;
+        attachmentSize = uploadData.size;
+      }
+
+      const res = await fetch("/api/news", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: activeViewNotice.id,
+          title: editTitle,
+          content: editContent,
+          category: "NOTICE",
+          attachmentPath,
+          attachmentName,
+          attachmentSize,
+          isStarred: editIsStarred,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "공지사항 수정에 실패했습니다.");
+        return;
+      }
+
+      const updatedNotice = {
+        ...data.news,
+        createdAt: data.news.createdAt,
+        updatedAt: data.news.updatedAt,
+        author: {
+          name: data.news.author?.name || activeViewNotice.author?.name || "관리자",
+          role: data.news.author?.role || activeViewNotice.author?.role || "ADMIN",
+        },
+      };
+      setNewsList((prev) => prev.map((item) => item.id === updatedNotice.id ? updatedNotice : item));
+      setActiveViewNotice({
+        ...updatedNotice,
+        createdAt: String(updatedNotice.createdAt).slice(0, 10).replace(/-/g, "."),
+        isReal: true,
+      });
+      setIsEditingNotice(false);
+      await refreshNoticeList();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "공지사항 수정 중 오류가 발생했습니다.");
+    } finally {
+      setIsSavingNotice(false);
+    }
+  };
 
   // 1. 최신 중요 공지사항 또는 최신 일반 공지사항
   const latestStarredNotice = useMemo(() => {
@@ -204,7 +333,7 @@ export function NewsClient({
                       {latestStarredNotice.isStarred && "★ "}{latestStarredNotice.title}
                     </h4>
                     <p className="text-[11px] text-graphite/85 line-clamp-2 font-normal leading-relaxed pt-0.5">
-                      {latestStarredNotice.content}
+                      {getPlainNoticeText(latestStarredNotice.content)}
                     </p>
                   </div>
                 ) : (
@@ -522,28 +651,161 @@ export function NewsClient({
             </div>
 
             <div className="flex-1 mt-6 space-y-6">
-              <div className="space-y-3">
-                <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
-                  {activeViewNotice.isStarred && (
-                    <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
-                      ★ 중요
-                    </span>
-                  )}
-                  {activeViewNotice.title}
-                </h3>
-                
-                <div className="flex items-center gap-3 text-[11px] font-bold text-ash font-mono border-y border-stone-surface/65 py-2.5">
-                  <span>📂 분류: 조합 공지사항</span>
-                  <span>•</span>
-                  <span>작성자: {activeViewNotice.author?.name || "조합 사무국"}</span>
-                  <span>•</span>
-                  <span>등록일: {activeViewNotice.createdAt}</span>
-                </div>
-              </div>
+              {isEditingNotice ? (
+                <form onSubmit={saveNoticeEdit} className="space-y-5">
+                  <div className="flex items-center justify-between gap-3 border-b border-stone-surface pb-3">
+                    <h3 className="text-sm font-black text-charcoal-primary">공지사항 수정</h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingNotice(false)}
+                      className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                    >
+                      수정 취소
+                    </button>
+                  </div>
 
-              <div className="text-sm text-graphite/95 leading-8 font-normal whitespace-pre-wrap pt-2">
-                {activeViewNotice.content}
-              </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      공지 제목 *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      공지 내용 *
+                    </label>
+                    <NoticeRichEditor
+                      value={editContent}
+                      onChange={setEditContent}
+                      onUploadImage={(file) => uploadPublicFile(file, "image")}
+                      ariaLabel="공지 내용 편집창"
+                      placeholder="공지사항 세부 내용을 상세히 기술해 주십시오."
+                    />
+                    <p className="text-[10px] font-medium text-ash">
+                      이미지 버튼 또는 Ctrl+V로 본문에 이미지를 넣고, 이미지를 선택하면 크기를 조절할 수 있습니다.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 py-1 select-none">
+                    <input
+                      type="checkbox"
+                      id="edit-star-checkbox"
+                      checked={editIsStarred}
+                      onChange={(e) => setEditIsStarred(e.target.checked)}
+                      className="size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
+                    />
+                    <label htmlFor="edit-star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
+                      중요 공지사항으로 상단 고정 표시 (★)
+                    </label>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="edit-notice-attachment-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      첨부파일 (선택)
+                    </label>
+                    {editAttachmentPath && (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-white px-3 py-2 text-[11px] font-bold text-graphite">
+                        <span>현재 첨부파일: {editAttachmentName || "다운로드"}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditAttachmentPath(null);
+                            setEditAttachmentName(null);
+                            setEditAttachmentSize(null);
+                          }}
+                          className="rounded-full bg-stone-surface px-2.5 py-1 text-[10px] font-bold text-graphite"
+                        >
+                          첨부 제거
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      id="edit-notice-attachment-file"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.hwp,.hwpx,.zip"
+                      onChange={(e) => setEditAttachmentFile(e.target.files?.[0] || null)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
+                    />
+                    {editAttachmentFile && (
+                      <p className="text-[10px] font-bold text-sky-blue">
+                        새 첨부파일: {editAttachmentFile.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-2 border-t border-stone-surface pt-5">
+                    <Button
+                      type="submit"
+                      disabled={isSavingNotice}
+                      className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-6 h-10 cursor-pointer disabled:opacity-50"
+                    >
+                      {isSavingNotice ? "저장 중..." : "수정사항 저장"}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
+                        {activeViewNotice.isStarred && (
+                          <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                            ★ 중요
+                          </span>
+                        )}
+                        {activeViewNotice.title}
+                      </h3>
+                      {isEditableNotice && (
+                        <button
+                          type="button"
+                          onClick={beginNoticeEdit}
+                          className="shrink-0 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                        >
+                          수정
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 text-[11px] font-bold text-ash font-mono border-y border-stone-surface/65 py-2.5">
+                      <span>📂 분류: 조합 공지사항</span>
+                      <span>•</span>
+                      <span>작성자: {activeViewNotice.author?.name || "조합 사무국"}</span>
+                      <span>•</span>
+                      <span>등록일: {activeViewNotice.createdAt}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-graphite/95 leading-8 font-normal pt-2">
+                    {activeViewNotice.imagePath && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={activeViewNotice.imagePath}
+                        alt=""
+                        className="mb-4 max-h-80 w-full rounded-2xl object-cover border border-stone-surface"
+                      />
+                    )}
+                    <NoticeRichContent content={activeViewNotice.content} />
+                  </div>
+                  {activeViewNotice.attachmentPath && (
+                    <a
+                      href={activeViewNotice.attachmentPath}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-stone-surface bg-white px-4 py-3 text-xs font-bold text-charcoal-primary hover:border-sky-blue"
+                    >
+                      <span>첨부파일: {activeViewNotice.attachmentName || "다운로드"}</span>
+                      <span className="text-[10px] text-sky-blue">열기</span>
+                    </a>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </>,

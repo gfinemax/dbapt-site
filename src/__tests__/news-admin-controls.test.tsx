@@ -1,0 +1,959 @@
+import React from "react";
+import { existsSync, readdirSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NoticeBoard } from "@/components/news/notice-board";
+import { CoopNewsletter } from "@/components/news/coop-newsletter";
+import { FreeBoard } from "@/components/news/free-board";
+import * as newsRoute from "@/app/api/news/route";
+import * as freeRoute from "@/app/api/news/free/route";
+import * as uploadRoute from "@/app/api/upload/route";
+
+const mockGetSession = vi.hoisted(() => vi.fn());
+const mockPrisma = vi.hoisted(() => ({
+  coopNews: {
+    create: vi.fn(),
+    update: vi.fn(),
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    delete: vi.fn(),
+  },
+  freePost: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  freeComment: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+const mockMkdir = vi.hoisted(() => vi.fn());
+const mockWriteFile = vi.hoisted(() => vi.fn());
+const testUploadNames = ["notice.pdf", "blob"];
+
+vi.mock("@/lib/auth", () => ({
+  getSession: mockGetSession,
+}));
+
+vi.mock("@/lib/db", () => ({
+  prisma: mockPrisma,
+}));
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return {
+    ...actual,
+    mkdir: mockMkdir,
+    writeFile: mockWriteFile,
+  };
+});
+
+afterEach(() => {
+  const uploadDir = join(process.cwd(), "public", "uploads");
+  if (!existsSync(uploadDir)) return;
+
+  for (const name of readdirSync(uploadDir)) {
+    if (testUploadNames.some((suffix) => name.endsWith(suffix))) {
+      rmSync(join(uploadDir, name), { force: true });
+    }
+  }
+});
+
+const realNotice = {
+  id: "notice-1",
+  title: "실제 공지",
+  content: "실제 공지 내용",
+  viewCount: 0,
+  isStarred: false,
+  author: { name: "관리자", role: "ADMIN" },
+  createdAt: "2026-06-01T00:00:00.000Z",
+  updatedAt: "2026-06-01T00:00:00.000Z",
+  category: "NOTICE",
+  imagePath: "/uploads/notice.png",
+  attachmentPath: "/uploads/notice.pdf",
+  attachmentName: "notice.pdf",
+  attachmentSize: 1024,
+};
+
+const realNewsletter = {
+  ...realNotice,
+  id: "newsletter-1",
+  title: "실제 조합뉴스",
+  category: "WEEKLY_MONTHLY",
+};
+
+const realFreePost = {
+  id: "free-1",
+  title: "실제 자유게시글",
+  content: "실제 자유게시글 내용",
+  createdAt: "2026-06-01T00:00:00.000Z",
+  updatedAt: "2026-06-01T00:00:00.000Z",
+  author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
+  comments: [],
+};
+
+const freeComment = {
+  id: "comment-1",
+  content: "원댓글입니다.",
+  postId: "free-1",
+  parentId: null,
+  createdAt: "2026-06-01T01:00:00.000Z",
+  author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
+};
+
+function jsonRequest(body: Record<string, unknown>) {
+  return new Request("http://localhost/api/news", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+describe("news admin API controls", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMkdir.mockResolvedValue(undefined);
+    mockWriteFile.mockResolvedValue(undefined);
+  });
+
+  it("rejects notice creation for non-admin sessions", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.coopNews.create.mockResolvedValue(realNotice);
+
+    const response = await newsRoute.POST(
+      jsonRequest({ title: "공지", content: "본문", category: "NOTICE" }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: "관리자 권한이 필요합니다." });
+    expect(mockPrisma.coopNews.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects notice deletion for non-admin sessions", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.coopNews.findUnique.mockResolvedValue(realNotice);
+
+    const response = await newsRoute.DELETE(
+      new Request("http://localhost/api/news?id=notice-1", { method: "DELETE" }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: "관리자 권한이 필요합니다." });
+    expect(mockPrisma.coopNews.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects notice updates for non-admin sessions", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.coopNews.update.mockResolvedValue(realNotice);
+
+    const response = await newsRoute.PATCH(
+      jsonRequest({ id: "notice-1", title: "수정", content: "본문", category: "NOTICE" }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: "관리자 권한이 필요합니다." });
+    expect(mockPrisma.coopNews.update).not.toHaveBeenCalled();
+  });
+
+  it("updates notice content and attachment metadata for admins", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNews.update.mockResolvedValue({ ...realNotice, title: "수정 공지" });
+
+    const response = await newsRoute.PATCH(
+      jsonRequest({
+        id: "notice-1",
+        title: "수정 공지",
+        content: "수정 본문",
+        category: "NOTICE",
+        imagePath: "/uploads/updated.png",
+        attachmentPath: "/uploads/updated.pdf",
+        attachmentName: "updated.pdf",
+        attachmentSize: 2048,
+        isStarred: true,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNews.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "notice-1" },
+      data: expect.objectContaining({
+        title: "수정 공지",
+        content: "수정 본문",
+        imagePath: "/uploads/updated.png",
+        attachmentPath: "/uploads/updated.pdf",
+        attachmentName: "updated.pdf",
+        attachmentSize: 2048,
+        isStarred: true,
+      }),
+    }));
+  });
+
+  it("rejects image upload for unauthenticated sessions", async () => {
+    mockGetSession.mockResolvedValue(null);
+    const formData = new FormData();
+    formData.set("file", new File(["image"], "notice.png", { type: "image/png" }));
+
+    const response = await uploadRoute.POST(
+      new Request("http://localhost/api/upload", { method: "POST", body: formData }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({ error: "인증되지 않은 사용자입니다." });
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversized image uploads", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const request = {
+      formData: async () => ({
+        get: () => ({
+          name: "large.png",
+          type: "image/png",
+          size: 5 * 1024 * 1024 + 1,
+          arrayBuffer: async () => new ArrayBuffer(0),
+        }),
+      }),
+    } as unknown as Request;
+
+    const response = await uploadRoute.POST(request);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "이미지는 5MB 이하만 업로드할 수 있습니다." });
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  it("rejects disguised non-image upload names", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const request = {
+      formData: async () => ({
+        get: () => ({
+          name: "vector.svg",
+          type: "image/svg+xml",
+          size: 3,
+          arrayBuffer: async () => new ArrayBuffer(0),
+        }),
+      }),
+    } as unknown as Request;
+
+    const response = await uploadRoute.POST(request);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "jpg, png, gif, webp 이미지만 업로드할 수 있습니다." });
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  it("rejects image files when uploaded as attachments", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const request = {
+      formData: async () => ({
+        get: (name: string) => {
+          if (name === "kind") return "attachment";
+          return {
+            name: "photo.png",
+            type: "image/png",
+            size: 3,
+            arrayBuffer: async () => new ArrayBuffer(0),
+          };
+        },
+      }),
+    } as unknown as Request;
+
+    const response = await uploadRoute.POST(request);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "이미지는 본문 이미지로만 업로드할 수 있습니다." });
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  it("allows authenticated member body image uploads but keeps attachments admin-only", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+
+    const imageResponse = await uploadRoute.POST({
+      formData: async () => ({
+        get: (name: string) => {
+          if (name === "kind") return "image";
+          return {
+            name: "freeboard.png",
+            type: "image/png",
+            size: 5,
+            arrayBuffer: async () => new ArrayBuffer(5),
+          };
+        },
+      }),
+    } as unknown as Request);
+
+    expect(imageResponse.status).toBe(200);
+    expect(await imageResponse.json()).toMatchObject({
+      success: true,
+      name: "freeboard.png",
+      kind: "image",
+    });
+
+    const attachmentResponse = await uploadRoute.POST({
+      formData: async () => ({
+        get: (name: string) => {
+          if (name === "kind") return "attachment";
+          return {
+            name: "notice.pdf",
+            type: "application/pdf",
+            size: 5,
+            arrayBuffer: async () => new ArrayBuffer(5),
+          };
+        },
+      }),
+    } as unknown as Request);
+
+    expect(attachmentResponse.status).toBe(403);
+    expect(await attachmentResponse.json()).toMatchObject({ error: "관리자 권한이 필요합니다." });
+  });
+
+  it("accepts public attachment uploads with a separate size cap", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const request = {
+      formData: async () => ({
+        get: (name: string) => {
+          if (name === "kind") return "attachment";
+          return {
+            name: "notice.pdf",
+            type: "application/pdf",
+            size: 3,
+            arrayBuffer: async () => new ArrayBuffer(3),
+          };
+        },
+      }),
+    } as unknown as Request;
+
+    const response = await uploadRoute.POST(request);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      success: true,
+      name: "notice.pdf",
+      size: 3,
+    });
+  });
+
+  it("rejects oversized attachment uploads", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const request = {
+      formData: async () => ({
+        get: (name: string) => {
+          if (name === "kind") return "attachment";
+          return {
+            name: "large.pdf",
+            type: "application/pdf",
+            size: 20 * 1024 * 1024 + 1,
+            arrayBuffer: async () => new ArrayBuffer(0),
+          };
+        },
+      }),
+    } as unknown as Request;
+
+    const response = await uploadRoute.POST(request);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "첨부파일은 20MB 이하만 업로드할 수 있습니다." });
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  it("persists uploaded attachment metadata when creating news", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNews.create.mockResolvedValue(realNotice);
+
+    const response = await newsRoute.POST(
+      jsonRequest({
+        title: "첨부 공지",
+        content: "본문",
+        category: "NOTICE",
+        attachmentPath: "/uploads/notice.pdf",
+        attachmentName: "notice.pdf",
+        attachmentSize: 1024,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNews.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        attachmentPath: "/uploads/notice.pdf",
+        attachmentName: "notice.pdf",
+        attachmentSize: 1024,
+      }),
+    }));
+  });
+
+  it("creates free-board replies under the top-level parent comment", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-2", role: "MEMBER" });
+    mockPrisma.freeComment.findUnique.mockResolvedValue({
+      ...freeComment,
+      id: "comment-reply",
+      parentId: "comment-1",
+    });
+    mockPrisma.freeComment.create.mockResolvedValue({
+      ...freeComment,
+      id: "comment-new",
+      content: "@조합원 다시 답글",
+      parentId: "comment-1",
+    });
+
+    const response = await freeRoute.POST(
+      jsonRequest({
+        postId: "free-1",
+        parentCommentId: "comment-reply",
+        content: "@조합원 다시 답글",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freeComment.findUnique).toHaveBeenCalledWith({
+      where: { id: "comment-reply" },
+      select: { id: true, postId: true, parentId: true },
+    });
+    expect(mockPrisma.freeComment.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        postId: "free-1",
+        parentId: "comment-1",
+        content: "@조합원 다시 답글",
+        authorId: "member-2",
+      }),
+    }));
+  });
+
+  it("rejects free-board replies when the parent comment belongs to another post", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-2", role: "MEMBER" });
+    mockPrisma.freeComment.findUnique.mockResolvedValue({
+      ...freeComment,
+      postId: "other-free-post",
+    });
+
+    const response = await freeRoute.POST(
+      jsonRequest({
+        postId: "free-1",
+        parentCommentId: "comment-1",
+        content: "다른 게시글 댓글에는 답글 불가",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "답글 대상 댓글이 게시글과 일치하지 않습니다." });
+    expect(mockPrisma.freeComment.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects post update for non-author and non-admin sessions", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-2", role: "MEMBER" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: "수정 권한이 없습니다." });
+    expect(mockPrisma.freePost.update).not.toHaveBeenCalled();
+  });
+
+  it("allows post update for the author", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+    mockPrisma.freePost.update.mockResolvedValue({ ...realFreePost, title: "수정제목", content: "수정내용" });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ success: true });
+    expect(mockPrisma.freePost.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "free-1" },
+      data: { title: "수정제목", content: "수정내용" },
+    }));
+  });
+
+  it("allows post update for administrators", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+    mockPrisma.freePost.update.mockResolvedValue({ ...realFreePost, title: "수정제목", content: "수정내용" });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ success: true });
+    expect(mockPrisma.freePost.update).toHaveBeenCalled();
+  });
+
+  it("ignores isStarred on post creation for non-admin sessions", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.freePost.create.mockResolvedValue(realFreePost);
+
+    const response = await freeRoute.POST(
+      jsonRequest({
+        title: "신규글",
+        content: "내용",
+        isStarred: true,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: "신규글",
+        isStarred: false,
+      }),
+    }));
+  });
+
+  it("allows isStarred setting on post creation for admins", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.create.mockResolvedValue({ ...realFreePost, isStarred: true });
+
+    const response = await freeRoute.POST(
+      jsonRequest({
+        title: "신규글",
+        content: "내용",
+        isStarred: true,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: "신규글",
+        isStarred: true,
+      }),
+    }));
+  });
+
+  it("allows isStarred update on PATCH for admins but ignores it for non-admin authors", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+    mockPrisma.freePost.update.mockResolvedValue({ ...realFreePost, title: "수정제목" });
+
+    // Non-admin author tries to update isStarred
+    let response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+        isStarred: true,
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.not.objectContaining({
+        isStarred: true,
+      }),
+    }));
+
+    // Admin tries to update isStarred
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+        isStarred: true,
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        isStarred: true,
+      }),
+    }));
+  });
+});
+
+describe("news admin visible controls", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.spyOn(window, "alert").mockImplementation(() => {});
+  });
+
+  it("shows notice create and delete controls only to admins", () => {
+    const { rerender } = render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[realNotice]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "+ 신규 공지사항 등록" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "공지 삭제" })).not.toBeInTheDocument();
+
+    rerender(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[realNotice]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "+ 신규 공지사항 등록" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "공지 삭제" })).toBeInTheDocument();
+  });
+
+  it("uploads a newsletter image file before creating the newsletter", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, url: "/uploads/thumb.png" }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, news: realNewsletter }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <CoopNewsletter
+        isLoggedIn
+        isAdmin
+        newsList={[]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ 신규 주/월간소식 등록" }));
+    fireEvent.change(screen.getByPlaceholderText(/대방동 2026년 6월/), {
+      target: { value: "6월 조합뉴스" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/상세 실적 보고/), {
+      target: { value: "6월 사업 진행 보고입니다." },
+    });
+    fireEvent.change(screen.getByLabelText("카드 썸네일 이미지 파일 (선택)"), {
+      target: { files: [new File(["image"], "thumb.png", { type: "image/png" })] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "조합뉴스 즉시 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/upload", expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/news",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"imagePath\":\"/uploads/thumb.png\""),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("uses a pasted notice body image with resize controls before creating the notice", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, url: "/uploads/pasted.png", name: "pasted.png", size: 5 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, url: "/uploads/agenda.pdf", name: "agenda.pdf", size: 6 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, news: realNotice }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ 신규 공지사항 등록" }));
+    expect(screen.queryByLabelText("공지 이미지 파일 (선택)")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "굵게" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "밑줄" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "이미지 삽입" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText("공지사항의 제목을 입력하십시오."), {
+      target: { value: "붙여넣기 공지" },
+    });
+    const editor = screen.getByRole("textbox", { name: "공지 내용 편집창" });
+    fireEvent.input(editor, {
+      currentTarget: { innerHTML: "<p>붙여넣기 본문</p>" },
+    });
+    fireEvent.paste(editor, {
+      clipboardData: {
+        files: [new File(["image"], "clipboard.png", { type: "image/png" })],
+      },
+    });
+    await waitFor(() => expect(screen.getByAltText("본문 이미지")).toBeInTheDocument());
+    expect(screen.getByLabelText("이미지 크기")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("이미지 크기"), {
+      target: { value: "55" },
+    });
+    fireEvent.change(screen.getByLabelText("첨부파일 (선택)"), {
+      target: { files: [new File(["agenda"], "agenda.pdf", { type: "application/pdf" })] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 즉시 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/upload", expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/upload", expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("<img"),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        body: expect.stringContaining("/uploads/pasted.png"),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        body: expect.stringMatching(/width:\s*55%/),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        body: expect.not.stringContaining("\"imagePath\":\"/uploads/pasted.png\""),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        body: expect.stringContaining("\"attachmentPath\":\"/uploads/agenda.pdf\""),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("shows free board posts as a notice-style list and writes body images in the editor", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, url: "/uploads/free-image.png", name: "free-image.png", size: 5 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, post: realFreePost }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    expect(screen.getByRole("table", { name: "자유게시판 게시글 목록" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "No." })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "제목" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "작성자" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "작성일" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "✍️ 새 토론 게시글 작성" }));
+    expect(screen.getByRole("button", { name: "이미지 삽입" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText("의견을 명확하게 요약한 제목을 입력해 주십시오."), {
+      target: { value: "이미지 포함 자유글" },
+    });
+
+    const editor = screen.getByRole("textbox", { name: "자유게시판 본문 편집창" });
+    fireEvent.input(editor, {
+      currentTarget: { innerHTML: "<p>자유게시판 본문</p>" },
+    });
+    fireEvent.paste(editor, {
+      clipboardData: {
+        files: [new File(["image"], "free-image.png", { type: "image/png" })],
+      },
+    });
+
+    await waitFor(() => expect(screen.getByAltText("본문 이미지")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "게시글 작성 완료" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/upload", expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/news/free",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("<img"),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/news/free",
+      expect.objectContaining({
+        body: expect.stringContaining("/uploads/free-image.png"),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("opens a left focus panel from the free board list and keeps the post URL addressable", () => {
+    window.history.pushState({}, "", "/news?tab=free");
+
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+
+    const panel = screen.getByLabelText("토론 집중 패널");
+    expect(panel).toBeInTheDocument();
+    expect(within(panel).getByRole("heading", { name: "실제 자유게시글" })).toBeInTheDocument();
+    expect(within(panel).getByText("실제 자유게시글 내용")).toBeInTheDocument();
+    expect(window.location.search).toContain("post=free-1");
+
+    fireEvent.click(screen.getByRole("button", { name: "목록으로" }));
+
+    expect(screen.queryByLabelText("토론 집중 패널")).not.toBeInTheDocument();
+    expect(window.location.search).not.toContain("post=free-1");
+  });
+
+  it("shows one-level replies in the focus panel and sends parent comment ids for new replies", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, comment: { id: "comment-new" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <FreeBoard
+        session={{ id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" }}
+        posts={[{
+          ...realFreePost,
+          comments: [
+            freeComment,
+            {
+              ...freeComment,
+              id: "comment-2",
+              content: "첫 번째 답글입니다.",
+              parentId: "comment-1",
+              author: { id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" },
+            },
+            {
+              ...freeComment,
+              id: "comment-3",
+              content: "@답글러 두 번째 답글입니다.",
+              parentId: "comment-1",
+              author: { id: "member-3", name: "참여자", loginId: "member3", role: "MEMBER" },
+            },
+          ],
+        }]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+
+    expect(within(panel).getByText("원댓글입니다.")).toBeInTheDocument();
+    expect(within(panel).queryByText("첫 번째 답글입니다.")).not.toBeInTheDocument();
+
+    fireEvent.click(within(panel).getByRole("button", { name: "답글 2개 보기" }));
+    expect(within(panel).getByText("첫 번째 답글입니다.")).toBeInTheDocument();
+    expect(within(panel).getByText("@답글러 두 번째 답글입니다.")).toBeInTheDocument();
+
+    fireEvent.click(within(panel).getByRole("button", { name: "답글 작성" }));
+    fireEvent.change(within(panel).getByPlaceholderText("원댓글에 답글을 작성해 주세요…"), {
+      target: { value: "새 답글입니다." },
+    });
+    fireEvent.click(within(panel).getByRole("button", { name: "답글 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news/free",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"parentCommentId\":\"comment-1\""),
+      }),
+    ));
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("allows post editing in the focus panel and calls PATCH API", async () => {
+    window.history.pushState({}, "", "/news?tab=free");
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, post: { ...realFreePost, title: "완전수정제목" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    // Open detail panel
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+
+    // Click edit button
+    const editBtn = within(panel).getByRole("button", { name: "게시글 수정" });
+    expect(editBtn).toBeInTheDocument();
+    fireEvent.click(editBtn);
+
+    // Drawer should open and inputs pre-filled
+    const drawer = screen.getByLabelText("토론글 수정 드로어");
+    expect(drawer).toBeInTheDocument();
+    expect(screen.getByText("토론 게시글 수정")).toBeInTheDocument();
+
+    const titleInput = screen.getByPlaceholderText("의견을 명확하게 요약한 제목을 입력해 주십시오.");
+    expect(titleInput).toHaveValue("실제 자유게시글");
+    fireEvent.change(titleInput, { target: { value: "완전수정제목" } });
+
+    // Submit edit
+    fireEvent.click(screen.getByRole("button", { name: "수정 완료" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news/free",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"title\":\"완전수정제목\""),
+      }),
+    ));
+    expect(onRefresh).toHaveBeenCalled();
+  });
+});

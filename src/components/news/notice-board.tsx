@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
 type NoticeBoardProps = {
   isLoggedIn: boolean;
@@ -25,6 +26,10 @@ const MOCK_NOTICES = [
     isStarred: true,
     author: { name: "사무국" },
     createdAt: "2026.05.26",
+    imagePath: null,
+    attachmentPath: null,
+    attachmentName: null,
+    attachmentSize: null,
   },
   {
     id: "mock-notice-2",
@@ -34,6 +39,10 @@ const MOCK_NOTICES = [
     isStarred: false,
     author: { name: "감사단" },
     createdAt: "2026.05.25",
+    imagePath: null,
+    attachmentPath: null,
+    attachmentName: null,
+    attachmentSize: null,
   },
   {
     id: "mock-notice-3",
@@ -43,11 +52,16 @@ const MOCK_NOTICES = [
     isStarred: false,
     author: { name: "사무국" },
     createdAt: "2026.04.15",
+    imagePath: null,
+    attachmentPath: null,
+    attachmentName: null,
+    attachmentSize: null,
   },
 ] as const;
 
 export function NoticeBoard({
   isLoggedIn,
+  isAdmin,
   newsList = [],
   onViewNotice,
   onRefresh,
@@ -75,6 +89,7 @@ export function NoticeBoard({
   // Upload Form State
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadContent, setUploadContent] = useState("");
+  const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -88,6 +103,10 @@ export function NoticeBoard({
       isStarred: item.isStarred,
       author: item.author,
       createdAt: item.createdAt.slice(0, 10).replace(/-/g, "."),
+      imagePath: item.imagePath,
+      attachmentPath: item.attachmentPath,
+      attachmentName: item.attachmentName,
+      attachmentSize: item.attachmentSize,
       isReal: true,
     }));
 
@@ -114,15 +133,42 @@ export function NoticeBoard({
     return combinedData.filter((n) => n.isStarred);
   }, [combinedData]);
 
+  const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
+    const formData = new FormData();
+    formData.set("file", file);
+    formData.set("kind", kind);
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) {
+      throw new Error(uploadData.error || "파일 업로드에 실패했습니다.");
+    }
+    return uploadData as { url: string; name: string; size: number };
+  };
+
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadTitle.trim() || !uploadContent.trim()) {
+    if (!uploadTitle.trim() || !getPlainNoticeText(uploadContent).trim()) {
       alert("공지 제목과 본문 내용을 모두 입력해 주세요.");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      let attachmentPath: string | null = null;
+      let attachmentName: string | null = null;
+      let attachmentSize: number | null = null;
+
+      if (uploadAttachmentFile) {
+        const uploadData = await uploadPublicFile(uploadAttachmentFile, "attachment");
+        attachmentPath = uploadData.url;
+        attachmentName = uploadData.name;
+        attachmentSize = uploadData.size;
+      }
+
       const res = await fetch("/api/news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,6 +176,9 @@ export function NoticeBoard({
           title: uploadTitle,
           content: uploadContent,
           category: "NOTICE",
+          attachmentPath,
+          attachmentName,
+          attachmentSize,
           isStarred: uploadIsStarred,
         }),
       });
@@ -142,14 +191,40 @@ export function NoticeBoard({
 
       setUploadTitle("");
       setUploadContent("");
+      setUploadAttachmentFile(null);
       setUploadIsStarred(false);
       setShowUploadModal(false);
       await onRefresh();
     } catch (err) {
       console.error(err);
-      alert("공지사항 등록 중 오류가 발생했습니다.");
+      alert(err instanceof Error ? err.message : "공지사항 등록 중 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteNotice = async (notice: any) => {
+    if (!notice.isReal) return;
+    if (!confirm(`"${notice.title}" 공지사항을 삭제하시겠습니까?`)) return;
+
+    try {
+      const res = await fetch(`/api/news?id=${encodeURIComponent(notice.id)}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        alert(errData.error || "공지사항 삭제에 실패했습니다.");
+        return;
+      }
+
+      if (activeViewNotice?.id === notice.id) {
+        setActiveViewNotice(null);
+      }
+      await onRefresh();
+    } catch (err) {
+      console.error(err);
+      alert("공지사항 삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -183,17 +258,45 @@ export function NoticeBoard({
                   <h4 className="text-[13px] font-extrabold text-charcoal-primary leading-snug line-clamp-2">
                     {notice.title}
                   </h4>
+                  {notice.imagePath && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={notice.imagePath}
+                      alt=""
+                      className="mt-3 h-24 w-full rounded-xl object-cover border border-stone-surface"
+                    />
+                  )}
                   <p className="text-[11px] text-graphite/90 font-normal leading-relaxed line-clamp-3 pt-2">
-                    {notice.content}
+                    {getPlainNoticeText(notice.content)}
                   </p>
+                  {notice.attachmentPath && (
+                    <span className="mt-3 inline-flex rounded-full bg-stone-surface px-2 py-1 text-[9px] font-bold text-graphite">
+                      첨부파일
+                    </span>
+                  )}
                 </div>
                 <div className="mt-5 pt-3 border-t border-stone-surface/60 flex items-center justify-between select-none">
                   <span className="text-[9.5px] font-bold text-ash flex items-center gap-1">
                     <span>👤</span> {notice.author?.name || "사무국"}
                   </span>
-                  <span className="text-[10px] font-extrabold text-ember-orange hover:underline">
-                    열람하기 →
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {isAdmin && notice.isReal && (
+                      <button
+                        type="button"
+                        aria-label="공지 삭제"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleDeleteNotice(notice);
+                        }}
+                        className="text-[10px] font-extrabold text-coral-red hover:underline"
+                      >
+                        삭제
+                      </button>
+                    )}
+                    <span className="text-[10px] font-extrabold text-ember-orange hover:underline">
+                      열람하기 →
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -216,7 +319,7 @@ export function NoticeBoard({
           />
         </div>
 
-        {isLoggedIn && (
+        {isLoggedIn && isAdmin && (
           <Button
             onClick={() => setShowUploadModal(true)}
             className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
@@ -236,12 +339,13 @@ export function NoticeBoard({
                 <th className="px-5 py-3.5">제목</th>
                 <th className="px-5 py-3.5 w-24 text-center">등록자</th>
                 <th className="px-5 py-3.5 w-28 text-center">작성일</th>
+                {isAdmin && <th className="px-5 py-3.5 w-20 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedData.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={isAdmin ? 5 : 4} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 공지사항이 존재하지 않습니다.
                   </td>
                 </tr>
@@ -277,6 +381,9 @@ export function NoticeBoard({
                         {notice.isReal && (
                           <span className="bg-sky-blue/10 border border-sky-blue/20 text-sky-blue text-[8px] font-black scale-90 rounded px-1 shrink-0 select-none">실제자료</span>
                         )}
+                        {notice.attachmentPath && (
+                          <span className="bg-stone-surface text-graphite text-[8px] font-black scale-90 rounded px-1 shrink-0 select-none">첨부</span>
+                        )}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-center text-xs text-graphite/80 font-normal">
@@ -285,6 +392,23 @@ export function NoticeBoard({
                     <td className="px-5 py-4 text-center text-xs text-ash font-mono">
                       {notice.createdAt}
                     </td>
+                    {isAdmin && (
+                      <td className="px-5 py-4 text-center">
+                        {notice.isReal && (
+                          <button
+                            type="button"
+                            aria-label="공지 삭제"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleDeleteNotice(notice);
+                            }}
+                            className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
+                          >
+                            삭제
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -328,9 +452,40 @@ export function NoticeBoard({
                 <span>등록일: {activeViewNotice.createdAt}</span>
               </div>
 
-              <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal whitespace-pre-wrap pt-2">
-                {activeViewNotice.content}
+              <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal pt-2">
+                {activeViewNotice.imagePath && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={activeViewNotice.imagePath}
+                    alt=""
+                    className="mb-4 max-h-72 w-full rounded-2xl object-cover border border-stone-surface"
+                  />
+                )}
+                <NoticeRichContent content={activeViewNotice.content} />
               </div>
+              {activeViewNotice.attachmentPath && (
+                <a
+                  href={activeViewNotice.attachmentPath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-stone-surface bg-white px-4 py-3 text-xs font-bold text-charcoal-primary hover:border-sky-blue"
+                >
+                  <span>첨부파일: {activeViewNotice.attachmentName || "다운로드"}</span>
+                  <span className="text-[10px] text-sky-blue">열기</span>
+                </a>
+              )}
+              {isAdmin && activeViewNotice.isReal && (
+                <div className="pt-4 border-t border-stone-surface">
+                  <button
+                    type="button"
+                    aria-label="공지 삭제"
+                    onClick={() => void handleDeleteNotice(activeViewNotice)}
+                    className="rounded-full border border-coral-red/20 bg-coral-red/10 px-3 py-1.5 text-[11px] font-bold text-coral-red hover:bg-coral-red/15"
+                  >
+                    공지 삭제
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -378,14 +533,16 @@ export function NoticeBoard({
                 <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
                   공지 내용 *
                 </label>
-                <textarea
-                  required
-                  rows={8}
-                  placeholder="공지사항 세부 내용을 상세히 기술해 주십시오."
+                <NoticeRichEditor
                   value={uploadContent}
-                  onChange={(e) => setUploadContent(e.target.value)}
-                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30 resize-none leading-relaxed"
+                  onChange={setUploadContent}
+                  onUploadImage={(file) => uploadPublicFile(file, "image")}
+                  ariaLabel="공지 내용 편집창"
+                  placeholder="공지사항 세부 내용을 상세히 기술해 주십시오."
                 />
+                <p className="text-[10px] font-medium text-ash">
+                  이미지 버튼 또는 Ctrl+V로 본문에 이미지를 넣고, 이미지를 선택하면 크기를 조절할 수 있습니다.
+                </p>
               </div>
 
               <div className="flex items-center gap-2.5 py-1 select-none">
@@ -399,6 +556,24 @@ export function NoticeBoard({
                 <label htmlFor="star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
                   중요 공지사항으로 상단 고정 표시 (★)
                 </label>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="notice-attachment-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  첨부파일 (선택)
+                </label>
+                <input
+                  id="notice-attachment-file"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.hwp,.hwpx,.zip"
+                  onChange={(e) => setUploadAttachmentFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
+                />
+                {uploadAttachmentFile && (
+                  <p className="text-[10px] font-bold text-sky-blue">
+                    선택된 첨부파일: {uploadAttachmentFile.name}
+                  </p>
+                )}
               </div>
 
               <div className="pt-5 border-t border-stone-surface flex justify-end">

@@ -14,6 +14,7 @@ export async function GET() {
       include: {
         author: {
           select: {
+            id: true,
             name: true,
             loginId: true,
             role: true,
@@ -23,6 +24,7 @@ export async function GET() {
           include: {
             author: {
               select: {
+                id: true,
                 name: true,
                 loginId: true,
                 role: true,
@@ -32,7 +34,10 @@ export async function GET() {
           orderBy: { createdAt: "asc" },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { isStarred: "desc" },
+        { createdAt: "desc" },
+      ],
     });
 
     return NextResponse.json({ posts });
@@ -51,23 +56,44 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { title, content, postId } = body; // 만약 postId가 존재하면 댓글 추가로 판별
+    const { title, content, postId, parentCommentId, isStarred } = body; // 만약 postId가 존재하면 댓글 추가로 판별
 
     if (postId) {
       // 댓글 등록
-      if (!content) {
+      const commentContent = typeof content === "string" ? content.trim() : "";
+      if (!commentContent) {
         return NextResponse.json({ error: "댓글 내용을 입력해 주세요." }, { status: 400 });
+      }
+
+      let parentId: string | undefined;
+      if (parentCommentId) {
+        const parentComment = await prisma.freeComment.findUnique({
+          where: { id: parentCommentId },
+          select: { id: true, postId: true, parentId: true },
+        });
+
+        if (!parentComment) {
+          return NextResponse.json({ error: "답글 대상 댓글을 찾을 수 없습니다." }, { status: 404 });
+        }
+
+        if (parentComment.postId !== postId) {
+          return NextResponse.json({ error: "답글 대상 댓글이 게시글과 일치하지 않습니다." }, { status: 400 });
+        }
+
+        parentId = parentComment.parentId || parentComment.id;
       }
 
       const comment = await prisma.freeComment.create({
         data: {
-          content,
+          content: commentContent,
           postId,
+          parentId,
           authorId: session.id,
         },
         include: {
           author: {
             select: {
+              id: true,
               name: true,
               loginId: true,
               role: true,
@@ -88,6 +114,7 @@ export async function POST(request: Request) {
           title,
           content,
           authorId: session.id,
+          isStarred: session.role === "ADMIN" ? !!isStarred : false,
         },
       });
 
@@ -144,3 +171,52 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "삭제 처리에 실패했습니다." }, { status: 500 });
   }
 }
+
+// 4. PATCH: 자유게시판 포스트 수정 (작성자 혹은 ADMIN 전용)
+export async function PATCH(request: Request) {
+  const session = (await getSession()) as { id: string; role: string } | null;
+  if (!session) {
+    return NextResponse.json({ error: "인증되지 않은 사용자입니다." }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { postId, title, content, isStarred } = body;
+
+    if (!postId) {
+      return NextResponse.json({ error: "수정할 대상 ID가 누락되었습니다." }, { status: 400 });
+    }
+
+    if (!title || !content) {
+      return NextResponse.json({ error: "제목과 내용을 모두 입력해 주세요." }, { status: 400 });
+    }
+
+    const post = await prisma.freePost.findUnique({ where: { id: postId } });
+    if (!post) {
+      return NextResponse.json({ error: "존재하지 않는 게시글입니다." }, { status: 404 });
+    }
+
+    if (post.authorId !== session.id && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "수정 권한이 없습니다." }, { status: 403 });
+    }
+
+    const updateData: any = {
+      title,
+      content,
+    };
+    if (session.role === "ADMIN") {
+      updateData.isStarred = !!isStarred;
+    }
+
+    const updated = await prisma.freePost.update({
+      where: { id: postId },
+      data: updateData,
+    });
+
+    return NextResponse.json({ success: true, post: updated });
+  } catch (e) {
+    console.error("PATCH free post error:", e);
+    return NextResponse.json({ error: "게시글 수정 처리에 실패했습니다." }, { status: 500 });
+  }
+}
+

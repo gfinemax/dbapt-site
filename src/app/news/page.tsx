@@ -40,6 +40,9 @@ export default async function NewsPage() {
         name: item.author.name || "관리자",
         role: item.author.role,
       },
+      attachmentPath: item.attachmentPath,
+      attachmentName: item.attachmentName,
+      attachmentSize: item.attachmentSize,
     }));
 
     // 2. 로그인 세션이 있을 경우 자유게시판 및 FAQ 수집 (MEMBER, ADMIN, REFUND 전용)

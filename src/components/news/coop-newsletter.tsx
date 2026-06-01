@@ -21,6 +21,9 @@ const MOCK_NEWSLETTERS = [
     author: { name: "사무국" },
     createdAt: "2026.05.30",
     imagePath: null,
+    attachmentPath: null,
+    attachmentName: null,
+    attachmentSize: null,
     isStarred: true,
   },
   {
@@ -30,6 +33,9 @@ const MOCK_NEWSLETTERS = [
     author: { name: "사무국" },
     createdAt: "2026.05.21",
     imagePath: null,
+    attachmentPath: null,
+    attachmentName: null,
+    attachmentSize: null,
     isStarred: false,
   },
   {
@@ -39,6 +45,9 @@ const MOCK_NEWSLETTERS = [
     author: { name: "사무국" },
     createdAt: "2026.04.30",
     imagePath: null,
+    attachmentPath: null,
+    attachmentName: null,
+    attachmentSize: null,
     isStarred: false,
   },
 ] as const;
@@ -53,6 +62,7 @@ const PREMIUM_GRADIENTS = [
 
 export function CoopNewsletter({
   isLoggedIn,
+  isAdmin,
   newsList = [],
   onRefresh,
 }: CoopNewsletterProps) {
@@ -63,7 +73,8 @@ export function CoopNewsletter({
   // Upload Form State
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadContent, setUploadContent] = useState("");
-  const [uploadImagePath, setUploadImagePath] = useState("");
+  const [uploadImageFile, setUploadImageFile] = useState<File | null>(null);
+  const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -78,6 +89,9 @@ export function CoopNewsletter({
       author: item.author,
       createdAt: item.createdAt.slice(0, 10).replace(/-/g, "."),
       imagePath: item.imagePath,
+      attachmentPath: item.attachmentPath,
+      attachmentName: item.attachmentName,
+      attachmentSize: item.attachmentSize,
       isReal: true,
     }));
 
@@ -93,6 +107,30 @@ export function CoopNewsletter({
     return [...filteredReal, ...filteredMock];
   }, [newsList, searchQuery]);
 
+  const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
+    const formData = new FormData();
+    formData.set("file", file);
+    formData.set("kind", kind);
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) {
+      throw new Error(uploadData.error || "파일 업로드에 실패했습니다.");
+    }
+    return uploadData as { url: string; name: string; size: number };
+  };
+
+  const handlePasteImage = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const imageFile = Array.from(e.clipboardData.files).find((file) => file.type.startsWith("image/"));
+    if (!imageFile) return;
+
+    e.preventDefault();
+    setUploadImageFile(imageFile);
+  };
+
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadTitle.trim() || !uploadContent.trim()) {
@@ -102,6 +140,22 @@ export function CoopNewsletter({
 
     setIsSubmitting(true);
     try {
+      let imagePath: string | null = null;
+      let attachmentPath: string | null = null;
+      let attachmentName: string | null = null;
+      let attachmentSize: number | null = null;
+
+      if (uploadImageFile) {
+        const uploadData = await uploadPublicFile(uploadImageFile, "image");
+        imagePath = uploadData.url;
+      }
+      if (uploadAttachmentFile) {
+        const uploadData = await uploadPublicFile(uploadAttachmentFile, "attachment");
+        attachmentPath = uploadData.url;
+        attachmentName = uploadData.name;
+        attachmentSize = uploadData.size;
+      }
+
       const res = await fetch("/api/news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -109,7 +163,10 @@ export function CoopNewsletter({
           title: uploadTitle,
           content: uploadContent,
           category: "WEEKLY_MONTHLY",
-          imagePath: uploadImagePath || null,
+          imagePath,
+          attachmentPath,
+          attachmentName,
+          attachmentSize,
           isStarred: uploadIsStarred,
         }),
       });
@@ -122,15 +179,41 @@ export function CoopNewsletter({
 
       setUploadTitle("");
       setUploadContent("");
-      setUploadImagePath("");
+      setUploadImageFile(null);
+      setUploadAttachmentFile(null);
       setUploadIsStarred(false);
       setShowUploadModal(false);
       await onRefresh();
     } catch (err) {
       console.error(err);
-      alert("조합뉴스 등록 중 오류가 발생했습니다.");
+      alert(err instanceof Error ? err.message : "조합뉴스 등록 중 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteNews = async (news: any) => {
+    if (!news.isReal) return;
+    if (!confirm(`"${news.title}" 조합뉴스를 삭제하시겠습니까?`)) return;
+
+    try {
+      const res = await fetch(`/api/news?id=${encodeURIComponent(news.id)}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        alert(errData.error || "조합뉴스 삭제에 실패했습니다.");
+        return;
+      }
+
+      if (activeViewNews?.id === news.id) {
+        setActiveViewNews(null);
+      }
+      await onRefresh();
+    } catch (err) {
+      console.error(err);
+      alert("조합뉴스 삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -151,7 +234,7 @@ export function CoopNewsletter({
           />
         </div>
 
-        {isLoggedIn && (
+        {isLoggedIn && isAdmin && (
           <Button
             onClick={() => setShowUploadModal(true)}
             className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
@@ -207,12 +290,32 @@ export function CoopNewsletter({
                     <p className="text-[11px] text-graphite/80 font-normal leading-relaxed line-clamp-3 break-all">
                       {news.content}
                     </p>
+                    {news.attachmentPath && (
+                      <span className="inline-flex rounded-full bg-stone-surface px-2 py-1 text-[9px] font-bold text-graphite">
+                        첨부파일
+                      </span>
+                    )}
                   </div>
 
                   {/* 하단 메타 영역 */}
                   <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono border-t border-stone-surface/40 pt-3">
                     <span>작성자: {news.author.name}</span>
-                    <span>{news.createdAt}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{news.createdAt}</span>
+                      {isAdmin && news.isReal && (
+                        <button
+                          type="button"
+                          aria-label="조합뉴스 삭제"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleDeleteNews(news);
+                          }}
+                          className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2 py-0.5 text-[9px] font-bold text-coral-red hover:bg-coral-red/15"
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -252,8 +355,39 @@ export function CoopNewsletter({
               </div>
 
               <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal whitespace-pre-wrap pt-2">
+                {activeViewNews.imagePath && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={activeViewNews.imagePath}
+                    alt=""
+                    className="mb-4 max-h-72 w-full rounded-2xl object-cover border border-stone-surface"
+                  />
+                )}
                 {activeViewNews.content}
               </div>
+              {activeViewNews.attachmentPath && (
+                <a
+                  href={activeViewNews.attachmentPath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-stone-surface bg-white px-4 py-3 text-xs font-bold text-charcoal-primary hover:border-sky-blue"
+                >
+                  <span>첨부파일: {activeViewNews.attachmentName || "다운로드"}</span>
+                  <span className="text-[10px] text-sky-blue">열기</span>
+                </a>
+              )}
+              {isAdmin && activeViewNews.isReal && (
+                <div className="pt-4 border-t border-stone-surface">
+                  <button
+                    type="button"
+                    aria-label="조합뉴스 삭제"
+                    onClick={() => void handleDeleteNews(activeViewNews)}
+                    className="rounded-full border border-coral-red/20 bg-coral-red/10 px-3 py-1.5 text-[11px] font-bold text-coral-red hover:bg-coral-red/15"
+                  >
+                    조합뉴스 삭제
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -301,21 +435,48 @@ export function CoopNewsletter({
                   placeholder="주간/월간 소식의 상세 실적 보고 내용을 작성해 주십시오."
                   value={uploadContent}
                   onChange={(e) => setUploadContent(e.target.value)}
+                  onPaste={handlePasteImage}
                   className="w-full rounded-xl border border-stone-surface bg-white px-4.5 py-2.5 text-xs outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue resize-none leading-relaxed"
                 />
+                <p className="text-[10px] font-medium text-ash">
+                  본문 영역에 이미지를 복사한 뒤 Ctrl+V로 붙여넣으면 썸네일 이미지로 등록됩니다.
+                </p>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
-                  카드 썸네일 이미지 URL (선택)
+                <label htmlFor="newsletter-image-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  카드 썸네일 이미지 파일 (선택)
                 </label>
                 <input
-                  type="text"
-                  placeholder="https://example.com/image.png (미입력 시 우아한 그라데이션 자동 배정)"
-                  value={uploadImagePath}
-                  onChange={(e) => setUploadImagePath(e.target.value)}
-                  className="w-full rounded-xl border border-stone-surface bg-white px-4.5 py-2.5 text-xs outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue"
+                  id="newsletter-image-file"
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  onChange={(e) => setUploadImageFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4.5 py-2.5 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
                 />
+                {uploadImageFile && (
+                  <p className="text-[10px] font-bold text-sky-blue">
+                    선택된 이미지: {uploadImageFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="newsletter-attachment-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  첨부파일 (선택)
+                </label>
+                <input
+                  id="newsletter-attachment-file"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.hwp,.hwpx,.zip"
+                  onChange={(e) => setUploadAttachmentFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4.5 py-2.5 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
+                />
+                {uploadAttachmentFile && (
+                  <p className="text-[10px] font-bold text-sky-blue">
+                    선택된 첨부파일: {uploadAttachmentFile.name}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-2 py-1 select-none">
