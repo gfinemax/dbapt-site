@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HomeClient } from "@/components/landing/home-client";
+import { featureLinks, megaMenuNavigation, publicNavigation } from "@/content/landing";
 
 vi.mock("next/navigation", () => ({
   useRouter() {
@@ -32,8 +33,41 @@ describe("public landing page", () => {
     ).toBe(true);
     expect(screen.getByRole("link", { name: "사업정보 보기" })).toHaveAttribute(
       "href",
-      "#business",
+      "/business",
     );
+  });
+
+  it("routes public business entry points to the business status page", () => {
+    expect(publicNavigation).toContainEqual({ label: "사업현황", href: "/business" });
+    expect(megaMenuNavigation.find((item) => item.title === "사업현황")).toMatchObject({
+      href: "/business",
+      subItems: expect.arrayContaining([
+        { label: "건축개요", href: "/business#overview" },
+        { label: "조감도 / 배치도", href: "/business#plan" },
+        { label: "평형별 평면도", href: "/business#unit" },
+        { label: "추진절차", href: "/business#timeline" },
+      ]),
+    });
+    expect(featureLinks.find((item) => item.title === "사업정보")).toMatchObject({
+      description: "사업현황과 위치, 조감도를 확인하세요.",
+      href: "/business#overview",
+    });
+  });
+
+  it("routes public library entry points to the unified library page", () => {
+    expect(publicNavigation).toContainEqual({ label: "자료실", href: "/library" });
+    expect(megaMenuNavigation.find((item) => item.title === "자료실")).toMatchObject({
+      href: "/library",
+      subItems: expect.arrayContaining([
+        { label: "핵심자료", href: "/library#featured" },
+        { label: "계약·협약", href: "/library#contracts" },
+        { label: "법령·제도", href: "/library#legal" },
+      ]),
+    });
+    expect(featureLinks.find((item) => item.title === "자료실")).toMatchObject({
+      description: "법령, 계약, 총회, 서식 자료를 한곳에서 찾습니다.",
+      href: "/library",
+    });
   });
 
   it("presents protected services as login-only access", () => {

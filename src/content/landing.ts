@@ -9,10 +9,10 @@ export const heroContent = {
 
 export const publicNavigation = [
   { label: "조합소개", href: "/about" },
-  { label: "사업개요", href: "/#business" },
+  { label: "사업현황", href: "/business" },
   { label: "공개자료", href: "/disclosure" },
   { label: "조합소식", href: "/news" },
-  { label: "자료실", href: "/#library" },
+  { label: "자료실", href: "/library" },
 ] as const;
 
 export const megaMenuNavigation = [
@@ -27,14 +27,13 @@ export const megaMenuNavigation = [
     ],
   },
   {
-    title: "사업개요",
-    href: "/#business",
+    title: "사업현황",
+    href: "/business",
     subItems: [
-      { label: "건축개요", href: "/#business" },
-      { label: "건축심의 자료", href: "/#business" },
-      { label: "조감도 / 배치도", href: "/#business" },
-      { label: "평형별 평면도", href: "/#business" },
-      { label: "주변 개발 현황", href: "/#business" },
+      { label: "건축개요", href: "/business#overview" },
+      { label: "조감도 / 배치도", href: "/business#plan" },
+      { label: "평형별 평면도", href: "/business#unit" },
+      { label: "추진절차", href: "/business#timeline" },
     ],
   },
   {
@@ -69,11 +68,14 @@ export const megaMenuNavigation = [
   },
   {
     title: "자료실",
-    href: "/#library",
+    href: "/library",
     subItems: [
-      { label: "주택법(개정법령)", href: "/#library" },
-      { label: "총회책자(안내문)", href: "/#library" },
-      { label: "서식·양식", href: "/#library" },
+      { label: "핵심자료", href: "/library#featured" },
+      { label: "총회·회의", href: "/library#meetings" },
+      { label: "계약·협약", href: "/library#contracts" },
+      { label: "회계·감사", href: "/library#accounting" },
+      { label: "법령·제도", href: "/library#legal" },
+      { label: "서식·양식", href: "/library#forms" },
     ],
   },
 ] as const;
@@ -81,14 +83,14 @@ export const megaMenuNavigation = [
 export const featureLinks = [
   {
     title: "사업정보",
-    description: "사업개요와 위치, 조감도를 확인하세요.",
-    href: "#business",
+    description: "사업현황과 위치, 조감도를 확인하세요.",
+    href: "/business#overview",
     icon: "/assets/icons/business-info.png",
   },
   {
     title: "추진현황",
     description: "현재 단계와 주요 일정을 안내합니다.",
-    href: "#business",
+    href: "/business#timeline",
     icon: "/assets/icons/progress.png",
   },
   {
@@ -99,8 +101,8 @@ export const featureLinks = [
   },
   {
     title: "자료실",
-    description: "법령과 일반 안내자료를 제공합니다.",
-    href: "#library",
+    description: "법령, 계약, 총회, 서식 자료를 한곳에서 찾습니다.",
+    href: "/library",
     icon: "/assets/icons/library.png",
   },
 ] as const;

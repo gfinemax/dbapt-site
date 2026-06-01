@@ -35,7 +35,7 @@ export function HeroSection() {
                 <Link href="/login">{heroContent.primaryAction}</Link>
               </Button>
               <Button asChild variant="secondary" size="lg">
-                <Link href="#business">{heroContent.secondaryAction}</Link>
+                <Link href="/business">{heroContent.secondaryAction}</Link>
               </Button>
             </div>
           </div>

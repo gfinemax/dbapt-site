@@ -79,17 +79,9 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   }, []);
 
   const handleLibraryClick = () => {
-    if (isLoggedIn) {
-      if (isDrawerSupportedPage) {
-        if (onOpenPortal) onOpenPortal();
-        else window.dispatchEvent(new CustomEvent('open-portal'));
-      } else {
-        handleMyRoomClick();
-      }
-    } else {
-      alert("이 정보는 대방동 지역주택조합원 전용 비공개 자료입니다.\n안전한 정보 보호를 위해 조합원 계정 로그인 후 열람하실 수 있습니다.");
-      router.push("/login");
-    }
+    window.dispatchEvent(new CustomEvent('close-portal'));
+    setIsMobileMenuOpen(false);
+    router.push("/library");
   };
 
   const handleMyRoomClick = () => {
@@ -468,12 +460,12 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
           <span className="text-[10px] font-bold mt-1 tracking-tight">공개자료</span>
         </Link>
 
-        {/* 자료실 탭 (클릭 시 세션 체크) */}
+        {/* 자료실 탭 */}
         <button 
           onClick={handleLibraryClick}
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full transition duration-150 cursor-pointer",
-            (activeMobileTab === "portal" || (activeMobileTab === null && pathname?.startsWith("/portal") && pathname !== "/portal/admin" && pathname !== "/portal/pending" && pathname !== "/portal/refund")) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
+            (activeMobileTab === "library" || (activeMobileTab === null && pathname?.startsWith("/library"))) ? "text-ember-orange" : "text-ash/90 hover:text-charcoal-primary"
           )}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

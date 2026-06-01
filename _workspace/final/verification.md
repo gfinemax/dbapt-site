@@ -1,33 +1,42 @@
-# Verification Evidence
+# Verification
 
-## Implemented Feature & Changed Files
-- Feature: Free Board Post Editing
-  - Deleted the "Delete" (삭제) button from the upper-right corner of the free-board focus panel.
-  - Implemented the "Edit" (수정) button in its place.
-  - Handled editing state (`editingPost`), form pre-filling, drawer labels, and close state resets inside `FreeBoard`.
-  - Added `PATCH` method handler for `/api/news/free` in `route.ts`.
-  - Added unit and integration tests inside `news-admin-controls.test.tsx`.
-- Changed Files:
-  - [route.ts](file:///c:/workspace/antigravity/dbapt-site/src/app/api/news/free/route.ts)
-  - [free-board.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/news/free-board.tsx)
-  - [news-admin-controls.test.tsx](file:///c:/workspace/antigravity/dbapt-site/src/__tests__/news-admin-controls.test.tsx)
+## Implemented Feature
 
-## Required Checks Run & Results
-- **Linting**:
-  - Command: `pnpm lint`
-  - Result: SUCCESS (0 errors, 1 unrelated warning from document-table.tsx)
-- **Unit & Integration Tests**:
-  - Command: `pnpm test`
-  - Result: SUCCESS (All 44 tests passed, including the new PATCH API and UI editing flow tests)
-- **Build**:
-  - Command: `pnpm build`
-  - Result: SUCCESS (Next.js Turbopack compiled successfully, TypeScript check passed, static pages optimized successfully)
+- Added a public `/library` page as a unified 자료실 index.
+- Included duplicated references to materials that also live under `공개자료`, `사업현황`, and `조합소식`.
+- Added category filters, frequently used 자료 cards, access-status badges, source-location labels, and gated login actions.
+- Updated public navigation, mega menu 자료실 subitems, landing feature links, landing 자료실 panel, and mobile bottom 자료실 action to route to `/library`.
+- Kept protected materials gated by showing document names and locations only, without direct private file access.
 
-## Browser Verification
-- Checked that opening a post renders the "수정" button instead of the "삭제" button in the upper-right of the focus panel.
-- Verified that clicking "수정" opens the drawer with the exact title and rich text content prefilled.
-- Verified that submitting the drawer with "수정 완료" triggers the PATCH API and refreshes the focus panel and list view immediately.
-- Verified that keyboard focus and mobile layouts remain highly functional with no horizontal scrollbars.
+## Changed Files
 
-## Unresolved Risks or Follow-Up Specs
-- none
+- `src/content/landing.ts`
+- `src/content/library.ts`
+- `src/app/library/page.tsx`
+- `src/components/library/library-client.tsx`
+- `src/components/landing/notices-section.tsx`
+- `src/components/landing/site-header.tsx`
+- `src/__tests__/landing-page.test.tsx`
+- `src/__tests__/library-page.test.tsx`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `docs/superpowers/plans/2026-06-02-daebang-library-index.md`
+
+## Checks Run
+
+- `pnpm test src/__tests__/library-page.test.tsx src/__tests__/landing-page.test.tsx`: pass
+- `pnpm lint`: pass with one existing warning in `src/components/portal/document-table.tsx`
+- `pnpm test`: pass, 7 files and 53 tests
+- `pnpm build`: pass, `/library` included in the route output
+
+## Browser Checks
+
+- Dev server: existing Next dev server on `http://localhost:3000`
+- Desktop: Chrome CDP screenshot at `.tmp/browser-check/library-desktop-cdp.png`
+- Mobile: Chrome CDP screenshot at `.tmp/browser-check/library-mobile-cdp.png`
+- Result: `/library` renders the unified 자료실 index, protected document labels, and mobile bottom 자료실 active state without horizontal overflow.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- The page is a public index only. Actual private document viewing remains dependent on the existing authenticated document routes and permissions.

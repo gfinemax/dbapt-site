@@ -200,7 +200,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "수정 권한이 없습니다." }, { status: 403 });
     }
 
-    const updateData: any = {
+    const updateData: { title: string; content: string; isStarred?: boolean } = {
       title,
       content,
     };
@@ -219,4 +219,3 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "게시글 수정 처리에 실패했습니다." }, { status: 500 });
   }
 }
-
