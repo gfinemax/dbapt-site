@@ -43,7 +43,7 @@ export function sanitizeNoticeContentHtml(content: string) {
   const images: string[] = [];
   const withImagePlaceholders = content.replace(/<img\b([^>]*)>/gi, (_match, attrs: string) => {
     const src = attrs.match(/\ssrc=(["'])(.*?)\1/i)?.[2] || "";
-    if (!src.startsWith("/uploads/")) return "";
+    if (!src.startsWith("/uploads/") && !src.includes("/storage/v1/object/public/")) return "";
 
     const alt = attrs.match(/\salt=(["'])(.*?)\1/i)?.[2] || "본문 이미지";
     const widthFromData = Number(attrs.match(/\sdata-width=(["'])(\d{1,3})\1/i)?.[2]);

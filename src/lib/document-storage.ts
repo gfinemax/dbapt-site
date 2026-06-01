@@ -117,3 +117,53 @@ export async function downloadDocumentFile(path: string) {
 
   return data;
 }
+
+export const UPLOADS_BUCKET = process.env.SUPABASE_UPLOADS_BUCKET || "uploads";
+let uploadsBucketReady = false;
+
+export async function ensurePublicUploadsBucket() {
+  if (uploadsBucketReady) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+
+  if (listError) {
+    throw listError;
+  }
+
+  const exists = buckets.some((bucket) => bucket.id === UPLOADS_BUCKET);
+  if (!exists) {
+    const { error: createError } = await supabase.storage.createBucket(UPLOADS_BUCKET, {
+      public: true,
+      fileSizeLimit: "5MB",
+    });
+
+    if (createError) {
+      throw createError;
+    }
+  }
+
+  uploadsBucketReady = true;
+}
+
+export async function uploadPublicFile(file: File) {
+  await ensurePublicUploadsBucket();
+
+  const datePrefix = new Date().toISOString().slice(0, 10);
+  const path = `uploads/${datePrefix}/${randomUUID()}-${sanitizeFileName(file.name)}`;
+  const contentType = file.type || "image/png";
+  const bytes = await file.arrayBuffer();
+
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.storage.from(UPLOADS_BUCKET).upload(path, bytes, {
+    contentType,
+    upsert: false,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const { data } = supabase.storage.from(UPLOADS_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}

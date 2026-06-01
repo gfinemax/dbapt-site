@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { randomUUID } from "node:crypto";
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { uploadPublicFile } from "@/lib/document-storage";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
@@ -65,31 +63,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "허용되지 않는 첨부파일 형식입니다." }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Supabase 퍼블릭 스토리지 버킷에 파일 업로드
+    const publicUrl = await uploadPublicFile(file);
 
-    // 파일명 안전하게 변환
-    const sanitized = file.name
-      .normalize("NFKD")
-      .replace(/[^a-zA-Z0-9._-]/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_+|_+$/g, "");
-
-    const finalFileName = sanitized || "upload.png";
-    const datePrefix = new Date().toISOString().slice(0, 10);
-    const uniqueFileName = `${datePrefix}-${randomUUID()}-${finalFileName}`;
-
-    // public/uploads 폴더 생성 및 저장
-    const uploadDir = join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
-    const filePath = join(uploadDir, uniqueFileName);
-    await writeFile(filePath, buffer);
-
-    const relativeUrl = `/uploads/${uniqueFileName}`;
     return NextResponse.json({
       success: true,
-      url: relativeUrl,
+      url: publicUrl,
       name: file.name,
       size: file.size,
       kind,
