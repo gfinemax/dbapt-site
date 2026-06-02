@@ -79,11 +79,20 @@
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   body {
     @apply bg-background text-foreground;
     letter-spacing: -0.01em;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   h1,

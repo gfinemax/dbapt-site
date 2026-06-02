@@ -2,25 +2,25 @@
 
 ## Reviewed Change
 
-- Feature: `/library` uploaded material details and narrow orange right-side `조합원 개인 자료실` badge
-- Governing spec: Existing public library index scope and repository UI rules in `AGENTS.md`
+- Feature: Post-login 안내 modal, matching right-side vertical badge style, and hidden page scrollbar
+- Governing spec: Existing authenticated portal preview and repository UI rules in `AGENTS.md`
 - Implementation plan: Not required for this narrow correction
-- Files or pages reviewed: `/`, `/library`, `src/components/landing/site-header.tsx`, `src/components/library/library-client.tsx`, `src/app/library/page.tsx`, `src/__tests__/site-header.test.tsx`, `src/__tests__/library-page.test.tsx`
+- Files or pages reviewed: `/portal/admin`, `/`, `/business`, `src/app/globals.css`, `src/components/portal/portal-shell.tsx`, `src/components/landing/home-client.tsx`, `src/components/landing/site-header.tsx`, `src/__tests__/portal-shell.test.tsx`, `src/__tests__/landing-page.test.tsx`, `src/__tests__/site-header.test.tsx`
 
 ## Boundary Review
 
-- Finding: The change does not alter public navigation, roles, permissions, or public document access.
-- Evidence: The badge renders only for logged-in sessions, still calls the existing portal-open path, and is hidden on `/portal/*` routes. `/library` loads approved uploaded documents only when a session exists and opens real entries through `/api/documents/[id]/view`.
+- Finding: The change does not alter public navigation, roles, permissions, redirects, or public document access.
+- Evidence: The modal renders only when an authenticated `MEMBER`, `REFUND`, or `ADMIN` session is present on a non-drawer `PortalShell`. `/login` still redirects to the correct `/portal/*` route through the existing proxy behavior.
 
 ## Truthful Presentation Review
 
-- Finding: The CTA remains truthful and does not imply a new public document feature.
-- Evidence: The visible label is now `조합원 개인 자료실`; clicking it opens the same authenticated drawer as before, now titled `조합원 개인 자료실`. Real uploaded material cards use actual document titles and route through the existing viewer instead of exposing private file URLs.
+- Finding: The 안내 modal remains truthful for a login-gated portal surface.
+- Evidence: It appears only after authentication and describes role-gated information disclosure and security audit logging already present in the portal flow. The primary action scrolls to the existing portal document section instead of exposing a new route or public action.
 
 ## Design And Accessibility Review
 
-- Finding: The material panel and side badge follow the requested visible behavior while keeping the site layout stable.
-- Evidence: Browser check found one fixed right-side badge with width about 40px, background `rgb(255, 90, 31)`, text color `rgb(255, 255, 255)`, 12px left corner radius, zero-width borders on all sides, vertical text, and box-shadow layers all at `rgba(0,0,0,0)`. Mobile behavior remains hidden below the desktop breakpoint to avoid duplicating the bottom navigation.
+- Finding: The restored modal and side badge follow the existing warm canvas, stone border, rounded panel, and orange pill-button visual language.
+- Evidence: Browser check on `/portal/admin` found `조합원 개인 자료실 등록 알림`, `자료실 열기`, and `오늘 하루 이 창 열지 않기` after clearing the dismissal flag and reloading an authenticated admin session. Browser check on `/` found the right-side badge with `rgb(255, 62, 0)` background, white text, zero-width borders, `12px` left-side radius with square right edge, and transparent zero-offset box-shadow layers. Browser check on `/business` confirmed `scrollbar-width: none`, no client-width loss from a visible scrollbar, and wheel scrolling still works.
 
 ## Outcome
 

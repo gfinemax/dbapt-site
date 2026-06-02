@@ -261,7 +261,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
             if (onOpenPortal) onOpenPortal();
             else window.dispatchEvent(new CustomEvent('open-portal'));
           }}
-          className="fixed right-0 top-1/2 z-45 hidden min-h-44 w-10 -translate-y-1/2 flex-col items-center justify-center gap-3 overflow-hidden rounded-l-[12px] border-0 bg-[#ff5a1f] px-0 py-4 text-[12px] font-extrabold tracking-[0.08em] text-white shadow-none transition-all duration-200 hover:w-11 hover:bg-[#ff4a14] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5a1f]/25 md:inline-flex"
+          className="fixed right-0 top-1/2 z-45 hidden min-h-44 w-10 -translate-y-1/2 flex-col items-center justify-center gap-3 overflow-hidden rounded-l-[12px] border-0 bg-ember-orange px-0 py-4 text-[12px] font-extrabold tracking-[0.08em] text-white shadow-none transition-all duration-200 hover:w-11 hover:bg-[#e03700] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-orange/30 md:inline-flex"
           aria-label="조합원 개인 자료실 열기"
         >
           <ChevronLeft className="size-4 shrink-0 stroke-[3]" aria-hidden="true" />

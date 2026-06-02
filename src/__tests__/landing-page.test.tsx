@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { HomeClient } from "@/components/landing/home-client";
 import { featureLinks, megaMenuNavigation, publicNavigation } from "@/content/landing";
 
@@ -18,6 +18,12 @@ vi.mock("next/navigation", () => ({
     };
   },
 }));
+
+afterEach(() => {
+  vi.useRealTimers();
+  localStorage.clear();
+  sessionStorage.clear();
+});
 
 describe("public landing page", () => {
   it("introduces the cooperative with member and business entry actions", () => {
@@ -123,5 +129,28 @@ describe("public landing page", () => {
     for (const icon of icons) {
       expect(existsSync(join(process.cwd(), "public", "assets", "icons", icon))).toBe(true);
     }
+  });
+
+  it("shows the login announcement popup for administrator sessions", async () => {
+    vi.useFakeTimers();
+
+    render(
+      <HomeClient
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+      />,
+    );
+
+    expect(screen.queryByText("조합원 개인 자료실 등록 알림")).not.toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(450);
+    });
+
+    expect(screen.getByText("조합원 개인 자료실 등록 알림")).toBeInTheDocument();
   });
 });

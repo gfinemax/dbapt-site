@@ -36,7 +36,7 @@ describe("site header", () => {
 
     const badge = screen.getByRole("button", { name: "조합원 개인 자료실 열기" });
 
-    expect(badge).toHaveClass("fixed", "right-0", "top-1/2", "w-10", "rounded-l-[12px]", "border-0", "bg-[#ff5a1f]", "text-white");
+    expect(badge).toHaveClass("fixed", "right-0", "top-1/2", "w-10", "rounded-l-[12px]", "border-0", "bg-ember-orange", "text-white", "shadow-none");
     expect(screen.getByText("조합원 개인 자료실")).toHaveClass("[writing-mode:vertical-rl]");
 
     fireEvent.click(badge);

@@ -102,7 +102,9 @@ export function PortalShell({
   // 알림 아키텍처 상태 정의
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showAnnouncePopup, setShowAnnouncePopup] = useState(false);
   const [isDoNotShowToday, setIsDoNotShowToday] = useState(false);
+  const [isDoNotShowAnnounceToday, setIsDoNotShowAnnounceToday] = useState(false);
   const [welcomeModalConfig, setWelcomeModalConfig] = useState({ title: "", description: "", isUpgrade: true });
   const [showToast, setShowToast] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -127,6 +129,32 @@ export function PortalShell({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn || !session || isDrawerMode) return;
+    if (!["MEMBER", "REFUND", "ADMIN"].includes(session.role)) return;
+
+    const dismissedUntil = localStorage.getItem("dbapt_announce_popup_dismissed_until");
+    const isDismissed = dismissedUntil && Date.now() < parseInt(dismissedUntil, 10);
+
+    if (isDismissed) return;
+
+    const timer = setTimeout(() => {
+      setShowAnnouncePopup(true);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [isLoggedIn, session, isDrawerMode]);
+
+  useEffect(() => {
+    if (showWelcomeModal || showAnnouncePopup) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showWelcomeModal, showAnnouncePopup]);
 
   // 3단계 및 2단계 감지 감시 장치 (마운트 시)
   useEffect(() => {
@@ -195,6 +223,25 @@ export function PortalShell({
       localStorage.setItem("dbapt_welcome_modal_dismissed_until", midnight.getTime().toString());
     }
     setShowWelcomeModal(false);
+  };
+
+  const handleCloseAnnouncePopup = () => {
+    if (isDoNotShowAnnounceToday) {
+      const midnight = new Date();
+      midnight.setHours(23, 59, 59, 999);
+      localStorage.setItem("dbapt_announce_popup_dismissed_until", midnight.getTime().toString());
+    }
+    setShowAnnouncePopup(false);
+  };
+
+  const handleOpenDocumentsFromPopup = () => {
+    handleCloseAnnouncePopup();
+    setTimeout(() => {
+      document.getElementById("portal-documents-section")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 150);
   };
 
   const handleLogout = async () => {
@@ -579,7 +626,7 @@ export function PortalShell({
 
             {/* 2. Interactive Document Table */}
             {role !== "admin" && (
-              <section className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
+              <section id="portal-documents-section" className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
                 <h3 className="text-lg font-semibold text-charcoal-primary mb-2">공개 자료실</h3>
                 <p className="text-xs text-graphite mb-6">검색 및 카테고리 필터를 활용하여 해당 문서의 원본 PDF 파일을 안전하게 조회/다운로드할 수 있습니다.</p>
                 <DocumentTable 
@@ -596,7 +643,7 @@ export function PortalShell({
 
             {/* 3. Document list for Admin */}
             {role === "admin" && (
-              <section className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
+              <section id="portal-documents-section" className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
                 <h3 className="text-lg font-semibold text-charcoal-primary mb-2">전체 등록 문서 목록</h3>
                 <p className="text-xs text-graphite mb-6">등록된 전체 문서들의 세부 정보 및 상태입니다.</p>
                 <DocumentTable 
@@ -654,6 +701,101 @@ export function PortalShell({
           </>
         )}
       </div>
+
+      {showAnnouncePopup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative flex w-full max-w-lg flex-col rounded-3xl border border-stone-surface bg-warm-canvas p-6 text-left shadow-2xl animate-in zoom-in-95 duration-200 sm:p-8">
+            <button
+              type="button"
+              onClick={handleCloseAnnouncePopup}
+              className="absolute right-6 top-6 text-ash transition duration-150 hover:text-charcoal-primary cursor-pointer"
+              aria-label="닫기"
+            >
+              <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="text-[11px] font-bold uppercase tracking-widest text-ash">
+              안내
+            </div>
+
+            <div className="mt-4 flex flex-col">
+              <span className="self-start rounded-full bg-ember-orange/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ember-orange">
+                조합원 권익 및 기밀 유지
+              </span>
+
+              <h3 className="mt-3 text-xl font-bold leading-tight tracking-tight text-charcoal-primary sm:text-2xl">
+                조합원 개인 자료실 등록 알림
+              </h3>
+
+              <p className="mt-3 text-xs font-medium leading-5 text-graphite/90">
+                조합원님의 투명한 권익 보호를 위한 정보공개 의무 문서 및 회계 자금 보고서가 정상 등록되었습니다. 조합 정보 보호를 위해 안전 수칙 하에 열람하실 수 있습니다.
+              </p>
+
+              <div className="mt-5 space-y-3.5 rounded-2xl border border-dashed border-stone-surface bg-parchment-card p-4 text-[11px] text-graphite shadow-inner">
+                <div className="flex gap-2">
+                  <span className="shrink-0 select-none text-base text-ember-orange">📁</span>
+                  <div>
+                    <h4 className="text-xs font-bold text-charcoal-primary">최신 등록 문서 안내</h4>
+                    <p className="mt-1 leading-relaxed text-graphite/85">
+                      정보공개 자료와 회계 및 자금 보고 문서를 로그인 세션 안에서 확인할 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 border-t border-dashed border-stone-surface/60 pt-3.5">
+                  <span className="shrink-0 select-none text-base text-sky-blue">🔒</span>
+                  <div>
+                    <h4 className="text-xs font-bold text-charcoal-primary">보안 감사 및 이력 자동 기록</h4>
+                    <p className="mt-1 leading-relaxed text-graphite/85">
+                      PDF 파일 열람 및 다운로드 이력은 보안 감사 로그에 실시간으로 자동 보존됩니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={handleOpenDocumentsFromPopup}
+                className="flex-1 rounded-full bg-ember-orange px-4 py-3 text-center text-xs font-bold text-white shadow-md transition-all duration-200 hover:bg-[#e03700] active:scale-97 cursor-pointer"
+              >
+                자료실 열기 (자세히 보기)
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCloseAnnouncePopup}
+                className="flex-1 rounded-full border border-stone-surface bg-white px-4 py-3 text-center text-xs font-bold text-graphite transition-all duration-200 hover:bg-[#f8f7f4] active:scale-97 cursor-pointer"
+              >
+                확인
+              </button>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between border-t border-stone-surface pt-4">
+              <div className="flex items-center gap-2">
+                <input
+                  id="portalDoNotShowAnnounceToday"
+                  type="checkbox"
+                  checked={isDoNotShowAnnounceToday}
+                  onChange={(e) => setIsDoNotShowAnnounceToday(e.target.checked)}
+                  className="size-4 rounded border-stone-surface text-charcoal-primary accent-[#121212] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                />
+                <label
+                  htmlFor="portalDoNotShowAnnounceToday"
+                  className="cursor-pointer select-none text-xs font-semibold text-graphite transition-colors hover:text-charcoal-primary"
+                >
+                  오늘 하루 이 창 열지 않기
+                </label>
+              </div>
+
+              <span className="text-[9px] font-medium text-ash">대방동지역주택조합</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2단계: 로그인 성공 토스트 알림 (DESIGN.md 규격에 맞춘 옅은 돌색 테두리 + Meadow Green 성공 하이라이트) */}
       {showToast && (

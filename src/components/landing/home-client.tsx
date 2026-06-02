@@ -117,7 +117,7 @@ export function HomeClient({
   // 로그인 성공 조합원을 위한 안내 팝업 자동 트리거 (오늘 하루 보지 않기 여부 체크)
   useEffect(() => {
     if (!session) return;
-    if (session.role !== "MEMBER" && session.role !== "REFUND") return;
+    if (!["MEMBER", "REFUND", "ADMIN"].includes(session.role)) return;
 
     const dismissedUntil = localStorage.getItem("dbapt_announce_popup_dismissed_until");
     const isDismissed = dismissedUntil && Date.now() < parseInt(dismissedUntil, 10);
