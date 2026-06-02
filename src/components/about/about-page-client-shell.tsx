@@ -150,7 +150,7 @@ export function AboutPageClientShell({
           "fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
-        aria-label="조합원 전용 자료실 드로어"
+        aria-label="조합원 개인 자료실 드로어"
       >
         {/* 드로어 상단 헤더 */}
         <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
@@ -159,7 +159,7 @@ export function AboutPageClientShell({
               D
             </span>
             <h2 className="text-base font-bold text-charcoal-primary">
-              조합원 전용 자료실
+              조합원 개인 자료실
             </h2>
           </div>
           

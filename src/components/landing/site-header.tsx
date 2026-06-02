@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { megaMenuNavigation } from "@/content/landing";
 import { cn } from "@/lib/utils";
@@ -159,17 +160,6 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         <div className="flex items-center gap-3">
           {isLoggedIn && session ? (
             <>
-              {/* [대안 A] 핵심: 메인 네비게이션용 [조합원 전용 자료실] 액션 단추 (Ember Orange 포인트) */}
-              <button
-                onClick={() => {
-                  if (onOpenPortal) onOpenPortal();
-                  else window.dispatchEvent(new CustomEvent('open-portal'));
-                }}
-                className="hidden sm:inline-flex items-center justify-center rounded-full bg-ember-orange text-white px-4 py-2 text-xs font-bold shadow-md hover:bg-[#e03700] active:scale-95 transition-all duration-200 cursor-pointer"
-              >
-                조합원 전용 자료실
-              </button>
-
               {/* 미니 프로필 드롭다운 위젯 (데스크톱 md 해상도 이상에서만 노출) */}
               <div className="hidden md:block relative" ref={dropdownRef}>
                 <button
@@ -262,6 +252,23 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         </div>
       </div>
       </header>
+      )}
+
+      {isLoggedIn && session && !isPortalRoute && (
+        <button
+          type="button"
+          onClick={() => {
+            if (onOpenPortal) onOpenPortal();
+            else window.dispatchEvent(new CustomEvent('open-portal'));
+          }}
+          className="fixed right-0 top-1/2 z-45 hidden min-h-44 w-10 -translate-y-1/2 flex-col items-center justify-center gap-3 overflow-hidden rounded-l-[12px] border-0 bg-[#ff5a1f] px-0 py-4 text-[12px] font-extrabold tracking-[0.08em] text-white shadow-none transition-all duration-200 hover:w-11 hover:bg-[#ff4a14] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5a1f]/25 md:inline-flex"
+          aria-label="조합원 개인 자료실 열기"
+        >
+          <ChevronLeft className="size-4 shrink-0 stroke-[3]" aria-hidden="true" />
+          <span className="[writing-mode:vertical-rl]">
+            조합원 개인 자료실
+          </span>
+        </button>
       )}
  
       {/* 5. 모바일/데스크톱 네비게이션 드로어 (사이트맵) - 전역 노출 가능하도록 header 외부 배치 및 md:hidden 해제 */}
@@ -378,7 +385,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
                     }}
                     className="w-full inline-flex items-center justify-center rounded-full bg-ember-orange text-white py-2.5 text-xs font-bold shadow-md hover:bg-[#e03700] active:scale-98 transition duration-200 cursor-pointer"
                   >
-                    조합원 전용 자료실 열기
+                    조합원 개인 자료실 열기
                   </button>
                 </div>
               ) : (

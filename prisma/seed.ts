@@ -77,7 +77,7 @@ async function main() {
     data: {
       loginId: "admin",
       passwordHash: adminPasswordHash,
-      name: "김관리 (관리자)",
+      name: "운영자",
       role: "ADMIN",
     },
   });

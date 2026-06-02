@@ -2,25 +2,25 @@
 
 ## Reviewed Change
 
-- Feature: Public `/library` unified 자료실 index page
-- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md`
-- Files or pages reviewed: `/library`, `src/content/landing.ts`, `src/components/library/*`, `src/components/landing/notices-section.tsx`, `src/components/landing/site-header.tsx`
+- Feature: `/library` uploaded material details and narrow orange right-side `조합원 개인 자료실` badge
+- Governing spec: Existing public library index scope and repository UI rules in `AGENTS.md`
+- Implementation plan: Not required for this narrow correction
+- Files or pages reviewed: `/`, `/library`, `src/components/landing/site-header.tsx`, `src/components/library/library-client.tsx`, `src/app/library/page.tsx`, `src/__tests__/site-header.test.tsx`, `src/__tests__/library-page.test.tsx`
 
 ## Boundary Review
 
-- Finding: Public navigation remains within the approved public general-resource scope.
-- Evidence: The menu exposes `자료실` as `/library`, a public index page. Gated documents such as 조합규약, 회의록, 계약서, and 회계감사보고서 show names, categories, source locations, and login-required status only; no private file URLs or direct document actions are exposed.
+- Finding: The change does not alter public navigation, roles, permissions, or public document access.
+- Evidence: The badge renders only for logged-in sessions, still calls the existing portal-open path, and is hidden on `/portal/*` routes. `/library` loads approved uploaded documents only when a session exists and opens real entries through `/api/documents/[id]/view`.
 
 ## Truthful Presentation Review
 
-- Finding: The page is truthful about access state and does not imply live public document delivery.
-- Evidence: Public items use `자료 위치 보기`; member-only items use `로그인 후 확인`; pending forms use `준비중`. The page explains that protected materials require login and permission.
+- Finding: The CTA remains truthful and does not imply a new public document feature.
+- Evidence: The visible label is now `조합원 개인 자료실`; clicking it opens the same authenticated drawer as before, now titled `조합원 개인 자료실`. Real uploaded material cards use actual document titles and route through the existing viewer instead of exposing private file URLs.
 
 ## Design And Accessibility Review
 
-- Finding: The visible surface follows repository UI rules: warm canvas, large hero typography, stone cards, restrained accents, pill controls, and Pretendard-based UI conventions.
-- Evidence: Desktop and mobile Chrome checks rendered `/library` without horizontal overflow. The mobile bottom bar highlights 자료실 and the content remains readable on a narrow viewport.
+- Finding: The material panel and side badge follow the requested visible behavior while keeping the site layout stable.
+- Evidence: Browser check found one fixed right-side badge with width about 40px, background `rgb(255, 90, 31)`, text color `rgb(255, 255, 255)`, 12px left corner radius, zero-width borders on all sides, vertical text, and box-shadow layers all at `rgba(0,0,0,0)`. Mobile behavior remains hidden below the desktop breakpoint to avoid duplicating the bottom navigation.
 
 ## Outcome
 

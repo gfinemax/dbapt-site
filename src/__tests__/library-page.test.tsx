@@ -1,6 +1,62 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { LibraryClient } from "@/components/library/library-client";
+import { type Document } from "@/components/portal/document-table";
+
+const uploadedMeetingDocuments: Document[] = [
+  {
+    id: "doc-regular-meeting",
+    title: "2026년 정기총회 의사록(직인)",
+    description: "등록된 조합원 전용 문서입니다.",
+    category: "DISCLOSURE",
+    subCategory: "총회 의사록",
+    fileName: "regular-meeting-2026.pdf",
+    fileSize: 204800,
+    status: "APPROVED",
+    publishedAt: "2026-04-18T00:00:00.000Z",
+    documentDate: "2026-04-18T00:00:00.000Z",
+    createdAt: "2026-04-18T00:00:00.000Z",
+  },
+  {
+    id: "doc-founding-meeting",
+    title: "창립총회 의사록",
+    description: "창립총회 의결 결과와 조합 설립 초기 결의 사항을 확인하는 회의록입니다.",
+    category: "DISCLOSURE",
+    subCategory: "총회 의사록",
+    fileName: "founding-meeting.pdf",
+    fileSize: 102400,
+    status: "APPROVED",
+    publishedAt: "2026-04-17T00:00:00.000Z",
+    documentDate: "2026-04-17T00:00:00.000Z",
+    createdAt: "2026-04-17T00:00:00.000Z",
+  },
+  {
+    id: "doc-general-meeting",
+    title: "정기총회 의사록",
+    description: "결산, 예산, 규약 변경 등 정기총회 주요 결의 내용을 확인합니다.",
+    category: "DISCLOSURE",
+    subCategory: "총회 의사록",
+    fileName: "general-meeting.pdf",
+    fileSize: 153600,
+    status: "APPROVED",
+    publishedAt: "2026-04-16T00:00:00.000Z",
+    documentDate: "2026-04-16T00:00:00.000Z",
+    createdAt: "2026-04-16T00:00:00.000Z",
+  },
+  {
+    id: "doc-board-meeting",
+    title: "이사회 회의록",
+    description: "계약 심의, 예산 집행, 사업 추진 현황 등 이사회 의결 기록입니다.",
+    category: "DISCLOSURE",
+    subCategory: "이사회 회의록",
+    fileName: "board-meeting.pdf",
+    fileSize: 128000,
+    status: "APPROVED",
+    publishedAt: "2026-04-15T00:00:00.000Z",
+    documentDate: "2026-04-15T00:00:00.000Z",
+    createdAt: "2026-04-15T00:00:00.000Z",
+  },
+];
 
 describe("library page", () => {
   it("presents a unified index of duplicated public and gated materials", () => {
@@ -23,5 +79,37 @@ describe("library page", () => {
     const lawCard = screen.getByTestId("library-item-housing-law");
     expect(within(lawCard).getByText("공개")).toBeInTheDocument();
     expect(within(lawCard).getByRole("link", { name: "자료 위치 보기" })).toHaveAttribute("href", "/library#legal");
+  });
+
+  it("opens member-only source links directly for logged-in users", () => {
+    render(<LibraryClient isLoggedIn />);
+
+    const contractCard = screen.getAllByTestId("library-item-service-contracts")[0];
+    expect(within(contractCard).queryByRole("link", { name: "로그인 후 확인" })).not.toBeInTheDocument();
+    expect(within(contractCard).getByRole("button", { name: "자료 확인" })).toBeInTheDocument();
+  });
+
+  it("shows the selected material list inside the library page for logged-in users", () => {
+    render(<LibraryClient isLoggedIn />);
+
+    const meetingCard = screen.getAllByTestId("library-item-meeting-minutes")[0];
+    fireEvent.click(within(meetingCard).getByRole("button", { name: "자료 확인" }));
+
+    expect(screen.getByRole("dialog", { name: "회의록 자료 목록" })).toBeInTheDocument();
+    expect(screen.getByText("회의록 리스트")).toBeInTheDocument();
+    expect(screen.getByText("자료실 안에서 바로 확인하는 조합원 전용 색인입니다.")).toBeInTheDocument();
+  });
+
+  it("opens uploaded material details from the material list", () => {
+    render(<LibraryClient isLoggedIn documents={uploadedMeetingDocuments} />);
+
+    const meetingCard = screen.getAllByTestId("library-item-meeting-minutes")[0];
+    fireEvent.click(within(meetingCard).getByRole("button", { name: "자료 확인" }));
+    fireEvent.click(screen.getByText("2026년 정기총회 의사록(직인)"));
+
+    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute(
+      "src",
+      "/api/documents/doc-regular-meeting/view",
+    );
   });
 });

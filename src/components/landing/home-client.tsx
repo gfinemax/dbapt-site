@@ -191,7 +191,7 @@ export function HomeClient({
           "fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
-        aria-label="조합원 전용 자료실 드로어"
+        aria-label="조합원 개인 자료실 드로어"
       >
         {/* 드로어 상단 헤더 */}
         <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
@@ -200,7 +200,7 @@ export function HomeClient({
               D
             </span>
             <h2 className="text-base font-bold text-charcoal-primary">
-              조합원 전용 자료실
+              조합원 개인 자료실
             </h2>
           </div>
           
@@ -273,7 +273,7 @@ export function HomeClient({
 
               {/* 아주 굵고 정교한 헤드라인 */}
               <h3 className="text-xl sm:text-2xl font-bold text-charcoal-primary tracking-tight leading-tight mt-3">
-                조합원 전용 자료실 등록 알림
+                조합원 개인 자료실 등록 알림
               </h3>
 
               <p className="mt-3 text-xs leading-5 text-graphite/90 font-medium">
