@@ -15,6 +15,7 @@ type SessionUser = {
   id: string;
   loginId: string | null;
   name: string | null;
+  signupName?: string | null;
   role: string;
   email?: string | null;
   image?: string | null;
@@ -40,10 +41,12 @@ export async function decrypt(token: string) {
 }
 
 export async function createSessionToken(user: SessionUser) {
+  const displayName = user.signupName?.trim() || user.name;
+
   return encrypt({
     id: user.id,
     loginId: user.loginId,
-    name: user.name,
+    name: displayName,
     role: user.role,
     email: user.email || undefined,
     image: user.image || undefined,

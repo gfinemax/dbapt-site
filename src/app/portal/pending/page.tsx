@@ -34,12 +34,14 @@ export default async function PendingPortalPage() {
   const pendingUser = await prisma.user.findUnique({
     where: { id: session.id },
     select: {
+      name: true,
       signupName: true,
       signupPhone: true,
       signupMemo: true,
     },
   });
   const displaySignupName = pendingUser?.signupName || session.name;
+  const googleProfileName = pendingUser?.name || session.name;
 
   const handleLogout = async () => {
     "use server";
@@ -57,7 +59,7 @@ export default async function PendingPortalPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <span className="text-xs text-graphite font-medium">
-              {session.name} (승인 대기)
+              {displaySignupName} (승인 대기)
             </span>
             <form action={handleLogout}>
               <Button type="submit" variant="ghost" size="sm" className="rounded-full hover:text-ember-orange text-xs h-8">
@@ -108,10 +110,10 @@ export default async function PendingPortalPage() {
                   <span className="max-w-sm text-right text-charcoal-primary">{pendingUser.signupMemo}</span>
                 </li>
               )}
-              {displaySignupName !== session.name && (
+              {displaySignupName !== googleProfileName && (
                 <li className="flex justify-between items-center pb-2 border-b border-[#f8f7f4]">
                   <span className="font-medium">Google 인증 이름</span>
-                  <span className="text-charcoal-primary font-semibold">{session.name}</span>
+                  <span className="text-charcoal-primary font-semibold">{googleProfileName}</span>
                 </li>
               )}
               <li className="flex justify-between items-center pb-2 border-b border-[#f8f7f4]">

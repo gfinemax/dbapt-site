@@ -2,6 +2,37 @@
 
 ## Reviewed Change
 
+- Feature: Use the corrected signup/application name as the member-facing display name after approval.
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Implementation plan: Existing Google OAuth pending-approval workflow; keep `User.name` as the Google-authenticated source and use `signupName` as the corrected display name when present.
+- Files or pages reviewed: `src/lib/auth.ts`, `src/app/portal/pending/page.tsx`, `src/__tests__/portal-auth-flow.test.tsx`.
+
+## Boundary Review
+
+- Finding: PASS. The change affects display naming only and does not expand member permissions, document access, or public surfaces.
+- Evidence: `createSessionToken` still emits the same session fields and role, but resolves `name` from `signupName || name`. Role routing and access checks remain unchanged.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The corrected application name is used for member-facing greetings while the original Google-authenticated name remains available for the pending review screen.
+- Evidence: `/portal/pending` now reads the stored `User.name` separately as `googleProfileName` and only shows `Google 인증 이름` when it differs from the corrected display name.
+
+## Design And Accessibility Review
+
+- Finding: PASS with one browser-tool limitation.
+- Evidence: No new layout or control was introduced. Existing text slots now receive the corrected display name. A focused session-token test verifies the member-facing session name policy. Callable browser automation was not exposed in this session.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
 - Feature: Let administrators correct the signup/application name for pending Google applicants.
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Implementation plan: Existing Google OAuth pending-approval workflow; keep the original Google profile name visible while allowing an admin-maintained application name.

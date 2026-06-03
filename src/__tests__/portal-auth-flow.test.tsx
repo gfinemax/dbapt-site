@@ -2,7 +2,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect } from "vitest";
-import { encrypt, decrypt } from "../lib/auth";
+import { createSessionToken, decrypt, encrypt } from "../lib/auth";
 import { prisma } from "../lib/db";
 import bcrypt from "bcryptjs";
 
@@ -32,6 +32,23 @@ describe("Phase 2 Authentication and Session Logic", () => {
       const invalidToken = "invalid-token-string";
       const decrypted = await decrypt(invalidToken);
       expect(decrypted).toBeNull();
+    });
+
+    it("should use the corrected signup name as the session display name", async () => {
+      const token = await createSessionToken({
+        id: "google-user-1",
+        loginId: "g_member_1001",
+        name: "OH Hakdong",
+        signupName: "오하동",
+        role: "MEMBER",
+        email: "gfinemax@gmail.com",
+      });
+
+      const decrypted = await decrypt(token);
+
+      expect(decrypted?.name).toBe("오하동");
+      expect(decrypted?.email).toBe("gfinemax@gmail.com");
+      expect(decrypted?.role).toBe("MEMBER");
     });
   });
 

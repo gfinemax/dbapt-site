@@ -1,5 +1,33 @@
 # Verification
 
+## Verification Addendum: Corrected Signup Name As Member Display Name
+
+## Implemented Change
+
+- Updated session creation so `signupName` becomes the member-facing display name when present.
+- Preserved the original Google profile name in `User.name`.
+- Updated the pending page to read the original Google profile name from the database and keep showing it separately when it differs from the corrected application name.
+
+## Checks Run
+
+- `pnpm test -- src/__tests__/portal-auth-flow.test.tsx -t "corrected signup name"`: passed, 1 test.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx src/__tests__/google-auth.test.ts`: passed, 2 files and 7 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm build`: passed.
+- `pnpm test`: failed in existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:88`; current database has 2 documents and the test expects at least 3. Other 74 tests passed.
+
+## Browser Checks
+
+- Automated browser visual review could not be completed because the callable in-app browser tool was not exposed in this session.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch still needs separate cleanup: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
 ## Verification Addendum: Admin Editable Signup Name
 
 ## Implemented Change
