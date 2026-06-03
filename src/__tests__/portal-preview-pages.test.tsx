@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
@@ -22,7 +22,11 @@ vi.mock("next/headers", () => ({
   },
 }));
 
-type PageComponent = () => ReactNode | Promise<ReactNode>;
+type PageComponent = (props?: {
+  searchParams?: Promise<{
+    error?: string;
+  }>;
+}) => ReactNode | Promise<ReactNode>;
 
 const pageModules = import.meta.glob<{ default: PageComponent }>("../app/**/page.tsx", {
   eager: true,
@@ -97,13 +101,23 @@ describe("role-specific portal preview pages", () => {
     expect(screen.getAllByText(/준비 중/).length).toBeGreaterThan(0);
   });
 
-  it("hides demo credentials from the login page by default", () => {
+  it("hides demo credentials from the login page by default", async () => {
     const Page = findPage("../app/login/page.tsx");
     if (!Page) return;
 
-    render(<Page />);
+    render(await Page({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText("로그인 후 이동 경로")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "신규 가입 신청" }));
+
+    expect(screen.getByText("가입 신청 절차")).toBeInTheDocument();
+    expect(screen.getByLabelText("신청자 이름")).toHaveAttribute("name", "signupName");
+    expect(screen.getByLabelText("연락처")).toHaveAttribute("name", "signupPhone");
+    expect(screen.getByLabelText("전달 메모")).toHaveAttribute("name", "signupMemo");
+    expect(screen.getByRole("button", { name: "Google 계정으로 신청하기" })).toHaveAttribute(
+      "type",
+      "submit",
+    );
     expect(
       screen.getByText(/발급받은 계정으로 로그인하면 권한에 맞는 전용 화면으로 이동합니다/),
     ).toBeInTheDocument();

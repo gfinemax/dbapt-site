@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { megaMenuNavigation } from "@/content/landing";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/lib/auth";
+import { getPersonalLibraryActionLabel, getPersonalLibraryLabel } from "@/lib/personal-library-label";
 
 type SiteHeaderProps = {
   session?: {
@@ -41,6 +42,8 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<string | null>(null);
+  const personalLibraryLabel = getPersonalLibraryLabel(session);
+  const personalLibraryActionLabel = getPersonalLibraryActionLabel(session);
 
   // 모바일 하단 네비게이션 드로어 탭 활성화 상태 동기화 리스너
   useEffect(() => {
@@ -224,11 +227,7 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
                 )}
               </div>
             </>
-          ) : (
-            <Button asChild variant="secondary" className="hidden sm:inline-flex rounded-full">
-              <Link href="/login">조합원 로그인</Link>
-            </Button>
-          )}
+          ) : null}
 
           {/* 모바일/데스크톱 햄버거 토글 버튼 (전역 노출) */}
           <button
@@ -262,11 +261,11 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
             else window.dispatchEvent(new CustomEvent('open-portal'));
           }}
           className="fixed right-0 top-1/2 z-45 hidden min-h-44 w-10 -translate-y-1/2 flex-col items-center justify-center gap-3 overflow-hidden rounded-l-[12px] border-0 bg-ember-orange px-0 py-4 text-[12px] font-extrabold tracking-[0.08em] text-white shadow-none transition-all duration-200 hover:w-11 hover:bg-[#e03700] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-orange/30 md:inline-flex"
-          aria-label="조합원 개인 자료실 열기"
+          aria-label={personalLibraryActionLabel}
         >
           <ChevronLeft className="size-4 shrink-0 stroke-[3]" aria-hidden="true" />
           <span className="[writing-mode:vertical-rl]">
-            조합원 개인 자료실
+            {personalLibraryLabel}
           </span>
         </button>
       )}
@@ -357,46 +356,16 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
               ))}
             </div>
             
-            {/* 하단: 로그인 상태 액션바 (글씨 비침 방지를 위해 bg-[#fbfaf9] 솔리드 적용) */}
-            <div className="p-6 border-t border-stone-surface/80 bg-[#fbfaf9] flex flex-col gap-3">
-              {isLoggedIn && session ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[13px] font-bold text-charcoal-primary">{session.name}님</p>
-                      <p className="text-[10px] text-ash mt-0.5">{getRoleLabel(session.role)}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="text-[11px] font-bold text-ember-orange hover:bg-ember-orange/5 px-3 py-1.5 rounded-full border border-ember-orange/10 transition cursor-pointer"
-                    >
-                      로그아웃
-                    </button>
-                  </div>
-                  
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      if (onOpenPortal) onOpenPortal();
-                      else window.dispatchEvent(new CustomEvent('open-portal'));
-                    }}
-                    className="w-full inline-flex items-center justify-center rounded-full bg-ember-orange text-white py-2.5 text-xs font-bold shadow-md hover:bg-[#e03700] active:scale-98 transition duration-200 cursor-pointer"
-                  >
-                    조합원 개인 자료실 열기
-                  </button>
-                </div>
-              ) : (
+            {!isLoggedIn && (
+              <div className="p-6 border-t border-stone-surface/80 bg-[#fbfaf9] flex flex-col gap-3">
                 <div className="space-y-2">
                   <p className="text-[11px] text-ash text-center mb-1">안전한 정보 보호를 위해 로그인이 필요합니다.</p>
                   <Button asChild variant="secondary" className="w-full rounded-full cursor-pointer py-2.5" onClick={() => setIsMobileMenuOpen(false)}>
                     <Link href="/login">조합원 로그인</Link>
                   </Button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -9,6 +9,17 @@ const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "default-secret-key-at-least-32-characters-long-dbapt"
 );
 
+const SESSION_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+
+type SessionUser = {
+  id: string;
+  loginId: string | null;
+  name: string | null;
+  role: string;
+  email?: string | null;
+  image?: string | null;
+};
+
 export async function encrypt(payload: Record<string, unknown>) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
@@ -26,6 +37,17 @@ export async function decrypt(token: string) {
   } catch {
     return null;
   }
+}
+
+export async function createSessionToken(user: SessionUser) {
+  return encrypt({
+    id: user.id,
+    loginId: user.loginId,
+    name: user.name,
+    role: user.role,
+    email: user.email || undefined,
+    image: user.image || undefined,
+  });
 }
 
 export async function getSession() {
@@ -58,13 +80,8 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     }
 
     // Create session
-    const expires = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
-    const session = await encrypt({
-      id: user.id,
-      loginId: user.loginId,
-      name: user.name,
-      role: user.role,
-    });
+    const expires = new Date(Date.now() + SESSION_MAX_AGE_MS);
+    const session = await createSessionToken(user);
 
     const cookieStore = await cookies();
     cookieStore.set("session", session, {
@@ -94,56 +111,6 @@ export async function logoutAction() {
   });
 }
 
-export async function googleMockLoginAction() {
-  try {
-    // 1. 가상의 구글 사용자 이메일 및 프로필
-    const mockGoogleEmail = "google_member_preview@gmail.com";
-    const mockGoogleName = "구글조합원 (가상)";
-
-    // 2. DB에서 이메일 기준 유저 조회 또는 생성
-    let user = await prisma.user.findUnique({
-      where: { email: mockGoogleEmail },
-    });
-
-    if (!user) {
-      // 구글 로그인으로 처음 가입하는 유저는 기본 권한이 PENDING(대기) 상태
-      user = await prisma.user.create({
-        data: {
-          email: mockGoogleEmail,
-          name: mockGoogleName,
-          role: "PENDING", // 최초 가입 시 미승인 대기 상태
-          isActive: true,
-        },
-      });
-    }
-
-    // 3. 세션 쿠키 생성 (jose SignJWT 활용)
-    const expires = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
-    const session = await encrypt({
-      id: user.id,
-      loginId: user.loginId || null,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    });
-
-    const cookieStore = await cookies();
-    cookieStore.set("session", session, {
-      expires,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
-
-    // 4. 역할(role)에 따른 리다이렉트 분기 제공
-    return { success: true, role: user.role };
-  } catch (e) {
-    console.error("Google mock login error:", e);
-    return { error: "구글 소셜 로그인 처리 중 문제가 발생했습니다." };
-  }
-}
-
 export async function approveUserAction(userId: string, targetRole: "MEMBER" | "REFUND") {
   try {
     // 임시 조합원/환불 번호 자동 매핑
@@ -165,4 +132,36 @@ export async function approveUserAction(userId: string, targetRole: "MEMBER" | "
   }
 }
 
+export async function updateSignupNameAction(userId: string, signupName: string) {
+  const normalizedName = signupName.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 80);
 
+  if (!normalizedName) {
+    return { error: "신청 이름을 입력해주세요." };
+  }
+
+  try {
+    const session = await getSession() as { id?: string; role?: string } | null;
+    if (!session?.id || session.role !== "ADMIN") {
+      return { error: "관리자만 신청 이름을 수정할 수 있습니다." };
+    }
+
+    const updated = await prisma.user.updateMany({
+      where: {
+        id: userId,
+        role: "PENDING",
+      },
+      data: {
+        signupName: normalizedName,
+      },
+    });
+
+    if (updated.count === 0) {
+      return { error: "승인 대기 사용자를 찾을 수 없습니다." };
+    }
+
+    return { success: true, signupName: normalizedName };
+  } catch (e) {
+    console.error("Update signup name action error:", e);
+    return { error: "신청 이름 수정 중 문제가 발생했습니다." };
+  }
+}

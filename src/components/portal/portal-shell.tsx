@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { portalProfiles, portalRoleOrder, type PortalRole } from "@/content/portal";
 import { cn } from "@/lib/utils";
-import { logoutAction, approveUserAction } from "@/lib/auth";
+import { logoutAction, approveUserAction, updateSignupNameAction } from "@/lib/auth";
 import { DocumentTable, type Document } from "./document-table";
 import { DocumentUploadForm } from "./document-upload-form";
 import { AuditLogsTable, type LogEntry } from "./audit-logs-table";
+import { ContributionSummaryMini } from "./contribution-summary-mini";
 import { PortalHamburger } from "./portal-hamburger";
+import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 
 // 헬퍼 함수 파일 레벨 최상단 배치 (ESLint 선언 순서 및 렌더링 낭비 방지)
 const getRoleLabel = (r: string) => {
@@ -38,6 +40,28 @@ const formatDate = (dateStr: string | null) => {
   ).padStart(2, "0")}`;
 };
 
+const getContributionStatusLabel = (status?: string | null) => {
+  switch (status) {
+    case "OVERDUE":
+      return "연체 주의";
+    case "UNPAID":
+      return "미납 안내";
+    default:
+      return "납부 정상";
+  }
+};
+
+const getContributionStatusClass = (status?: string | null) => {
+  switch (status) {
+    case "OVERDUE":
+      return "bg-ember-orange/10 text-ember-orange";
+    case "UNPAID":
+      return "bg-sunburst-yellow/20 text-charcoal-primary";
+    default:
+      return "bg-meadow-green/10 text-midnight";
+  }
+};
+
 type PortalShellProps = {
   role: PortalRole;
   session?: {
@@ -54,10 +78,15 @@ type PortalShellProps = {
     processedState: string;
     targetDate: string | null;
   } | null;
+  contributionSummary?: ContributionSummaryView | null;
+  paymentNotices?: PaymentNoticeView[];
   pendingUsers?: {
     id: string;
     name: string;
     email: string;
+    signupName?: string | null;
+    signupPhone?: string | null;
+    signupMemo?: string | null;
     createdAt: string;
   }[];
   approvedSocialUsers?: {
@@ -78,6 +107,8 @@ export function PortalShell({
   documents = [],
   logs = [],
   refundInfo,
+  contributionSummary,
+  paymentNotices = [],
   pendingUsers = [],
   approvedSocialUsers = [],
   isDrawerMode = false,
@@ -401,51 +432,106 @@ export function PortalShell({
             <section className="grid gap-6 md:grid-cols-2">
               {role === "member" && (
                 <article className="stone-card p-6 bg-white">
-                  <span className="inline-flex rounded-full bg-meadow-green/10 text-midnight px-3 py-1 text-xs font-semibold">
-                    납부 정상
+                  <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-semibold", getContributionStatusClass(contributionSummary?.status))}>
+                    {getContributionStatusLabel(contributionSummary?.status)}
                   </span>
                   <h2 className="mt-4 text-xl font-semibold">내 분담금 현황</h2>
-                  <p className="mt-2 text-sm text-graphite">조합원님의 현재 분담금 수납 상세 내역입니다.</p>
+                  <p className="mt-2 text-sm text-graphite">
+                    {contributionSummary?.noticeMessage || "승인된 분담금 납부자료가 반영되면 본인의 수납 상세 내역이 표시됩니다."}
+                  </p>
                   <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#f2f0ed] pt-4 text-sm">
                     <div>
-                      <div className="text-xs text-graphite/70">총 납부 금액</div>
-                      <div className="text-lg font-bold text-charcoal-primary mt-1">45,000,000 원</div>
+                      <div className="text-xs text-graphite/70">총 고지액</div>
+                      <div className="text-lg font-bold text-charcoal-primary mt-1">{formatNumber(contributionSummary?.totalDue || 0)} 원</div>
                     </div>
                     <div>
-                      <div className="text-xs text-graphite/70">미납 / 독촉 액수</div>
-                      <div className="text-lg font-bold text-meadow-green mt-1">0 원 (정상)</div>
+                      <div className="text-xs text-graphite/70">총 납부액</div>
+                      <div className="text-lg font-bold text-charcoal-primary mt-1">{formatNumber(contributionSummary?.totalPaid || 0)} 원</div>
                     </div>
+                    <div>
+                      <div className="text-xs text-graphite/70">미납액</div>
+                      <div className={cn("text-lg font-bold mt-1", contributionSummary?.unpaidAmount ? "text-ember-orange" : "text-meadow-green")}>
+                        {formatNumber(contributionSummary?.unpaidAmount || 0)} 원
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-graphite/70">연체 미납 / 연체료</div>
+                      <div className={cn("text-lg font-bold mt-1", contributionSummary?.overdueAmount ? "text-ember-orange" : "text-meadow-green")}>
+                        {formatNumber(contributionSummary?.overdueAmount || 0)} 원 / {formatNumber(contributionSummary?.lateFee || 0)} 원
+                      </div>
+                    </div>
+                    <div className="col-span-2 mt-1 border-t border-[#f2f0ed] pt-3 text-xs text-graphite">
+                      다음 납부기한: <strong className="text-charcoal-primary">{formatDate(contributionSummary?.nextDueDate || null)}</strong>
+                    </div>
+                    {paymentNotices.length > 0 && (
+                      <div className="col-span-2 rounded-2xl border border-dashed border-stone-surface bg-parchment-card p-4 text-xs text-graphite">
+                        <div className="font-bold text-charcoal-primary">{paymentNotices[0].title}</div>
+                        <p className="mt-1 leading-relaxed">{paymentNotices[0].message}</p>
+                        <p className="mt-2 text-[10px] text-ash">상태: {paymentNotices[0].status} · 관리자 승인 전 발송되지 않습니다.</p>
+                      </div>
+                    )}
                   </div>
                 </article>
               )}
 
-              {role === "refund" && refundInfo && (
+              {role === "refund" && (refundInfo || contributionSummary) && (
                 <article className="stone-card p-6 bg-white">
-                  <span className="inline-flex rounded-full bg-ember-orange/10 text-ember-orange px-3 py-1 text-xs font-semibold">
-                    환불 수속 중
+                  <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-semibold", getContributionStatusClass(contributionSummary?.status))}>
+                    {getContributionStatusLabel(contributionSummary?.status)}
                   </span>
-                  <h2 className="mt-4 text-xl font-semibold">내 환불/정산 현황</h2>
-                  <p className="mt-2 text-sm text-graphite">환불조합원 탈퇴 의결 및 정산 예정 명세입니다.</p>
+                  <h2 className="mt-4 text-xl font-semibold">내 환불/정산 및 납부 현황</h2>
+                  <p className="mt-2 text-sm text-graphite">환불조합원 탈퇴 의결, 납부 실적, 미납 및 연체 반영 내역입니다.</p>
                   <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#f2f0ed] pt-4 text-sm">
                     <div>
                       <div className="text-xs text-graphite/70">납부 실적액</div>
-                      <div className="text-base font-bold text-graphite mt-1">{formatNumber(refundInfo.totalPaid)} 원</div>
+                      <div className="text-base font-bold text-graphite mt-1">{formatNumber(contributionSummary?.totalPaid ?? refundInfo?.totalPaid ?? 0)} 원</div>
                     </div>
                     <div>
                       <div className="text-xs text-graphite/70">정산예정액 (실 환불액)</div>
-                      <div className="text-base font-bold text-ember-orange mt-1">{formatNumber(refundInfo.refundAmount)} 원</div>
+                      <div className="text-base font-bold text-ember-orange mt-1">{formatNumber(refundInfo?.refundAmount || 0)} 원</div>
                     </div>
-                    <div className="col-span-2 mt-1 border-t border-[#f2f0ed] pt-3 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-graphite/70">지급 진행 단계:</span>
-                        <strong className="ml-1 text-charcoal-primary">{refundInfo.processedState}</strong>
-                      </div>
-                      <div>
-                        <span className="text-graphite/70">지급 예정일:</span>
-                        <strong className="ml-1 text-charcoal-primary">{formatDate(refundInfo.targetDate)}</strong>
+                    <div>
+                      <div className="text-xs text-graphite/70">미납액</div>
+                      <div className={cn("text-base font-bold mt-1", contributionSummary?.unpaidAmount ? "text-ember-orange" : "text-meadow-green")}>
+                        {formatNumber(contributionSummary?.unpaidAmount || 0)} 원
                       </div>
                     </div>
+                    <div>
+                      <div className="text-xs text-graphite/70">연체 미납 / 연체료</div>
+                      <div className={cn("text-base font-bold mt-1", contributionSummary?.overdueAmount ? "text-ember-orange" : "text-meadow-green")}>
+                        {formatNumber(contributionSummary?.overdueAmount || 0)} 원 / {formatNumber(contributionSummary?.lateFee || 0)} 원
+                      </div>
+                    </div>
+                    {refundInfo && (
+                      <div className="col-span-2 mt-1 border-t border-[#f2f0ed] pt-3 flex justify-between items-center text-xs">
+                        <div>
+                          <span className="text-graphite/70">지급 진행 단계:</span>
+                          <strong className="ml-1 text-charcoal-primary">{refundInfo.processedState}</strong>
+                        </div>
+                        <div>
+                          <span className="text-graphite/70">지급 예정일:</span>
+                          <strong className="ml-1 text-charcoal-primary">{formatDate(refundInfo.targetDate)}</strong>
+                        </div>
+                      </div>
+                    )}
+                    {paymentNotices.length > 0 && (
+                      <div className="col-span-2 rounded-2xl border border-dashed border-stone-surface bg-parchment-card p-4 text-xs text-graphite">
+                        <div className="font-bold text-charcoal-primary">{paymentNotices[0].title}</div>
+                        <p className="mt-1 leading-relaxed">{paymentNotices[0].message}</p>
+                        <p className="mt-2 text-[10px] text-ash">상태: {paymentNotices[0].status} · 관리자 승인 전 발송되지 않습니다.</p>
+                      </div>
+                    )}
                   </div>
+                </article>
+              )}
+
+              {role === "refund" && !refundInfo && !contributionSummary && (
+                <article className="stone-card p-6 bg-white">
+                  <span className="inline-flex rounded-full bg-sunburst-yellow/20 text-charcoal-primary px-3 py-1 text-xs font-semibold">
+                    정산 자료 대기
+                  </span>
+                  <h2 className="mt-4 text-xl font-semibold">내 환불/정산 현황</h2>
+                  <p className="mt-2 text-sm text-graphite">승인된 환불 또는 납부자료가 반영되면 본인 화면에만 표시됩니다.</p>
                 </article>
               )}
 
@@ -499,8 +585,57 @@ export function PortalShell({
                             <tbody className="divide-y divide-[#f8f7f4]">
                               {pendingUsers.map((user) => (
                                 <tr key={user.id} className="text-charcoal-primary">
-                                  <td className="py-3.5 pr-4 font-semibold">{user.name}</td>
-                                  <td className="py-3.5 pr-4 font-mono">{user.email}</td>
+                                  <td className="py-3.5 pr-4">
+                                    <form
+                                      className="flex min-w-[180px] flex-col gap-2"
+                                      onSubmit={async (event) => {
+                                        event.preventDefault();
+                                        const formData = new FormData(event.currentTarget);
+                                        const nextSignupName = String(formData.get("signupName") || "");
+                                        const res = await updateSignupNameAction(user.id, nextSignupName);
+                                        if (res.success) {
+                                          alert(`${user.name}님의 신청 이름이 수정되었습니다.`);
+                                          router.refresh();
+                                        } else if (res.error) {
+                                          alert(res.error);
+                                        }
+                                      }}
+                                    >
+                                      <label className="sr-only" htmlFor={`signup-name-${user.id}`}>
+                                        {user.name} 신청 이름
+                                      </label>
+                                      <input
+                                        id={`signup-name-${user.id}`}
+                                        name="signupName"
+                                        defaultValue={user.signupName || user.name}
+                                        className="w-full rounded-lg border border-[#f2f0ed] bg-white px-2.5 py-2 text-xs font-semibold text-charcoal-primary outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                                      />
+                                      <button
+                                        type="submit"
+                                        className="self-start rounded-full bg-[#f8f7f4] px-3 py-1 text-[10px] font-semibold text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
+                                      >
+                                        신청 이름 저장
+                                      </button>
+                                    </form>
+                                    {user.signupName && user.signupName !== user.name && (
+                                      <div className="mt-2 text-[10px] font-medium text-ash">
+                                        Google 이름: {user.name}
+                                      </div>
+                                    )}
+                                    {user.signupMemo && (
+                                      <div className="mt-1 max-w-[220px] text-[10px] leading-4 text-ash">
+                                        {user.signupMemo}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="py-3.5 pr-4">
+                                    <div className="font-mono">{user.email}</div>
+                                    {user.signupPhone && (
+                                      <div className="mt-1 text-[10px] font-medium text-graphite">
+                                        {user.signupPhone}
+                                      </div>
+                                    )}
+                                  </td>
                                   <td className="py-3.5 pr-4">{formatDate(user.createdAt)}</td>
                                   <td className="py-3.5 text-right flex justify-end gap-2">
                                     <Button
@@ -753,6 +888,11 @@ export function PortalShell({
                     </p>
                   </div>
                 </div>
+
+                <ContributionSummaryMini
+                  contributionSummary={contributionSummary}
+                  paymentNotices={paymentNotices}
+                />
               </div>
             </div>
 

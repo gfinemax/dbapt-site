@@ -43,6 +43,22 @@ describe("public landing page", () => {
     );
   });
 
+  it("hides the hero entry actions after login", () => {
+    const { container } = render(
+      <HomeClient
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+      />,
+    );
+
+    expect(container.querySelector("[data-hero-actions]")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "사업정보 보기" })).not.toBeInTheDocument();
+  });
+
   it("routes public business entry points to the business status page", () => {
     expect(publicNavigation).toContainEqual({ label: "사업현황", href: "/business" });
     expect(megaMenuNavigation.find((item) => item.title === "사업현황")).toMatchObject({
@@ -152,5 +168,56 @@ describe("public landing page", () => {
     });
 
     expect(screen.getByText("조합원 개인 자료실 등록 알림")).toBeInTheDocument();
+  });
+
+  it("shows contribution payment details in the login announcement and personal library", async () => {
+    vi.useFakeTimers();
+
+    render(
+      <HomeClient
+        session={{
+          id: "member-1",
+          loginId: "member1",
+          name: "이조합",
+          role: "MEMBER",
+        }}
+        contributionSummary={{
+          totalDue: 120000000,
+          totalPaid: 95000000,
+          unpaidAmount: 25000000,
+          overdueAmount: 5000000,
+          lateFee: 120000,
+          nextDueDate: "2026-06-30T00:00:00.000Z",
+          status: "OVERDUE",
+          noticeMessage: "연체 미납금 납부 안내 대상입니다.",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        }}
+        paymentNotices={[
+          {
+            id: "notice-1",
+            type: "OVERDUE",
+            status: "DRAFT",
+            title: "연체 미납금 납부 안내",
+            message: "연체 미납금 5,000,000원이 있습니다.",
+            unpaidAmount: 25000000,
+            overdueAmount: 5000000,
+            lateFee: 120000,
+            dueDate: "2026-06-30T00:00:00.000Z",
+            createdAt: "2026-06-01T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("내 분담금 현황")).toBeInTheDocument();
+    expect(screen.getByText("120,000,000 원")).toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(450);
+    });
+
+    expect(screen.getByText("내 분담금 요약")).toBeInTheDocument();
+    expect(screen.getAllByText("25,000,000 원").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("연체 미납금 납부 안내").length).toBeGreaterThan(0);
   });
 });

@@ -3,8 +3,10 @@ import { PortalShell } from "@/components/portal/portal-shell";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { serializeDocuments } from "@/lib/document-serializer";
+import { serializeContributionSummary, serializePaymentNotices } from "@/lib/contribution-serializer";
 
 import { type Document } from "@/components/portal/document-table";
+import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 
 export const metadata: Metadata = {
   title: "환불조합원 포털 | 대방동 지역주택조합",
@@ -21,23 +23,34 @@ export default async function RefundPortalPage() {
     targetDate: string | null;
     updatedAt: string;
   } | null = null;
+  let contributionSummary: ContributionSummaryView | null = null;
+  let paymentNotices: PaymentNoticeView[] = [];
 
   if (session) {
     try {
-      // 1. Fetch approved documents
-      const docs = await prisma.document.findMany({
-        where: { status: "APPROVED" },
-        include: {
-          attachments: true,
-        },
-        orderBy: { documentDate: "desc" },
-      });
+      const [docs, refundRecord, summary, notices] = await Promise.all([
+        prisma.document.findMany({
+          where: { status: "APPROVED" },
+          include: {
+            attachments: true,
+          },
+          orderBy: { documentDate: "desc" },
+        }),
+        prisma.refundInfo.findUnique({
+          where: { userId: session.id },
+        }),
+        prisma.contributionSummary.findUnique({
+          where: { userId: session.id },
+        }),
+        prisma.paymentNotice.findMany({
+          where: {
+            userId: session.id,
+            status: { in: ["DRAFT", "APPROVED"] },
+          },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
       documents = serializeDocuments(docs);
-
-      // 2. Fetch refundInfo linked to user
-      const refundRecord = await prisma.refundInfo.findUnique({
-        where: { userId: session.id },
-      });
       if (refundRecord) {
         refundInfo = {
           ...refundRecord,
@@ -45,6 +58,8 @@ export default async function RefundPortalPage() {
           updatedAt: refundRecord.updatedAt.toISOString(),
         };
       }
+      contributionSummary = serializeContributionSummary(summary);
+      paymentNotices = serializePaymentNotices(notices);
     } catch (e) {
       console.error("Error loading refund portal data:", e);
     }
@@ -56,6 +71,8 @@ export default async function RefundPortalPage() {
       session={session}
       documents={documents}
       refundInfo={refundInfo}
+      contributionSummary={contributionSummary}
+      paymentNotices={paymentNotices}
     />
   );
 }

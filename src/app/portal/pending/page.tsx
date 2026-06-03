@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession, logoutAction } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { PortalHamburger } from "@/components/portal/portal-hamburger";
 
@@ -29,6 +30,16 @@ export default async function PendingPortalPage() {
     if (session.role === "REFUND") redirect("/portal/refund");
     if (session.role === "ADMIN") redirect("/portal/admin");
   }
+
+  const pendingUser = await prisma.user.findUnique({
+    where: { id: session.id },
+    select: {
+      signupName: true,
+      signupPhone: true,
+      signupMemo: true,
+    },
+  });
+  const displaySignupName = pendingUser?.signupName || session.name;
 
   const handleLogout = async () => {
     "use server";
@@ -66,7 +77,7 @@ export default async function PendingPortalPage() {
         </p>
 
         <h1 className="mt-6 max-w-3xl text-4xl leading-tight sm:text-[3rem] text-charcoal-primary">
-          {session.name}님, 환영합니다
+          {displaySignupName}님, 환영합니다
         </h1>
         
         <p className="mt-5 max-w-2xl text-base leading-8 text-graphite">
@@ -83,8 +94,26 @@ export default async function PendingPortalPage() {
             <ul className="space-y-4 text-sm text-graphite border-t border-[#f2f0ed] pt-4">
               <li className="flex justify-between items-center pb-2 border-b border-[#f8f7f4]">
                 <span className="font-medium">신청 이름</span>
-                <span className="text-charcoal-primary font-semibold">{session.name}</span>
+                <span className="text-charcoal-primary font-semibold">{displaySignupName}</span>
               </li>
+              {pendingUser?.signupPhone && (
+                <li className="flex justify-between items-center pb-2 border-b border-[#f8f7f4]">
+                  <span className="font-medium">신청 연락처</span>
+                  <span className="text-charcoal-primary font-semibold">{pendingUser.signupPhone}</span>
+                </li>
+              )}
+              {pendingUser?.signupMemo && (
+                <li className="flex justify-between gap-6 pb-2 border-b border-[#f8f7f4]">
+                  <span className="font-medium">신청 메모</span>
+                  <span className="max-w-sm text-right text-charcoal-primary">{pendingUser.signupMemo}</span>
+                </li>
+              )}
+              {displaySignupName !== session.name && (
+                <li className="flex justify-between items-center pb-2 border-b border-[#f8f7f4]">
+                  <span className="font-medium">Google 인증 이름</span>
+                  <span className="text-charcoal-primary font-semibold">{session.name}</span>
+                </li>
+              )}
               <li className="flex justify-between items-center pb-2 border-b border-[#f8f7f4]">
                 <span className="font-medium">구글 계정 이메일</span>
                 <span className="text-charcoal-primary font-mono">{session.email || "이메일 없음"}</span>

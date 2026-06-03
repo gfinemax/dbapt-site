@@ -19,6 +19,22 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 describe("site header", () => {
+  it("keeps auth badges out of the public header for logged-out users", () => {
+    render(<SiteHeader />);
+
+    expect(screen.queryByRole("link", { name: "가입 신청" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "조합원 로그인" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the login action inside the sitemap drawer for logged-out users", () => {
+    render(<SiteHeader />);
+
+    fireEvent.click(screen.getByRole("button", { name: "모바일 메뉴" }));
+
+    expect(screen.getByText("전체 메뉴 (사이트맵)")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "조합원 로그인" })).toHaveAttribute("href", "/login");
+  });
+
   it("renders the member library action as a fixed right-side vertical badge", () => {
     const onOpenPortal = vi.fn();
 
@@ -34,13 +50,31 @@ describe("site header", () => {
       />,
     );
 
-    const badge = screen.getByRole("button", { name: "조합원 개인 자료실 열기" });
+    const badge = screen.getByRole("button", { name: "이조합 개인 자료실 열기" });
 
     expect(badge).toHaveClass("fixed", "right-0", "top-1/2", "w-10", "rounded-l-[12px]", "border-0", "bg-ember-orange", "text-white", "shadow-none");
-    expect(screen.getByText("조합원 개인 자료실")).toHaveClass("[writing-mode:vertical-rl]");
+    expect(screen.getByText("이조합 개인 자료실")).toHaveClass("[writing-mode:vertical-rl]");
 
     fireEvent.click(badge);
 
     expect(onOpenPortal).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not repeat the logged-in personal library action in the sitemap drawer", () => {
+    render(
+      <SiteHeader
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "모바일 메뉴" }));
+
+    expect(screen.getByText("전체 메뉴 (사이트맵)")).toBeInTheDocument();
+    expect(screen.queryByText("운영자 개인 자료실 열기")).not.toBeInTheDocument();
   });
 });

@@ -1,9 +1,11 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { serializeDocuments } from "@/lib/document-serializer";
+import { serializeContributionSummary, serializePaymentNotices } from "@/lib/contribution-serializer";
 import { HomeClient } from "@/components/landing/home-client";
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
+import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 
 export default async function Home() {
   const session = (await getSession()) as {
@@ -22,8 +24,10 @@ export default async function Home() {
     processedState: string;
     targetDate: string | null;
   } | null = null;
-  let pendingUsers: { id: string; name: string; email: string; createdAt: string }[] = [];
+  let pendingUsers: { id: string; name: string; email: string; signupName?: string | null; signupPhone?: string | null; signupMemo?: string | null; createdAt: string }[] = [];
   let approvedSocialUsers: { id: string; name: string; email: string; role: string; createdAt: string }[] = [];
+  let contributionSummary: ContributionSummaryView | null = null;
+  let paymentNotices: PaymentNoticeView[] = [];
 
   if (session) {
     try {
@@ -42,6 +46,21 @@ export default async function Home() {
       
       // Convert Date objects to ISO string safely
       documents = serializeDocuments(docs);
+
+      const [summary, notices] = await Promise.all([
+        prisma.contributionSummary.findUnique({
+          where: { userId: session.id },
+        }),
+        prisma.paymentNotice.findMany({
+          where: {
+            userId: session.id,
+            status: { in: ["DRAFT", "APPROVED"] },
+          },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
+      contributionSummary = serializeContributionSummary(summary);
+      paymentNotices = serializePaymentNotices(notices);
 
       // 2. REFUND 전용 정산 데이터 수집
       if (session.role === "REFUND") {
@@ -99,6 +118,9 @@ export default async function Home() {
           id: u.id,
           name: u.name || "이름 없음",
           email: u.email || "이메일 없음",
+          signupName: u.signupName,
+          signupPhone: u.signupPhone,
+          signupMemo: u.signupMemo,
           createdAt: u.createdAt.toISOString(),
         }));
 
@@ -131,6 +153,8 @@ export default async function Home() {
       refundInfo={refundInfo}
       pendingUsers={pendingUsers}
       approvedSocialUsers={approvedSocialUsers}
+      contributionSummary={contributionSummary}
+      paymentNotices={paymentNotices}
     />
   );
 }

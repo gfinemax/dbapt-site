@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -11,7 +11,13 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-const pageModules = import.meta.glob<{ default: ComponentType }>("../app/**/page.tsx", {
+type PageComponent = (props?: {
+  searchParams?: Promise<{
+    error?: string;
+  }>;
+}) => ReactNode | Promise<ReactNode>;
+
+const pageModules = import.meta.glob<{ default: PageComponent }>("../app/**/page.tsx", {
   eager: true,
 });
 
@@ -39,13 +45,19 @@ describe("linked informational pages", () => {
   });
 
   for (const route of routes) {
-    it(`states the preparation status on ${route.path}`, () => {
+    it(`states the preparation status on ${route.path}`, async () => {
       const Page = pageModules[route.path]?.default;
 
       expect(Page).toBeDefined();
       if (!Page) return;
 
-      render(<Page />);
+      render(
+        await Page(
+          route.path === "../app/login/page.tsx"
+            ? { searchParams: Promise.resolve({}) }
+            : undefined,
+        ),
+      );
       expect(screen.getByRole("heading", { name: route.heading })).toBeInTheDocument();
       expect(screen.getByText(new RegExp(route.message))).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "홈으로 돌아가기" })).toHaveAttribute("href", "/");

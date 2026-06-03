@@ -18,6 +18,9 @@ model User {
   email         String?     @unique                  // 구글 로그인 이메일
   emailVerified DateTime?
   image         String?                              // 구글 프로필 이미지 URL
+  signupName    String?                              // 가입 신청서 입력 이름
+  signupPhone   String?                              // 가입 신청서 연락처
+  signupMemo    String?                              // 가입 신청서 관리자 전달 메모
   role          String      @default("PENDING")      // PENDING(대기), MEMBER(정식), REFUND(환불), ADMIN(관리자)
   isActive      Boolean     @default(true)           // 계정 활성 상태
   createdAt     DateTime    @default(now())
@@ -30,6 +33,10 @@ model User {
   // 관계 정의
   documentLogs  DocumentLog[]
   refundInfo    RefundInfo?
+  contributionSummary ContributionSummary?
+  paymentNotices PaymentNotice[]
+  createdPaymentImportBatches PaymentImportBatch[] @relation("PaymentImportCreatedBy")
+  approvedPaymentImportBatches PaymentImportBatch[] @relation("PaymentImportApprovedBy")
   coopNews      CoopNews[]
   freePosts     FreePost[]
   freeComments  FreeComment[]
@@ -98,6 +105,97 @@ model RefundInfo {
   updatedAt      DateTime    @updatedAt
 
   user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// 4.5. 조합원/환불자 개인별 분담금 납부 현황
+model ContributionSummary {
+  id            String      @id @default(uuid())
+  userId        String      @unique
+  totalDue      Int         @default(0)               // 총 고지액
+  totalPaid     Int         @default(0)               // 총 납부액
+  unpaidAmount  Int         @default(0)               // 미납 원금
+  overdueAmount Int         @default(0)               // 연체 미납액
+  lateFee       Int         @default(0)               // 연체료
+  nextDueDate   DateTime?                             // 다음 납부기한
+  status        String      @default("NORMAL")        // NORMAL, UNPAID, OVERDUE
+  noticeMessage String?                               // 본인 화면 안내 문구
+  sourceBatchId String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+// 4.6. 분담금 자료 업로드/API 수신 배치
+model PaymentImportBatch {
+  id           String             @id @default(uuid())
+  source       String             @default("MANUAL_API") // MANUAL_API, EXCEL, EXTERNAL_API
+  status       String             @default("PENDING")    // PENDING, APPROVED, REJECTED
+  rowCount     Int                @default(0)
+  errorCount   Int                @default(0)
+  createdById  String
+  approvedById String?
+  approvedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  createdBy    User               @relation("PaymentImportCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy   User?              @relation("PaymentImportApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  rows         PaymentImportRow[]
+
+  @@index([status, createdAt])
+}
+
+// 4.7. 배치별 개인 납부 행 검증 결과
+model PaymentImportRow {
+  id                String             @id @default(uuid())
+  batchId           String
+  loginId           String
+  memberName        String?
+  targetUserId      String?
+  totalDue          Int                @default(0)
+  totalPaid         Int                @default(0)
+  unpaidAmount      Int                @default(0)
+  overdueAmount     Int                @default(0)
+  lateFee           Int                @default(0)
+  nextDueDate       DateTime?
+  status            String             @default("NORMAL")
+  noticeMessage     String?
+  validationStatus  String             @default("VALID") // VALID, ERROR
+  validationMessage String?
+  createdAt         DateTime           @default(now())
+
+  batch             PaymentImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([loginId])
+  @@index([targetUserId])
+}
+
+// 4.8. 미납/연체 안내 초안과 승인/발송 추적
+model PaymentNotice {
+  id            String      @id @default(uuid())
+  userId        String
+  sourceBatchId String?
+  type          String      @default("UNPAID")       // UNPAID, OVERDUE
+  status        String      @default("DRAFT")        // DRAFT, APPROVED, SENT, CANCELLED
+  title         String
+  message       String
+  unpaidAmount  Int         @default(0)
+  overdueAmount Int         @default(0)
+  lateFee       Int         @default(0)
+  dueDate       DateTime?
+  approvedAt    DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 // OAuth 계정 정보 저장 테이블 (NextAuth 표준)

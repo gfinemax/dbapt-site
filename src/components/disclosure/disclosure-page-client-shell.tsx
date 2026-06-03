@@ -9,6 +9,7 @@ import { PortalShell } from "@/components/portal/portal-shell";
 import { type Document, type Attachment } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 import { cn } from "@/lib/utils";
+import { getPersonalLibraryLabel } from "@/lib/personal-library-label";
 
 type DisclosurePageClientShellProps = {
   session?: {
@@ -30,6 +31,9 @@ type DisclosurePageClientShellProps = {
     id: string;
     name: string;
     email: string;
+    signupName?: string | null;
+    signupPhone?: string | null;
+    signupMemo?: string | null;
     createdAt: string;
   }[];
   approvedSocialUsers?: {
@@ -54,6 +58,7 @@ export function DisclosurePageClientShell({
   const [isDisclosureDrawerOpen, setIsDisclosureDrawerOpen] = useState(false);
   const [portalCategory, setPortalCategory] = useState<string>("all");
   const [portalSearch, setPortalSearch] = useState<string>("");
+  const personalLibraryLabel = getPersonalLibraryLabel(session);
   const [activeViewDoc, setActiveViewDoc] = useState<{ 
     id: string; 
     title: string; 
@@ -185,7 +190,7 @@ export function DisclosurePageClientShell({
           "fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
-        aria-label="조합원 개인 자료실 드로어"
+        aria-label={`${personalLibraryLabel} 드로어`}
       >
         <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
           <div className="flex items-center gap-2">
@@ -193,7 +198,7 @@ export function DisclosurePageClientShell({
               D
             </span>
             <h2 className="text-base font-bold text-charcoal-primary">
-              조합원 개인 자료실
+              {personalLibraryLabel}
             </h2>
           </div>
           

@@ -1,7 +1,7 @@
 # Request Summary
 
-- Requested change: Restore the login 안내 modal that was previously implemented but no longer appears after login.
-- Explicitly included scope: Ensure the `조합원 개인 자료실 등록 알림` 안내 modal appears after authenticated users land on their role-specific portal page, including administrator sessions. Keep the existing `/login` to `/portal/*` redirect behavior and do not change permissions. Apply the modal primary button style to the right-side vertical `조합원 개인 자료실` badge. Hide the browser's page scrollbar while keeping page scrolling functional.
-- Explicitly excluded scope: New document APIs, new permissions, public exposure of protected files, accounting, payment, voting, messaging, or private member data.
-- Candidate governing specification: Existing authenticated portal preview and repository UI rules in `AGENTS.md`.
+- Requested feature slice: Implement an API-ready first slice for member/refund-member contribution payment status, overdue unpaid amount guidance, and admin-approved payment imports.
+- Explicitly included scope: Add database models, admin import/approval APIs, current-user contribution read API, and login-gated portal display for approved contribution summaries and draft notices.
+- Explicitly excluded scope: Do not connect external accounting systems, SMS, Kakao 알림톡, payment gateways, automatic public disclosure, or direct external writes into live member data.
+- Candidate governing specification: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, section `납부와 미납 안내`.
 - Unanswered decision: none

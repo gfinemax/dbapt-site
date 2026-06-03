@@ -1,0 +1,3 @@
+ALTER TABLE "User" ADD COLUMN "signupName" TEXT;
+ALTER TABLE "User" ADD COLUMN "signupPhone" TEXT;
+ALTER TABLE "User" ADD COLUMN "signupMemo" TEXT;

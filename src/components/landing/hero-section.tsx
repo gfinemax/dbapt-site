@@ -3,7 +3,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { heroContent } from "@/content/landing";
 
-export function HeroSection() {
+type HeroSectionProps = {
+  isLoggedIn?: boolean;
+};
+
+export function HeroSection({ isLoggedIn = false }: HeroSectionProps) {
   return (
     <section className="relative isolate overflow-hidden pb-8 pt-3 sm:pb-10">
       <div className="site-container relative min-h-[480px] overflow-hidden rounded-[2rem] bg-white sm:min-h-[520px]">
@@ -30,14 +34,16 @@ export function HeroSection() {
             <p className="mt-6 max-w-none text-[16px] leading-7 text-graphite sm:text-[17px]">
               {heroContent.description}
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link href="/login">{heroContent.primaryAction}</Link>
-              </Button>
-              <Button asChild variant="secondary" size="lg">
-                <Link href="/business">{heroContent.secondaryAction}</Link>
-              </Button>
-            </div>
+            {!isLoggedIn && (
+              <div data-hero-actions className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Button asChild size="lg">
+                  <Link href="/login">{heroContent.primaryAction}</Link>
+                </Button>
+                <Button asChild variant="secondary" size="lg">
+                  <Link href="/business">{heroContent.secondaryAction}</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -22,7 +22,7 @@ export default async function DisclosurePage() {
     processedState: string;
     targetDate: string | null;
   } | null = null;
-  let pendingUsers: { id: string; name: string; email: string; createdAt: string }[] = [];
+  let pendingUsers: { id: string; name: string; email: string; signupName?: string | null; signupPhone?: string | null; signupMemo?: string | null; createdAt: string }[] = [];
   let approvedSocialUsers: { id: string; name: string; email: string; role: string; createdAt: string }[] = [];
 
   if (session) {
@@ -96,6 +96,9 @@ export default async function DisclosurePage() {
           id: u.id,
           name: u.name || "이름 없음",
           email: u.email || "이메일 없음",
+          signupName: u.signupName,
+          signupPhone: u.signupPhone,
+          signupMemo: u.signupMemo,
           createdAt: u.createdAt.toISOString(),
         }));
 

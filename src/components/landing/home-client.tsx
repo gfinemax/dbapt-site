@@ -11,7 +11,10 @@ import { DisclosureClient } from "@/components/disclosure/disclosure-client";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
+import { ContributionSummaryMini } from "@/components/portal/contribution-summary-mini";
+import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 import { cn } from "@/lib/utils";
+import { getPersonalLibraryLabel } from "@/lib/personal-library-label";
 
 type HomeClientProps = {
   session?: {
@@ -33,6 +36,9 @@ type HomeClientProps = {
     id: string;
     name: string;
     email: string;
+    signupName?: string | null;
+    signupPhone?: string | null;
+    signupMemo?: string | null;
     createdAt: string;
   }[];
   approvedSocialUsers?: {
@@ -42,6 +48,8 @@ type HomeClientProps = {
     role: string;
     createdAt: string;
   }[];
+  contributionSummary?: ContributionSummaryView | null;
+  paymentNotices?: PaymentNoticeView[];
 };
 
 export function HomeClient({
@@ -51,6 +59,8 @@ export function HomeClient({
   refundInfo,
   pendingUsers = [],
   approvedSocialUsers = [],
+  contributionSummary,
+  paymentNotices = [],
 }: HomeClientProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAboutDrawerOpen, setIsAboutDrawerOpen] = useState(false);
@@ -59,6 +69,7 @@ export function HomeClient({
   const [portalSearch, setPortalSearch] = useState<string>("");
   const [showAnnouncePopup, setShowAnnouncePopup] = useState(false);
   const [isDoNotShowAnnounceToday, setIsDoNotShowAnnounceToday] = useState(false);
+  const personalLibraryLabel = getPersonalLibraryLabel(session);
 
   // 드로어 또는 안내 팝업 활성화 시 본문 스크롤 차단 처리 (디테일한 UX 보장)
   useEffect(() => {
@@ -165,7 +176,7 @@ export function HomeClient({
 
       {/* 2. 일반 랜딩 홈페이지 콘텐츠 */}
       <main className="flex-1 animate-page-in">
-        <HeroSection />
+        <HeroSection isLoggedIn={!!session} />
         <FeatureLinks />
         <NoticesSection />
         <PortalPreview session={session} onOpenPortal={() => setIsDrawerOpen(true)} />
@@ -191,7 +202,7 @@ export function HomeClient({
           "fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
-        aria-label="조합원 개인 자료실 드로어"
+        aria-label={`${personalLibraryLabel} 드로어`}
       >
         {/* 드로어 상단 헤더 */}
         <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
@@ -200,7 +211,7 @@ export function HomeClient({
               D
             </span>
             <h2 className="text-base font-bold text-charcoal-primary">
-              조합원 개인 자료실
+              {personalLibraryLabel}
             </h2>
           </div>
           
@@ -227,6 +238,8 @@ export function HomeClient({
               refundInfo={refundInfo}
               pendingUsers={pendingUsers}
               approvedSocialUsers={approvedSocialUsers}
+              contributionSummary={contributionSummary}
+              paymentNotices={paymentNotices}
               isDrawerMode={true}
               initialCategory={portalCategory}
               initialSearch={portalSearch}
@@ -302,6 +315,12 @@ export function HomeClient({
                     </p>
                   </div>
                 </div>
+
+                <ContributionSummaryMini
+                  contributionSummary={contributionSummary}
+                  paymentNotices={paymentNotices}
+                  className="border-t border-stone-surface/60"
+                />
               </div>
             </div>
 
