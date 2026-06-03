@@ -2,6 +2,130 @@
 
 ## Reviewed Change
 
+- Feature: Show the downloaded 59㎡A, 59㎡B, 74㎡A, and 84㎡ premium unit-plan images one at a time in `사업현황 > 세대계획`.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `사업정보` scope.
+- Implementation plan: `docs/superpowers/plans/2026-06-01-daebang-business-status.md`.
+- Files or pages reviewed: `src/components/business/unit-tab.tsx`, `src/__tests__/business-page.test.tsx`, `public/assets/business/units/*.png`, public `/business#unit` presentation.
+
+## Boundary Review
+
+- Finding: PASS. The change adds public unit-plan reference information only.
+- Evidence: No route, login check, private document access, pricing, contract action, payment data, or admin/member workflow was added. The content remains inside the public `/business` informational page.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The section identifies the unit-plan content as attached/downloaded premium unit-detail information and separates it from the broader household-count tables.
+- Evidence: The added cards list only visible image-grounded details for 59㎡A, 59㎡B, 74㎡A, and 84㎡. The 84㎡ image does not show a household count, so the UI says `세대수 별도 표기 없음` instead of inventing one.
+
+## Design And Accessibility Review
+
+- Finding: PASS with one browser viewport limitation. The image gallery follows the existing stone-card, warm recessed panel, compact badge, and responsive grid patterns used in the business page.
+- Evidence: The unit gallery uses `next/image` with explicit alt text, contained `object-contain` imagery, compact area data, and a forced single-column layout so each 평형 card appears one at a time. Focused Business page tests verify the gallery has `grid-cols-1` and no `lg:grid-cols-2`. Connected Chrome desktop verification confirmed 4 cards, no adjacent cards sharing the same row, all 4 images loaded, and no horizontal overflow. Mobile viewport resizing was not exposed by the connected browser backend.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
+- Feature: Refine the `사업현황 > 조감도·배치도` section to surface the briefing images and layout notes more clearly.
+- Governing spec: `DESIGN.md` card, imagery, and truthful public information presentation rules.
+- Implementation plan: Existing public `/business#plan` section; no access or workflow behavior change.
+- Files or pages reviewed: `src/components/business/plan-tab.tsx`, `src/__tests__/business-page.test.tsx`.
+
+## Boundary Review
+
+- Finding: PASS. The change reorganizes public briefing-image presentation only.
+- Evidence: No routes, login checks, document access, payment data, or admin/member actions were added. The section remains on the public `/business` informational surface.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The section labels the images as 2025.09.06 briefing-material references and preserves the caution that they are not final permit drawings.
+- Evidence: The revised section identifies `변경 조감도`, `당초 배치도`, and `당초 조감도` by briefing page source, and the caution text states the images should not be interpreted as confirmed renderings or final approval drawings.
+
+## Design And Accessibility Review
+
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The plan section now uses compact summary cards, a larger standalone layout-image card, and the existing image alt text for all briefing images. Focused Business page tests passed and local `/business` SSR output included the new labels. Callable browser automation was not exposed in this session.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
+- Feature: Add a cooperative organization chart to the `조직 및 협력사` section and separate it from partner status cards.
+- Governing spec: `DESIGN.md` card, color, and public information presentation rules.
+- Implementation plan: Existing public about page organization tab; no new access or workflow surface.
+- Files or pages reviewed: `src/components/about/about-client.tsx`, `src/__tests__/about-client.test.tsx`.
+
+## Boundary Review
+
+- Finding: PASS. The change adds public explanatory organization content only.
+- Evidence: No routes, login checks, document access, payment data, or admin/member actions were added. The section remains on the public `/about` informational surface.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The organization chart describes role categories and governance flow without exposing unverified personal lists or operational results.
+- Evidence: The chart uses `조합원 총회`, `조합장`, `이사회`, `감사`, `사무국`, and `전문 협력사` as role nodes, and the partner section is labeled separately as `협력사 현황`.
+
+## Design And Accessibility Review
+
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The organization chart preserves the top-to-bottom governance diagram while using the same icon-plus-white-card pattern as the partner status cards, with each node icon and title aligned on the same centered row, a smaller top assembly node, narrower fixed node widths to reduce right-side empty space, straight SVG branch connector lines with rounded corners marked `aria-hidden`, charcoal headings, and compact explanatory copy. Focused About component tests passed. Callable browser automation was not exposed in this session.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
+- Feature: Refine the active desktop navigation indicator from a full-width underline to a compact rounded bar.
+- Governing spec: `DESIGN.md` navigation and color token rules.
+- Implementation plan: Existing public header navigation; no product scope or access behavior change.
+- Files or pages reviewed: `src/components/landing/site-header.tsx`, `src/__tests__/site-header.test.tsx`.
+
+## Boundary Review
+
+- Finding: PASS. The change is visual-only and does not add, remove, or expose navigation destinations.
+- Evidence: `megaMenuNavigation` items, routes, auth controls, sitemap behavior, and role-gated access behavior are unchanged.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The indicator communicates the current page only and does not imply progress, completion, or a workflow step.
+- Evidence: The active state remains tied to the current `pathname`; no numeric step markers or segmented progress UI were added.
+
+## Design And Accessibility Review
+
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The active nav label keeps the existing Ember Orange text treatment and now uses a 3px rounded bar centered under the label, preserving the warm canvas/header style. The indicator is `aria-hidden`, so it does not add redundant screen-reader output. Focused header tests passed. Callable browser automation was not exposed in this session.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
 - Feature: Use the corrected signup/application name as the member-facing display name after approval.
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Implementation plan: Existing Google OAuth pending-approval workflow; keep `User.name` as the Google-authenticated source and use `signupName` as the corrected display name when present.

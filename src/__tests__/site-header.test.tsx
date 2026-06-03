@@ -1,10 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SiteHeader } from "@/components/landing/site-header";
+
+const navigationState = vi.hoisted(() => ({
+  pathname: "/",
+}));
 
 vi.mock("next/navigation", () => ({
   usePathname() {
-    return "/";
+    return navigationState.pathname;
   },
   useRouter() {
     return {
@@ -19,6 +23,10 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 describe("site header", () => {
+  afterEach(() => {
+    navigationState.pathname = "/";
+  });
+
   it("keeps auth badges out of the public header for logged-out users", () => {
     render(<SiteHeader />);
 
@@ -76,5 +84,25 @@ describe("site header", () => {
 
     expect(screen.getByText("전체 메뉴 (사이트맵)")).toBeInTheDocument();
     expect(screen.queryByText("운영자 개인 자료실 열기")).not.toBeInTheDocument();
+  });
+
+  it("uses a compact rounded active indicator directly under the active desktop nav label", () => {
+    navigationState.pathname = "/about";
+
+    const { container } = render(<SiteHeader />);
+    const aboutLink = container.querySelector('nav a[href="/about"]');
+    const indicator = container.querySelector("[data-active-nav-indicator]");
+
+    expect(aboutLink).not.toBeNull();
+    expect(aboutLink).toHaveClass("text-ember-orange", "font-bold");
+    expect(indicator).toHaveClass(
+      "bottom-[18px]",
+      "left-1/2",
+      "h-[3px]",
+      "w-[72%]",
+      "-translate-x-1/2",
+      "rounded-full",
+      "bg-ember-orange",
+    );
   });
 });

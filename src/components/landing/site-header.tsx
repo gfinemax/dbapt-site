@@ -151,7 +151,11 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
                 >
                   <span>{item.title}</span>
                   {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-ember-orange rounded-full animate-in fade-in duration-200" />
+                    <span
+                      aria-hidden="true"
+                      data-active-nav-indicator
+                      className="absolute bottom-[18px] left-1/2 h-[3px] w-[72%] -translate-x-1/2 rounded-full bg-ember-orange shadow-[0_0_0_1px_rgba(255,62,0,0.08)] animate-in fade-in duration-200"
+                    />
                   )}
                 </Link>
               );

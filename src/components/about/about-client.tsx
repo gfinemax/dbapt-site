@@ -108,6 +108,74 @@ const tabs = [
   { id: "location", label: "찾아오시는 길" },
 ] as const;
 
+const organizationNodes = [
+  {
+    title: "조합원 총회",
+    description: "정관, 예산, 주요 사업 의사결정의 최상위 승인 기구",
+    icon: "👥",
+    tone: "bg-ember-orange/10 text-ember-orange",
+  },
+  {
+    title: "조합장",
+    description: "조합 운영 총괄 및 대외 업무 대표",
+    icon: "🧭",
+    tone: "bg-sky-blue/10 text-sky-blue",
+  },
+  {
+    title: "이사회",
+    description: "예산, 계약, 사업 추진 안건 심의",
+    icon: "📋",
+    tone: "bg-meadow-green/10 text-midnight",
+  },
+  {
+    title: "감사",
+    description: "자금 집행과 업무 절차의 독립 점검",
+    icon: "🔎",
+    tone: "bg-sunburst-yellow/15 text-charcoal-primary",
+  },
+  {
+    title: "사무국",
+    description: "조합원 응대, 문서 관리, 행정 실무 수행",
+    icon: "🗂️",
+    tone: "bg-stone-surface text-charcoal-primary",
+  },
+  {
+    title: "전문 협력사",
+    description: "신탁, 설계, 법무, 회계, 금융, 사업관리 실무 지원",
+    icon: "🤝",
+    tone: "bg-ember-orange/10 text-ember-orange",
+  },
+];
+
+function OrganizationNodeCard({
+  node,
+  badge,
+  className,
+}: {
+  node: (typeof organizationNodes)[number];
+  badge?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("stone-card flex flex-col items-center justify-center rounded-[22px] border border-stone-surface bg-white p-5 text-center sm:p-6", className)}>
+      <div className="flex min-w-0 items-center justify-center gap-3">
+        <span className={cn("flex size-12 shrink-0 select-none items-center justify-center rounded-2xl text-2xl", node.tone)}>
+          {node.icon}
+        </span>
+        <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
+          <h4 className="text-lg font-extrabold text-charcoal-primary tracking-tight">{node.title}</h4>
+          {badge && (
+            <span className="inline-flex rounded-full bg-midnight px-2.5 py-0.5 text-[9px] font-bold text-white">
+              {badge}
+            </span>
+          )}
+        </div>
+      </div>
+      <p className="mt-4 text-sm leading-6 text-graphite">{node.description}</p>
+    </div>
+  );
+}
+
 export function AboutClient({ onOpenPortal }: AboutClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("greetings");
   const [showFullHistory, setShowFullHistory] = useState(false);
@@ -538,7 +606,78 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
               사업의 견고함을 뒷받침하는 조직 및 협력사
             </h2>
             <p className="text-xs sm:text-sm text-graphite mt-3">
-              최고의 전문가 조직과 투명한 공정 대행 기관이 만나 주거 신화를 완수해 나갑니다.
+              내부 의사결정 구조와 외부 전문 협력 체계를 분리해 조합 운영의 책임과 역할을 명확히 공개합니다.
+            </p>
+          </div>
+
+          <div className="mb-10 sm:mb-12">
+            <div className="mb-5 flex flex-col gap-2 text-left sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-ember-orange tracking-widest uppercase">COOPERATIVE CHART</p>
+                <h3 className="mt-2 text-xl sm:text-2xl font-extrabold text-charcoal-primary tracking-tight">
+                  대방동 지역주택조합 조직도
+                </h3>
+              </div>
+              <p className="max-w-md text-xs leading-5 text-graphite">
+                조합원 총회를 최상위 의사결정 기구로 두고, 조합장·이사회·감사·사무국이 역할을 나누어 사업을 운영합니다.
+              </p>
+            </div>
+
+            <div data-organization-chart className="relative overflow-hidden rounded-[24px] border border-stone-surface bg-parchment-card px-4 py-7 sm:px-7 sm:py-10">
+              <svg
+                className="pointer-events-none absolute left-6 right-6 top-[144px] bottom-[102px] hidden md:block"
+                viewBox="0 0 1000 520"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <g fill="none" stroke="#d8d2ca" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3">
+                  <path d="M500 0 V82" />
+                  <path d="M500 82 H176 Q148 82 148 110 V128" />
+                  <path d="M500 82 V128" />
+                  <path d="M500 82 H824 Q852 82 852 110 V128" />
+                  <path d="M500 286 V356" />
+                  <path d="M500 356 H318 Q290 356 290 384 V404" />
+                  <path d="M500 356 H682 Q710 356 710 384 V404" />
+                </g>
+              </svg>
+
+              <div className="relative z-10 mx-auto flex max-w-4xl flex-col">
+                <div className="mx-auto w-full max-w-[420px]">
+                  <OrganizationNodeCard
+                    node={organizationNodes[0]}
+                    badge="최상위 의결"
+                    className="min-h-[104px] border-[#d9d4cc] bg-white"
+                  />
+                </div>
+
+                <div className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[repeat(3,minmax(0,260px))] md:justify-center">
+                  {organizationNodes.slice(1, 4).map((node) => (
+                    <div key={node.title} className="flex h-full flex-col">
+                      <OrganizationNodeCard node={node} className="h-full min-h-[148px]" />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[repeat(2,minmax(0,320px))] md:justify-center">
+                  {organizationNodes.slice(4).map((node) => (
+                    <div key={node.title} className="flex h-full flex-col">
+                      <OrganizationNodeCard node={node} className="h-full min-h-[136px]" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-5 flex flex-col gap-2 text-left sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-bold text-ember-orange tracking-widest uppercase">PARTNER NETWORK</p>
+              <h3 className="mt-2 text-xl sm:text-2xl font-extrabold text-charcoal-primary tracking-tight">
+                협력사 현황
+              </h3>
+            </div>
+            <p className="max-w-md text-xs leading-5 text-graphite">
+              외부 전문기관은 각 분야별 실무를 지원하며, 주요 계약과 집행은 조합 내부 의결 및 감사 절차를 거쳐 관리됩니다.
             </p>
           </div>
 
@@ -569,9 +708,9 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
             <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex items-start gap-4">
               <span className="text-2xl select-none bg-ember-orange/10 text-ember-orange p-2.5 rounded-2xl shrink-0">🤝</span>
               <div>
-                <h3 className="text-base font-bold text-charcoal-primary">조합 행정기구 및 이사회</h3>
+                <h3 className="text-base font-bold text-charcoal-primary">법무·회계 자문기관</h3>
                 <p className="text-xs text-graphite mt-2 leading-5">
-                  조합 사무국과의 긴밀한 소통으로 조합 내부 규약에 의해 선출된 입주 예정 조합원 대표 감사진과 이사회 의결 기구가 상시 가동되어, 모든 예산 조율과 계약 사항을 민주적이고 투명하게 의결합니다.
+                  주요 계약, 소송 대응, 회계 세무 정비, 실태조사 지적사항 개선 등 조합 운영의 법적 안정성과 회계 투명성을 높이기 위해 분야별 외부 전문가의 검토 체계를 운영합니다.
                 </p>
               </div>
             </div>

@@ -1,5 +1,157 @@
 # Verification
 
+## Verification Addendum: Premium Unit Plan Image Gallery
+
+## Implemented Change
+
+- Changed the premium unit gallery from a two-column desktop grid to a forced single-column sequence so each 평형 card appears one at a time.
+- Added a regression assertion that `premium-unit-gallery` uses `grid-cols-1` and does not use `lg:grid-cols-2`.
+- Copied the four downloaded premium unit-plan images into `public/assets/business/units/`:
+  - `unit-59a-premium.png`
+  - `unit-59b-premium.png`
+  - `unit-74a-premium.png`
+  - `unit-84-premium.png`
+- Added a `사업현황 > 세대계획` premium unit gallery for:
+  - `59㎡A` / `78세대`
+  - `59㎡B` / `18세대`
+  - `74㎡A` / `33세대`
+  - `84㎡` / `세대수 별도 표기 없음`
+- Reflected the visible area breakdowns from each image.
+- Kept the existing 분양주택/공공주택 세대계획 tables unchanged.
+- Updated the Business page regression test for all four unit image alt texts and the single-column gallery layout.
+
+## Checks Run
+
+- Red layout test: `pnpm test -- src/__tests__/business-page.test.tsx` failed before implementation because `premium-unit-gallery` was not present and the layout was still a two-column desktop grid.
+- Focused layout test after implementation: `pnpm test -- src/__tests__/business-page.test.tsx` passed, 1 file and 3 tests.
+- Red test: `pnpm test -- src/__tests__/business-page.test.tsx` failed before implementation because `프리미엄 평형 정보 59㎡A 평면도` was not rendered.
+- Focused test: `pnpm test -- src/__tests__/business-page.test.tsx` passed, 1 file and 3 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm test`: failed in existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:88`; current database has 2 documents and the test expects at least 3. Other 76 tests passed.
+- `pnpm build`: passed.
+
+## Browser Checks
+
+- Used the existing local dev server at `http://127.0.0.1:3000`; no new dev server was started.
+- Connected Chrome desktop check for `http://127.0.0.1:3000/business#unit` confirmed all four expected image alt texts exist.
+- Desktop check confirmed the gallery class is `mt-6 grid grid-cols-1 gap-6`, has 4 cards, and no adjacent cards share the same row.
+- Desktop check confirmed four `#unit` images completed loading with nonzero natural dimensions.
+- Desktop check reported no horizontal overflow at viewport `1166x1259`.
+- Mobile viewport resizing was not exposed by the connected browser backend in this session, so mobile visual verification remains limited to the responsive component structure and tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch still needs separate cleanup: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
+## Verification Addendum: Business Plan View Briefing Image Reflection
+
+## Implemented Change
+
+- Updated `사업현황 > 조감도·배치도` to show briefing content in a clearer sequence:
+  - `변경 조감도`
+  - `당초 배치도`
+  - `당초 조감도`
+- Added compact source summary cards for briefing pages 14, 10, and 12.
+- Promoted the `당초 설계(안) 배치도` image into its own larger card.
+- Updated layout notes to call out 101~105동, 등용로변 출입 체계, 근린생활시설·사회복지시설, and 공공보행통로.
+- Kept the caution that images are briefing references, not confirmed renderings or final approval drawings.
+- Updated the Business page regression test for the new plan-view labels and layout note.
+
+## Checks Run
+
+- `pnpm test -- src/__tests__/business-page.test.tsx`: passed, 1 file and 3 tests.
+- `Invoke-WebRequest http://localhost:3000/business`: passed; SSR output includes `변경 조감도`, `당초 배치도`, `등용로변 출입 체계`, and `당초 설계(안) 배치도`.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm build`: passed.
+- `pnpm test`: failed in existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:88`; current database has 2 documents and the test expects at least 3. Other 76 tests passed.
+
+## Browser Checks
+
+- Automated browser visual review could not be completed because the callable in-app browser tool was not exposed in this session; local `/business` SSR output was checked instead.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch still needs separate cleanup: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
+## Verification Addendum: About Organization Chart
+
+## Implemented Change
+
+- Added `대방동 지역주택조합 조직도` to the `조직 및 협력사` tab.
+- Matched the organization chart nodes to the partner status cards with rounded white boxes, each icon and organization title on the same centered row, colored icon badges, a 25% narrower top assembly node, narrower fixed node widths, and straight SVG branch connector lines with rounded corners while preserving the diagram hierarchy.
+- Separated internal governance roles from external partner status:
+  - `조합원 총회`
+  - `조합장`
+  - `이사회`
+  - `감사`
+  - `사무국`
+  - `전문 협력사`
+- Added a separate `협력사 현황` heading above the existing partner cards.
+- Updated the former internal `조합 행정기구 및 이사회` partner card to `법무·회계 자문기관` to avoid duplicating the organization chart.
+- Added an About component regression test for the organization/partner separation.
+
+## Checks Run
+
+- `pnpm test -- src/__tests__/about-client.test.tsx src/__tests__/site-header.test.tsx`: passed, 2 files and 6 tests.
+- `pnpm test -- src/__tests__/about-client.test.tsx`: passed, 1 file and 1 test after the stronger organization-chart visual refinement.
+- `pnpm test -- src/__tests__/about-client.test.tsx`: passed, 1 file and 1 test after reducing organization node right-side empty space.
+- `pnpm test -- src/__tests__/about-client.test.tsx`: passed, 1 file and 1 test after replacing segmented connector divs with rounded SVG connector paths.
+- `pnpm test -- src/__tests__/about-client.test.tsx`: passed, 1 file and 1 test after centering organization node contents and reducing the top assembly node width.
+- `pnpm test -- src/__tests__/about-client.test.tsx`: passed, 1 file and 1 test after aligning each icon and organization title on the same row and restoring the previous div connector treatment.
+- `pnpm test -- src/__tests__/about-client.test.tsx`: passed, 1 file and 1 test after replacing connector lines with straight SVG branches and rounded corners.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm build`: passed.
+- `pnpm test`: failed in existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:88`; current database has 2 documents and the test expects at least 3. Other 76 tests passed.
+- `Invoke-WebRequest http://localhost:3000/about`: passed; SSR output includes `data-organization-chart`, `대방동 지역주택조합 조직도`, `조합원 총회`, and `전문 협력사`.
+
+## Browser Checks
+
+- Automated browser visual review could not be completed because the callable in-app browser tool was not exposed in this session; local `/about` SSR output was checked instead.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch still needs separate cleanup: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
+## Verification Addendum: Active Navigation Indicator Refinement
+
+## Implemented Change
+
+- Replaced the active desktop nav underline with a shorter centered rounded bar.
+- Kept the active menu title in Ember Orange and bold weight.
+- Marked the visual indicator as `aria-hidden`.
+- Added a focused regression test for the compact rounded active indicator.
+
+## Checks Run
+
+- `pnpm test -- src/__tests__/site-header.test.tsx`: passed, 1 file and 5 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm build`: passed.
+- `pnpm test`: failed in existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:88`; current database has 2 documents and the test expects at least 3. Other 75 tests passed.
+
+## Browser Checks
+
+- Automated browser visual review could not be completed because the callable in-app browser tool was not exposed in this session.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch still needs separate cleanup: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
 ## Verification Addendum: Corrected Signup Name As Member Display Name
 
 ## Implemented Change
