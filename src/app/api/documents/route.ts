@@ -1,7 +1,27 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { uploadDocumentFile } from "@/lib/document-storage";
+import {
+  isAllowedDocumentUploadExtension,
+  MAX_DOCUMENT_UPLOAD_SIZE,
+  uploadDocumentFile,
+} from "@/lib/document-storage";
+
+function validateUploadFile(file: File, label: string) {
+  if (!file || file.size === 0) {
+    return `${label}이 비어 있습니다.`;
+  }
+
+  if (file.size > MAX_DOCUMENT_UPLOAD_SIZE) {
+    return `${label}은 20MB 이하만 업로드할 수 있습니다.`;
+  }
+
+  if (!isAllowedDocumentUploadExtension(file.name)) {
+    return `${label}은 PDF, HWP, HWPX, Word 파일만 업로드할 수 있습니다.`;
+  }
+
+  return null;
+}
 
 // 1. GET: List documents (gated by session and role)
 export async function GET(request: Request) {
@@ -66,10 +86,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 카테고리, 파일)이 누락되었습니다." }, { status: 400 });
     }
 
+    const fileError = validateUploadFile(file, "문서 파일");
+    if (fileError) {
+      return NextResponse.json({ error: fileError }, { status: 400 });
+    }
+
+    const validAttachments = attachments.slice(0, 10);
+
+    for (const att of validAttachments) {
+      if (att && att.size > 0) {
+        const attachmentError = validateUploadFile(att, "추가 첨부파일");
+        if (attachmentError) {
+          return NextResponse.json({ error: attachmentError }, { status: 400 });
+        }
+      }
+    }
+
     const storagePath = await uploadDocumentFile(file);
 
     const attachmentsData: { filePath: string; fileName: string; fileSize: number }[] = [];
-    const validAttachments = attachments.slice(0, 10);
 
     for (const att of validAttachments) {
       if (att && att.size > 0) {

@@ -2,6 +2,23 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 export const DOCUMENTS_BUCKET = process.env.SUPABASE_DOCUMENTS_BUCKET || "documents";
+export const MAX_DOCUMENT_UPLOAD_SIZE = 20 * 1024 * 1024;
+const DOCUMENT_UPLOAD_FILE_SIZE_LIMIT = "20MB";
+export const DOCUMENT_UPLOAD_MIME_TYPES = [
+  "application/pdf",
+  "application/x-hwp",
+  "application/vnd.hancom.hwpx",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+const DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
+  hwp: "application/x-hwp",
+  hwpx: "application/vnd.hancom.hwpx",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+};
 
 let supabaseAdmin: ReturnType<typeof createClient> | null = null;
 let bucketReady = false;
@@ -41,6 +58,23 @@ function sanitizeFileName(fileName: string) {
   return sanitized || "document.pdf";
 }
 
+function getFileExtension(fileName: string) {
+  return fileName.split(".").pop()?.toLowerCase() || "";
+}
+
+export function isAllowedDocumentUploadExtension(fileName: string) {
+  return getFileExtension(fileName) in DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION;
+}
+
+export function getDocumentUploadContentType(file: File) {
+  const contentTypeFromExtension = DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION[getFileExtension(file.name)];
+  if (contentTypeFromExtension) {
+    return contentTypeFromExtension;
+  }
+
+  return DOCUMENT_UPLOAD_MIME_TYPES.includes(file.type) ? file.type : "application/octet-stream";
+}
+
 export function createDocumentStoragePath(fileName: string) {
   const datePrefix = new Date().toISOString().slice(0, 10);
   return `documents/${datePrefix}/${randomUUID()}-${sanitizeFileName(fileName)}`;
@@ -60,12 +94,22 @@ export async function ensureDocumentsBucket() {
   if (!exists) {
     const { error: createError } = await supabase.storage.createBucket(DOCUMENTS_BUCKET, {
       public: false,
-      allowedMimeTypes: ["application/pdf"],
-      fileSizeLimit: "20MB",
+      allowedMimeTypes: DOCUMENT_UPLOAD_MIME_TYPES,
+      fileSizeLimit: DOCUMENT_UPLOAD_FILE_SIZE_LIMIT,
     });
 
     if (createError) {
       throw createError;
+    }
+  } else {
+    const { error: updateError } = await supabase.storage.updateBucket(DOCUMENTS_BUCKET, {
+      public: false,
+      allowedMimeTypes: DOCUMENT_UPLOAD_MIME_TYPES,
+      fileSizeLimit: DOCUMENT_UPLOAD_FILE_SIZE_LIMIT,
+    });
+
+    if (updateError) {
+      throw updateError;
     }
   }
 
@@ -76,7 +120,7 @@ export async function uploadDocumentFile(file: File) {
   await ensureDocumentsBucket();
 
   const path = createDocumentStoragePath(file.name);
-  const contentType = file.type || "application/pdf";
+  const contentType = getDocumentUploadContentType(file);
   const bytes = await file.arrayBuffer();
 
   const { error } = await getSupabaseAdmin().storage.from(DOCUMENTS_BUCKET).upload(path, bytes, {
