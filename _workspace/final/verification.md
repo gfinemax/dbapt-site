@@ -1,5 +1,185 @@
 # Verification
 
+## Verification Addendum: Folder-Style Registration For Public Disclosure Cards
+
+## Implemented Change
+
+- Extended the existing protected document folder table beyond the meeting folders so public disclosure cards can open the same drawer experience.
+- `운영관리규정`, `회계관리규정`, `선거관리규정`, `조합원 연명부`, and other non-meeting disclosure cards now use `자료실 열기` to open a folder table instead of only routing to the generic portal drawer.
+- Admin users can use `+ 신규 문서 등록` inside that drawer, and the upload form defaults `문서함 세부 분류` to the opened card's category.
+- Expanded the document folder category type and badge handling so the shared table supports 규약/규정/연명부/사업·감리 subcategories.
+- Added explicit upload subcategories for accounting and business/supervision cards, including `외부회계감사`, `내부감사`, `자금운용계획`, `에스크로 명세서`, `용역 계약서`, `공사진행/토지`, `추진실적`, and `감리 보고서`.
+- Added a regression test for opening `운영관리규정 문서함` and confirming the upload form defaults to `운영관리규정`.
+
+## Checks Run
+
+- Focused test: `pnpm test -- src/__tests__/disclosure-page.test.tsx src/__tests__/document-upload-form.test.tsx` passed, 2 files and 4 tests. The test runner emitted existing jsdom `window.scrollTo` not-implemented warnings after tab clicks.
+- `pnpm lint` passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build` passed.
+- After adding accounting and business/supervision subcategories, the same focused test, lint, and build checks were rerun and passed with the same existing lint warning and jsdom warnings.
+- `pnpm test` failed only in the existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the fixture no longer includes a pending document where the test expects one. Other 80 tests passed.
+
+## Browser Checks
+
+- Used the existing local dev server at `http://127.0.0.1:3000`; no new dev server was started.
+- Connected Chrome desktop check for `/disclosure` confirmed the session is admin, `운영관리규정` is visible, `자료실 열기` is visible, and there is no horizontal overflow.
+- Browser click automation was limited by the connected browser adapter selecting duplicate/off-screen DOM and not exposing reliable event dispatch for this page. The actual drawer/open/register flow is covered by the focused component test.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: Regulation Cards And Upload Categories
+
+## Implemented Change
+
+- Added regulation cards under `1. 규약 및 연명부`:
+  - `운영관리규정`
+  - `회계관리규정`
+  - `선거관리규정`
+  - `기타 내부 운영규정`
+- Added `읽기 가이드` chips to the 규약/규정/연명부 cards so long documents are easier to scan.
+- Added regulation submenus under `1. 규약 및 연명부`.
+- Added matching admin upload subcategories to `DocumentUploadForm`, including `정관 및 조합규약`, `운영관리규정`, `회계관리규정`, `선거관리규정`, `기타 내부 운영규정`, and `조합원 연명부`.
+- Expanded primary document file input from PDF-only to `.pdf,.hwp,.hwpx,.doc,.docx`.
+- Connected non-meeting disclosure cards to real uploaded documents by `subCategory`. Logged-in users now see uploaded document previews, latest date, and `문서 보기` actions per card; empty cards explain which admin subcategory to use for upload.
+- Added regression tests for regulation card previews and upload form options.
+
+## Checks Run
+
+- Red test: `pnpm test -- src/__tests__/disclosure-page.test.tsx` failed before implementation because `운영관리규정` was not rendered under `규약 및 연명부`.
+- Red test: `pnpm test -- src/__tests__/document-upload-form.test.tsx` failed before implementation because regulation subcategories and non-PDF accept formats were missing.
+- Focused tests after implementation:
+  - `pnpm test -- src/__tests__/disclosure-page.test.tsx` passed, 1 file and 2 tests. The test runner emitted existing jsdom `window.scrollTo` not-implemented warnings after tab clicks.
+  - `pnpm test -- src/__tests__/document-upload-form.test.tsx` passed, 1 file and 1 test.
+  - Final focused run `pnpm test -- src/__tests__/disclosure-page.test.tsx src/__tests__/document-upload-form.test.tsx` passed, 2 files and 3 tests. The same existing jsdom `window.scrollTo` warnings were emitted.
+- Required validation:
+  - `pnpm lint` passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+  - `pnpm test` failed only in the existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:88`; current database has 2 documents and the test expects at least 3. Other test files, including the new disclosure/upload tests, passed.
+  - `pnpm build` passed.
+
+## Browser Checks
+
+- Used the existing local dev server at `http://127.0.0.1:3000`; no new dev server was started.
+- Local `/disclosure` check confirmed `운영관리규정`, `회계관리규정`, `선거관리규정`, `기타 운영규정`, `읽기 가이드`, and the updated section subtitle are present.
+- Connected Chrome desktop check for `/disclosure` confirmed `section-rules` renders the new regulation cards, read guide text, and public lock/upload status.
+- Desktop check reported no horizontal overflow at viewport `1828x1263`.
+- Admin upload form subcategory and file-format support were verified by the focused component test. The browser admin upload screen was not checked because the current browser session was not authenticated as an admin.
+- Mobile viewport resizing was not exposed by the connected browser backend in this session, and the project does not have Playwright CLI installed for an alternate mobile visual run. Mobile visual verification remains limited to the responsive component structure and focused tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains from earlier verification: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
+## Verification Addendum: Disclosure Agreement Category Move
+
+## Implemented Change
+
+- Moved `공동사업주체 시공예정사 간의 업무협약서` from `1. 규약 및 연명부` to `4. 사업 및 감리`.
+- Removed the `시공자 협약서` submenu from the `규약 및 연명부` tab.
+- Added the `시공자 협약서` submenu to the `사업 및 감리` tab.
+- Updated the `규약 및 연명부` section subtitle so it no longer says the section contains 시공 협약 documents.
+- Added a Disclosure page regression test for the category placement.
+
+## Checks Run
+
+- Red test: `pnpm test -- src/__tests__/disclosure-page.test.tsx` failed before implementation because the agreement still appeared in `section-rules`.
+- Focused test after implementation: `pnpm test -- src/__tests__/disclosure-page.test.tsx` passed, 1 file and 1 test. The test runner emitted an existing jsdom `window.scrollTo` not-implemented warning after the tab click.
+
+## Browser Checks
+
+- Used the existing local dev server at `http://127.0.0.1:3000`; no new dev server was started.
+- Local SSR check for `/disclosure` confirmed `규약 및 연명부` subtitle no longer mentions 시공 협약 documents and the agreement card appears later in `사업 및 감리`.
+- Connected Chrome desktop check for `/disclosure` confirmed `section-rules` does not contain `공동사업주체 시공예정사 간의 업무협약서`, while `section-operations` does contain it.
+- Desktop check reported no horizontal overflow.
+- The connected browser extension exposed duplicate off-screen nav buttons and did not provide a reliable click-state check for the `4. 사업 및 감리` submenu. The focused component test verified that clicking the `4. 사업 및 감리` tab exposes `시공자 협약서`.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains from earlier verification: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
+## Verification Addendum: Premium Unit Plan Text Detail Removal
+
+## Implemented Change
+
+- Changed the premium unit-plan description from `59㎡A, 59㎡B, 74㎡A, 84㎡` to `48㎡A, 59㎡, 74㎡, 84㎡`.
+- Kept the four premium floor-plan images in the single-column gallery.
+- Removed the visible text blocks below each premium image card:
+  - type label such as `확장형`
+  - card title such as `59㎡A`
+  - household badge such as `78세대`
+  - area definition list such as `전용면적`, `공급면적`, and `계약면적`
+- Updated the Business page regression test to verify the new copy and absence of the former detail list/content.
+
+## Checks Run
+
+- Red test: `pnpm test -- src/__tests__/business-page.test.tsx` failed before implementation because the new `48㎡A, 59㎡, 74㎡, 84㎡` copy was not rendered.
+- Focused test after implementation: `pnpm test -- src/__tests__/business-page.test.tsx` passed, 1 file and 3 tests.
+
+## Browser Checks
+
+- Used the existing local dev server at `http://127.0.0.1:3000`; no new dev server was started.
+- Local SSR check for `/business` included the new `48㎡A, 59㎡, 74㎡, 84㎡` description.
+- Connected Chrome desktop check for `http://127.0.0.1:3000/business#unit` confirmed the new description is visible.
+- Desktop check confirmed 4 premium image cards remain, `premium-unit-gallery` contains no `dl` detail list, and the former visible details `78세대`, `59.99㎡`, `84.17㎡`, and `세대수 별도 표기 없음` are absent from page text.
+- Desktop check reported no horizontal overflow. The two lower images remained lazy-load pending in the connected browser check, but their image elements and alt texts remained present in the gallery.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains from earlier verification: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
+## Verification Addendum: About Organization Chart Hierarchy
+
+## Implemented Change
+
+- Reordered the organization chart governance row to render as:
+  - `이사회`
+  - `조합장`
+  - `감사`
+- Changed the lower organization chart group from two side-by-side cards to a vertical stack:
+  - `사무국`
+  - `전문 협력사`
+- Simplified the desktop connector line from the governance row to the secretariat stack.
+- Added regression assertions for the governance row order and secretariat/support stack order.
+- Updated the harness request, scope, and UI review notes for the public `조합소개 > 조직 및 협력사` change.
+
+## Checks Run
+
+- Red test: `pnpm test -- src/__tests__/about-client.test.tsx` failed before implementation because `organization-governance-row` did not exist.
+- Focused test after implementation: `pnpm test -- src/__tests__/about-client.test.tsx` passed, 1 file and 1 test.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm test`: failed in existing DB seed verification at `src/__tests__/portal-auth-flow.test.tsx:88`; current database has 2 documents and the test expects at least 3. Other 76 tests passed.
+- `pnpm build`: passed.
+
+## Browser Checks
+
+- Used the existing local dev server at `http://127.0.0.1:3000`; no new dev server was started.
+- Connected Chrome desktop check for `http://127.0.0.1:3000/about#section-organization` confirmed the visible chart governance row is `이사회`, `조합장`, `감사`.
+- Desktop check confirmed the visible secretariat stack is `사무국`, then `전문 협력사`, with `전문 협력사` below `사무국` and no horizontal overflow.
+- Mobile viewport resizing was not exposed by the connected browser backend in this session, so mobile visual verification remains limited to the responsive component structure and focused tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch still needs separate cleanup: current DB document count is lower than `src/__tests__/portal-auth-flow.test.tsx:88` expects.
+
+---
+
+# Verification
+
 ## Verification Addendum: Premium Unit Plan Image Gallery
 
 ## Implemented Change

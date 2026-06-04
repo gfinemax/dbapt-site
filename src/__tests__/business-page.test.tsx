@@ -35,13 +35,19 @@ describe("business status page", () => {
     expect(screen.getAllByText("102세대").length).toBeGreaterThan(0);
     expect(screen.getByText("공공주택 평형별 계획")).toBeInTheDocument();
     expect(screen.getByText("프리미엄 평형 정보")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "첨부 평형정보 이미지에 표기된 48㎡A, 59㎡, 74㎡, 84㎡ 타입의 면적과 평면도입니다. 세대계획 표와 구분되는 세부 타입 자료로 안내합니다."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("4개 타입")).toBeInTheDocument();
     const premiumUnitGallery = screen.getByTestId("premium-unit-gallery");
     expect(premiumUnitGallery).toHaveClass("grid-cols-1");
     expect(premiumUnitGallery).not.toHaveClass("lg:grid-cols-2");
-    expect(screen.getAllByText("78세대").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("59.99㎡").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("84.17㎡").length).toBeGreaterThan(0);
+    expect(premiumUnitGallery.querySelector("dl")).not.toBeInTheDocument();
+    expect(screen.queryByText("78세대")).not.toBeInTheDocument();
+    expect(screen.queryByText("59.99㎡")).not.toBeInTheDocument();
+    expect(screen.queryByText("84.17㎡")).not.toBeInTheDocument();
     expect(screen.getByAltText("프리미엄 평형 정보 59㎡A 평면도")).toBeInTheDocument();
     expect(screen.getByAltText("프리미엄 평형 정보 59㎡B 평면도")).toBeInTheDocument();
     expect(screen.getByAltText("프리미엄 평형 정보 74㎡A 평면도")).toBeInTheDocument();

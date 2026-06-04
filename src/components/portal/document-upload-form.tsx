@@ -10,6 +10,28 @@ type DocumentUploadFormProps = {
   defaultSubCategory?: string;
 };
 
+const disclosureSubCategoryOptions = [
+  "정관 및 조합규약",
+  "운영관리규정",
+  "회계관리규정",
+  "선거관리규정",
+  "기타 내부 운영규정",
+  "조합원 연명부",
+  "시공자 협약서",
+  "총회 의사록",
+  "이사회 회의록",
+  "수발신 공문",
+  "사업시행계획",
+  "외부회계감사",
+  "내부감사",
+  "자금운용계획",
+  "에스크로 명세서",
+  "용역 계약서",
+  "공사진행/토지",
+  "추진실적",
+  "감리 보고서",
+];
+
 export function DocumentUploadForm({ 
   onSuccess, 
   defaultCategory = "DISCLOSURE", 
@@ -169,7 +191,7 @@ export function DocumentUploadForm({
                 if (val !== "DISCLOSURE") {
                   setSubCategory("");
                 } else {
-                  setSubCategory("총회 의사록");
+                  setSubCategory(defaultSubCategory || "총회 의사록");
                 }
               }}
               className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
@@ -191,10 +213,11 @@ export function DocumentUploadForm({
                 onChange={(e) => setSubCategory(e.target.value)}
                 className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
               >
-                <option value="총회 의사록">총회 의사록</option>
-                <option value="이사회 회의록">이사회 회의록</option>
-                <option value="수발신 공문">수발신 공문</option>
-                <option value="사업시행계획">사업시행계획</option>
+                {disclosureSubCategoryOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
             </div>
           )}
@@ -229,12 +252,12 @@ export function DocumentUploadForm({
 
           <div className="sm:col-span-2">
             <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="file-upload">
-              첨부 파일 (PDF) *
+              첨부 파일 (PDF/HWP/Word) *
             </label>
             <input
               id="file-upload"
               type="file"
-              accept=".pdf"
+              accept=".pdf,.hwp,.hwpx,.doc,.docx"
               required
               onChange={(e) => {
                 if (e.target.files && e.target.files.length > 0) {

@@ -2,6 +2,159 @@
 
 ## Reviewed Change
 
+- Feature: Add the same folder-table registration experience to public disclosure cards outside the meeting section, including regulation, accounting, and business/supervision subcategories.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `공개자료` scope and existing protected document infrastructure.
+- Implementation plan: Reuse the existing document drawer/table and `DocumentUploadForm`; default upload subcategory to the opened card's folder.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`, public `/disclosure`.
+
+## Boundary Review
+
+- Finding: PASS. The change does not create public upload or alter the document mutation API.
+- Evidence: Upload remains behind the existing admin-only document workflow. Logged-out users still see protected login framing, while logged-in admin users can open the shared folder table and use `+ 신규 문서 등록`.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The folder table is opened for the actual card subcategory and the upload form defaults to that same subcategory.
+- Evidence: `운영관리규정` opens `운영관리규정 문서함`, and the regression test verifies the upload form's `문서함 세부 분류` value is `운영관리규정`. Accounting and business/supervision cards now also have explicit subcategories that match upload options.
+
+## Design And Accessibility Review
+
+- Finding: PASS. The implementation reuses the established side drawer, table, search, pagination, and modal form patterns shown in the meeting document folders.
+- Evidence: No new visual system was introduced. The same `자료실 열기`, `폴더 카드로 보기`, `+ 신규 문서 등록`, and `DocumentUploadForm` controls are used for the added public disclosure folder flow.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+
+- Feature: Add management regulation cards to `1. 규약 및 연명부`, add matching admin upload subcategories, and show uploaded document previews inside each regulation card for logged-in users.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `공개자료` scope and existing protected document infrastructure.
+- Implementation plan: Existing public disclosure category presentation plus existing admin document upload form/API.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/components/portal/document-upload-form.tsx`, `src/__tests__/disclosure-page.test.tsx`, `src/__tests__/document-upload-form.test.tsx`, public `/disclosure` and admin upload workflow.
+
+## Boundary Review
+
+- Finding: PASS. Upload remains inside the existing authenticated admin document form and protected API.
+- Evidence: No public upload route, unauthenticated document read, payment/accounting workflow, or new private-data exposure was added. Public cards still show protected-document framing, while logged-in previews use documents already loaded for the current session.
+
+## Truthful Presentation Review
+
+- Finding: PASS. Regulation cards describe document categories and show real uploaded document previews only when matching documents are supplied.
+- Evidence: New cards are `운영관리규정`, `회계관리규정`, `선거관리규정`, and `기타 내부 운영규정`. Upload counts derive from `documents` matching each card's `subCategory`; empty states say the 자료 is not uploaded yet instead of inventing content.
+
+## Design And Accessibility Review
+
+- Finding: PASS. The implementation reuses existing disclosure cards, submenu pills, protected status badges, and document-view button patterns.
+- Evidence: Each regulation card includes a compact `읽기 가이드`, uploaded-document list, and `문서 보기` action. Focused tests verify the new cards, submenus, upload subcategory options, file accept formats, and uploaded document previews.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
+- Feature: Move `공동사업주체 시공예정사 간의 업무협약서` from `1. 규약 및 연명부` to `4. 사업 및 감리`.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `공개자료` scope.
+- Implementation plan: Existing public disclosure category presentation; no new access or workflow surface.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`, public `/disclosure` presentation.
+
+## Boundary Review
+
+- Finding: PASS. The change moves one public preview card between existing disclosure categories only.
+- Evidence: No route, login check, download action, document mutation, private document exposure, payment data, or admin/member workflow was added.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The agreement now sits under the business/supervision category, matching the document subject more closely.
+- Evidence: `규약 및 연명부` now describes only bylaws and member register content, while `사업 및 감리` includes the construction-partner agreement card and `시공자 협약서` submenu.
+
+## Design And Accessibility Review
+
+- Finding: PASS. The existing card, tab, and submenu UI patterns are unchanged.
+- Evidence: The moved card reuses the same item renderer, date/status badges, and responsive grid behavior. Focused Disclosure page tests verify the card is absent from `section-rules`, present in `section-operations`, and exposed through the `4. 사업 및 감리` submenu.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
+- Feature: Update the `사업현황 > 세대계획` premium unit-plan description to `48㎡A, 59㎡, 74㎡, 84㎡` and remove visible text details below the four image cards.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `사업정보` scope.
+- Implementation plan: `docs/superpowers/plans/2026-06-01-daebang-business-status.md`.
+- Files or pages reviewed: `src/components/business/unit-tab.tsx`, `src/__tests__/business-page.test.tsx`, public `/business#unit` presentation.
+
+## Boundary Review
+
+- Finding: PASS. The change adjusts public unit-plan presentation only.
+- Evidence: No routes, login checks, document access, payment data, sales state, or admin/member actions were added. The section remains on the public `/business` informational page.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The description now names the requested type set and the image cards no longer duplicate or restate area/household details outside the images.
+- Evidence: The premium unit-plan text lists `48㎡A, 59㎡, 74㎡, 84㎡`, and the gallery articles render the floor-plan images without the former `확장형`, 세대수, or 면적 definition list blocks.
+
+## Design And Accessibility Review
+
+- Finding: PASS. The gallery keeps the existing single-column card layout and image `alt` text while removing only the bottom text content.
+- Evidence: Focused Business page tests verify the new copy, confirm no `dl` detail list exists inside `premium-unit-gallery`, and confirm the four image alt texts remain rendered.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
+- Feature: Adjust the `조직 및 협력사` organization chart hierarchy so the governance row reads `이사회`, `조합장`, `감사` and `전문 협력사` appears below `사무국`.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `조합소개` scope.
+- Implementation plan: Existing public about page organization section; no new access or workflow surface.
+- Files or pages reviewed: `src/components/about/about-client.tsx`, `src/__tests__/about-client.test.tsx`.
+
+## Boundary Review
+
+- Finding: PASS. The change adjusts public organization-chart presentation only.
+- Evidence: No routes, login checks, document access, payment data, or admin/member actions were added. The section remains on the public `/about` informational surface.
+
+## Truthful Presentation Review
+
+- Finding: PASS. The organization chart still describes role categories and support relationships without adding unverified names, contracts, or operational status.
+- Evidence: The chart continues to use the role nodes `조합원 총회`, `이사회`, `조합장`, `감사`, `사무국`, and `전문 협력사`. The external partner status cards remain under the separate `협력사 현황` heading.
+
+## Design And Accessibility Review
+
+- Finding: PASS. The chart keeps the existing warm recessed panel, stone-card node styling, centered node content, and `aria-hidden` connector treatment.
+- Evidence: The governance row is rendered through `organization-governance-row` in the requested order, and the secretariat/support group is rendered as `organization-secretariat-stack` with `전문 협력사` below `사무국`. Focused About component tests verify both structures.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+
 - Feature: Show the downloaded 59㎡A, 59㎡B, 74㎡A, and 84㎡ premium unit-plan images one at a time in `사업현황 > 세대계획`.
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `사업정보` scope.
 - Implementation plan: `docs/superpowers/plans/2026-06-01-daebang-business-status.md`.

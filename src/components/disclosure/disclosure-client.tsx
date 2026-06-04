@@ -23,6 +23,18 @@ type DisclosureClientProps = {
 
 type TabId = "rules" | "meetings" | "accounting" | "operations";
 
+type DisclosureDocumentFolder = {
+  id: string;
+  title: string;
+  desc: string;
+  date: string;
+  count: number;
+  searchKey: string;
+  categoryKey: "DISCLOSURE";
+  bbsCategory: MeetingCategory;
+  preview: string[];
+};
+
 const tabs = [
   { id: "rules", label: "1. 규약 및 연명부" },
   { id: "meetings", label: "2. 회의 및 행정" },
@@ -34,12 +46,57 @@ const tabs = [
 const disclosureData = {
   rules: {
     title: "규약 및 연명부",
-    subtitle: "조합의 헌법인 규약과 공인된 조합원 소속 명부, 시공 협약 문서입니다.",
+    subtitle: "조합의 헌법인 규약, 운영·회계·선거관리규정, 공인된 조합원 소속 명부입니다.",
     badge: "Regulations & Agreements",
     items: [
-      { id: "rules-1", title: "대방동 지역주택조합 정관 및 조합규약", desc: "조합원의 의무와 권리, 총회·이사회 의결 절차 등 조합의 법적 운영 기준을 명세한 정관 문서입니다.", date: "2026.02" },
-      { id: "rules-2", title: "대방동지역주택조합 정식 조합원 연명부", desc: "동작구청 설립인가 및 정식 등재 완료된 입주 예정 조합원 연명 목록입니다. (개인정보 비식별 조치)", date: "2025.12" },
-      { id: "rules-3", title: "공동사업주체 시공예정사 간의 업무협약서", desc: "대한민국 1군 메이저 브랜드 건설사와 체결한 사업 공동 추진 실무 협약 및 브랜드 사용 계약서 원본입니다.", date: "2025.07" },
+      {
+        id: "rules-1",
+        title: "대방동 지역주택조합 정관 및 조합규약",
+        desc: "조합원의 의무와 권리, 총회·이사회 의결 절차 등 조합의 법적 운영 기준을 명세한 정관 문서입니다.",
+        date: "2026.02",
+        subCategory: "정관 및 조합규약",
+        guide: ["조합원 권리·의무", "총회·이사회 의결", "분담금·탈퇴 기준"],
+      },
+      {
+        id: "rules-3",
+        title: "운영관리규정",
+        desc: "사무국 운영, 민원 응대, 문서 접수·보존, 내부 결재와 정보공개 절차를 정리한 운영 기준입니다.",
+        date: "2026.02",
+        subCategory: "운영관리규정",
+        guide: ["사무국 업무 범위", "문서 접수·보존", "민원·열람 처리"],
+      },
+      {
+        id: "rules-4",
+        title: "회계관리규정",
+        desc: "예산 편성, 자금 집행, 증빙 보관, 회계 보고와 감사 대응 절차를 정리한 회계 운영 기준입니다.",
+        date: "2026.02",
+        subCategory: "회계관리규정",
+        guide: ["예산·집행 절차", "증빙 보관", "회계 보고·감사"],
+      },
+      {
+        id: "rules-5",
+        title: "선거관리규정",
+        desc: "임원 선출, 후보 등록, 투표·개표, 이의신청 절차를 공정하게 관리하기 위한 선거 기준입니다.",
+        date: "2026.02",
+        subCategory: "선거관리규정",
+        guide: ["후보 등록", "투표·개표", "이의신청 절차"],
+      },
+      {
+        id: "rules-6",
+        title: "기타 내부 운영규정",
+        desc: "조합 운영 중 별도 제정되는 보안, 개인정보, 협력사 관리 등 내부 규정을 한곳에서 관리합니다.",
+        date: "수시 업데이트",
+        subCategory: "기타 내부 운영규정",
+        guide: ["보안·개인정보", "협력사 관리", "개정 이력"],
+      },
+      {
+        id: "rules-2",
+        title: "대방동지역주택조합 정식 조합원 연명부",
+        desc: "동작구청 설립인가 및 정식 등재 완료된 입주 예정 조합원 연명 목록입니다. (개인정보 비식별 조치)",
+        date: "2025.12",
+        subCategory: "조합원 연명부",
+        guide: ["등재 기준", "비식별 처리", "열람 권한"],
+      },
     ]
   },
   meetings: {
@@ -98,10 +155,10 @@ const disclosureData = {
     subtitle: "자금관리 신탁사의 에스크로 입출금 내역과 외부감사인의 투명한 회계보고서입니다.",
     badge: "Accounting & Audit",
     items: [
-      { id: "acc-1", title: "2025년도 정기 외부회계감사 정밀 보고서", desc: "주택법 제12조에 의거하여 독립된 공인회계법인으로부터 분담금 집행 일체를 정밀 감사받은 결과보고서입니다.", date: "2026.02" },
-      { id: "acc-2", title: "조합 내부 감사진 정기 분기별 감사 보고서", desc: "입주예정 조합원 대표 감사진이 조합 사무국 예산 수립 및 계약 집행 적정성을 자체 감사한 감독 결과입니다.", date: "2026.01" },
-      { id: "acc-3", title: "2026년도 연간 자금운용 계획 및 차입 예산서", desc: "2026년 한 해 동안 집행 예정인 부동산 매입, 용역비, 차입 금융 조달(LOI 확보) 관련 전체 운용 계획입니다.", date: "2026.01" },
-      { id: "acc-4", title: "신영부동산신탁 수탁 에스크로 자금입출금명세서", desc: "조합원 분담금 임의 유출 방지를 위해 에스크로 안전 계좌로 관리된 월별 자금 입출금 세부 내역서입니다.", date: "2026.02" },
+      { id: "acc-1", title: "2025년도 정기 외부회계감사 정밀 보고서", desc: "주택법 제12조에 의거하여 독립된 공인회계법인으로부터 분담금 집행 일체를 정밀 감사받은 결과보고서입니다.", date: "2026.02", subCategory: "외부회계감사" },
+      { id: "acc-2", title: "조합 내부 감사진 정기 분기별 감사 보고서", desc: "입주예정 조합원 대표 감사진이 조합 사무국 예산 수립 및 계약 집행 적정성을 자체 감사한 감독 결과입니다.", date: "2026.01", subCategory: "내부감사" },
+      { id: "acc-3", title: "2026년도 연간 자금운용 계획 및 차입 예산서", desc: "2026년 한 해 동안 집행 예정인 부동산 매입, 용역비, 차입 금융 조달(LOI 확보) 관련 전체 운용 계획입니다.", date: "2026.01", subCategory: "자금운용계획" },
+      { id: "acc-4", title: "신영부동산신탁 수탁 에스크로 자금입출금명세서", desc: "조합원 분담금 임의 유출 방지를 위해 에스크로 안전 계좌로 관리된 월별 자금 입출금 세부 내역서입니다.", date: "2026.02", subCategory: "에스크로 명세서" },
     ]
   },
   operations: {
@@ -109,10 +166,11 @@ const disclosureData = {
     subtitle: "조합이 체결한 정식 용역 계약 원본과 감리전문가의 월간 실적서입니다.",
     badge: "Operations, Contracts & Supervision",
     items: [
-      { id: "ops-1", title: "설계·용역·부동산 대행사별 정식 계약서 원본 일람", desc: "하우드엔지니어링(설계), 솔롱고스(매입), 월드(법률) 등 조합이 정식 체결하고 공증한 일체의 계약서 모음입니다.", date: "2025.07" },
-      { id: "ops-2", title: "대방동 현장 월별 공사진행 및 토지 매입 상황판", desc: "현장 토지 소유권 확보 소송 추진 현황과 토지매입 실무 핫라인 소통 기록, 매입 비율 현황 보고입니다.", date: "2026.02" },
-      { id: "ops-3", title: "분기별 조합 마일스톤 추진실적 실무 보고서", desc: "지구단위계획 완수 이후 소방·설비 설계 용역사 발주 등 단계별 마일스톤 도달 실적에 대한 조합 공식 보고입니다.", date: "2025.09" },
-      { id: "ops-4", title: "건축·소방 감리원 안전점검 및 월간 감리보고서", desc: "인허가 관련 정밀 안전 확보와 법령 준수를 위해 감리 기술자가 정밀 점검하고 관청에 제출한 공식 실적서입니다.", date: "2025.11" },
+      { id: "ops-1", title: "설계·용역·부동산 대행사별 정식 계약서 원본 일람", desc: "하우드엔지니어링(설계), 솔롱고스(매입), 월드(법률) 등 조합이 정식 체결하고 공증한 일체의 계약서 모음입니다.", date: "2025.07", subCategory: "용역 계약서" },
+      { id: "ops-2", title: "대방동 현장 월별 공사진행 및 토지 매입 상황판", desc: "현장 토지 소유권 확보 소송 추진 현황과 토지매입 실무 핫라인 소통 기록, 매입 비율 현황 보고입니다.", date: "2026.02", subCategory: "공사진행/토지" },
+      { id: "ops-3", title: "분기별 조합 마일스톤 추진실적 실무 보고서", desc: "지구단위계획 완수 이후 소방·설비 설계 용역사 발주 등 단계별 마일스톤 도달 실적에 대한 조합 공식 보고입니다.", date: "2025.09", subCategory: "추진실적" },
+      { id: "ops-4", title: "건축·소방 감리원 안전점검 및 월간 감리보고서", desc: "인허가 관련 정밀 안전 확보와 법령 준수를 위해 감리 기술자가 정밀 점검하고 관청에 제출한 공식 실적서입니다.", date: "2025.11", subCategory: "감리 보고서" },
+      { id: "ops-5", title: "공동사업주체 시공예정사 간의 업무협약서", desc: "대한민국 1군 메이저 브랜드 건설사와 체결한 사업 공동 추진 실무 협약 및 브랜드 사용 계약서 원본입니다.", date: "2025.07", subCategory: "시공자 협약서", guide: ["협약 당사자", "업무 범위", "브랜드 사용 조건"] },
     ]
   }
 };
@@ -121,8 +179,11 @@ const disclosureData = {
 const subMenus = {
   rules: [
     { label: "조합규약", id: "rules-1" },
+    { label: "운영관리규정", id: "rules-3" },
+    { label: "회계관리규정", id: "rules-4" },
+    { label: "선거관리규정", id: "rules-5" },
+    { label: "기타 운영규정", id: "rules-6" },
     { label: "조합연명부", id: "rules-2" },
-    { label: "시공자 협약서", id: "rules-3" },
   ],
   meetings: [
     { label: "총회 의사록", id: "meetings-1" },
@@ -141,8 +202,16 @@ const subMenus = {
     { label: "공사진행/토지", id: "ops-2" },
     { label: "추진실적", id: "ops-3" },
     { label: "감리 보고서", id: "ops-4" },
+    { label: "시공자 협약서", id: "ops-5" },
   ],
 } as const;
+
+function formatDisclosureDate(dateStr?: string | null) {
+  if (!dateStr) return "-";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return dateStr;
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+}
 
 export function DisclosureClient({ onOpenPortal, session, documents = [], onViewDocument }: DisclosureClientProps) {
   const router = useRouter();
@@ -152,10 +221,15 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
   const [activeTab, setActiveTab] = useState<TabId>("rules");
   const [activeSubTab, setActiveSubTab] = useState<string>("all");
   const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
-  const [selectedFolder, setSelectedFolder] = useState<typeof disclosureData.meetings.items[number] | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<DisclosureDocumentFolder | null>(null);
   const [mounted, setMounted] = useState(false);
   const isScrollingRef = useRef(false);
   const isSubTabClickRef = useRef(false);
+
+  const openDocumentFolder = (folder: DisclosureDocumentFolder) => {
+    setSelectedFolder(folder);
+    setIsLeftDrawerOpen(true);
+  };
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -376,17 +450,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                 <div className="grid gap-6 md:grid-cols-2">
                   {data.items
                     .map((item) => {
-                      const folderItem = item as {
-                        id: string;
-                        title: string;
-                        desc: string;
-                        date: string;
-                        count: number;
-                        searchKey: string;
-                        categoryKey: string;
-                        bbsCategory: string;
-                        preview: string[];
-                      };
+                      const folderItem = item as DisclosureDocumentFolder;
 
                       // 1. 실제 DB 문서 중 해당 카테고리의 문서 필터링
                       const realDocs = documents.filter(
@@ -506,8 +570,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                               </span>
                               <Button
                                 onClick={() => {
-                                  setSelectedFolder(folderItem);
-                                  setIsLeftDrawerOpen(true);
+                                  openDocumentFolder(folderItem);
                                 }}
                                 size="sm"
                                 className="rounded-full text-[11px] font-bold bg-midnight hover:bg-midnight/90 text-white cursor-pointer h-8 px-4"
@@ -526,6 +589,32 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                     .map((item) => {
                       const isSelected = activeSubTab === item.id;
                       const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
+                      const itemSubCategory = "subCategory" in item ? item.subCategory : item.title;
+                      const realDocs = documents
+                        .filter((doc) => doc.category === "DISCLOSURE" && doc.subCategory === itemSubCategory)
+                        .sort((a, b) => {
+                          const aTime = new Date(a.documentDate || a.publishedAt || a.createdAt).getTime();
+                          const bTime = new Date(b.documentDate || b.publishedAt || b.createdAt).getTime();
+                          return bTime - aTime;
+                        });
+                      const latestDoc = realDocs[0];
+                      const displayDocs = realDocs.slice(0, 3);
+                      const documentFolder: DisclosureDocumentFolder = {
+                        id: `${item.id}-folder`,
+                        title: `${itemSubCategory} 문서함`,
+                        desc: item.desc,
+                        date: item.date,
+                        count: realDocs.length,
+                        searchKey: item.title,
+                        categoryKey: "DISCLOSURE",
+                        bbsCategory: itemSubCategory as MeetingCategory,
+                        preview:
+                          displayDocs.length > 0
+                            ? displayDocs.map((doc) => doc.title)
+                            : "guide" in item && item.guide
+                              ? item.guide
+                              : [item.title],
+                      };
                       
                       return (
                         <div 
@@ -544,9 +633,13 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                           <span>기준일: {item.date}</span>
                           <span className={cn(
                             "rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider",
-                            isLoggedIn ? "bg-meadow-green/10 text-meadow-green" : "bg-ember-orange/10 text-ember-orange"
+                            realDocs.length > 0
+                              ? "bg-meadow-green/10 text-meadow-green"
+                              : isLoggedIn
+                                ? "bg-sky-blue/10 text-sky-blue"
+                                : "bg-ember-orange/10 text-ember-orange"
                           )}>
-                            {isLoggedIn ? "열람 가능" : "보안 잠금"}
+                            {realDocs.length > 0 ? `업로드 ${realDocs.length}건` : isLoggedIn ? "업로드 대기" : "보안 잠금"}
                           </span>
                         </div>
                         <h3 className="text-[14.5px] font-bold text-charcoal-primary mt-3 leading-snug">
@@ -555,25 +648,91 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                         <p className="text-xs text-graphite mt-2.5 leading-5 font-normal">
                           {item.desc}
                         </p>
+                        {"guide" in item && item.guide && (
+                          <div className="mt-4 rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
+                            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ash">
+                              읽기 가이드
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {item.guide.map((guide) => (
+                                <span
+                                  key={`${item.id}-${guide}`}
+                                  className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-graphite"
+                                >
+                                  {guide}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* 로그인 유도 & 프리뷰 (비로그인 상태) vs 정식 자료실 액션 (로그인 상태) */}
                       <div className="mt-6 pt-4 border-t border-stone-surface/60">
                         {isLoggedIn ? (
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-meadow-green font-bold flex items-center gap-1">
-                              <span>🔓</span> 정식 세션 내 보호 열람 중
-                            </span>
-                            <Button
-                              onClick={() => {
-                                if (onOpenPortal) onOpenPortal();
-                                else window.dispatchEvent(new CustomEvent('open-portal'));
-                              }}
-                              size="sm"
-                              className="rounded-full text-[11px] font-bold bg-sky-blue hover:bg-sky-blue/90 text-white cursor-pointer h-8"
-                            >
-                              자료실 열기
-                            </Button>
+                          <div className="space-y-4">
+                            {displayDocs.length > 0 ? (
+                              <div className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3.5">
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-ash">
+                                    등록 자료
+                                  </span>
+                                  <span className="text-[10px] font-bold text-meadow-green">
+                                    최신 {formatDisclosureDate(latestDoc?.documentDate || latestDoc?.publishedAt || latestDoc?.createdAt)}
+                                  </span>
+                                </div>
+                                <ul className="mt-3 space-y-2">
+                                  {displayDocs.map((doc) => (
+                                    <li key={doc.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2">
+                                      <div className="min-w-0">
+                                        <p className="truncate text-[11px] font-bold text-charcoal-primary">
+                                          {doc.title}
+                                        </p>
+                                        <p className="mt-0.5 text-[9px] font-mono text-ash">
+                                          {formatDisclosureDate(doc.documentDate || doc.publishedAt || doc.createdAt)}
+                                          {doc.isStarred ? " · 중요" : ""}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        onClick={() => {
+                                          if (onViewDocument) onViewDocument(doc.id, doc.title);
+                                          else if (onOpenPortal) onOpenPortal("DISCLOSURE", doc.title);
+                                          else window.dispatchEvent(new CustomEvent('open-portal', { detail: { category: "DISCLOSURE", search: doc.title } }));
+                                        }}
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 shrink-0 rounded-full border-sky-blue/30 px-2.5 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/5"
+                                      >
+                                        문서 보기
+                                      </Button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : (
+                              <div className="rounded-xl border border-dashed border-stone-surface bg-[#f8f7f4] p-3.5">
+                                <p className="text-[11px] font-bold text-charcoal-primary">
+                                  아직 업로드된 자료가 없습니다.
+                                </p>
+                                <p className="mt-1 text-[10px] leading-4 text-graphite">
+                                  관리자 포털에서 `의무 정보 공개 자료`의 세부 분류를 `{itemSubCategory}`로 선택해 등록하면 이 카드에 최신 자료가 표시됩니다.
+                                </p>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-meadow-green font-bold flex items-center gap-1">
+                                <span>🔓</span> 정식 세션 내 보호 열람 중
+                              </span>
+                              <Button
+                                onClick={() => {
+                                  openDocumentFolder(documentFolder);
+                                }}
+                                size="sm"
+                                className="rounded-full text-[11px] font-bold bg-sky-blue hover:bg-sky-blue/90 text-white cursor-pointer h-8"
+                              >
+                                자료실 열기
+                              </Button>
+                            </div>
                           </div>
                         ) : (
                           <div className="space-y-4">

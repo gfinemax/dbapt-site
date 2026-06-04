@@ -17,60 +17,20 @@ const publicUnits = [
 
 const premiumUnitPlans = [
   {
-    title: "59㎡A",
-    type: "확장형",
-    households: "78세대",
     src: "/assets/business/units/unit-59a-premium.png",
     alt: "프리미엄 평형 정보 59㎡A 평면도",
-    areas: [
-      { label: "전용면적", value: "59.99㎡" },
-      { label: "주거공용면적", value: "21.05㎡" },
-      { label: "공급면적", value: "81.04㎡" },
-      { label: "기타공용면적", value: "3.13㎡" },
-      { label: "계약면적", value: "84.17㎡" },
-    ],
   },
   {
-    title: "59㎡B",
-    type: "확장형",
-    households: "18세대",
     src: "/assets/business/units/unit-59b-premium.png",
     alt: "프리미엄 평형 정보 59㎡B 평면도",
-    areas: [
-      { label: "전용면적", value: "59.99㎡" },
-      { label: "주거공용면적", value: "21.05㎡" },
-      { label: "공급면적", value: "81.04㎡" },
-      { label: "기타공용면적", value: "3.13㎡" },
-      { label: "계약면적", value: "84.17㎡" },
-    ],
   },
   {
-    title: "74㎡A",
-    type: "확장형",
-    households: "33세대",
     src: "/assets/business/units/unit-74a-premium.png",
     alt: "프리미엄 평형 정보 74㎡A 평면도",
-    areas: [
-      { label: "전용면적", value: "74.94㎡" },
-      { label: "주거공용면적", value: "26.47㎡" },
-      { label: "공급면적", value: "101.41㎡" },
-      { label: "기타공용면적", value: "3.91㎡" },
-      { label: "계약면적", value: "105.32㎡" },
-    ],
   },
   {
-    title: "84㎡",
-    type: "확장형",
-    households: "세대수 별도 표기 없음",
     src: "/assets/business/units/unit-84-premium.png",
     alt: "프리미엄 평형 정보 84㎡ 평면도",
-    areas: [
-      { label: "전용면적", value: "84.99㎡" },
-      { label: "주거공용면적", value: "29.37㎡" },
-      { label: "공급면적", value: "114.36㎡" },
-      { label: "기타공용면적", value: "4.43㎡" },
-      { label: "계약면적", value: "118.79㎡" },
-    ],
   },
 ];
 
@@ -169,7 +129,7 @@ export function UnitTab() {
               프리미엄 평형 정보
             </h3>
             <p className="mt-2 text-xs leading-relaxed text-graphite">
-              첨부 평형정보 이미지에 표기된 59㎡A, 59㎡B, 74㎡A, 84㎡ 타입의 면적과 평면도입니다. 세대계획 표와 구분되는 세부 타입 자료로 안내합니다.
+              첨부 평형정보 이미지에 표기된 48㎡A, 59㎡, 74㎡, 84㎡ 타입의 면적과 평면도입니다. 세대계획 표와 구분되는 세부 타입 자료로 안내합니다.
             </p>
           </div>
           <div className="rounded-2xl bg-[#f8f7f4] px-5 py-4 text-left sm:min-w-36 sm:text-center">
@@ -183,7 +143,7 @@ export function UnitTab() {
         <div data-testid="premium-unit-gallery" className="mt-6 grid grid-cols-1 gap-6">
           {premiumUnitPlans.map((unit) => (
             <article
-              key={unit.title}
+              key={unit.src}
               className="overflow-hidden rounded-2xl border border-stone-surface bg-[#f8f7f4]"
             >
               <div className="relative aspect-[5/4] bg-white">
@@ -194,27 +154,6 @@ export function UnitTab() {
                   sizes="(min-width: 1024px) 768px, 100vw"
                   className="object-contain"
                 />
-              </div>
-              <div className="p-5">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-bold text-ash">{unit.type}</span>
-                    <h4 className="mt-1 text-lg font-extrabold text-charcoal-primary">
-                      {unit.title}
-                    </h4>
-                  </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-graphite">
-                    {unit.households}
-                  </span>
-                </div>
-                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-5">
-                  {unit.areas.map((area) => (
-                    <div key={`${unit.title}-${area.label}`}>
-                      <dt className="text-[10px] font-bold text-ash">{area.label}</dt>
-                      <dd className="mt-1 font-extrabold text-charcoal-primary">{area.value}</dd>
-                    </div>
-                  ))}
-                </dl>
               </div>
             </article>
           ))}

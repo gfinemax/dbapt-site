@@ -7,8 +7,27 @@ import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.
 import { type Document } from "@/components/portal/document-table";
 import { DocumentUploadForm } from "../portal/document-upload-form";
 
-// ── 회의·행정 문서 타입 ──
-export type MeetingCategory = "총회 의사록" | "이사회 회의록" | "수발신 공문" | "사업시행계획";
+// ── 공개자료 문서함 분류 타입 ──
+export type MeetingCategory =
+  | "정관 및 조합규약"
+  | "운영관리규정"
+  | "회계관리규정"
+  | "선거관리규정"
+  | "기타 내부 운영규정"
+  | "조합원 연명부"
+  | "시공자 협약서"
+  | "총회 의사록"
+  | "이사회 회의록"
+  | "수발신 공문"
+  | "사업시행계획"
+  | "외부회계감사"
+  | "내부감사"
+  | "자금운용계획"
+  | "에스크로 명세서"
+  | "용역 계약서"
+  | "공사진행/토지"
+  | "추진실적"
+  | "감리 보고서";
 
 type MeetingDoc = {
   id: number;
@@ -79,7 +98,28 @@ const MEETING_DOCS: MeetingDoc[] = [
 ];
 
 const PAGE_SIZE = 10;
-const CATEGORIES: ("전체" | MeetingCategory)[] = ["전체", "총회 의사록", "이사회 회의록", "수발신 공문", "사업시행계획"];
+const CATEGORIES: ("전체" | MeetingCategory)[] = [
+  "전체",
+  "정관 및 조합규약",
+  "운영관리규정",
+  "회계관리규정",
+  "선거관리규정",
+  "기타 내부 운영규정",
+  "조합원 연명부",
+  "시공자 협약서",
+  "총회 의사록",
+  "이사회 회의록",
+  "수발신 공문",
+  "사업시행계획",
+  "외부회계감사",
+  "내부감사",
+  "자금운용계획",
+  "에스크로 명세서",
+  "용역 계약서",
+  "공사진행/토지",
+  "추진실적",
+  "감리 보고서",
+];
 
 // ── 카테고리 뱃지 색상 ──
 function categoryBadge(cat: MeetingCategory) {
@@ -92,6 +132,23 @@ function categoryBadge(cat: MeetingCategory) {
       return "bg-amber-500/10 text-amber-600";
     case "사업시행계획":
       return "bg-emerald-500/10 text-emerald-600";
+    case "정관 및 조합규약":
+    case "운영관리규정":
+    case "회계관리규정":
+    case "선거관리규정":
+    case "기타 내부 운영규정":
+    case "조합원 연명부":
+      return "bg-sky-blue/10 text-sky-blue";
+    case "시공자 협약서":
+    case "외부회계감사":
+    case "내부감사":
+    case "자금운용계획":
+    case "에스크로 명세서":
+    case "용역 계약서":
+    case "공사진행/토지":
+    case "추진실적":
+    case "감리 보고서":
+      return "bg-meadow-green/10 text-meadow-green";
   }
 }
 

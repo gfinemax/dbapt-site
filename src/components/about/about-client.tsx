@@ -147,6 +147,17 @@ const organizationNodes = [
   },
 ];
 
+const governanceOrganizationNodes = [
+  organizationNodes[2],
+  organizationNodes[1],
+  organizationNodes[3],
+];
+
+const secretariatOrganizationNodes = [
+  organizationNodes[4],
+  organizationNodes[5],
+];
+
 function OrganizationNodeCard({
   node,
   badge,
@@ -635,9 +646,7 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                   <path d="M500 82 H176 Q148 82 148 110 V128" />
                   <path d="M500 82 V128" />
                   <path d="M500 82 H824 Q852 82 852 110 V128" />
-                  <path d="M500 286 V356" />
-                  <path d="M500 356 H318 Q290 356 290 384 V404" />
-                  <path d="M500 356 H682 Q710 356 710 384 V404" />
+                  <path d="M500 286 V404" />
                 </g>
               </svg>
 
@@ -650,17 +659,29 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                   />
                 </div>
 
-                <div className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[repeat(3,minmax(0,260px))] md:justify-center">
-                  {organizationNodes.slice(1, 4).map((node) => (
+                <div
+                  data-testid="organization-governance-row"
+                  className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[repeat(3,minmax(0,260px))] md:justify-center"
+                >
+                  {governanceOrganizationNodes.map((node) => (
                     <div key={node.title} className="flex h-full flex-col">
                       <OrganizationNodeCard node={node} className="h-full min-h-[148px]" />
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[repeat(2,minmax(0,320px))] md:justify-center">
-                  {organizationNodes.slice(4).map((node) => (
-                    <div key={node.title} className="flex h-full flex-col">
+                <div
+                  data-testid="organization-secretariat-stack"
+                  className="mt-12 flex flex-col items-center gap-4 md:mt-20"
+                >
+                  {secretariatOrganizationNodes.map((node, index) => (
+                    <div key={node.title} className="relative flex w-full max-w-[640px] flex-col">
+                      {index > 0 && (
+                        <span
+                          className="pointer-events-none absolute -top-4 left-1/2 hidden h-4 w-px -translate-x-1/2 bg-[#d8d2ca] md:block"
+                          aria-hidden="true"
+                        />
+                      )}
                       <OrganizationNodeCard node={node} className="h-full min-h-[136px]" />
                     </div>
                   ))}
