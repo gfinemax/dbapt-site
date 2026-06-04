@@ -3,9 +3,16 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
   isAllowedDocumentUploadExtension,
+  isSafeDocumentStoragePath,
   MAX_DOCUMENT_UPLOAD_SIZE,
   uploadDocumentFile,
 } from "@/lib/document-storage";
+
+type UploadedDocumentFile = {
+  path?: unknown;
+  name?: unknown;
+  size?: unknown;
+};
 
 function validateUploadFile(file: File, label: string) {
   if (!file || file.size === 0) {
@@ -21,6 +28,30 @@ function validateUploadFile(file: File, label: string) {
   }
 
   return null;
+}
+
+function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string) {
+  const path = typeof file.path === "string" ? file.path.trim() : "";
+  const name = typeof file.name === "string" ? file.name.trim() : "";
+  const size = typeof file.size === "number" ? file.size : Number(file.size);
+
+  if (!path || !name || !Number.isFinite(size) || size <= 0) {
+    return { error: `${label} 정보가 올바르지 않습니다.` };
+  }
+
+  if (!isSafeDocumentStoragePath(path)) {
+    return { error: `${label} 저장 경로가 올바르지 않습니다.` };
+  }
+
+  if (size > MAX_DOCUMENT_UPLOAD_SIZE) {
+    return { error: `${label}은 20MB 이하만 업로드할 수 있습니다.` };
+  }
+
+  if (!isAllowedDocumentUploadExtension(name)) {
+    return { error: `${label}은 PDF, HWP, HWPX, Word 파일만 업로드할 수 있습니다.` };
+  }
+
+  return { path, name, size };
 }
 
 // 1. GET: List documents (gated by session and role)
@@ -70,6 +101,70 @@ export async function POST(request: Request) {
   }
 
   try {
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+      const title = typeof body.title === "string" ? body.title.trim() : "";
+      const description = typeof body.description === "string" ? body.description : "";
+      const category = typeof body.category === "string" ? body.category : "";
+      const subCategory = typeof body.subCategory === "string" ? body.subCategory : "";
+      const documentDateStr = typeof body.documentDate === "string" ? body.documentDate : "";
+      const publishedAtStr = typeof body.publishedAt === "string" ? body.publishedAt : "";
+      const isStarred = body.isStarred === true;
+
+      if (!title || !category || !body.file) {
+        return NextResponse.json({ error: "필수 입력 항목(제목, 카테고리, 파일)이 누락되었습니다." }, { status: 400 });
+      }
+
+      const uploadedFile = validateUploadedDocumentFile(body.file, "문서 파일");
+      if ("error" in uploadedFile) {
+        return NextResponse.json({ error: uploadedFile.error }, { status: 400 });
+      }
+
+      const rawAttachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 10) : [];
+      const attachmentsData: { filePath: string; fileName: string; fileSize: number }[] = [];
+
+      for (const attachment of rawAttachments) {
+        const uploadedAttachment = validateUploadedDocumentFile(attachment, "추가 첨부파일");
+        if ("error" in uploadedAttachment) {
+          return NextResponse.json({ error: uploadedAttachment.error }, { status: 400 });
+        }
+
+        attachmentsData.push({
+          filePath: uploadedAttachment.path,
+          fileName: uploadedAttachment.name,
+          fileSize: uploadedAttachment.size,
+        });
+      }
+
+      const documentDate = documentDateStr ? new Date(documentDateStr) : new Date();
+      const publishedAt = publishedAtStr ? new Date(publishedAtStr) : new Date();
+
+      const document = await prisma.document.create({
+        data: {
+          title,
+          description: description || null,
+          category,
+          subCategory: subCategory || null,
+          filePath: uploadedFile.path,
+          fileName: uploadedFile.name,
+          fileSize: uploadedFile.size,
+          status: "APPROVED",
+          isStarred,
+          publishedAt,
+          documentDate,
+          attachments: {
+            create: attachmentsData,
+          },
+        },
+        include: {
+          attachments: true,
+        },
+      });
+
+      return NextResponse.json({ success: true, document });
+    }
+
     const formData = await request.formData();
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;

@@ -32,6 +32,33 @@ const disclosureSubCategoryOptions = [
   "감리 보고서",
 ];
 
+type SignedDocumentUpload = {
+  path: string;
+  signedUrl: string;
+  token: string;
+  contentType: string;
+};
+
+const MAX_DOCUMENT_UPLOAD_SIZE = 20 * 1024 * 1024;
+
+async function uploadToSignedUrl(upload: SignedDocumentUpload, file: File) {
+  const body = new FormData();
+  body.append("cacheControl", "3600");
+  body.append("", file);
+
+  const response = await fetch(upload.signedUrl, {
+    method: "PUT",
+    headers: {
+      "x-upsert": "false",
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error("스토리지 업로드 중 오류가 발생했습니다.");
+  }
+}
+
 export function DocumentUploadForm({ 
   onSuccess, 
   defaultCategory = "DISCLOSURE", 
@@ -76,32 +103,67 @@ export function DocumentUploadForm({
     setError("");
     setSuccess(false);
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("category", category);
-    if (category === "DISCLOSURE") {
-      formData.append("subCategory", subCategory);
-    }
-    formData.append("documentDate", documentDate);
-    formData.append("publishedAt", publishedAt);
-    formData.append("file", file);
-    formData.append("isStarred", String(isStarred));
-    
-    if (attachments.length > 0) {
-      attachments.forEach((att) => {
-        formData.append("attachments", att);
-      });
+    const filesToUpload = [file, ...attachments];
+    const oversizedFile = filesToUpload.find((uploadFile) => uploadFile.size > MAX_DOCUMENT_UPLOAD_SIZE);
+    if (oversizedFile) {
+      setError(`${oversizedFile.name} 파일은 20MB 이하만 업로드할 수 있습니다.`);
+      setIsPending(false);
+      return;
     }
 
     try {
-      const res = await fetch("/api/documents", {
+      const uploadUrlResponse = await fetch("/api/documents/upload-url", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          files: filesToUpload.map((uploadFile) => ({
+            name: uploadFile.name,
+            size: uploadFile.size,
+          })),
+        }),
       });
 
+      const uploadUrlData = await uploadUrlResponse.json();
+      if (!uploadUrlResponse.ok) {
+        setError(uploadUrlData.error || "문서 업로드 준비 중 문제가 발생했습니다.");
+        return;
+      }
+
+      const signedUploads = uploadUrlData.uploads as SignedDocumentUpload[];
+      if (!Array.isArray(signedUploads) || signedUploads.length !== filesToUpload.length) {
+        setError("문서 업로드 준비 정보가 올바르지 않습니다.");
+        return;
+      }
+
+      await Promise.all(signedUploads.map((upload, index) => uploadToSignedUrl(upload, filesToUpload[index])));
+
+      const [mainUpload, ...attachmentUploads] = signedUploads;
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          category,
+          subCategory: category === "DISCLOSURE" ? subCategory : "",
+          documentDate,
+          publishedAt,
+          isStarred,
+          file: {
+            path: mainUpload.path,
+            name: file.name,
+            size: file.size,
+          },
+          attachments: attachmentUploads.map((upload, index) => ({
+            path: upload.path,
+            name: attachments[index].name,
+            size: attachments[index].size,
+          })),
+        }),
+      });
+
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || "업로드 중 오류가 발생했습니다.");
         return;
       }

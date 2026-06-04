@@ -66,6 +66,15 @@ export function isAllowedDocumentUploadExtension(fileName: string) {
   return getFileExtension(fileName) in DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION;
 }
 
+export function isSafeDocumentStoragePath(path: string) {
+  return (
+    path.startsWith("documents/") &&
+    !path.includes("..") &&
+    !path.startsWith("/") &&
+    !/^[A-Za-z]:[\\/]/.test(path)
+  );
+}
+
 export function getDocumentUploadContentType(file: File) {
   const contentTypeFromExtension = DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION[getFileExtension(file.name)];
   if (contentTypeFromExtension) {
@@ -133,6 +142,24 @@ export async function uploadDocumentFile(file: File) {
   }
 
   return path;
+}
+
+export async function createDocumentSignedUpload(fileName: string) {
+  await ensureDocumentsBucket();
+
+  const path = createDocumentStoragePath(fileName);
+  const { data, error } = await getSupabaseAdmin().storage.from(DOCUMENTS_BUCKET).createSignedUploadUrl(path);
+
+  if (error) {
+    throw error;
+  }
+
+  return {
+    path,
+    signedUrl: data.signedUrl,
+    token: data.token,
+    contentType: DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION[getFileExtension(fileName)] || "application/octet-stream",
+  };
 }
 
 export async function uploadDocumentBytes(params: {
