@@ -2,6 +2,35 @@
 
 ## Reviewed Change
 
+- Feature: Remove the visible `읽기 가이드` inner boxes from disclosure cards and reduce unnecessary internal card whitespace.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `공개자료` presentation scope.
+- Implementation plan: Small presentation cleanup in `DisclosureClient`.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`, public `/disclosure`.
+
+## Boundary Review
+
+- Finding: PASS. The change removes only visual guide panels and tightens spacing.
+- Evidence: Document categories, permissions, protected upload workflow, document drawer behavior, and `자료실 열기` actions remain unchanged.
+
+## Truthful Presentation Review
+
+- Finding: PASS. Removing the guide boxes reduces explanatory UI without inventing or hiding document availability status.
+- Evidence: Upload status, uploaded document previews, empty upload states, and protected session labels remain rendered.
+
+## Design And Accessibility Review
+
+- Finding: PASS. The cards are simpler and keep the existing title, description, divider, status, and action structure while reducing the description-to-document gap.
+- Evidence: Regression test verifies `읽기 가이드` no longer appears in the `규약 및 연명부` card section. The visible card padding, divider spacing, and uploaded/empty document box padding are reduced without changing actions.
+
+## Outcome
+
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+
 - Feature: Add the same folder-table registration experience to public disclosure cards outside the meeting section, including regulation, accounting, and business/supervision subcategories.
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `공개자료` scope and existing protected document infrastructure.
 - Implementation plan: Reuse the existing document drawer/table and `DocumentUploadForm`; default upload subcategory to the opened card's folder.

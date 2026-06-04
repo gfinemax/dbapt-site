@@ -77,6 +77,7 @@ describe("disclosure page", () => {
     expect(within(rulesSection as HTMLElement).getByText("운영관리규정 최신본")).toBeInTheDocument();
     expect(within(rulesSection as HTMLElement).getByText("회계관리규정 최신본")).toBeInTheDocument();
     expect(within(rulesSection as HTMLElement).getAllByText("업로드 1건").length).toBeGreaterThanOrEqual(2);
+    expect(within(rulesSection as HTMLElement).queryByText("읽기 가이드")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "1. 규약 및 연명부" }));
     expect(screen.getAllByText("운영관리규정").length).toBeGreaterThan(0);

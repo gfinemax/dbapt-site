@@ -1,5 +1,33 @@
 # Verification
 
+## Verification Addendum: Disclosure Card Guide Removal And Spacing Tightening
+
+## Implemented Change
+
+- Removed the visible `읽기 가이드` inner panel from disclosure cards.
+- Reduced non-meeting disclosure card padding from `p-6` to `p-5`.
+- Tightened the title/description spacing and reduced the gap between the description and registered/empty document area.
+- Reduced registered/empty document box padding and list item spacing while preserving upload status, document previews, and `자료실 열기` actions.
+
+## Checks Run
+
+- Focused test: `pnpm test -- src/__tests__/disclosure-page.test.tsx src/__tests__/document-upload-form.test.tsx` passed, 2 files and 4 tests. The test runner emitted existing jsdom `window.scrollTo` not-implemented warnings after tab clicks.
+- `pnpm lint` passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build` passed.
+
+## Browser Checks
+
+- Used the existing local dev server at `http://127.0.0.1:3000`; no new dev server was started.
+- Connected Chrome desktop check for `/disclosure` confirmed `읽기 가이드` is no longer rendered in `section-rules`.
+- Browser check confirmed visible rules cards use compact `p-5` padding and the registered document area starts at `mt-4 pt-3`.
+- Desktop check reported no horizontal overflow.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing unrelated full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101` from earlier verification.
+
+---
+
 ## Verification Addendum: Folder-Style Registration For Public Disclosure Cards
 
 ## Implemented Change

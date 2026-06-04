@@ -481,7 +481,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                         <div 
                           key={folderItem.id}
                           className={cn(
-                            "stone-card bg-white p-6 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
+                            "stone-card bg-white p-5 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
                             isAnySelectedInThisSection
                               ? isSelected
                                 ? "border-sky-blue ring-1 ring-sky-blue/30 shadow-lg scale-[1.02] z-2 opacity-100 bg-[#fdfdfc]"
@@ -611,16 +611,14 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                         preview:
                           displayDocs.length > 0
                             ? displayDocs.map((doc) => doc.title)
-                            : "guide" in item && item.guide
-                              ? item.guide
-                              : [item.title],
+                            : [item.title],
                       };
                       
                       return (
                         <div 
                           key={item.id}
                           className={cn(
-                            "stone-card bg-white p-6 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
+                            "stone-card bg-white p-5 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
                             isAnySelectedInThisSection
                               ? isSelected
                                 ? "border-sky-blue ring-1 ring-sky-blue/30 shadow-lg scale-[1.02] z-2 opacity-100 bg-[#fdfdfc]"
@@ -642,37 +640,20 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                             {realDocs.length > 0 ? `업로드 ${realDocs.length}건` : isLoggedIn ? "업로드 대기" : "보안 잠금"}
                           </span>
                         </div>
-                        <h3 className="text-[14.5px] font-bold text-charcoal-primary mt-3 leading-snug">
+                        <h3 className="text-[14.5px] font-bold text-charcoal-primary mt-2.5 leading-snug">
                           {item.title}
                         </h3>
-                        <p className="text-xs text-graphite mt-2.5 leading-5 font-normal">
+                        <p className="text-xs text-graphite mt-2 leading-5 font-normal">
                           {item.desc}
                         </p>
-                        {"guide" in item && item.guide && (
-                          <div className="mt-4 rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
-                            <p className="text-[10px] font-extrabold uppercase tracking-wider text-ash">
-                              읽기 가이드
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {item.guide.map((guide) => (
-                                <span
-                                  key={`${item.id}-${guide}`}
-                                  className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-graphite"
-                                >
-                                  {guide}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       {/* 로그인 유도 & 프리뷰 (비로그인 상태) vs 정식 자료실 액션 (로그인 상태) */}
-                      <div className="mt-6 pt-4 border-t border-stone-surface/60">
+                      <div className="mt-4 pt-3 border-t border-stone-surface/60">
                         {isLoggedIn ? (
-                          <div className="space-y-4">
+                          <div className="space-y-3">
                             {displayDocs.length > 0 ? (
-                              <div className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3.5">
+                              <div className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
                                 <div className="flex items-center justify-between gap-3">
                                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-ash">
                                     등록 자료
@@ -681,9 +662,9 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                                     최신 {formatDisclosureDate(latestDoc?.documentDate || latestDoc?.publishedAt || latestDoc?.createdAt)}
                                   </span>
                                 </div>
-                                <ul className="mt-3 space-y-2">
+                                <ul className="mt-2 space-y-1.5">
                                   {displayDocs.map((doc) => (
-                                    <li key={doc.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2">
+                                    <li key={doc.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-1.5">
                                       <div className="min-w-0">
                                         <p className="truncate text-[11px] font-bold text-charcoal-primary">
                                           {doc.title}
@@ -710,7 +691,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                                 </ul>
                               </div>
                             ) : (
-                              <div className="rounded-xl border border-dashed border-stone-surface bg-[#f8f7f4] p-3.5">
+                              <div className="rounded-xl border border-dashed border-stone-surface bg-[#f8f7f4] p-3">
                                 <p className="text-[11px] font-bold text-charcoal-primary">
                                   아직 업로드된 자료가 없습니다.
                                 </p>
@@ -735,9 +716,9 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                             </div>
                           </div>
                         ) : (
-                          <div className="space-y-4">
+                          <div className="space-y-3">
                             {/* 고해상도 정보 보호용 리드미컬하고 세련된 디테일 블러 프레임 */}
-                            <div className="bg-parchment-card border border-stone-surface border-dashed p-3.5 rounded-xl text-[10px] space-y-2 select-none pointer-events-none opacity-50 relative overflow-hidden">
+                            <div className="bg-parchment-card border border-stone-surface border-dashed p-3 rounded-xl text-[10px] space-y-1.5 select-none pointer-events-none opacity-50 relative overflow-hidden">
                               {/* 그라데이션 오버레이로 감각적인 숨김 처리 */}
                               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-parchment-card/30 to-parchment-card backdrop-blur-[2.5px] z-1" />
                               <div className="flex justify-between font-mono">
