@@ -452,6 +452,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Keep disclosure registration-card preview height sized for three uploaded documents while top-aligning one-document previews.
+- Governing spec: `DESIGN.md`, public `공개자료` authenticated preview presentation.
+- Implementation plan: Remove vertical card distribution from the disclosure subcategory card and reserve a fixed preview panel height for registered documents.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, authenticated `/disclosure` card layout.
+
+## Boundary Review
+- Finding: PASS. This is a layout-only change and does not alter document access, upload, approval, or download behavior.
+- Evidence: Document filtering, drawer opening, and protected upload controls remain unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS. The preview still shows only matching uploaded documents and keeps the same latest-date and document-count semantics.
+- Evidence: The registered document panel continues to render from `displayDocs` and the surrounding status labels are unchanged.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser limitation.
+- Evidence: The three-document visual footprint is preserved with a minimum preview height, while removing card-level `justify-between` prevents a single uploaded document from being pushed to the bottom. Browser automation was unavailable in this session, so verification is by code inspection and build checks.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Remove the logged-out top-right login badge from the public header.
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Implementation plan: Existing login-scoped access presentation; no new product scope added.

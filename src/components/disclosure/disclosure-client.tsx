@@ -618,7 +618,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                         <div 
                           key={item.id}
                           className={cn(
-                            "stone-card bg-white p-5 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
+                            "stone-card bg-white p-5 rounded-2xl border flex flex-col transition-all duration-500 relative group",
                             isAnySelectedInThisSection
                               ? isSelected
                                 ? "border-sky-blue ring-1 ring-sky-blue/30 shadow-lg scale-[1.02] z-2 opacity-100 bg-[#fdfdfc]"
@@ -653,7 +653,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                         {isLoggedIn ? (
                           <div className="space-y-3">
                             {displayDocs.length > 0 ? (
-                              <div className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
+                              <div className="min-h-[188px] rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
                                 <div className="flex items-center justify-between gap-3">
                                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-ash">
                                     등록 자료
