@@ -42,9 +42,13 @@ type SignedDocumentUpload = {
 const MAX_DOCUMENT_UPLOAD_SIZE = 20 * 1024 * 1024;
 
 async function uploadToSignedUrl(upload: SignedDocumentUpload, file: File) {
+  const typedFile =
+    upload.contentType && file.type !== upload.contentType
+      ? new Blob([file], { type: upload.contentType })
+      : file;
   const body = new FormData();
   body.append("cacheControl", "3600");
-  body.append("", file);
+  body.append("", typedFile, file.name);
 
   const response = await fetch(upload.signedUrl, {
     method: "PUT",
@@ -55,6 +59,11 @@ async function uploadToSignedUrl(upload: SignedDocumentUpload, file: File) {
   });
 
   if (!response.ok) {
+    console.error("Signed document upload failed:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: await response.text().catch(() => ""),
+    });
     throw new Error("스토리지 업로드 중 오류가 발생했습니다.");
   }
 }
@@ -188,7 +197,7 @@ export function DocumentUploadForm({
       if (onSuccess) onSuccess();
     } catch (e) {
       console.error(e);
-      setError("서버와의 통신 중 문제가 발생했습니다.");
+      setError(e instanceof Error ? e.message : "서버와의 통신 중 문제가 발생했습니다.");
     } finally {
       setIsPending(false);
     }
