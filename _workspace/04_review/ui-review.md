@@ -426,6 +426,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Remove static library index placeholder entries from material drawers when uploaded documents exist.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, 자료실 truthful presentation boundary.
+- Implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md`.
+- Files or pages reviewed: `src/components/library/library-client.tsx`, `src/__tests__/library-page.test.tsx`, `/library` on local dev server.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only removes placeholder fallback entries from mixed material lists when real uploaded documents exist. It does not change public navigation, authentication, document access, upload, or admin mutation permissions.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: DB-backed uploaded documents now render without appending static `자료실 색인` placeholders such as `조합규약 및 정관` and `정식 조합원 연명부`.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: No new controls or layout surfaces were added. Browser check for `/library` showed page content, no framework error overlay, no console errors, and no horizontal overflow at the checked desktop viewport.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Add admin-only edit and delete management for uploaded material entries inside the `/library` material drawer.
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, authenticated document management and 자료실 boundaries.
 - Implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md` plus existing `PATCH`/`DELETE /api/documents/[id]` behavior.

@@ -58,6 +58,22 @@ const uploadedMeetingDocuments: Document[] = [
   },
 ];
 
+const uploadedRuleDocuments: Document[] = [
+  {
+    id: "doc-coop-rule",
+    title: "조합규약(260418 1차개정)",
+    description: "2026년 정기총회에서 조합규약 개정됨",
+    category: "DISCLOSURE",
+    subCategory: "정관 및 조합규약",
+    fileName: "coop-rule.pdf",
+    fileSize: 204800,
+    status: "APPROVED",
+    publishedAt: "2026-06-04T00:00:00.000Z",
+    documentDate: "2026-06-04T00:00:00.000Z",
+    createdAt: "2026-06-04T00:00:00.000Z",
+  },
+];
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -119,6 +135,17 @@ describe("library page", () => {
       "src",
       "/api/documents/doc-regular-meeting/view",
     );
+  });
+
+  it("does not mix static index placeholders with uploaded rule materials", () => {
+    render(<LibraryClient isLoggedIn documents={uploadedRuleDocuments} />);
+
+    const ruleCard = screen.getAllByTestId("library-item-cooperative-rules")[0];
+    fireEvent.click(within(ruleCard).getByRole("button", { name: "자료 확인" }));
+
+    expect(screen.getByText("조합규약(260418 1차개정)")).toBeInTheDocument();
+    expect(screen.queryByText("조합규약 및 정관")).not.toBeInTheDocument();
+    expect(screen.queryByText("정식 조합원 연명부")).not.toBeInTheDocument();
   });
 
   it("lets admins edit and delete uploaded material entries from the library panel", async () => {

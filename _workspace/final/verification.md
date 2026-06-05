@@ -785,3 +785,29 @@
 
 - Static `자료실 색인` fallback entries remain code-managed and are intentionally not editable from the UI.
 - Full `pnpm test` remains blocked by the existing portal seed pending-document mismatch.
+
+---
+
+# Verification Addendum: Library Placeholder Cleanup
+
+## Implemented Change
+
+- Changed the library material drawer so real uploaded documents are shown by themselves.
+- Static `자료실 색인` fallback entries are no longer appended when matching uploaded documents exist.
+- Added a regression test that confirms uploaded 조합규약 materials do not show the placeholder entries `조합규약 및 정관` and `정식 조합원 연명부`.
+
+## Checks Run
+
+- `pnpm vitest run src/__tests__/library-page.test.tsx -t "does not mix static index placeholders"`: passed.
+- `pnpm vitest run src/__tests__/library-page.test.tsx`: passed, 6 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm build`: passed.
+
+## Browser Checks
+
+- Checked `http://127.0.0.1:3000/library` at 1280x900 with headless Chrome.
+- Confirmed page content renders, no framework error overlay is present, no console errors are reported, and no horizontal overflow is detected.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Full `pnpm test` was not rerun for this small cleanup; the suite was already known to be blocked by the existing portal seed pending-document mismatch.

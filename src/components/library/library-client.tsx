@@ -427,7 +427,7 @@ function LibraryMaterialPanel({
       meta: `${item.source} · ${item.updatedAt}`,
     },
   ];
-  const entries = [...realEntries, ...fallbackEntries];
+  const entries = realEntries.length > 0 ? realEntries : fallbackEntries;
   const listLabel = item.id === "meeting-minutes" ? "회의록 리스트" : `${item.title} 리스트`;
 
   return (
