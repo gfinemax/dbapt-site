@@ -72,7 +72,21 @@ export async function DELETE(
   }
 }
 
-// PATCH: 문서 별표(중요) 토글 (관리자 전용)
+const EDITABLE_DOCUMENT_FIELDS = [
+  "title",
+  "description",
+  "category",
+  "subCategory",
+  "documentDate",
+  "publishedAt",
+  "isStarred",
+] as const;
+
+function hasOwn(body: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(body, key);
+}
+
+// PATCH: 문서 메타데이터 수정 및 별표(중요) 토글 (관리자 전용)
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -85,16 +99,79 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const body = await request.json();
-    const { isStarred } = body;
+    const body = await request.json() as Record<string, unknown>;
+    const data: {
+      title?: string;
+      description?: string | null;
+      category?: string;
+      subCategory?: string | null;
+      documentDate?: Date;
+      publishedAt?: Date | null;
+      isStarred?: boolean;
+    } = {};
 
-    if (typeof isStarred !== "boolean") {
-      return NextResponse.json({ error: "isStarred 필드는 boolean 이어야 합니다." }, { status: 400 });
+    const hasEditableField = EDITABLE_DOCUMENT_FIELDS.some((field) => hasOwn(body, field));
+    if (!hasEditableField) {
+      return NextResponse.json({ error: "수정할 문서 정보가 없습니다." }, { status: 400 });
+    }
+
+    if (hasOwn(body, "title")) {
+      const title = typeof body.title === "string" ? body.title.trim() : "";
+      if (!title) {
+        return NextResponse.json({ error: "문서 제목을 입력해 주세요." }, { status: 400 });
+      }
+      data.title = title;
+    }
+
+    if (hasOwn(body, "description")) {
+      const description = typeof body.description === "string" ? body.description.trim() : "";
+      data.description = description || null;
+    }
+
+    if (hasOwn(body, "category")) {
+      const category = typeof body.category === "string" ? body.category.trim() : "";
+      if (!category) {
+        return NextResponse.json({ error: "카테고리를 선택해 주세요." }, { status: 400 });
+      }
+      data.category = category;
+    }
+
+    if (hasOwn(body, "subCategory")) {
+      const subCategory = typeof body.subCategory === "string" ? body.subCategory.trim() : "";
+      data.subCategory = subCategory || null;
+    }
+
+    if (hasOwn(body, "documentDate")) {
+      const documentDateStr = typeof body.documentDate === "string" ? body.documentDate : "";
+      const documentDate = new Date(documentDateStr);
+      if (!documentDateStr || Number.isNaN(documentDate.getTime())) {
+        return NextResponse.json({ error: "발생일이 올바르지 않습니다." }, { status: 400 });
+      }
+      data.documentDate = documentDate;
+    }
+
+    if (hasOwn(body, "publishedAt")) {
+      const publishedAtStr = typeof body.publishedAt === "string" ? body.publishedAt : "";
+      const publishedAt = new Date(publishedAtStr);
+      if (!publishedAtStr || Number.isNaN(publishedAt.getTime())) {
+        return NextResponse.json({ error: "등록일이 올바르지 않습니다." }, { status: 400 });
+      }
+      data.publishedAt = publishedAt;
+    }
+
+    if (hasOwn(body, "isStarred")) {
+      if (typeof body.isStarred !== "boolean") {
+        return NextResponse.json({ error: "isStarred 필드는 boolean 이어야 합니다." }, { status: 400 });
+      }
+      data.isStarred = body.isStarred;
     }
 
     const updated = await prisma.document.update({
       where: { id },
-      data: { isStarred },
+      data,
+      include: {
+        attachments: true,
+      },
     });
 
     return NextResponse.json({ success: true, document: updated });

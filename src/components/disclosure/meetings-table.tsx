@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
@@ -161,6 +161,17 @@ export type RowDocType = {
   isReal?: boolean;
   fileName?: string;
   fileSize?: number;
+  sourceDocument?: Document;
+};
+
+type DocumentEditFormState = {
+  id: string;
+  title: string;
+  description: string;
+  subCategory: MeetingCategory;
+  documentDate: string;
+  publishedAt: string;
+  isStarred: boolean;
 };
 
 type MeetingsTableProps = {
@@ -190,11 +201,14 @@ export function MeetingsTable({
   const [filterCat, setFilterCat] = useState<"전체" | MeetingCategory>(initialFilterCat);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<DocumentEditFormState | null>(null);
 
   // 로컬에서 실시간으로 문서 상태(삭제/별표)를 제어하기 위한 state
   const [managedDocs, setManagedDocs] = useState<Document[]>(documents);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [starringId, setStarringId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editError, setEditError] = useState("");
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -210,6 +224,11 @@ export function MeetingsTable({
     const nowTime = new Date().getTime();
     const diffDays = (nowTime - uploadTime) / (1000 * 60 * 60 * 24);
     return diffDays >= 0 && diffDays <= 3;
+  };
+
+  const toDateInputValue = (dateStr?: string | null) => {
+    if (!dateStr) return "";
+    return dateStr.slice(0, 10);
   };
 
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -273,6 +292,67 @@ export function MeetingsTable({
     }
   };
 
+  const openEditModal = (doc: RowDocType) => {
+    if (!doc.isReal || !doc.sourceDocument) return;
+    const source = doc.sourceDocument;
+    setEditError("");
+    setEditingDoc({
+      id: source.id,
+      title: source.title,
+      description: source.description || "",
+      subCategory: (source.subCategory || doc.category) as MeetingCategory,
+      documentDate: toDateInputValue(source.documentDate || source.createdAt),
+      publishedAt: toDateInputValue(source.publishedAt || source.createdAt),
+      isStarred: !!source.isStarred,
+    });
+  };
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingDoc) return;
+
+    if (!editingDoc.title.trim()) {
+      setEditError("문서 제목을 입력해 주세요.");
+      return;
+    }
+
+    setEditingId(editingDoc.id);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/documents/${editingDoc.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editingDoc.title,
+          description: editingDoc.description,
+          category: "DISCLOSURE",
+          subCategory: editingDoc.subCategory,
+          documentDate: editingDoc.documentDate,
+          publishedAt: editingDoc.publishedAt,
+          isStarred: editingDoc.isStarred,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setEditError(data.error || "문서 수정에 실패했습니다.");
+        return;
+      }
+
+      const updatedDocument = data.document as Document;
+      setManagedDocs((prev) =>
+        prev.map((doc) => (doc.id === updatedDocument.id ? updatedDocument : doc))
+      );
+      setEditingDoc(null);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setEditError("문서 수정 중 오류가 발생했습니다.");
+    } finally {
+      setEditingId(null);
+    }
+  };
+
   // 필터 + 검색 적용 (실제 DB 문서와 목 데이터 결합)
   const filtered = useMemo(() => {
     // 1. 목 데이터 필터링
@@ -304,6 +384,7 @@ export function MeetingsTable({
           isReal: true,
           fileName: d.fileName,
           fileSize: d.fileSize,
+          sourceDocument: d,
         }));
 
       if (filterCat !== "전체") {
@@ -355,6 +436,40 @@ export function MeetingsTable({
         alert("이 문서는 데모 시연용 가상 문서입니다.\n\n실제 PDF 파일의 등록, 인라인 열람 및 실시간 보안 감사 로그 기록 흐름을 연습하시려면, [운영자] 계정으로 로그인 후 [신규 정보공개 문서 등록]에서 '의무 정보 공개 자료'와 해당 세부 분류(문서함)를 지정해 직접 업로드해 보십시오!");
       }
     }
+  };
+
+  const renderEditButton = (doc: RowDocType) => {
+    if (!isAdmin || !doc.isReal || !doc.sourceDocument) return null;
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          openEditModal(doc);
+        }}
+        className="flex items-center justify-center size-7 rounded-full text-ash hover:text-sky-blue hover:bg-sky-blue/10 active:scale-90 transition-all duration-150 cursor-pointer"
+        title="문서 수정"
+        aria-label={`${doc.title} 문서 수정`}
+      >
+        <svg
+          className="size-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16.862 4.487l1.688-1.688a1.875 1.875 0 112.652 2.652L9.38 17.273 5.75 18.25l.977-3.63L16.862 4.487z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19.5 7.125L16.875 4.5"
+          />
+        </svg>
+      </button>
+    );
   };
 
   return (
@@ -501,7 +616,8 @@ export function MeetingsTable({
                     <td className="px-5 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">{doc.date}</td>
                     {isAdmin && (
                       <td className="px-5 py-3.5 text-center">
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {renderEditButton(doc)}
                           {doc.isReal && (
                             <button
                               onClick={async (e) => {
@@ -610,33 +726,36 @@ export function MeetingsTable({
                       </span>
                     )}
                     {doc.isReal && isAdmin && (
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await handleDelete(String(doc.id), doc.title);
-                        }}
-                        disabled={deletingId === doc.id}
-                        className="flex items-center justify-center size-7 rounded-full text-ash hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all duration-150 cursor-pointer disabled:opacity-40"
-                        title="문서 삭제"
-                      >
-                        {deletingId === doc.id ? (
-                          <span className="size-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <svg
-                            className="size-3.5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        )}
-                      </button>
+                      <>
+                        {renderEditButton(doc)}
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await handleDelete(String(doc.id), doc.title);
+                          }}
+                          disabled={deletingId === doc.id}
+                          className="flex items-center justify-center size-7 rounded-full text-ash hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all duration-150 cursor-pointer disabled:opacity-40"
+                          title="문서 삭제"
+                        >
+                          {deletingId === doc.id ? (
+                            <span className="size-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <svg
+                              className="size-3.5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -719,6 +838,143 @@ export function MeetingsTable({
                 setShowUploadModal(false);
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* 문서 메타데이터 수정 팝업 모달 (관리자용) */}
+      {editingDoc && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0" onClick={() => setEditingDoc(null)} />
+          <div className="relative w-full max-w-lg rounded-2xl bg-warm-canvas border border-stone-surface shadow-2xl p-6 text-left animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-charcoal-primary">정보공개 문서 수정</h3>
+                <p className="mt-1 text-[11px] text-graphite">첨부파일은 유지하고 문서 정보만 수정합니다.</p>
+              </div>
+              <button
+                onClick={() => setEditingDoc(null)}
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="soft-panel p-5 bg-white border border-[#f2f0ed] rounded-2xl">
+              {editError && (
+                <div className="mb-4 rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-600">
+                  {editError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-title">
+                    문서 제목 *
+                  </label>
+                  <input
+                    id="edit-doc-title"
+                    type="text"
+                    value={editingDoc.title}
+                    onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, title: e.target.value } : prev)}
+                    required
+                    className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition placeholder:text-[#848281] focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-desc">
+                    문서 설명 (선택)
+                  </label>
+                  <input
+                    id="edit-doc-desc"
+                    type="text"
+                    value={editingDoc.description}
+                    onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, description: e.target.value } : prev)}
+                    className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition placeholder:text-[#848281] focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-subcat">
+                    문서함 세부 분류 *
+                  </label>
+                  <select
+                    id="edit-doc-subcat"
+                    value={editingDoc.subCategory}
+                    onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, subCategory: e.target.value as MeetingCategory } : prev)}
+                    className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
+                  >
+                    {CATEGORIES.filter((category): category is MeetingCategory => category !== "전체").map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-date">
+                      발생일 *
+                    </label>
+                    <input
+                      id="edit-doc-date"
+                      type="date"
+                      value={editingDoc.documentDate}
+                      onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, documentDate: e.target.value } : prev)}
+                      required
+                      className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-published">
+                      등록일 (공개일) *
+                    </label>
+                    <input
+                      id="edit-doc-published"
+                      type="date"
+                      value={editingDoc.publishedAt}
+                      onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, publishedAt: e.target.value } : prev)}
+                      required
+                      className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 py-1">
+                  <input
+                    id="edit-doc-starred"
+                    type="checkbox"
+                    checked={editingDoc.isStarred}
+                    onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, isStarred: e.target.checked } : prev)}
+                    className="size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+                  />
+                  <label className="text-xs font-semibold text-charcoal-primary select-none cursor-pointer" htmlFor="edit-doc-starred">
+                    중요 문서로 표시
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditingDoc(null)}
+                    className="rounded-full border-stone-surface text-xs font-bold text-graphite hover:bg-stone-surface"
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={editingId === editingDoc.id}
+                    className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 disabled:opacity-60"
+                  >
+                    {editingId === editingDoc.id ? "수정 중..." : "수정 저장"}
+                  </Button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}

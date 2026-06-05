@@ -5,6 +5,7 @@ const mockCreateDocumentSignedUpload = vi.hoisted(() => vi.fn());
 const mockPrisma = vi.hoisted(() => ({
   document: {
     create: vi.fn(),
+    update: vi.fn(),
   },
 }));
 
@@ -121,6 +122,57 @@ describe("document upload API", () => {
           ],
         },
       }),
+    }));
+    expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("updates document metadata for admins", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.update.mockResolvedValue({
+      id: "doc-1",
+      title: "수정된 문서",
+      description: "수정 설명",
+      category: "DISCLOSURE",
+      subCategory: "운영관리규정",
+      documentDate: new Date("2026-06-01"),
+      publishedAt: new Date("2026-06-05"),
+      isStarred: true,
+      attachments: [],
+    });
+
+    const { PATCH } = await import("@/app/api/documents/[id]/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/documents/doc-1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "수정된 문서",
+          description: "수정 설명",
+          category: "DISCLOSURE",
+          subCategory: "운영관리규정",
+          documentDate: "2026-06-01",
+          publishedAt: "2026-06-05",
+          isStarred: true,
+        }),
+      }),
+      { params: Promise.resolve({ id: "doc-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "doc-1" },
+      data: expect.objectContaining({
+        title: "수정된 문서",
+        description: "수정 설명",
+        category: "DISCLOSURE",
+        subCategory: "운영관리규정",
+        documentDate: new Date("2026-06-01"),
+        publishedAt: new Date("2026-06-05"),
+        isStarred: true,
+      }),
+      include: {
+        attachments: true,
+      },
     }));
     expect(await response.json()).toMatchObject({ success: true });
   });

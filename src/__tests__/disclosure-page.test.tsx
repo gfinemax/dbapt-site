@@ -108,4 +108,43 @@ describe("disclosure page", () => {
     expect(screen.getByRole("heading", { name: "신규 정보공개 문서 등록" })).toBeInTheDocument();
     expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("운영관리규정");
   });
+
+  it("opens document edit controls from the folder list for uploaded documents", () => {
+    const documents: Document[] = [
+      {
+        id: "doc-operating-rule",
+        title: "운영관리규정 최신본",
+        description: "사무국 운영 및 문서 보존 절차",
+        category: "DISCLOSURE",
+        subCategory: "운영관리규정",
+        fileName: "operating-rule.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        isStarred: true,
+        publishedAt: "2026-06-05T00:00:00.000Z",
+        documentDate: "2026-06-01T00:00:00.000Z",
+        createdAt: "2026-06-05T00:00:00.000Z",
+      },
+    ];
+
+    render(
+      <DisclosureClient
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={documents}
+      />
+    );
+
+    const operatingHeading = screen.getByRole("heading", { name: "운영관리규정" });
+    const operatingCard = operatingHeading.closest(".stone-card");
+    expect(operatingCard).toBeInTheDocument();
+
+    fireEvent.click(within(operatingCard as HTMLElement).getByRole("button", { name: "자료실 열기" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "운영관리규정 최신본 문서 수정" })[0]);
+
+    expect(screen.getByRole("heading", { name: "정보공개 문서 수정" })).toBeInTheDocument();
+    expect(screen.getByLabelText("문서 제목 *")).toHaveValue("운영관리규정 최신본");
+    expect(screen.getByLabelText("문서 설명 (선택)")).toHaveValue("사무국 운영 및 문서 보존 절차");
+    expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("운영관리규정");
+    expect(screen.getByLabelText("중요 문서로 표시")).toBeChecked();
+  });
 });

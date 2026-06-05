@@ -426,6 +426,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Add admin document metadata editing from the disclosure folder list.
+- Governing spec: `DESIGN.md`, protected information-disclosure document workflow.
+- Implementation plan: Reuse the existing admin-only document API and folder-list management column; add an edit modal for uploaded document metadata without changing file access.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/app/api/documents/[id]/route.ts`, `src/__tests__/disclosure-page.test.tsx`, `src/__tests__/document-upload-api.test.ts`, authenticated `/disclosure` document drawer.
+
+## Boundary Review
+- Finding: PASS. Editing is available only to administrators and only for real uploaded document records.
+- Evidence: Mock rows do not render edit controls, the PATCH route still requires `ADMIN`, and the edit form updates metadata only.
+
+## Truthful Presentation Review
+- Finding: PASS. The UI does not imply file replacement or new public access.
+- Evidence: The modal explicitly states that attachments remain unchanged, while title, description, folder classification, dates, and important status can be edited.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser limitation.
+- Evidence: The edit control uses a compact icon button in the existing management column, keeps visible focusable form controls with labels, and focused component/API tests cover the modal opening and PATCH contract. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Add a real signup application input form inside the login-page signup panel.
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Implementation plan: Existing Google OAuth pending-approval flow, expanded with application fields stored on pending users.
