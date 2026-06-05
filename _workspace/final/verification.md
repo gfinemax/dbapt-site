@@ -811,3 +811,56 @@
 ## Unresolved Risks Or Follow-Up Specs
 
 - Full `pnpm test` was not rerun for this small cleanup; the suite was already known to be blocked by the existing portal seed pending-document mismatch.
+
+---
+
+# Verification Addendum: Chairman Signature Restore
+
+## Implemented Change
+
+- Copied the provided PNG into `public/assets/about/chairman-signature.png` without changing the file bytes.
+- Rendered the signature image to the right of `대방동 지역주택조합 조합장` in the `/about` greeting sign-off.
+- Kept the image aspect ratio by using `h-14 w-auto object-contain`.
+- Added a regression test that confirms the signature image renders and `안동연(인)` is not shown.
+
+## Checks Run
+
+- `pnpm test src/__tests__/about-client.test.tsx`: passed, 2 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm build`: passed.
+- `pnpm test`: failed in existing `src/__tests__/portal-auth-flow.test.tsx` seed verification; `pending` document is `undefined`. Other 93 tests passed.
+- SHA256 check: source PNG and `public/assets/about/chairman-signature.png` matched exactly.
+
+## Browser Checks
+
+- Checked `http://127.0.0.1:3000/about?tab=greetings` at 1280x900 and 390x844 with headless Chrome.
+- Confirmed the signature asset loads from `/assets/about/chairman-signature.png` with natural size 3588x1184.
+- Confirmed `대방동 지역주택조합 조합장` remains visible, `안동연(인)` is absent, and no horizontal overflow is detected on desktop or mobile.
+- The page DOM includes the same signature image inside the closed about drawer because the drawer reuses `AboutClient`; the visible main sign-off renders correctly.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Full `pnpm test` remains blocked by the existing portal seed pending-document mismatch.
+
+---
+
+# Verification Addendum: Chairman Signature Transparent Background
+
+## Implemented Change
+
+- Updated `public/assets/about/chairman-signature.png` so the opaque checkerboard/light background is transparent.
+- Kept the image dimensions at 3588x1184 and left the existing `/about` sign-off layout unchanged.
+
+## Checks Run
+
+- PIL asset inspection: alpha extrema `0..255`, corner alpha `[0, 0, 0, 0]`, transparent pixels `3,681,563`, visible pixels `566,629`.
+- Browser canvas inspection at `http://127.0.0.1:3000/about?tab=greetings`: desktop 1280x900 and mobile 390x844 both loaded `/assets/about/chairman-signature.png` with corner alpha `[0, 0, 0, 0]`.
+- Browser checks also confirmed no horizontal overflow at both viewports.
+- `pnpm test src/__tests__/about-client.test.tsx`: passed, 2 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm build`: passed.
+- `pnpm test`: failed in existing `src/__tests__/portal-auth-flow.test.tsx` seed verification; `pending` document is `undefined`. Other 93 tests passed.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Full `pnpm test` remains blocked by the existing portal seed pending-document mismatch.

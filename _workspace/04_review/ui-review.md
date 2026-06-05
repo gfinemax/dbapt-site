@@ -426,6 +426,110 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Make the chairman signature image background transparent.
+- Governing spec: `DESIGN.md`, public `조합소개` presentation scope.
+- Implementation plan: Update only the signature PNG alpha channel and keep the existing sign-off rendering beside `대방동 지역주택조합 조합장`.
+- Files or pages reviewed: `public/assets/about/chairman-signature.png`, `src/components/about/about-client.tsx`, `/about?tab=greetings`.
+
+## Boundary Review
+- Finding: PASS. The change is limited to the public signature asset and does not alter routes, permissions, document workflows, or authenticated surfaces.
+- Evidence: The about sign-off component still references the same `/assets/about/chairman-signature.png` path with the same displayed dimensions.
+
+## Truthful Presentation Review
+- Finding: PASS. The signature remains a black signature mark and no old `안동연(인)` text is restored.
+- Evidence: The visible sign-off text remains `대방동 지역주택조합 조합장`, with the signature image beside it.
+
+## Design And Accessibility Review
+- Finding: PASS. The asset now has transparent background pixels and still preserves the original canvas size/aspect ratio in the page layout.
+- Evidence: PIL inspection reported alpha extrema `0..255`, corner alpha `[0, 0, 0, 0]`, and the original 3588x1184 image dimensions. Browser checks at 1280x900 and 390x844 confirmed the loaded image has corner alpha `[0, 0, 0, 0]` and no horizontal overflow.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Restore the provided chairman signature image beside the greeting sign-off without transforming the source PNG.
+- Governing spec: `DESIGN.md`, public `조합소개` presentation scope.
+- Implementation plan: Add the provided PNG as a public about asset and render it with preserved aspect ratio beside `대방동 지역주택조합 조합장`.
+- Files or pages reviewed: `src/components/about/about-client.tsx`, `src/__tests__/about-client.test.tsx`, `public/assets/about/chairman-signature.png`, `/about?tab=greetings`.
+
+## Boundary Review
+- Finding: PASS. The change is limited to public about-page presentation and does not alter routes, permissions, document workflows, or authenticated surfaces.
+- Evidence: Only the about greeting sign-off rendering and its public image asset/test were changed.
+
+## Truthful Presentation Review
+- Finding: PASS. The provided signature image is shown as a signature asset and the old `안동연(인)` text remains absent.
+- Evidence: Browser checks found `대방동 지역주택조합 조합장` visible, `안동연(인)` absent, and `/assets/about/chairman-signature.png` loaded completely.
+
+## Design And Accessibility Review
+- Finding: PASS. The image is rendered with `h-14 w-auto object-contain`, preserving aspect ratio and avoiding distortion while keeping the sign-off responsive.
+- Evidence: Source and destination SHA256 hashes matched exactly, confirming the PNG bytes were not transformed. Desktop 1280x900 and mobile 390x844 browser checks found no horizontal overflow. The page also contains a second matching image in the closed off-canvas about drawer because the drawer reuses the same `AboutClient` component.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Remove the chairman signature image from the public greeting sign-off.
+- Governing spec: `DESIGN.md`, public `조합소개` greeting presentation.
+- Implementation plan: Delete the signature asset and render only the existing `대방동 지역주택조합 조합장` sign-off text.
+- Files or pages reviewed: `src/components/about/about-client.tsx`, `src/__tests__/about-client.test.tsx`, public `/about?tab=greetings`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change removes a public presentation asset only. No route, login check, document access, upload, payment, voting, or admin/member workflow changed.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The greeting still shows the chairman sign-off role text without the signature image or the old `안동연(인)` text. No new claim or private data was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: Browser checks on desktop and mobile confirmed there is no `안동연 조합장 서명` image, the sign-off text remains visible, and there is no horizontal overflow.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Replace the `안동연(인)` text in the chairman greeting sign-off with a black transparent-background signature asset.
+- Governing spec: `DESIGN.md`, public `조합소개` greeting presentation.
+- Implementation plan: Add a public about-page signature asset and render it in the existing chairman greeting sign-off without changing access or workflow behavior.
+- Files or pages reviewed: `src/components/about/about-client.tsx`, `public/assets/about/chairman-signature.png`, `src/__tests__/about-client.test.tsx`, public `/about?tab=greetings`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change is a public about-page presentation update only. No route, login check, document access, upload, payment, voting, or admin/member workflow was added.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The sign-off still identifies `대방동 지역주택조합 조합장`; the old plain `안동연(인)` text is replaced by a signature image with accessible alt text. No fabricated personal data or operational claim was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: The signature asset is an RGBA PNG with transparent corners and black ink only. Browser checks on desktop and mobile confirmed `/assets/about/chairman-signature.png` loads, the old `안동연(인)` text is no longer visible, and there is no horizontal overflow.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Make the global right-side personal-library action open the drawer on `/business`, `/news`, and `/library`.
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, authenticated personal-library/document access boundary.
 - Implementation plan: Reuse the existing authenticated `PortalShell` drawer and shared personal-library data loading without adding a new public access surface.

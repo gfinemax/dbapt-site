@@ -3,6 +3,17 @@ import { describe, expect, it } from "vitest";
 import { AboutClient } from "@/components/about/about-client";
 
 describe("about client", () => {
+  it("renders the chairman signature image without replacing the sign-off text", () => {
+    render(<AboutClient />);
+
+    const signature = screen.getByRole("img", { name: "안동연 조합장 서명" });
+
+    expect(signature).toHaveAttribute("src", "/assets/about/chairman-signature.png");
+    expect(signature).toHaveClass("h-14", "w-auto", "object-contain");
+    expect(screen.getByText("대방동 지역주택조합 조합장")).toBeInTheDocument();
+    expect(screen.queryByText("안동연(인)")).not.toBeInTheDocument();
+  });
+
   it("separates the cooperative organization chart from partner status cards", () => {
     const { container } = render(<AboutClient />);
 

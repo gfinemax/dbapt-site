@@ -326,8 +326,14 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                 <p>
                   조합원 여러분의 귀중한 재산과 신뢰를 끝까지 보호할 것을 다짐하며, 언제나 귀를 열고 조합원 한 분 한 분의 제안을 경청하겠습니다. 속도감 있는 사업 추진과 탁월한 주거 가치 구현으로 보답하겠습니다.
                 </p>
-                <p className="pt-4 font-bold text-charcoal-primary text-right">
-                  대방동 지역주택조합 조합장  <span className="font-mono text-base ml-2 text-charcoal-primary">안동연(인)</span>
+                <p className="pt-4 flex flex-wrap items-end justify-end gap-x-3 gap-y-2 font-bold text-charcoal-primary text-right">
+                  <span>대방동 지역주택조합 조합장</span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/assets/about/chairman-signature.png"
+                    alt="안동연 조합장 서명"
+                    className="h-14 w-auto object-contain"
+                  />
                 </p>
               </div>
             </div>
