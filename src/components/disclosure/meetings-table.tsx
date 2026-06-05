@@ -708,9 +708,15 @@ export function MeetingsTable({
             <DocumentUploadForm
               defaultCategory="DISCLOSURE"
               defaultSubCategory={filterCat !== "전체" ? filterCat : "총회 의사록"}
-              onSuccess={() => {
+              onSuccess={(uploadedDocument) => {
+                if (uploadedDocument) {
+                  setManagedDocs((prev) => [
+                    uploadedDocument,
+                    ...prev.filter((document) => document.id !== uploadedDocument.id),
+                  ]);
+                  setPage(1);
+                }
                 setShowUploadModal(false);
-                router.refresh();
               }}
             />
           </div>

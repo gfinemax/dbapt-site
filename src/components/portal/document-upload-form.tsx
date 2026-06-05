@@ -3,9 +3,10 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { type Document } from "@/components/portal/document-table";
 
 type DocumentUploadFormProps = {
-  onSuccess?: () => void;
+  onSuccess?: (document?: Document) => void;
   defaultCategory?: string;
   defaultSubCategory?: string;
 };
@@ -194,7 +195,7 @@ export function DocumentUploadForm({
       const attachmentInput = document.getElementById("attachment-upload") as HTMLInputElement;
       if (attachmentInput) attachmentInput.value = "";
 
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(data.document as Document | undefined);
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "서버와의 통신 중 문제가 발생했습니다.");
