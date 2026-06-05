@@ -3,20 +3,21 @@
 import { Suspense } from "react";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  emptyPersonalLibraryData,
+  loadPersonalLibraryData,
+  type PersonalLibrarySession,
+} from "@/lib/personal-library-data";
 import { NewsClient } from "@/components/news/news-client";
+import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 
 export default async function NewsPage() {
-  const session = (await getSession()) as {
-    id: string;
-    loginId: string | null;
-    name: string;
-    role: string;
-    email?: string;
-  } | null;
+  const session = (await getSession()) as PersonalLibrarySession | null;
 
   let newsList: any[] = [];
   let freePosts: any[] = [];
   let faqs: any[] = [];
+  let personalLibraryData = emptyPersonalLibraryData();
 
   try {
     // 1. 공지사항 및 조합뉴스(주/월간소식) 조회 (Public)
@@ -105,20 +106,30 @@ export default async function NewsPage() {
     console.error("Error loading news page server data:", e);
   }
 
+  if (session) {
+    try {
+      personalLibraryData = await loadPersonalLibraryData(session);
+    } catch (e) {
+      console.error("Error loading news page personal library data:", e);
+    }
+  }
+
   return (
-    <main className="flex-1 animate-page-in min-h-screen bg-warm-canvas">
-      <Suspense fallback={
-        <div className="w-full min-h-[400px] flex items-center justify-center bg-warm-canvas">
-          <div className="text-xs font-bold text-graphite/60 animate-pulse">정보를 로드하고 있습니다...</div>
-        </div>
-      }>
-        <NewsClient
-          session={session}
-          initialNewsList={newsList}
-          initialFreePosts={freePosts}
-          initialFaqs={faqs}
-        />
-      </Suspense>
-    </main>
+    <PersonalLibraryDrawerHost session={session} {...personalLibraryData}>
+      <main className="flex-1 animate-page-in min-h-screen bg-warm-canvas">
+        <Suspense fallback={
+          <div className="w-full min-h-[400px] flex items-center justify-center bg-warm-canvas">
+            <div className="text-xs font-bold text-graphite/60 animate-pulse">정보를 로드하고 있습니다...</div>
+          </div>
+        }>
+          <NewsClient
+            session={session}
+            initialNewsList={newsList}
+            initialFreePosts={freePosts}
+            initialFaqs={faqs}
+          />
+        </Suspense>
+      </main>
+    </PersonalLibraryDrawerHost>
   );
 }

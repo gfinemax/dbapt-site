@@ -1,34 +1,31 @@
 import { LibraryClient } from "@/components/library/library-client";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { serializeDocuments } from "@/lib/document-serializer";
-import { type Document } from "@/components/portal/document-table";
+import {
+  emptyPersonalLibraryData,
+  loadPersonalLibraryData,
+  type PersonalLibrarySession,
+} from "@/lib/personal-library-data";
+import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 
 export default async function LibraryPage() {
-  const session = (await getSession()) as {
-    id: string;
-    loginId: string | null;
-    name: string;
-    role: string;
-    email?: string;
-  } | null;
-  let documents: Document[] = [];
+  const session = (await getSession()) as PersonalLibrarySession | null;
+  let personalLibraryData = emptyPersonalLibraryData();
 
   if (session) {
     try {
-      const docs = await prisma.document.findMany({
-        where: session.role === "ADMIN" ? {} : { status: "APPROVED" },
-        include: {
-          attachments: true,
-        },
-        orderBy: { documentDate: "desc" },
-      });
-
-      documents = serializeDocuments(docs);
+      personalLibraryData = await loadPersonalLibraryData(session);
     } catch (error) {
-      console.error("Error loading library documents:", error);
+      console.error("Error loading library page personal library data:", error);
     }
   }
 
-  return <LibraryClient isLoggedIn={!!session} isAdmin={session?.role === "ADMIN"} documents={documents} />;
+  return (
+    <PersonalLibraryDrawerHost session={session} {...personalLibraryData}>
+      <LibraryClient
+        isLoggedIn={!!session}
+        isAdmin={session?.role === "ADMIN"}
+        documents={personalLibraryData.documents}
+      />
+    </PersonalLibraryDrawerHost>
+  );
 }

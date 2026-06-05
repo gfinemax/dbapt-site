@@ -426,6 +426,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Make the global right-side personal-library action open the drawer on `/business`, `/news`, and `/library`.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, authenticated personal-library/document access boundary.
+- Implementation plan: Reuse the existing authenticated `PortalShell` drawer and shared personal-library data loading without adding a new public access surface.
+- Files or pages reviewed: `src/components/portal/personal-library-drawer-host.tsx`, `src/lib/personal-library-data.ts`, `src/app/business/page.tsx`, `src/app/news/page.tsx`, `src/app/library/page.tsx`, authenticated `/business`, `/news`, and `/library`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The right-side action still appears only for logged-in sessions through the existing global header. The new host loads the same role-scoped approved/admin document data and renders the existing `PortalShell` in drawer mode; no public document access, upload, payment, voting, or messaging surface was added.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The drawer displays session-derived personal-library labels and real loaded document/payment/admin data only when a session exists. Logged-out pages do not show the right-side action, and no fabricated document or account content was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: The drawer uses the existing warm canvas, stone border, right-side slide-over, labeled close button, and `aria-label` pattern already used on landing/about/disclosure. Browser checks confirmed `/business`, `/news`, and `/library` open `운영자 개인 자료실 드로어` from the desktop right-side badge and that the mobile drawer has no horizontal overflow.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Remove static library index placeholder entries from material drawers when uploaded documents exist.
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, 자료실 truthful presentation boundary.
 - Implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md`.
