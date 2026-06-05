@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NoticeBoard } from "@/components/news/notice-board";
 import { CoopNewsletter } from "@/components/news/coop-newsletter";
 import { FreeBoard } from "@/components/news/free-board";
+import { NoticeRichContent } from "@/components/news/notice-rich-editor";
 import * as newsRoute from "@/app/api/news/route";
 import * as freeRoute from "@/app/api/news/free/route";
 import * as uploadRoute from "@/app/api/upload/route";
@@ -611,6 +612,18 @@ describe("news admin visible controls", () => {
 
     expect(screen.getByRole("button", { name: "+ 신규 공지사항 등록" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "공지 삭제" })).toBeInTheDocument();
+  });
+
+  it("renders notice rich content with editor-matched body typography", () => {
+    const { container } = render(
+      <NoticeRichContent content="<p>동작구청 방문 결과 공유드립니다</p>" />,
+    );
+
+    const content = container.querySelector(".notice-rich-content");
+
+    expect(content).toHaveClass("text-xs");
+    expect(content).toHaveClass("leading-relaxed");
+    expect(content).toHaveClass("text-charcoal-primary");
   });
 
   it("uploads a newsletter image file before creating the newsletter", async () => {

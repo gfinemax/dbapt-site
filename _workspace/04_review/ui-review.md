@@ -426,6 +426,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Match notice read-mode rich content typography and line height to the notice edit-mode rich editor.
+- Governing spec: Existing `조합소식` notice administration presentation; no access-scope expansion.
+- Implementation plan: `docs/superpowers/plans/2026-06-01-daebang-news-admin-media-controls.md`.
+- Files or pages reviewed: `src/components/news/notice-rich-editor.tsx`, `src/__tests__/news-admin-controls.test.tsx`, `/news?tab=notice` notice drawer on local dev server.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only updates shared rich-content typography classes and a focused rendering test. No navigation, authentication, upload, document disclosure, payment, voting, or messaging behavior changed.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Notice content still renders sanitized stored notice HTML through `NoticeRichContent`; no new preview claims, operational data, or action controls were added.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: Browser checks on `http://127.0.0.1:3000/news?tab=notice` showed the notice drawer body renders `.notice-rich-content` at `12px` font size and `19.5px` line height on both desktop and mobile, matching the editor body class. No Next.js error overlay, no console errors, and no mobile horizontal overflow were detected.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Let administrators edit the empty-document guidance shown in disclosure cards.
 - Governing spec: `DESIGN.md`, protected information-disclosure document workflow.
 - Implementation plan: Store per-subcategory empty-card guidance in `DisclosureEmptyMessage`, load it into disclosure cards, and expose an admin-only edit modal when no uploaded documents exist.

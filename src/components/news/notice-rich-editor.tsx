@@ -15,6 +15,8 @@ type NoticeRichEditorProps = {
 
 const EDITOR_BUTTON_CLASS =
   "rounded-full border border-stone-surface bg-[#f8f7f4] px-2.5 py-1 text-[10px] font-bold text-graphite hover:bg-stone-surface focus:outline-none focus:ring-2 focus:ring-sky-blue/30";
+const NOTICE_RICH_BODY_CLASS =
+  "text-xs leading-relaxed text-charcoal-primary [&_a]:text-sky-blue [&_a]:underline [&_img]:my-1 [&_img]:max-w-full [&_img]:rounded-none [&_img]:border [&_img]:border-stone-surface [&_li]:ml-4 [&_ol]:list-decimal [&_ul]:list-disc";
 
 function escapeAttr(value: string) {
   return value
@@ -86,7 +88,8 @@ export function NoticeRichContent({
   return (
     <div
       className={cn(
-        "notice-rich-content whitespace-normal break-words [&_a]:text-sky-blue [&_a]:underline [&_img]:my-1.5 [&_img]:max-w-full [&_img]:rounded-none [&_img]:border [&_img]:border-stone-surface [&_li]:ml-4 [&_ol]:list-decimal [&_ul]:list-disc",
+        "notice-rich-content whitespace-normal break-words",
+        NOTICE_RICH_BODY_CLASS,
         className,
       )}
       dangerouslySetInnerHTML={{ __html: sanitizeNoticeContentHtml(content) }}
@@ -258,7 +261,10 @@ export function NoticeRichEditor({
           const target = event.target as HTMLElement;
           if (target.tagName === "IMG") selectImage(target as HTMLImageElement);
         }}
-        className="min-h-52 w-full px-4 py-3 text-xs leading-relaxed text-charcoal-primary outline-none empty:before:text-ash empty:before:content-[attr(data-placeholder)] [&_a]:text-sky-blue [&_a]:underline [&_img]:my-1 [&_img]:max-w-full [&_img]:rounded-none [&_img]:border [&_img]:border-stone-surface [&_li]:ml-4 [&_ol]:list-decimal [&_ul]:list-disc"
+        className={cn(
+          "min-h-52 w-full px-4 py-3 outline-none empty:before:text-ash empty:before:content-[attr(data-placeholder)]",
+          NOTICE_RICH_BODY_CLASS,
+        )}
       />
     </div>
   );
