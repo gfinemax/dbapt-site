@@ -426,6 +426,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Add admin-only edit and delete management for uploaded material entries inside the `/library` material drawer.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, authenticated document management and 자료실 boundaries.
+- Implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md` plus existing `PATCH`/`DELETE /api/documents/[id]` behavior.
+- Files or pages reviewed: `src/components/library/library-client.tsx`, `src/app/library/page.tsx`, `src/__tests__/library-page.test.tsx`, `/library` on local dev server.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Edit/delete controls are gated by `isAdmin` and only render for DB-backed `실제 업로드` entries. Logged-out and non-admin library behavior remains read-only, and static `자료실 색인` fallback entries are not presented as mutable CMS data.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The library page continues to describe gated materials as indexed or member-only. The new mutation controls call the existing admin-only document API and do not add public upload, approval, accounting, voting, notification, or private-data surfaces.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: Buttons use visible icon+text labels, form fields have labels, and focusable controls remain inside the existing drawer surface. Browser checks for `/library` at desktop and mobile widths showed page content, no framework error overlay, no console errors, and no horizontal overflow.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Match notice read-mode rich content typography and line height to the notice edit-mode rich editor.
 - Governing spec: Existing `조합소식` notice administration presentation; no access-scope expansion.
 - Implementation plan: `docs/superpowers/plans/2026-06-01-daebang-news-admin-media-controls.md`.

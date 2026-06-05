@@ -24,3 +24,12 @@
 - Candidate governing specification: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `공개자료` scope.
 - Candidate implementation plan: Existing public disclosure category presentation plus existing admin document upload form/API.
 - Unanswered decision: none.
+
+---
+
+- Requested feature slice: Let administrators edit and delete related uploaded documents directly from the `/library` material drawer.
+- Explicitly included scope: Show admin-only `수정` and `삭제` controls for `실제 업로드` material entries inside the library panel; update document title, description, category, subcategory, dates, and important flag through the existing document metadata API; remove deleted entries from the local material list.
+- Explicitly excluded scope: Do not make static `자료실 색인` fallback entries CMS-managed, do not replace uploaded files, do not expose management controls to non-admin users, and do not change document access rules.
+- Candidate governing specification: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, authenticated document management and public 자료실 boundaries.
+- Candidate implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md` plus existing `PATCH`/`DELETE /api/documents/[id]` document-management API.
+- Unanswered decision: none.

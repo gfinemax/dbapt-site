@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { LibraryClient } from "@/components/library/library-client";
 import { type Document } from "@/components/portal/document-table";
 
@@ -58,6 +58,11 @@ const uploadedMeetingDocuments: Document[] = [
   },
 ];
 
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
 describe("library page", () => {
   it("presents a unified index of duplicated public and gated materials", () => {
     render(<LibraryClient />);
@@ -98,6 +103,9 @@ describe("library page", () => {
     expect(screen.getByRole("dialog", { name: "회의록 자료 목록" })).toBeInTheDocument();
     expect(screen.getByText("회의록 리스트")).toBeInTheDocument();
     expect(screen.getByText("자료실 안에서 바로 확인하는 조합원 전용 색인입니다.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "자료 목록 닫기" }));
+    expect(screen.queryByRole("dialog", { name: "회의록 자료 목록" })).not.toBeInTheDocument();
   });
 
   it("opens uploaded material details from the material list", () => {
@@ -111,5 +119,61 @@ describe("library page", () => {
       "src",
       "/api/documents/doc-regular-meeting/view",
     );
+  });
+
+  it("lets admins edit and delete uploaded material entries from the library panel", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          document: {
+            ...uploadedMeetingDocuments[0],
+            title: "수정된 정기총회 의사록",
+            description: "수정된 문서 설명",
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.spyOn(window, "alert").mockImplementation(() => {});
+
+    render(<LibraryClient isLoggedIn isAdmin documents={uploadedMeetingDocuments} />);
+
+    const meetingCard = screen.getAllByTestId("library-item-meeting-minutes")[0];
+    fireEvent.click(within(meetingCard).getByRole("button", { name: "자료 확인" }));
+
+    const uploadedEntry = screen.getByLabelText("2026년 정기총회 의사록(직인) 관리");
+    fireEvent.click(within(uploadedEntry).getByRole("button", { name: "수정" }));
+    fireEvent.change(within(uploadedEntry).getByLabelText("문서 제목"), {
+      target: { value: "수정된 정기총회 의사록" },
+    });
+    fireEvent.change(within(uploadedEntry).getByLabelText("문서 설명"), {
+      target: { value: "수정된 문서 설명" },
+    });
+    fireEvent.click(within(uploadedEntry).getByRole("button", { name: "저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/doc-regular-meeting",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("수정된 정기총회 의사록"),
+      }),
+    ));
+    expect(screen.getByText("수정된 정기총회 의사록")).toBeInTheDocument();
+
+    const updatedEntry = screen.getByLabelText("수정된 정기총회 의사록 관리");
+    fireEvent.click(within(updatedEntry).getByRole("button", { name: "삭제" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/doc-regular-meeting",
+      { method: "DELETE" },
+    ));
+    expect(screen.queryByText("수정된 정기총회 의사록")).not.toBeInTheDocument();
   });
 });

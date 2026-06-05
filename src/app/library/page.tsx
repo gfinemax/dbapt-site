@@ -30,5 +30,5 @@ export default async function LibraryPage() {
     }
   }
 
-  return <LibraryClient isLoggedIn={!!session} documents={documents} />;
+  return <LibraryClient isLoggedIn={!!session} isAdmin={session?.role === "ADMIN"} documents={documents} />;
 }

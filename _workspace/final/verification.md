@@ -754,3 +754,34 @@
 
 - Full test suite remains blocked by the seeded document count mismatch above.
 - Mobile browser viewport visual check remains pending because viewport control was unavailable in the connected browser backend.
+
+---
+
+# Verification Addendum: Library Material Admin Management
+
+## Implemented Change
+
+- Added `isAdmin` propagation from `src/app/library/page.tsx` into `LibraryClient`.
+- Added local document list management in the library page so edited/deleted uploaded entries update immediately inside the material drawer.
+- Added admin-only `수정` and `삭제` controls for DB-backed `실제 업로드` material entries.
+- Added inline edit form for title, description, category, subcategory, document date, published date, and important-document flag.
+- Reused existing admin-only `PATCH /api/documents/[id]` and `DELETE /api/documents/[id]`; no new public mutation surface was added.
+
+## Checks Run
+
+- `pnpm vitest run src/__tests__/library-page.test.tsx`: passed, 5 tests.
+- `pnpm vitest run src/__tests__/document-upload-api.test.ts`: passed, 4 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx`.
+- `pnpm test`: failed in existing `src/__tests__/portal-auth-flow.test.tsx` seed verification; `pending` document is `undefined`. Other 90 tests passed.
+- `pnpm build`: passed.
+
+## Browser Checks
+
+- Checked `http://127.0.0.1:3000/library` with headless Chrome at 1280x900 and 390x844.
+- Desktop and mobile checks confirmed page content renders, no Next.js error overlay is present, no console errors are reported, and no horizontal overflow is detected.
+- Admin-only drawer controls were verified by component tests because browser verification did not inject an authenticated admin session.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Static `자료실 색인` fallback entries remain code-managed and are intentionally not editable from the UI.
+- Full `pnpm test` remains blocked by the existing portal seed pending-document mismatch.

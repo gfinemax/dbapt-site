@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FileText, FolderOpen, LockKeyhole, Search, X } from "lucide-react";
+import { FileText, FolderOpen, LockKeyhole, Pencil, Search, Trash2, X } from "lucide-react";
 import { SiteFooter } from "@/components/landing/site-footer";
 import {
   featuredLibraryItemIds,
@@ -28,12 +28,16 @@ const accessClassName: Record<LibraryAccess, string> = {
 
 type LibraryClientProps = {
   isLoggedIn?: boolean;
+  isAdmin?: boolean;
   documents?: Document[];
 };
 
-export function LibraryClient({ isLoggedIn = false, documents = [] }: LibraryClientProps) {
+const EMPTY_DOCUMENTS: Document[] = [];
+
+export function LibraryClient({ isLoggedIn = false, isAdmin = false, documents = EMPTY_DOCUMENTS }: LibraryClientProps) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeMaterial, setActiveMaterial] = useState<(typeof libraryItems)[number] | null>(null);
+  const [managedDocuments, setManagedDocuments] = useState<Document[]>(documents);
 
   const filteredItems = useMemo(() => {
     if (activeCategory === "all") return libraryItems;
@@ -186,7 +190,14 @@ export function LibraryClient({ isLoggedIn = false, documents = [] }: LibraryCli
       {activeMaterial && (
         <LibraryMaterialPanel
           item={activeMaterial}
-          documents={documents}
+          documents={managedDocuments}
+          isAdmin={isAdmin}
+          onDocumentUpdated={(document) => {
+            setManagedDocuments((prev) => prev.map((item) => item.id === document.id ? document : item));
+          }}
+          onDocumentDeleted={(id) => {
+            setManagedDocuments((prev) => prev.filter((document) => document.id !== id));
+          }}
           onClose={() => setActiveMaterial(null)}
         />
       )}
@@ -356,6 +367,11 @@ function formatDate(value?: string | null) {
   return value.slice(0, 10).replace(/-/g, ".");
 }
 
+function toDateInputValue(value?: string | null) {
+  if (!value) return "";
+  return value.slice(0, 10);
+}
+
 function getRealMaterialEntries(itemId: string, documents: Document[]): MaterialEntry[] {
   const matcher = (doc: Document) => {
     const text = `${doc.title} ${doc.description ?? ""} ${doc.category} ${doc.subCategory ?? ""}`;
@@ -390,10 +406,16 @@ function getRealMaterialEntries(itemId: string, documents: Document[]): Material
 function LibraryMaterialPanel({
   item,
   documents,
+  isAdmin,
+  onDocumentUpdated,
+  onDocumentDeleted,
   onClose,
 }: {
   item: (typeof libraryItems)[number];
   documents: Document[];
+  isAdmin: boolean;
+  onDocumentUpdated: (document: Document) => void;
+  onDocumentDeleted: (id: string) => void;
   onClose: () => void;
 }) {
   const [activeViewDocument, setActiveViewDocument] = useState<Document | null>(null);
@@ -468,7 +490,10 @@ function LibraryMaterialPanel({
             <MaterialEntryCard
               key={`${entry.title}-${index}`}
               entry={entry}
+              isAdmin={isAdmin}
               onOpenDocument={(document) => setActiveViewDocument(document)}
+              onUpdateDocument={onDocumentUpdated}
+              onDeleteDocument={onDocumentDeleted}
             />
           ))}
         </div>
@@ -500,11 +525,85 @@ function LibraryMaterialPanel({
 
 function MaterialEntryCard({
   entry,
+  isAdmin,
   onOpenDocument,
+  onUpdateDocument,
+  onDeleteDocument,
 }: {
   entry: MaterialEntry;
+  isAdmin: boolean;
   onOpenDocument: (document: Document) => void;
+  onUpdateDocument: (document: Document) => void;
+  onDeleteDocument: (id: string) => void;
 }) {
+  const document = entry.document;
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(entry.title);
+  const [draftDescription, setDraftDescription] = useState(entry.description);
+  const [draftCategory, setDraftCategory] = useState(document?.category || "DISCLOSURE");
+  const [draftSubCategory, setDraftSubCategory] = useState(document?.subCategory || "");
+  const [draftDocumentDate, setDraftDocumentDate] = useState(toDateInputValue(document?.documentDate || document?.createdAt));
+  const [draftPublishedAt, setDraftPublishedAt] = useState(toDateInputValue(document?.publishedAt || document?.createdAt));
+  const [draftIsStarred, setDraftIsStarred] = useState(!!document?.isStarred);
+
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!document) return;
+
+    setIsSaving(true);
+    try {
+      const body = {
+        title: draftTitle,
+        description: draftDescription,
+        category: draftCategory,
+        subCategory: draftSubCategory,
+        documentDate: draftDocumentDate,
+        publishedAt: draftPublishedAt,
+        isStarred: draftIsStarred,
+      };
+      const res = await fetch(`/api/documents/${document.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "문서 수정에 실패했습니다.");
+        return;
+      }
+      onUpdateDocument(data.document as Document);
+      setIsEditing(false);
+    } catch (error) {
+      console.error(error);
+      alert("문서 수정 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!document) return;
+    if (!confirm(`"${entry.title}" 문서를 삭제하시겠습니까?\n\n삭제된 문서는 복구할 수 없습니다.`)) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/documents/${document.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "문서 삭제에 실패했습니다.");
+        return;
+      }
+      onDeleteDocument(document.id);
+    } catch (error) {
+      console.error(error);
+      alert("문서 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const content = (
     <div className="flex items-start gap-3">
       <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f8f7f4] text-charcoal-primary">
@@ -529,16 +628,138 @@ function MaterialEntryCard({
     </div>
   );
 
-  if (entry.document) {
+  if (document) {
     return (
-      <button
-        type="button"
-        onClick={() => onOpenDocument(entry.document as Document)}
-        className="block w-full rounded-2xl border border-stone-surface bg-white p-4 text-left shadow-sm transition hover:border-ember-orange/50 hover:bg-[#fffdfb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/35 cursor-pointer"
-        aria-label={`${entry.title} 상세 열람`}
+      <article
+        aria-label={`${entry.title} 관리`}
+        className="rounded-2xl border border-stone-surface bg-white p-4 shadow-sm transition hover:border-ember-orange/50 hover:bg-[#fffdfb]"
       >
-        {content}
-      </button>
+        {isEditing ? (
+          <form onSubmit={handleSave} className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1 text-[10px] font-bold text-charcoal-primary">
+                문서 제목
+                <input
+                  value={draftTitle}
+                  onChange={(event) => setDraftTitle(event.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-3 py-2 text-xs font-medium text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                  required
+                />
+              </label>
+              <label className="space-y-1 text-[10px] font-bold text-charcoal-primary">
+                문서함 분류
+                <select
+                  value={draftCategory}
+                  onChange={(event) => setDraftCategory(event.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-3 py-2 text-xs font-medium text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                >
+                  <option value="DISCLOSURE">공개자료</option>
+                  <option value="ACCOUNTING">회계자료</option>
+                  <option value="NOTICE">조합원 공지</option>
+                </select>
+              </label>
+            </div>
+            <label className="block space-y-1 text-[10px] font-bold text-charcoal-primary">
+              문서 설명
+              <textarea
+                value={draftDescription}
+                onChange={(event) => setDraftDescription(event.target.value)}
+                rows={3}
+                className="w-full resize-none rounded-xl border border-stone-surface bg-white px-3 py-2 text-xs leading-relaxed text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+              />
+            </label>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="space-y-1 text-[10px] font-bold text-charcoal-primary">
+                세부 분류
+                <input
+                  value={draftSubCategory}
+                  onChange={(event) => setDraftSubCategory(event.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-3 py-2 text-xs font-medium text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                />
+              </label>
+              <label className="space-y-1 text-[10px] font-bold text-charcoal-primary">
+                문서 발생일
+                <input
+                  type="date"
+                  value={draftDocumentDate}
+                  onChange={(event) => setDraftDocumentDate(event.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-3 py-2 text-xs font-medium text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                  required
+                />
+              </label>
+              <label className="space-y-1 text-[10px] font-bold text-charcoal-primary">
+                공개 등록일
+                <input
+                  type="date"
+                  value={draftPublishedAt}
+                  onChange={(event) => setDraftPublishedAt(event.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-3 py-2 text-xs font-medium text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                  required
+                />
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-surface pt-3">
+              <label className="flex items-center gap-2 text-[11px] font-bold text-graphite">
+                <input
+                  type="checkbox"
+                  checked={draftIsStarred}
+                  onChange={(event) => setDraftIsStarred(event.target.checked)}
+                  className="size-4 rounded border-stone-surface text-midnight focus:ring-sky-blue/30"
+                />
+                중요 문서
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="rounded-full bg-midnight px-3 py-1.5 text-[11px] font-bold text-white hover:bg-charcoal-primary disabled:opacity-50"
+                >
+                  {isSaving ? "저장 중" : "저장"}
+                </button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => onOpenDocument(document)}
+              className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/35 cursor-pointer"
+              aria-label={`${entry.title} 상세 열람`}
+            >
+              {content}
+            </button>
+            {isAdmin && (
+              <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-stone-surface pt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                >
+                  <Pencil className="size-3" aria-hidden="true" />
+                  수정
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-ember-orange/20 bg-ember-orange/10 px-3 py-1.5 text-[11px] font-bold text-ember-orange hover:bg-ember-orange/15 disabled:opacity-50"
+                >
+                  <Trash2 className="size-3" aria-hidden="true" />
+                  {isDeleting ? "삭제 중" : "삭제"}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </article>
     );
   }
 

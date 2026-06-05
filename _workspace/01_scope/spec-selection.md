@@ -21,3 +21,11 @@
 - Implementation boundary: Keep `/disclosure` as a public informational preview page and keep uploads inside the existing authenticated admin document workflow. The current change adds regulation card categories, matching upload subcategories, and logged-in document previews without changing public access permissions.
 - Request/spec conflicts: none. The request fits the approved public `공개자료` informational scope.
 - Planning may continue: yes.
+
+---
+
+- Selected approved spec path: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`.
+- Selected implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md` with existing document API management behavior.
+- Implementation boundary: Keep `/library` as a unified index and keep document mutation admin-only. The change may expose edit/delete controls only for authenticated admin sessions and only for DB-backed uploaded document entries.
+- Request/spec conflicts: none. The request reuses existing administrator document mutation capability without exposing private files or creating a public management surface.
+- Planning may continue: yes.
