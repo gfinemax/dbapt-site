@@ -7,6 +7,9 @@ const mockPrisma = vi.hoisted(() => ({
     create: vi.fn(),
     update: vi.fn(),
   },
+  disclosureEmptyMessage: {
+    upsert: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -174,6 +177,44 @@ describe("document upload API", () => {
         attachments: true,
       },
     }));
+    expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("saves disclosure empty-card messages for admins", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.disclosureEmptyMessage.upsert.mockResolvedValue({
+      id: "empty-message-1",
+      subCategory: "회계관리규정",
+      title: "회계관리규정 자료 준비 중",
+      message: "회계 기준 개정본 검토 후 공개할 예정입니다.",
+    });
+
+    const { PATCH } = await import("@/app/api/disclosure-empty-messages/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/disclosure-empty-messages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subCategory: "회계관리규정",
+          title: "회계관리규정 자료 준비 중",
+          message: "회계 기준 개정본 검토 후 공개할 예정입니다.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.disclosureEmptyMessage.upsert).toHaveBeenCalledWith({
+      where: { subCategory: "회계관리규정" },
+      create: {
+        subCategory: "회계관리규정",
+        title: "회계관리규정 자료 준비 중",
+        message: "회계 기준 개정본 검토 후 공개할 예정입니다.",
+      },
+      update: {
+        title: "회계관리규정 자료 준비 중",
+        message: "회계 기준 개정본 검토 후 공개할 예정입니다.",
+      },
+    });
     expect(await response.json()).toMatchObject({ success: true });
   });
 });

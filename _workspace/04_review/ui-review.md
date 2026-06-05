@@ -426,6 +426,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Let administrators edit the empty-document guidance shown in disclosure cards.
+- Governing spec: `DESIGN.md`, protected information-disclosure document workflow.
+- Implementation plan: Store per-subcategory empty-card guidance in `DisclosureEmptyMessage`, load it into disclosure cards, and expose an admin-only edit modal when no uploaded documents exist.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/components/disclosure/disclosure-page-client-shell.tsx`, `src/app/disclosure/page.tsx`, `src/app/api/disclosure-empty-messages/route.ts`, `prisma/schema.prisma`, authenticated `/disclosure`.
+
+## Boundary Review
+- Finding: PASS. Only administrators can mutate the guidance text, and this does not expose new document access or upload capabilities.
+- Evidence: The API checks `session.role === "ADMIN"` and the edit button is rendered only for admin sessions.
+
+## Truthful Presentation Review
+- Finding: PASS. The feature changes only explanatory copy for empty document cards.
+- Evidence: Uploaded document counts, protected access labels, document opening, registration, and management controls remain unchanged.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser limitation.
+- Evidence: The edit action is a compact text button inside the existing empty panel, and the modal uses labeled inputs with the existing warm canvas, stone borders, and dark pill save action. Component and API tests cover rendering and persistence; browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Add admin document metadata editing from the disclosure folder list.
 - Governing spec: `DESIGN.md`, protected information-disclosure document workflow.
 - Implementation plan: Reuse the existing admin-only document API and folder-list management column; add an edit modal for uploaded document metadata without changing file access.

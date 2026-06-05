@@ -67,6 +67,16 @@ model Document {
   attachments  Attachment[]
 }
 
+// 2.1. 정보공개 문서함별 빈 자료 안내문
+model DisclosureEmptyMessage {
+  id          String   @id @default(uuid())
+  subCategory String   @unique
+  title       String
+  message     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // 2.5. 문서 추가 첨부파일 정보 (1:N 관계)
 model Attachment {
   id         String   @id @default(uuid())

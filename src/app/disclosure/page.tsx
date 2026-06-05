@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { serializeDocuments } from "@/lib/document-serializer";
 import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
+import { type DisclosureEmptyMessage } from "@/components/disclosure/disclosure-client";
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 
@@ -15,6 +16,7 @@ export default async function DisclosurePage() {
   } | null;
 
   let documents: Document[] = [];
+  let emptyMessages: DisclosureEmptyMessage[] = [];
   let logs: LogEntry[] = [];
   let refundInfo: {
     totalPaid: number;
@@ -41,6 +43,15 @@ export default async function DisclosurePage() {
       });
       
       documents = serializeDocuments(docs);
+
+      const savedEmptyMessages = await prisma.disclosureEmptyMessage.findMany({
+        orderBy: { subCategory: "asc" },
+      });
+      emptyMessages = savedEmptyMessages.map((message) => ({
+        subCategory: message.subCategory,
+        title: message.title,
+        message: message.message,
+      }));
 
       // 2. REFUND 전용 정산 데이터 수집
       if (session.role === "REFUND") {
@@ -126,6 +137,7 @@ export default async function DisclosurePage() {
     <DisclosurePageClientShell
       session={session}
       documents={documents}
+      emptyMessages={emptyMessages}
       logs={logs}
       refundInfo={refundInfo}
       pendingUsers={pendingUsers}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AboutClient } from "@/components/about/about-client";
 import { PdfViewerModal } from "../portal/pdf-viewer-modal";
 import { SiteFooter } from "@/components/landing/site-footer";
-import { DisclosureClient } from "./disclosure-client";
+import { DisclosureClient, type DisclosureEmptyMessage } from "./disclosure-client";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { type Document, type Attachment } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
@@ -20,6 +20,7 @@ type DisclosurePageClientShellProps = {
     email?: string;
   } | null;
   documents?: Document[];
+  emptyMessages?: DisclosureEmptyMessage[];
   logs?: LogEntry[];
   refundInfo?: {
     totalPaid: number;
@@ -48,6 +49,7 @@ type DisclosurePageClientShellProps = {
 export function DisclosurePageClientShell({
   session,
   documents = [],
+  emptyMessages = [],
   logs = [],
   refundInfo,
   pendingUsers = [],
@@ -152,6 +154,7 @@ export function DisclosurePageClientShell({
           }} 
           session={session} 
           documents={documents}
+          emptyMessages={emptyMessages}
           onViewDocument={(id, title) => {
             const matched = documents.find(d => d.id === id);
             if (matched) {
@@ -321,6 +324,7 @@ export function DisclosurePageClientShell({
           <DisclosureClient
             session={session}
             documents={documents}
+            emptyMessages={emptyMessages}
             onViewDocument={(id, title) => {
               setIsDisclosureDrawerOpen(false);
               const matched = documents.find(d => d.id === id);

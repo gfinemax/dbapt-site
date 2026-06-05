@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,7 +19,22 @@ type DisclosureClientProps = {
   } | null;
   documents?: Document[];
   onViewDocument?: (id: string, title: string) => void;
+  emptyMessages?: DisclosureEmptyMessage[];
 };
+
+export type DisclosureEmptyMessage = {
+  subCategory: string;
+  title: string;
+  message: string;
+};
+
+type EmptyMessageEditState = {
+  subCategory: string;
+  title: string;
+  message: string;
+};
+
+const DEFAULT_EMPTY_MESSAGES: DisclosureEmptyMessage[] = [];
 
 type TabId = "rules" | "meetings" | "accounting" | "operations";
 
@@ -213,16 +228,21 @@ function formatDisclosureDate(dateStr?: string | null) {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function DisclosureClient({ onOpenPortal, session, documents = [], onViewDocument }: DisclosureClientProps) {
+export function DisclosureClient({ onOpenPortal, session, documents = [], onViewDocument, emptyMessages }: DisclosureClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isLoggedIn = !!session;
+  const isAdmin = session?.role === "ADMIN";
   
   const [activeTab, setActiveTab] = useState<TabId>("rules");
   const [activeSubTab, setActiveSubTab] = useState<string>("all");
   const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState<DisclosureDocumentFolder | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [managedEmptyMessages, setManagedEmptyMessages] = useState<DisclosureEmptyMessage[]>(emptyMessages || DEFAULT_EMPTY_MESSAGES);
+  const [editingEmptyMessage, setEditingEmptyMessage] = useState<EmptyMessageEditState | null>(null);
+  const [emptyMessageError, setEmptyMessageError] = useState("");
+  const [emptyMessageSaving, setEmptyMessageSaving] = useState(false);
   const isScrollingRef = useRef(false);
   const isSubTabClickRef = useRef(false);
 
@@ -236,6 +256,66 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
     setMounted(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setManagedEmptyMessages(emptyMessages || DEFAULT_EMPTY_MESSAGES);
+  }, [emptyMessages]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const getDefaultEmptyMessage = (subCategory: string) => ({
+    subCategory,
+    title: "아직 업로드된 자료가 없습니다.",
+    message: `관리자 포털에서 \`의무 정보 공개 자료\`의 세부 분류를 \`${subCategory}\`로 선택해 등록하면 이 카드에 최신 자료가 표시됩니다.`,
+  });
+
+  const getEmptyMessage = (subCategory: string) =>
+    managedEmptyMessages.find((message) => message.subCategory === subCategory) ||
+    getDefaultEmptyMessage(subCategory);
+
+  const openEmptyMessageEditor = (subCategory: string) => {
+    setEmptyMessageError("");
+    setEditingEmptyMessage(getEmptyMessage(subCategory));
+  };
+
+  const handleEmptyMessageSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingEmptyMessage) return;
+
+    if (!editingEmptyMessage.title.trim() || !editingEmptyMessage.message.trim()) {
+      setEmptyMessageError("안내 제목과 본문을 모두 입력해 주세요.");
+      return;
+    }
+
+    setEmptyMessageSaving(true);
+    setEmptyMessageError("");
+    try {
+      const res = await fetch("/api/disclosure-empty-messages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingEmptyMessage),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setEmptyMessageError(data.error || "안내문 저장에 실패했습니다.");
+        return;
+      }
+
+      const savedMessage = data.emptyMessage as DisclosureEmptyMessage;
+      setManagedEmptyMessages((prev) => [
+        savedMessage,
+        ...prev.filter((message) => message.subCategory !== savedMessage.subCategory),
+      ]);
+      setEditingEmptyMessage(null);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setEmptyMessageError("안내문 저장 중 오류가 발생했습니다.");
+    } finally {
+      setEmptyMessageSaving(false);
+    }
+  };
 
   // 메인 탭 변경 시 서브 탭을 '전체 보기'("all")로 리셋
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -599,6 +679,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                         });
                       const latestDoc = realDocs[0];
                       const displayDocs = realDocs.slice(0, 3);
+                      const emptyMessage = getEmptyMessage(itemSubCategory);
                       const documentFolder: DisclosureDocumentFolder = {
                         id: `${item.id}-folder`,
                         title: `${itemSubCategory} 문서함`,
@@ -692,11 +773,22 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                               </div>
                             ) : (
                               <div className="rounded-xl border border-dashed border-stone-surface bg-[#f8f7f4] p-3">
-                                <p className="text-[11px] font-bold text-charcoal-primary">
-                                  아직 업로드된 자료가 없습니다.
-                                </p>
+                                <div className="flex items-start justify-between gap-3">
+                                  <p className="text-[11px] font-bold text-charcoal-primary">
+                                    {emptyMessage.title}
+                                  </p>
+                                  {isAdmin && (
+                                    <button
+                                      type="button"
+                                      onClick={() => openEmptyMessageEditor(itemSubCategory)}
+                                      className="shrink-0 rounded-full border border-stone-surface bg-white px-2.5 py-1 text-[9px] font-bold text-graphite hover:border-sky-blue hover:text-sky-blue"
+                                    >
+                                      안내문 수정
+                                    </button>
+                                  )}
+                                </div>
                                 <p className="mt-1 text-[10px] leading-4 text-graphite">
-                                  관리자 포털에서 `의무 정보 공개 자료`의 세부 분류를 `{itemSubCategory}`로 선택해 등록하면 이 카드에 최신 자료가 표시됩니다.
+                                  {emptyMessage.message}
                                 </p>
                               </div>
                             )}
@@ -764,6 +856,83 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
           );
         })}
       </div>
+
+      {/* 빈 자료 안내문 수정 팝업 모달 (관리자용) */}
+      {editingEmptyMessage && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0" onClick={() => setEditingEmptyMessage(null)} />
+          <div className="relative w-full max-w-lg rounded-2xl bg-warm-canvas border border-stone-surface shadow-2xl p-6 text-left animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-charcoal-primary">빈 자료 안내문 수정</h3>
+                <p className="mt-1 text-[11px] text-graphite">{editingEmptyMessage.subCategory} 카드에 표시됩니다.</p>
+              </div>
+              <button
+                onClick={() => setEditingEmptyMessage(null)}
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+
+            <form onSubmit={handleEmptyMessageSubmit} className="soft-panel p-5 bg-white border border-[#f2f0ed] rounded-2xl">
+              {emptyMessageError && (
+                <div className="mb-4 rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-600">
+                  {emptyMessageError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="empty-message-title">
+                    안내 제목 *
+                  </label>
+                  <input
+                    id="empty-message-title"
+                    type="text"
+                    value={editingEmptyMessage.title}
+                    onChange={(e) => setEditingEmptyMessage((prev) => prev ? { ...prev, title: e.target.value } : prev)}
+                    required
+                    className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition placeholder:text-[#848281] focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="empty-message-body">
+                    안내 본문 *
+                  </label>
+                  <textarea
+                    id="empty-message-body"
+                    value={editingEmptyMessage.message}
+                    onChange={(e) => setEditingEmptyMessage((prev) => prev ? { ...prev, message: e.target.value } : prev)}
+                    required
+                    rows={5}
+                    className="w-full resize-none rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm leading-relaxed outline-none transition placeholder:text-[#848281] focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditingEmptyMessage(null)}
+                    className="rounded-full border-stone-surface text-xs font-bold text-graphite hover:bg-stone-surface"
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={emptyMessageSaving}
+                    className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 disabled:opacity-60"
+                  >
+                    {emptyMessageSaving ? "저장 중..." : "안내문 저장"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 좌측 사이드 슬라이드 오버 (Drawer) 패널 - 문서함 열기 (React Portal로 body에 직접 마운트하여 stacking context 레이아웃 버그 완전 차단) */}
       {mounted && isLeftDrawerOpen && createPortal(

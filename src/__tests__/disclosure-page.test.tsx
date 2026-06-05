@@ -147,4 +147,33 @@ describe("disclosure page", () => {
     expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("운영관리규정");
     expect(screen.getByLabelText("중요 문서로 표시")).toBeChecked();
   });
+
+  it("shows admin-editable custom empty messages on disclosure cards", () => {
+    render(
+      <DisclosureClient
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={[]}
+        emptyMessages={[
+          {
+            subCategory: "회계관리규정",
+            title: "회계관리규정 자료 준비 중",
+            message: "회계 기준 개정본 검토 후 공개할 예정입니다.",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText("회계관리규정 자료 준비 중")).toBeInTheDocument();
+    expect(screen.getByText("회계 기준 개정본 검토 후 공개할 예정입니다.")).toBeInTheDocument();
+
+    const accountingHeading = screen.getByRole("heading", { name: "회계관리규정" });
+    const accountingCard = accountingHeading.closest(".stone-card");
+    expect(accountingCard).toBeInTheDocument();
+
+    fireEvent.click(within(accountingCard as HTMLElement).getByRole("button", { name: "안내문 수정" }));
+
+    expect(screen.getByRole("heading", { name: "빈 자료 안내문 수정" })).toBeInTheDocument();
+    expect(screen.getByLabelText("안내 제목 *")).toHaveValue("회계관리규정 자료 준비 중");
+    expect(screen.getByLabelText("안내 본문 *")).toHaveValue("회계 기준 개정본 검토 후 공개할 예정입니다.");
+  });
 });
