@@ -9,6 +9,7 @@ type DocumentUploadFormProps = {
   onSuccess?: (document?: Document) => void;
   defaultCategory?: string;
   defaultSubCategory?: string;
+  replyTargetDocuments?: Document[];
 };
 
 const disclosureSubCategoryOptions = [
@@ -21,6 +22,7 @@ const disclosureSubCategoryOptions = [
   "시공자 협약서",
   "총회 의사록",
   "이사회 회의록",
+  "대의원 회의록",
   "수발신 공문",
   "사업시행계획",
   "외부회계감사",
@@ -33,8 +35,21 @@ const disclosureSubCategoryOptions = [
   "감리 보고서",
 ];
 
-const correspondenceTypeOptions = ["수신", "발신", "회신"] as const;
-type CorrespondenceType = (typeof correspondenceTypeOptions)[number];
+const correspondenceTypeOptions = ["수신", "발신"] as const;
+type VisibleCorrespondenceType = (typeof correspondenceTypeOptions)[number];
+
+function getSubCategoryLabel(option: string) {
+  return option === "수발신 공문" ? "수신/발신 공문" : option;
+}
+
+function normalizeDefaultSubCategory(subCategory: string) {
+  return subCategory === "수신 공문" || subCategory === "발신 공문" ? "수발신 공문" : subCategory;
+}
+
+function getDefaultCorrespondenceType(subCategory: string): VisibleCorrespondenceType {
+  if (subCategory === "발신 공문") return "발신";
+  return "수신";
+}
 
 type SignedDocumentUpload = {
   path: string;
@@ -75,7 +90,8 @@ async function uploadToSignedUrl(upload: SignedDocumentUpload, file: File) {
 export function DocumentUploadForm({ 
   onSuccess, 
   defaultCategory = "DISCLOSURE", 
-  defaultSubCategory = "총회 의사록" 
+  defaultSubCategory = "총회 의사록",
+  replyTargetDocuments = [],
 }: DocumentUploadFormProps) {
   // 오늘 날짜 구하기 (KST 기준 YYYY-MM-DD)
   const getTodayString = () => {
@@ -89,7 +105,7 @@ export function DocumentUploadForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(defaultCategory);
-  const [subCategory, setSubCategory] = useState(defaultSubCategory);
+  const [subCategory, setSubCategory] = useState(normalizeDefaultSubCategory(defaultSubCategory));
   const [documentDate, setDocumentDate] = useState(getTodayString());
   const [publishedAt, setPublishedAt] = useState(getTodayString());
   const [file, setFile] = useState<File | null>(null);
@@ -98,13 +114,29 @@ export function DocumentUploadForm({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
-  const [correspondenceType, setCorrespondenceType] = useState<CorrespondenceType>("수신");
+  const [correspondenceType, setCorrespondenceType] = useState<VisibleCorrespondenceType>(() => getDefaultCorrespondenceType(defaultSubCategory));
+  const [isReplyCorrespondence, setIsReplyCorrespondence] = useState(false);
+  const [replyToDocumentId, setReplyToDocumentId] = useState("");
+  const [replyNotRequired, setReplyNotRequired] = useState(false);
+  const [replyDueDate, setReplyDueDate] = useState("");
   const isCorrespondenceDocument = category === "DISCLOSURE" && subCategory === "수발신 공문";
+  const receivedCorrespondenceDocuments = replyTargetDocuments.filter(
+    (document) =>
+      document.category === "DISCLOSURE" &&
+      document.subCategory === "수발신 공문" &&
+      document.correspondenceType === "수신" &&
+      !document.replyNotRequired
+  );
 
   // 폴더 카드 변경 시 기본값이 실시간으로 폼에 반영되도록 보장
   useEffect(() => {
     setCategory(defaultCategory);
-    setSubCategory(defaultSubCategory);
+    setSubCategory(normalizeDefaultSubCategory(defaultSubCategory));
+    setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
+    setIsReplyCorrespondence(false);
+    setReplyToDocumentId("");
+    setReplyNotRequired(false);
+    setReplyDueDate("");
   }, [defaultCategory, defaultSubCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,7 +193,10 @@ export function DocumentUploadForm({
           description,
           category,
           subCategory: category === "DISCLOSURE" ? subCategory : "",
-          correspondenceType: isCorrespondenceDocument ? correspondenceType : null,
+          correspondenceType: isCorrespondenceDocument ? (isReplyCorrespondence ? "회신" : correspondenceType) : null,
+          replyToDocumentId: isCorrespondenceDocument && isReplyCorrespondence ? replyToDocumentId || null : null,
+          replyNotRequired: isCorrespondenceDocument && correspondenceType === "수신" ? replyNotRequired : false,
+          replyDueDate: isCorrespondenceDocument && correspondenceType === "수신" && !replyNotRequired ? replyDueDate || null : null,
           documentDate,
           publishedAt,
           isStarred,
@@ -187,13 +222,17 @@ export function DocumentUploadForm({
       setSuccess(true);
       setTitle("");
       setDescription("");
-      setSubCategory(defaultSubCategory);
+      setSubCategory(normalizeDefaultSubCategory(defaultSubCategory));
       setDocumentDate(getTodayString());
       setPublishedAt(getTodayString());
       setFile(null);
       setAttachments([]);
       setIsStarred(false);
-      setCorrespondenceType("수신");
+      setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
+      setIsReplyCorrespondence(false);
+      setReplyToDocumentId("");
+      setReplyNotRequired(false);
+      setReplyDueDate("");
       
       // Reset file input element
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
@@ -270,7 +309,9 @@ export function DocumentUploadForm({
                 if (val !== "DISCLOSURE") {
                   setSubCategory("");
                 } else {
-                  setSubCategory(defaultSubCategory || "총회 의사록");
+                  setSubCategory(normalizeDefaultSubCategory(defaultSubCategory || "총회 의사록"));
+                  setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
+                  setIsReplyCorrespondence(false);
                 }
               }}
               className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
@@ -294,7 +335,7 @@ export function DocumentUploadForm({
               >
                 {disclosureSubCategoryOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {getSubCategoryLabel(option)}
                   </option>
                 ))}
               </select>
@@ -309,7 +350,18 @@ export function DocumentUploadForm({
               <select
                 id="upload-correspondence-type"
                 value={correspondenceType}
-                onChange={(e) => setCorrespondenceType(e.target.value as CorrespondenceType)}
+                onChange={(e) => {
+                  const nextType = e.target.value as VisibleCorrespondenceType;
+                  setCorrespondenceType(nextType);
+                  if (nextType !== "발신") {
+                    setIsReplyCorrespondence(false);
+                    setReplyToDocumentId("");
+                  }
+                  if (nextType !== "수신") {
+                    setReplyNotRequired(false);
+                    setReplyDueDate("");
+                  }
+                }}
                 className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
               >
                 {correspondenceTypeOptions.map((option) => (
@@ -318,6 +370,91 @@ export function DocumentUploadForm({
                   </option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {isCorrespondenceDocument && correspondenceType === "발신" && (
+            <div className="sm:col-span-2 flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
+              <input
+                id="upload-is-reply-correspondence"
+                type="checkbox"
+                checked={isReplyCorrespondence}
+                onChange={(e) => {
+                  setIsReplyCorrespondence(e.target.checked);
+                  if (!e.target.checked) setReplyToDocumentId("");
+                }}
+                className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+              />
+              <div>
+                <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="upload-is-reply-correspondence">
+                  회신 공문으로 등록
+                </label>
+                <p className="mt-1 text-[11px] leading-relaxed text-graphite">
+                  기존 수신 공문에 대한 회신이면 선택합니다.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isCorrespondenceDocument && correspondenceType === "수신" && (
+            <div className="sm:col-span-2 flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
+              <input
+                id="upload-reply-not-required"
+                type="checkbox"
+                checked={replyNotRequired}
+                onChange={(e) => {
+                  setReplyNotRequired(e.target.checked);
+                  if (e.target.checked) setReplyDueDate("");
+                }}
+                className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+              />
+              <div>
+                <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="upload-reply-not-required">
+                  회신 불필요
+                </label>
+                <p className="mt-1 text-[11px] leading-relaxed text-graphite">
+                  행정 안내처럼 별도 회신이 필요 없는 수신 공문일 때 선택합니다.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isCorrespondenceDocument && correspondenceType === "수신" && !replyNotRequired && (
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-reply-due-date">
+                회신기한
+              </label>
+              <input
+                id="upload-reply-due-date"
+                type="date"
+                value={replyDueDate}
+                onChange={(e) => setReplyDueDate(e.target.value)}
+                className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+              />
+            </div>
+          )}
+
+          {isCorrespondenceDocument && correspondenceType === "발신" && isReplyCorrespondence && (
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-reply-target">
+                회신 대상 수신 공문 (선택)
+              </label>
+              <select
+                id="upload-reply-target"
+                value={replyToDocumentId}
+                onChange={(e) => setReplyToDocumentId(e.target.value)}
+                className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
+              >
+                <option value="">대상 없음</option>
+                {receivedCorrespondenceDocuments.map((document) => (
+                  <option key={document.id} value={document.id}>
+                    {document.title}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-graphite">
+                회신 대상 수신 공문을 선택하면 해당 수신 공문이 목록에서 회신 완료로 표시됩니다.
+              </p>
             </div>
           )}
 

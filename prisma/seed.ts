@@ -62,6 +62,13 @@ async function main() {
   console.log("Seeding database...");
 
   // Clean existing data
+  await prisma.freeComment.deleteMany();
+  await prisma.freePost.deleteMany();
+  await prisma.coopNews.deleteMany();
+  await prisma.paymentNotice.deleteMany();
+  await prisma.contributionSummary.deleteMany();
+  await prisma.paymentImportRow.deleteMany();
+  await prisma.paymentImportBatch.deleteMany();
   await prisma.refundInfo.deleteMany();
   await prisma.documentLog.deleteMany();
   await prisma.document.deleteMany();

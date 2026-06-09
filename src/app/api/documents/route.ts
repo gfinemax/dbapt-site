@@ -16,10 +16,34 @@ type UploadedDocumentFile = {
 
 const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신"]);
 
-function normalizeCorrespondenceType(value: unknown, category: string, subCategory: string) {
+function normalizeSubCategory(value: string) {
+  return value === "수신 공문" || value === "발신 공문" ? "수발신 공문" : value;
+}
+
+function normalizeCorrespondenceType(value: unknown, category: string, subCategory: string, rawSubCategory = subCategory) {
   if (category !== "DISCLOSURE" || subCategory !== "수발신 공문") return null;
   const correspondenceType = typeof value === "string" ? value.trim() : "";
-  return CORRESPONDENCE_TYPES.has(correspondenceType) ? correspondenceType : "수신";
+  if (CORRESPONDENCE_TYPES.has(correspondenceType)) return correspondenceType;
+  if (rawSubCategory === "발신 공문") return "발신";
+  return "수신";
+}
+
+function normalizeReplyToDocumentId(value: unknown, correspondenceType: string | null) {
+  if (correspondenceType !== "회신") return null;
+  const replyToDocumentId = typeof value === "string" ? value.trim() : "";
+  return replyToDocumentId || null;
+}
+
+function normalizeReplyNotRequired(value: unknown, correspondenceType: string | null) {
+  return correspondenceType === "수신" && value === true;
+}
+
+function normalizeReplyDueDate(value: unknown, correspondenceType: string | null, replyNotRequired: boolean) {
+  if (correspondenceType !== "수신" || replyNotRequired) return null;
+  const replyDueDateStr = typeof value === "string" ? value.trim() : "";
+  if (!replyDueDateStr) return null;
+  const replyDueDate = new Date(replyDueDateStr);
+  return Number.isNaN(replyDueDate.getTime()) ? null : replyDueDate;
 }
 
 function validateUploadFile(file: File, label: string) {
@@ -115,8 +139,12 @@ export async function POST(request: Request) {
       const title = typeof body.title === "string" ? body.title.trim() : "";
       const description = typeof body.description === "string" ? body.description : "";
       const category = typeof body.category === "string" ? body.category : "";
-      const subCategory = typeof body.subCategory === "string" ? body.subCategory : "";
-      const correspondenceType = normalizeCorrespondenceType(body.correspondenceType, category, subCategory);
+      const rawSubCategory = typeof body.subCategory === "string" ? body.subCategory : "";
+      const subCategory = normalizeSubCategory(rawSubCategory);
+      const correspondenceType = normalizeCorrespondenceType(body.correspondenceType, category, subCategory, rawSubCategory);
+      const replyToDocumentId = normalizeReplyToDocumentId(body.replyToDocumentId, correspondenceType);
+      const replyNotRequired = normalizeReplyNotRequired(body.replyNotRequired, correspondenceType);
+      const replyDueDate = normalizeReplyDueDate(body.replyDueDate, correspondenceType, replyNotRequired);
       const documentDateStr = typeof body.documentDate === "string" ? body.documentDate : "";
       const publishedAtStr = typeof body.publishedAt === "string" ? body.publishedAt : "";
       const isStarred = body.isStarred === true;
@@ -156,6 +184,9 @@ export async function POST(request: Request) {
           category,
           subCategory: subCategory || null,
           correspondenceType,
+          replyToDocumentId,
+          replyNotRequired,
+          replyDueDate,
           filePath: uploadedFile.path,
           fileName: uploadedFile.name,
           fileSize: uploadedFile.size,
@@ -179,8 +210,12 @@ export async function POST(request: Request) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const category = formData.get("category") as string;
-    const subCategory = formData.get("subCategory") as string;
-    const correspondenceType = normalizeCorrespondenceType(formData.get("correspondenceType"), category, subCategory);
+    const rawSubCategory = formData.get("subCategory") as string;
+    const subCategory = normalizeSubCategory(rawSubCategory);
+    const correspondenceType = normalizeCorrespondenceType(formData.get("correspondenceType"), category, subCategory, rawSubCategory);
+    const replyToDocumentId = normalizeReplyToDocumentId(formData.get("replyToDocumentId"), correspondenceType);
+    const replyNotRequired = normalizeReplyNotRequired(formData.get("replyNotRequired") === "true", correspondenceType);
+    const replyDueDate = normalizeReplyDueDate(formData.get("replyDueDate"), correspondenceType, replyNotRequired);
     const documentDateStr = formData.get("documentDate") as string;
     const publishedAtStr = formData.get("publishedAt") as string;
     const file = formData.get("file") as File | null;
@@ -234,6 +269,9 @@ export async function POST(request: Request) {
         category,
         subCategory: subCategory || null,
         correspondenceType,
+        replyToDocumentId,
+        replyNotRequired,
+        replyDueDate,
         filePath: storagePath,
         fileName: file.name,
         fileSize: file.size,

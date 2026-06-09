@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AboutClient } from "@/components/about/about-client";
 import { PdfViewerModal } from "../portal/pdf-viewer-modal";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { DisclosureClient, type DisclosureCardContent, type DisclosureEmptyMessage } from "./disclosure-client";
 import { PortalShell } from "@/components/portal/portal-shell";
-import { type Document, type Attachment } from "@/components/portal/document-table";
+import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 import { cn } from "@/lib/utils";
 import { getPersonalLibraryLabel } from "@/lib/personal-library-label";
+import { getPdfRelatedDocument } from "@/lib/document-relations";
 
 type DisclosurePageClientShellProps = {
   session?: {
@@ -63,19 +64,11 @@ export function DisclosurePageClientShell({
   const [portalCategory, setPortalCategory] = useState<string>("all");
   const [portalSearch, setPortalSearch] = useState<string>("");
   const personalLibraryLabel = getPersonalLibraryLabel(session);
-  const [activeViewDoc, setActiveViewDoc] = useState<{ 
-    id: string; 
-    title: string; 
-    fileName?: string;
-    documentDate?: string;
-    fileSize?: number;
-    category?: string;
-    subCategory?: string | null;
-    description?: string | null;
-    attachmentName?: string | null;
-    attachments?: Attachment[];
-    publishedAt?: string | null;
-  } | null>(null);
+  const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
+  const activeViewDocRelation = useMemo(
+    () => activeViewDoc ? getPdfRelatedDocument(activeViewDoc, documents) : null,
+    [activeViewDoc, documents],
+  );
 
   // 드로어 활성화 시 본문 스크롤 차단 처리 (디테일한 UX 보장)
   useEffect(() => {
@@ -160,19 +153,7 @@ export function DisclosurePageClientShell({
           emptyMessages={emptyMessages}
           cardContents={cardContents}
           onViewDocument={(document) => {
-            setActiveViewDoc({
-              id: document.id,
-              title: document.title,
-              fileName: document.fileName,
-              documentDate: document.documentDate || document.publishedAt || document.createdAt || undefined,
-              fileSize: document.fileSize,
-              category: document.category,
-              subCategory: document.subCategory,
-              description: document.description,
-              attachmentName: document.attachmentName,
-              attachments: document.attachments,
-              publishedAt: document.publishedAt
-            });
+            setActiveViewDoc(document);
           }}
         />
       </main>
@@ -328,19 +309,7 @@ export function DisclosurePageClientShell({
             cardContents={cardContents}
             onViewDocument={(document) => {
               setIsDisclosureDrawerOpen(false);
-              setActiveViewDoc({
-                id: document.id,
-                title: document.title,
-                fileName: document.fileName,
-                documentDate: document.documentDate || document.publishedAt || document.createdAt || undefined,
-                fileSize: document.fileSize,
-                category: document.category,
-                subCategory: document.subCategory,
-                description: document.description,
-                attachmentName: document.attachmentName,
-                attachments: document.attachments,
-                publishedAt: document.publishedAt
-              });
+              setActiveViewDoc(document);
             }}
             onOpenPortal={(cat, search) => {
               setIsDisclosureDrawerOpen(false);
@@ -359,13 +328,15 @@ export function DisclosurePageClientShell({
           documentTitle={activeViewDoc.title}
           fileName={activeViewDoc.fileName}
           onClose={() => setActiveViewDoc(null)}
-          documentDate={activeViewDoc.documentDate}
+          documentDate={activeViewDoc.documentDate || activeViewDoc.publishedAt || activeViewDoc.createdAt || undefined}
           fileSize={activeViewDoc.fileSize}
           category={activeViewDoc.category}
           subCategory={activeViewDoc.subCategory}
           description={activeViewDoc.description}
           publishedAt={activeViewDoc.publishedAt || undefined}
           attachments={activeViewDoc.attachments}
+          relatedDocument={activeViewDocRelation?.document}
+          relatedDocumentLabel={activeViewDocRelation?.label}
         />
       )}
     </div>

@@ -13,6 +13,7 @@ import {
 import { type Document } from "@/components/portal/document-table";
 import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 import { cn } from "@/lib/utils";
+import { getPdfRelatedDocument } from "@/lib/document-relations";
 
 const accessLabel: Record<LibraryAccess, string> = {
   public: "공개",
@@ -419,6 +420,7 @@ function LibraryMaterialPanel({
   onClose: () => void;
 }) {
   const [activeViewDocument, setActiveViewDocument] = useState<Document | null>(null);
+  const activeViewDocumentRelation = activeViewDocument ? getPdfRelatedDocument(activeViewDocument, documents) : null;
   const realEntries = getRealMaterialEntries(item.id, documents);
   const fallbackEntries = fallbackMaterialEntries[item.id] || [
     {
@@ -517,6 +519,8 @@ function LibraryMaterialPanel({
             subCategory={activeViewDocument.subCategory}
             description={activeViewDocument.description}
             attachments={activeViewDocument.attachments}
+            relatedDocument={activeViewDocumentRelation?.document}
+            relatedDocumentLabel={activeViewDocumentRelation?.label}
           />
         )}
       </aside>

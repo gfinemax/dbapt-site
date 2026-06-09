@@ -87,17 +87,43 @@ const EDITABLE_DOCUMENT_FIELDS = [
   "category",
   "subCategory",
   "correspondenceType",
+  "replyToDocumentId",
+  "replyNotRequired",
+  "replyDueDate",
   "documentDate",
   "publishedAt",
   "isStarred",
   "file",
   "attachments",
+  "appendAttachments",
 ] as const;
 
 const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신"]);
 
+function normalizeSubCategory(value: string) {
+  return value === "수신 공문" || value === "발신 공문" ? "수발신 공문" : value;
+}
+
 function hasOwn(body: Record<string, unknown>, key: string) {
   return Object.prototype.hasOwnProperty.call(body, key);
+}
+
+function normalizeReplyToDocumentId(value: unknown, correspondenceType: string | null | undefined) {
+  if (correspondenceType !== "회신") return null;
+  const replyToDocumentId = typeof value === "string" ? value.trim() : "";
+  return replyToDocumentId || null;
+}
+
+function normalizeReplyNotRequired(value: unknown, correspondenceType: string | null | undefined) {
+  return correspondenceType === "수신" && value === true;
+}
+
+function normalizeReplyDueDate(value: unknown, correspondenceType: string | null | undefined, replyNotRequired: boolean | undefined) {
+  if (correspondenceType !== "수신" || replyNotRequired) return null;
+  const replyDueDateStr = typeof value === "string" ? value.trim() : "";
+  if (!replyDueDateStr) return null;
+  const replyDueDate = new Date(replyDueDateStr);
+  return Number.isNaN(replyDueDate.getTime()) ? null : replyDueDate;
 }
 
 type UploadedDocumentFile = {
@@ -105,6 +131,29 @@ type UploadedDocumentFile = {
   name?: unknown;
   size?: unknown;
 };
+
+function parseUploadedDocumentFiles(
+  input: unknown,
+  label: string,
+): { files: { filePath: string; fileName: string; fileSize: number }[] } | { error: string } {
+  const rawFiles = Array.isArray(input) ? input.slice(0, 10) : [];
+  const files: { filePath: string; fileName: string; fileSize: number }[] = [];
+
+  for (const rawFile of rawFiles) {
+    const uploadedFile = validateUploadedDocumentFile(rawFile as UploadedDocumentFile, label);
+    if ("error" in uploadedFile) {
+      return { error: typeof uploadedFile.error === "string" ? uploadedFile.error : `${label} 정보가 올바르지 않습니다.` };
+    }
+
+    files.push({
+      filePath: uploadedFile.path,
+      fileName: uploadedFile.name,
+      fileSize: uploadedFile.size,
+    });
+  }
+
+  return { files };
+}
 
 function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string) {
   const path = typeof file.path === "string" ? file.path.trim() : "";
@@ -150,6 +199,9 @@ export async function PATCH(
       category?: string;
       subCategory?: string | null;
       correspondenceType?: string | null;
+      replyToDocumentId?: string | null;
+      replyNotRequired?: boolean;
+      replyDueDate?: Date | null;
       documentDate?: Date;
       publishedAt?: Date | null;
       isStarred?: boolean;
@@ -157,7 +209,7 @@ export async function PATCH(
       fileName?: string;
       fileSize?: number;
       attachments?: {
-        deleteMany: Record<string, never>;
+        deleteMany?: Record<string, never>;
         create: { filePath: string; fileName: string; fileSize: number }[];
       };
     } = {};
@@ -189,7 +241,7 @@ export async function PATCH(
     }
 
     if (hasOwn(body, "subCategory")) {
-      const subCategory = typeof body.subCategory === "string" ? body.subCategory.trim() : "";
+      const subCategory = typeof body.subCategory === "string" ? normalizeSubCategory(body.subCategory.trim()) : "";
       data.subCategory = subCategory || null;
     }
 
@@ -199,6 +251,36 @@ export async function PATCH(
         return NextResponse.json({ error: "수발신 구분이 올바르지 않습니다." }, { status: 400 });
       }
       data.correspondenceType = correspondenceType || null;
+      if (correspondenceType !== "회신") {
+        data.replyToDocumentId = null;
+      }
+      if (correspondenceType !== "수신") {
+        data.replyNotRequired = false;
+        data.replyDueDate = null;
+      }
+    }
+
+    if (hasOwn(body, "replyToDocumentId")) {
+      const correspondenceType =
+        typeof body.correspondenceType === "string" ? body.correspondenceType.trim() : data.correspondenceType;
+      data.replyToDocumentId = normalizeReplyToDocumentId(body.replyToDocumentId, correspondenceType);
+    }
+
+    if (hasOwn(body, "replyNotRequired")) {
+      const correspondenceType =
+        typeof body.correspondenceType === "string" ? body.correspondenceType.trim() : data.correspondenceType;
+      data.replyNotRequired = normalizeReplyNotRequired(body.replyNotRequired, correspondenceType);
+      if (data.replyNotRequired) {
+        data.replyDueDate = null;
+      }
+    }
+
+    if (hasOwn(body, "replyDueDate")) {
+      const correspondenceType =
+        typeof body.correspondenceType === "string" ? body.correspondenceType.trim() : data.correspondenceType;
+      const replyNotRequired =
+        typeof body.replyNotRequired === "boolean" ? normalizeReplyNotRequired(body.replyNotRequired, correspondenceType) : data.replyNotRequired;
+      data.replyDueDate = normalizeReplyDueDate(body.replyDueDate, correspondenceType, replyNotRequired);
     }
 
     if (hasOwn(body, "documentDate")) {
@@ -238,25 +320,25 @@ export async function PATCH(
     }
 
     if (hasOwn(body, "attachments")) {
-      const rawAttachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 10) : [];
-      const attachmentsData: { filePath: string; fileName: string; fileSize: number }[] = [];
-
-      for (const attachment of rawAttachments) {
-        const uploadedAttachment = validateUploadedDocumentFile(attachment as UploadedDocumentFile, "추가 첨부파일");
-        if ("error" in uploadedAttachment) {
-          return NextResponse.json({ error: uploadedAttachment.error }, { status: 400 });
-        }
-
-        attachmentsData.push({
-          filePath: uploadedAttachment.path,
-          fileName: uploadedAttachment.name,
-          fileSize: uploadedAttachment.size,
-        });
+      const parsedAttachments = parseUploadedDocumentFiles(body.attachments, "추가 첨부파일");
+      if ("error" in parsedAttachments) {
+        return NextResponse.json({ error: parsedAttachments.error }, { status: 400 });
       }
 
       data.attachments = {
         deleteMany: {},
-        create: attachmentsData,
+        create: parsedAttachments.files,
+      };
+    }
+
+    if (hasOwn(body, "appendAttachments")) {
+      const parsedAttachments = parseUploadedDocumentFiles(body.appendAttachments, "추가 첨부파일");
+      if ("error" in parsedAttachments) {
+        return NextResponse.json({ error: parsedAttachments.error }, { status: 400 });
+      }
+
+      data.attachments = {
+        create: parsedAttachments.files,
       };
     }
 

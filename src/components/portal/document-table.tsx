@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PdfViewerModal } from "./pdf-viewer-modal";
+import { getPdfRelatedDocument } from "@/lib/document-relations";
 
 export type Attachment = {
   id: string;
@@ -20,6 +21,9 @@ export type Document = {
   category: string;
   subCategory?: string | null;
   correspondenceType?: "발신" | "수신" | "회신" | null;
+  replyToDocumentId?: string | null;
+  replyNotRequired?: boolean;
+  replyDueDate?: string | null;
   fileName: string;
   fileSize: number;
   status: string;
@@ -57,20 +61,8 @@ export function DocumentTable({
   const [categoryFilter, setCategoryFilter] = useState(initialCategory);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [starringId, setStarringId] = useState<string | null>(null);
-  const [activeViewDoc, setActiveViewDoc] = useState<{
-    id: string;
-    title: string;
-    fileName?: string;
-    documentDate?: string;
-    createdAt?: string;
-    publishedAt?: string | null;
-    fileSize?: number;
-    category?: string;
-    subCategory?: string | null;
-    description?: string | null;
-    attachmentName?: string | null;
-    attachments?: Attachment[];
-  } | null>(null);
+  const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
+  const activeViewDocRelation = activeViewDoc ? getPdfRelatedDocument(activeViewDoc, documents) : null;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -289,21 +281,7 @@ export function DocumentTable({
 
   // 문서 열람 핸들러
   const openViewDoc = (doc: Document) => {
-    setActiveViewDoc({
-      id: doc.id,
-      title: doc.title,
-      fileName: doc.fileName,
-      documentDate:
-        doc.documentDate || doc.publishedAt || doc.createdAt || undefined,
-      createdAt: doc.createdAt,
-      publishedAt: doc.publishedAt,
-      fileSize: doc.fileSize,
-      category: doc.category,
-      subCategory: doc.subCategory,
-      description: doc.description,
-      attachmentName: doc.attachmentName,
-      attachments: doc.attachments,
-    });
+    setActiveViewDoc(doc);
   };
 
   // 카드 뷰 렌더 (드로어 모바일 공용)
@@ -553,7 +531,7 @@ export function DocumentTable({
           documentTitle={activeViewDoc.title}
           fileName={activeViewDoc.fileName}
           onClose={() => setActiveViewDoc(null)}
-          documentDate={activeViewDoc.documentDate}
+          documentDate={activeViewDoc.documentDate || activeViewDoc.publishedAt || activeViewDoc.createdAt || undefined}
           createdAt={activeViewDoc.createdAt}
           publishedAt={activeViewDoc.publishedAt || undefined}
           fileSize={activeViewDoc.fileSize}
@@ -561,6 +539,8 @@ export function DocumentTable({
           subCategory={activeViewDoc.subCategory}
           description={activeViewDoc.description}
           attachments={activeViewDoc.attachments}
+          relatedDocument={activeViewDocRelation?.document}
+          relatedDocumentLabel={activeViewDocRelation?.label}
         />
       )}
     </div>

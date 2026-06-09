@@ -1,5 +1,223 @@
 # Verification
 
+## Verification Addendum: Disclosure Submenu Density
+
+## Implemented Change
+
+- Reduced submenu badge vertical padding from `py-1.5` to `py-[4.8px]`, making the badge height one fifth thinner.
+- Reduced submenu badge gaps from `gap-1.5 sm:gap-2` to `gap-1 sm:gap-[5.33px]`, tightening spacing by about one third.
+- Kept the same labels, active state, rounded pill treatment, and horizontal scroll behavior.
+
+## Checks Run
+
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm test -- src\__tests__\disclosure-page.test.tsx`: passed, 1 file and 29 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 135 tests passed.
+
+## Browser Checks
+
+- `http://localhost:3000/disclosure` returned HTTP 200.
+- In-app Browser automation was unavailable in this session.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: Disclosure Menu Divider
+
+## Implemented Change
+
+- Removed the mistakenly added card-box divider classes.
+- Restored the disclosure card grids to the normal `grid gap-6 md:grid-cols-2` layout.
+- Replaced the submenu wrapper's hard top border with a single warm-stone gradient line between the main menu row and submenu badge row.
+- Kept submenu badge sizing, spacing, active state, and horizontal scroll behavior unchanged.
+
+## Checks Run
+
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm test -- src\__tests__\disclosure-page.test.tsx`: passed, 1 file and 29 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 135 tests passed.
+
+## Browser Checks
+
+- `http://localhost:3000/disclosure` returned HTTP 200.
+- In-app Browser automation was unavailable in this session.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: PDF Related Correspondence Toggle
+
+## Implemented Change
+
+- Added a shared related-document lookup for correspondence PDF viewing.
+- Added a PDF viewer header button that appears only when a linked correspondence document exists.
+- When viewing a `회신` document, the button opens the original received document inside the same modal.
+- When viewing a `수신` document with a linked reply, the button opens the related reply document inside the same modal.
+- Wired the behavior through the disclosure page shell, portal document table, and library material panel.
+- Added regression coverage for toggling from a reply document to its original received document and back.
+
+## Checks Run
+
+- `pnpm test -- src\__tests__\pdf-viewer-modal.test.tsx`: passed, 1 file and 4 tests.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 135 tests passed.
+
+## Browser Checks
+
+- `http://localhost:3000/disclosure` returned HTTP 200.
+- In-app Browser automation was unavailable in this session, so visible behavior was verified through focused component tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: Disclosure Submenu Card Promotion
+
+## Implemented Change
+
+- Updated submenu badge selection so the selected card itself is the scroll target instead of only the section.
+- Promoted the selected card to the top of its section grid for both meeting/administration folders and other disclosure cards.
+- Made direct card-body clicks update the active submenu/card selection, while ignoring clicks on nested buttons, links, inputs, labels, selects, textareas, and forms.
+- Added regression coverage for selecting `대의원 회의록` by submenu, moving it to the top, then directly selecting `총회의사록` and moving that card to the top.
+
+## Checks Run
+
+- `pnpm test -- src\__tests__\disclosure-page.test.tsx`: passed, 1 file and 29 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 134 tests passed.
+
+## Browser Checks
+
+- `http://127.0.0.1:3000/disclosure` returned HTTP 200.
+- In-app Browser automation was unavailable in this session, so visible behavior was verified through focused component tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: Delegate Meeting Minutes Folder
+
+## Implemented Change
+
+- Added `대의원 회의록` to the disclosure document category type and filter list.
+- Added `대의원 회의록 문서함` under public disclosure `2. 회의`.
+- Added the `대의원 회의록` submenu chip under the meetings tab.
+- Added `대의원 회의록` to the admin upload/edit subcategory options.
+- Added regression coverage for the meeting tab card/submenu and admin registration default category.
+
+## Checks Run
+
+- `pnpm test -- src\__tests__\disclosure-page.test.tsx`: passed, 1 file and 28 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 133 tests passed.
+
+## Browser Checks
+
+- `http://127.0.0.1:3000/disclosure` returned HTTP 200.
+- In-app Browser automation was unavailable in this session, so visible behavior was verified through focused component tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: Reply Target Selection Cleanup
+
+## Implemented Change
+
+- Changed the reply-target source list so `회신 불필요` received correspondence is not selectable.
+- Changed the reply-target source list so received correspondence already referenced by a reply document, meaning `회신 완료`, is not selectable.
+- Kept the upload/edit select UI unchanged while reducing it to pending received correspondence only.
+- Added a regression test that verifies `회신 필요` appears and `회신 불필요`/`회신 완료` received correspondence are hidden from the reply-target select.
+
+## Checks Run
+
+- `pnpm test -- src\__tests__\disclosure-page.test.tsx src\__tests__\document-upload-form.test.tsx`: passed, 2 files and 33 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 132 tests passed.
+
+## Browser Checks
+
+- `http://127.0.0.1:3000/disclosure` returned HTTP 200.
+- In-app Browser automation was unavailable in this session, so the option-list behavior was verified through focused component tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: Disclosure Folder Column And Filter Cleanup
+
+## Implemented Change
+
+- Removed the desktop document folder `No.` and `분류` columns.
+- Moved `발생일` to the first desktop column.
+- Widened the `문서 제목` column by leaving it as the only flexible column between fixed date/status/action columns.
+- Moved the admin important-star control into the title cell so the `No.` column can be removed without losing the action.
+- Changed the folder list filter so `initialCorrespondenceTypes` only sets the initial folder state. After opening a sent/received correspondence folder, the top-left category selector now controls the visible list directly.
+- For reply documents shown in the sent correspondence folder, the `회신기한` column now shows `회신 완료`.
+
+## Checks Run
+
+- `pnpm test -- src\__tests__\disclosure-page.test.tsx`: passed, 1 file and 26 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 131 tests passed.
+
+## Browser Checks
+
+- `http://127.0.0.1:3000/disclosure` returned HTTP 200.
+- In-app Browser automation was unavailable in this session (`iab` browser not available), so visible behavior was verified through focused component tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
+## Verification Addendum: Reply Due Date And Completion Badge
+
+## Implemented Change
+
+- Kept `회신기한` as a dedicated date column in the disclosure document table.
+- Kept `회신 완료` as a compact status badge in the document title row instead of replacing the due-date value.
+- Added a regression test confirming a completed received correspondence still shows both `회신 완료` and its original `회신기한` date.
+
+## Checks Run
+
+- `pnpm test -- src\__tests__\disclosure-page.test.tsx`: passed, 1 file and 23 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in the existing seed verification at `src/__tests__/portal-auth-flow.test.tsx:101`; the test expects a pending mock document but receives `undefined`. Other 128 tests passed.
+
+## Browser Checks
+
+- Browser automation was unavailable in this session; the visible state is covered by the focused disclosure component test.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Existing full-suite seed mismatch remains in `src/__tests__/portal-auth-flow.test.tsx:101`.
+
+---
+
 ## Verification Addendum: Disclosure Card Guide Removal And Spacing Tightening
 
 ## Implemented Change

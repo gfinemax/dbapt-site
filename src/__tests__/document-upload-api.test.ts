@@ -106,7 +106,9 @@ describe("document upload API", () => {
           description: "자료확인",
           category: "DISCLOSURE",
           subCategory: "수발신 공문",
-          correspondenceType: "발신",
+          correspondenceType: "회신",
+          replyToDocumentId: "received-doc-1",
+          replyNotRequired: false,
           documentDate: "2026-06-05",
           publishedAt: "2026-06-05",
           isStarred: false,
@@ -141,10 +143,93 @@ describe("document upload API", () => {
             },
           ],
         },
-        correspondenceType: "발신",
+        correspondenceType: "회신",
+        replyToDocumentId: "received-doc-1",
+        replyNotRequired: false,
       }),
     }));
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("saves reply due date for received correspondence that requires a reply", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.create.mockResolvedValue({
+      id: "doc-1",
+      title: "수신 공문",
+      attachments: [],
+    });
+
+    const { POST } = await import("@/app/api/documents/route");
+    const response = await POST(
+      new Request("http://localhost/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "수신 공문",
+          description: "회신 필요",
+          category: "DISCLOSURE",
+          subCategory: "수발신 공문",
+          correspondenceType: "수신",
+          replyNotRequired: false,
+          replyDueDate: "2026-06-20",
+          documentDate: "2026-06-05",
+          publishedAt: "2026-06-05",
+          file: {
+            path: "documents/2026-06-05/main.pdf",
+            name: "main.pdf",
+            size: 1024,
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        correspondenceType: "수신",
+        replyNotRequired: false,
+        replyDueDate: new Date("2026-06-20"),
+      }),
+    }));
+  });
+
+  it("normalizes virtual sent correspondence folder uploads to stored correspondence metadata", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.create.mockResolvedValue({
+      id: "doc-1",
+      title: "발신 공문",
+      attachments: [],
+    });
+
+    const { POST } = await import("@/app/api/documents/route");
+    const response = await POST(
+      new Request("http://localhost/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "발신 공문",
+          description: "발신 문서",
+          category: "DISCLOSURE",
+          subCategory: "발신 공문",
+          correspondenceType: null,
+          documentDate: "2026-06-05",
+          publishedAt: "2026-06-05",
+          file: {
+            path: "documents/2026-06-05/sent.pdf",
+            name: "sent.pdf",
+            size: 1024,
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        subCategory: "수발신 공문",
+        correspondenceType: "발신",
+      }),
+    }));
   });
 
   it("updates document metadata for admins", async () => {
@@ -156,6 +241,8 @@ describe("document upload API", () => {
       category: "DISCLOSURE",
       subCategory: "수발신 공문",
       correspondenceType: "회신",
+      replyToDocumentId: "received-doc-1",
+      replyNotRequired: false,
       documentDate: new Date("2026-06-01"),
       publishedAt: new Date("2026-06-05"),
       isStarred: true,
@@ -173,6 +260,8 @@ describe("document upload API", () => {
           category: "DISCLOSURE",
           subCategory: "수발신 공문",
           correspondenceType: "회신",
+          replyToDocumentId: "received-doc-1",
+          replyNotRequired: false,
           documentDate: "2026-06-01",
           publishedAt: "2026-06-05",
           isStarred: true,
@@ -190,6 +279,8 @@ describe("document upload API", () => {
         category: "DISCLOSURE",
         subCategory: "수발신 공문",
         correspondenceType: "회신",
+        replyToDocumentId: "received-doc-1",
+        replyNotRequired: false,
         documentDate: new Date("2026-06-01"),
         publishedAt: new Date("2026-06-05"),
         isStarred: true,
@@ -199,6 +290,48 @@ describe("document upload API", () => {
       },
     }));
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("updates reply due date for received correspondence", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.update.mockResolvedValue({
+      id: "doc-1",
+      title: "수정된 수신 공문",
+      category: "DISCLOSURE",
+      subCategory: "수발신 공문",
+      correspondenceType: "수신",
+      replyNotRequired: false,
+      replyDueDate: new Date("2026-06-20"),
+      attachments: [],
+    });
+
+    const { PATCH } = await import("@/app/api/documents/[id]/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/documents/doc-1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "수정된 수신 공문",
+          category: "DISCLOSURE",
+          subCategory: "수발신 공문",
+          correspondenceType: "수신",
+          replyNotRequired: false,
+          replyDueDate: "2026-06-20",
+          documentDate: "2026-06-01",
+          publishedAt: "2026-06-05",
+        }),
+      }),
+      { params: Promise.resolve({ id: "doc-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        correspondenceType: "수신",
+        replyNotRequired: false,
+        replyDueDate: new Date("2026-06-20"),
+      }),
+    }));
   });
 
   it("deletes documents for normalized admin sessions", async () => {
@@ -235,7 +368,7 @@ describe("document upload API", () => {
     expect(await response.json()).toMatchObject({ success: true });
   });
 
-  it("updates the main document file and replaces additional attachments for admins", async () => {
+  it("updates the main document file and appends additional attachments for admins", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPrisma.document.findUnique.mockResolvedValue({
       id: "doc-1",
@@ -255,6 +388,12 @@ describe("document upload API", () => {
       fileName: "new-main.docx",
       fileSize: 4096,
       attachments: [
+        {
+          id: "att-old",
+          filePath: "documents/old/old-attachment.docx",
+          fileName: "old-attachment.docx",
+          fileSize: 1024,
+        },
         {
           id: "att-new",
           filePath: "documents/2026-06-09/new-attachment.pdf",
@@ -276,7 +415,7 @@ describe("document upload API", () => {
             name: "new-main.docx",
             size: 4096,
           },
-          attachments: [
+          appendAttachments: [
             {
               path: "documents/2026-06-09/new-attachment.pdf",
               name: "new-attachment.pdf",
@@ -297,7 +436,6 @@ describe("document upload API", () => {
         fileName: "new-main.docx",
         fileSize: 4096,
         attachments: {
-          deleteMany: {},
           create: [
             {
               filePath: "documents/2026-06-09/new-attachment.pdf",
@@ -316,6 +454,9 @@ describe("document upload API", () => {
       document: {
         fileName: "new-main.docx",
         attachments: [
+          {
+            fileName: "old-attachment.docx",
+          },
           {
             fileName: "new-attachment.pdf",
           },

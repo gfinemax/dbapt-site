@@ -50,7 +50,7 @@ type CardContentEditState = {
 const DEFAULT_EMPTY_MESSAGES: DisclosureEmptyMessage[] = [];
 const DEFAULT_CARD_CONTENTS: DisclosureCardContent[] = [];
 
-type TabId = "rules" | "meetings" | "accounting" | "operations";
+type TabId = "rules" | "meetings" | "administration" | "accounting" | "operations";
 
 type DisclosureDocumentFolder = {
   id: string;
@@ -62,13 +62,15 @@ type DisclosureDocumentFolder = {
   categoryKey: "DISCLOSURE";
   bbsCategory: MeetingCategory;
   preview: string[];
+  correspondenceTypes?: string[];
 };
 
 const tabs = [
   { id: "rules", label: "1. 규약 및 연명부" },
-  { id: "meetings", label: "2. 회의 및 행정" },
-  { id: "accounting", label: "3. 회계 및 감사" },
-  { id: "operations", label: "4. 사업 및 감리" },
+  { id: "meetings", label: "2. 회의" },
+  { id: "administration", label: "3. 행정" },
+  { id: "accounting", label: "4. 회계 및 감사" },
+  { id: "operations", label: "5. 사업 및 감리" },
 ] as const;
 
 // 각 카테고리별 자료 리스트 정의
@@ -129,9 +131,9 @@ const disclosureData = {
     ]
   },
   meetings: {
-    title: "회의 및 행정",
-    subtitle: "총회 및 이사회 의결록과 구청 유관부서 대내외 공식 수발신 행정 문서입니다.",
-    badge: "Meetings & Administration",
+    title: "회의",
+    subtitle: "총회, 이사회, 대의원회 의결록을 별도 문서함으로 보관합니다.",
+    badge: "Meetings",
     items: [
       { 
         id: "meetings-1", 
@@ -155,19 +157,50 @@ const disclosureData = {
         bbsCategory: "이사회 회의록",
         preview: ["제12차 정기 이사회 회의록", "2026년 신년 이사회 의결서", "제11차 임시 이사회 회의록"]
       },
+      {
+        id: "meetings-3",
+        title: "대의원 회의록 문서함",
+        desc: "대의원회 안건 보고, 의결 결과, 참석자 확인 등 대의원 회의 관련 기록을 별도 보관하는 문서함입니다.",
+        date: "최근 업데이트: 2026.01",
+        count: 0,
+        searchKey: "대의원",
+        categoryKey: "DISCLOSURE",
+        bbsCategory: "대의원 회의록",
+        preview: ["대의원회 회의록", "대의원 안건 보고서", "대의원 의결 확인서"]
+      },
+    ]
+  },
+  administration: {
+    title: "행정",
+    subtitle: "구청, 서울시 등 유관기관 수발신 공문과 사업시행 관련 행정 문서를 보관합니다.",
+    badge: "Administration",
+    items: [
       { 
-        id: "meetings-3", 
-        title: "대관 공문서 문서함", 
-        desc: "동작구청, 서울시 등 관청 수발신 공식 행정공문서 및 행정 실태조사 결과 보고 등 대내외 공문이 보존되어 있습니다.", 
+        id: "administration-1", 
+        title: "수신 공문서 문서함", 
+        desc: "동작구청, 서울시 등 관청에서 조합으로 접수된 공식 수신 공문과 행정 실태조사 관련 수신자료를 보관합니다.", 
         date: "최근 업데이트: 2026.01", 
-        count: 14,
-        searchKey: "공문",
+        count: 0,
+        searchKey: "수신",
         categoryKey: "DISCLOSURE",
         bbsCategory: "수발신 공문",
-        preview: ["동작구청 행정실태조사 수신공문", "시정요구 조치 결과보고 제출문", "서울특별시 지구단위계획 관련 수신"]
+        correspondenceTypes: ["수신"],
+        preview: ["동작구청 행정실태조사 수신공문", "서울특별시 지구단위계획 관련 수신", "관계기관 보완 요청 공문"]
       },
       { 
-        id: "meetings-4", 
+        id: "administration-2", 
+        title: "발신 공문서 문서함", 
+        desc: "조합에서 동작구청, 서울시 등 유관기관으로 제출한 발신 공문과 회신·조치결과 보고 문서를 보관합니다.", 
+        date: "최근 업데이트: 2026.01", 
+        count: 0,
+        searchKey: "발신",
+        categoryKey: "DISCLOSURE",
+        bbsCategory: "수발신 공문",
+        correspondenceTypes: ["발신", "회신"],
+        preview: ["시정요구 조치 결과보고 제출문", "사업시행 관련 보완자료 제출 공문", "유관기관 협의 회신 공문"]
+      },
+      { 
+        id: "administration-3", 
         title: "사업계획 및 고시문 문서함", 
         desc: "대방동 11-103 일대 주택건설 사업계획서(안) 및 지구단위계획 결정 고시(서울시 고시 제2022-291호) 등 인허가 원본 문서입니다.", 
         date: "최근 업데이트: 2025.08", 
@@ -217,8 +250,12 @@ const subMenus = {
   meetings: [
     { label: "총회 의사록", id: "meetings-1" },
     { label: "이사회 회의록", id: "meetings-2" },
-    { label: "수발신 공문", id: "meetings-3" },
-    { label: "사업시행계획", id: "meetings-4" },
+    { label: "대의원 회의록", id: "meetings-3" },
+  ],
+  administration: [
+    { label: "수신 공문", id: "administration-1" },
+    { label: "발신 공문", id: "administration-2" },
+    { label: "사업시행계획", id: "administration-3" },
   ],
   accounting: [
     { label: "외부회계감사", id: "acc-1" },
@@ -623,7 +660,7 @@ export function DisclosureClient({
           const tabKey = key as TabId;
           return (
             <section key={tabKey} id={`section-${tabKey}`} className="scroll-mt-52 min-h-[480px]">
-              <div className="max-w-xl mb-10">
+              <div className="max-w-xl mb-10 mx-auto text-center">
                 <span className="inline-flex rounded-full bg-ember-orange/10 px-3 py-1 text-[10px] font-bold text-ember-orange uppercase tracking-wider">
                   {data.badge}
                 </span>
@@ -637,15 +674,26 @@ export function DisclosureClient({
 
               {/* 개별 자료 목록 */}
               {/* 개별 자료 목록 */}
-              {tabKey === "meetings" ? (
+              {tabKey === "meetings" || tabKey === "administration" ? (
                 <div className="grid gap-6 md:grid-cols-2">
-                  {data.items
+                  {[...data.items]
+                    .sort((a, b) => {
+                      const aSelected = activeSubTab === a.id;
+                      const bSelected = activeSubTab === b.id;
+                      if (aSelected && !bSelected) return -1;
+                      if (!aSelected && bSelected) return 1;
+                      return 0;
+                    })
                     .map((item) => {
                       const folderItem = item as DisclosureDocumentFolder;
 
                       // 1. 실제 DB 문서 중 해당 카테고리의 문서 필터링
                       const realDocs = documents.filter(
-                        (d) => d.category === "DISCLOSURE" && d.subCategory === folderItem.bbsCategory
+                        (d) =>
+                          d.category === "DISCLOSURE" &&
+                          d.subCategory === folderItem.bbsCategory &&
+                          (!folderItem.correspondenceTypes ||
+                            (d.correspondenceType && folderItem.correspondenceTypes.includes(d.correspondenceType)))
                       );
 
                       // 2. 중요 표시 문서가 있는지 계산
@@ -671,8 +719,16 @@ export function DisclosureClient({
                       return (
                         <div 
                           key={folderItem.id}
+                          onClick={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.closest("button, a, input, label, select, textarea, form")) {
+                              return;
+                            }
+                            isSubTabClickRef.current = true;
+                            setActiveSubTab(folderItem.id);
+                          }}
                           className={cn(
-                            "stone-card bg-white p-5 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group",
+                            "stone-card bg-white p-5 rounded-2xl border flex flex-col justify-between transition-all duration-500 relative group cursor-pointer",
                             isAnySelectedInThisSection
                               ? isSelected
                                 ? "border-sky-blue ring-1 ring-sky-blue/30 shadow-lg scale-[1.02] z-2 opacity-100 bg-[#fdfdfc]"
@@ -776,7 +832,14 @@ export function DisclosureClient({
                 </div>
               ) : (
                 <div className="grid gap-6 md:grid-cols-2">
-                  {data.items
+                  {[...data.items]
+                    .sort((a, b) => {
+                      const aSelected = activeSubTab === a.id;
+                      const bSelected = activeSubTab === b.id;
+                      if (aSelected && !bSelected) return -1;
+                      if (!aSelected && bSelected) return 1;
+                      return 0;
+                    })
                     .map((item) => {
                       const isSelected = activeSubTab === item.id;
                       const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
@@ -813,8 +876,16 @@ export function DisclosureClient({
                       return (
                         <div 
                           key={item.id}
+                          onClick={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.closest("button, a, input, label, select, textarea, form")) {
+                              return;
+                            }
+                            isSubTabClickRef.current = true;
+                            setActiveSubTab(item.id);
+                          }}
                           className={cn(
-                            "stone-card bg-white p-5 rounded-2xl border flex flex-col justify-start transition-all duration-500 relative group",
+                            "stone-card bg-white p-5 rounded-2xl border flex flex-col justify-start transition-all duration-500 relative group cursor-pointer",
                             isAnySelectedInThisSection
                               ? isSelected
                                 ? "border-sky-blue ring-1 ring-sky-blue/30 shadow-lg scale-[1.02] z-2 opacity-100 bg-[#fdfdfc]"

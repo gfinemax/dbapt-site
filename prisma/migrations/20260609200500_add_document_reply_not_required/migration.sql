@@ -1,0 +1,1 @@
+ALTER TABLE "Document" ADD COLUMN "replyNotRequired" BOOLEAN NOT NULL DEFAULT false;

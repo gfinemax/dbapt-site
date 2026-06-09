@@ -18,6 +18,7 @@ export type MeetingCategory =
   | "시공자 협약서"
   | "총회 의사록"
   | "이사회 회의록"
+  | "대의원 회의록"
   | "수발신 공문"
   | "사업시행계획"
   | "외부회계감사"
@@ -29,79 +30,11 @@ export type MeetingCategory =
   | "실적보고서"
   | "감리 보고서";
 
-type MeetingDoc = {
-  id: number;
-  category: MeetingCategory;
-  title: string;
-  date: string;        // YYYY.MM.DD
-  isImportant?: boolean;
-  correspondenceType?: CorrespondenceType;
-  isReal?: boolean;
-};
-
-type CorrespondenceType = "발신" | "수신" | "회신";
-
-// ── 풍부한 목 데이터 (실제 DB 연동 전 시연용) ──
-const MEETING_DOCS: MeetingDoc[] = [
-  // 총회 의사록 (12건)
-  { id: 1,  category: "총회 의사록", title: "대방동지역주택조합 창립총회 의사록",                                date: "2022.11.15", isImportant: true },
-  { id: 2,  category: "총회 의사록", title: "제1차 임시총회 의사록 (규약 제정 및 임원 선출)",                      date: "2023.03.22", isImportant: true },
-  { id: 3,  category: "총회 의사록", title: "제2차 임시총회 의사록 (시공예정사 선정 의결)",                        date: "2023.07.10" },
-  { id: 4,  category: "총회 의사록", title: "2023년도 정기총회 의사록 (결산 및 예산 승인)",                        date: "2023.12.18" },
-  { id: 5,  category: "총회 의사록", title: "제3차 임시총회 의사록 (토지매입 방안 의결)",                          date: "2024.02.28" },
-  { id: 6,  category: "총회 의사록", title: "제4차 임시총회 의사록 (감리계약 체결 승인)",                          date: "2024.06.05" },
-  { id: 7,  category: "총회 의사록", title: "2024년도 정기총회 의사록 (결산 보고 및 규약 일부 개정)",              date: "2024.12.20", isImportant: true },
-  { id: 8,  category: "총회 의사록", title: "제5차 임시총회 의사록 (설계용역 변경 승인)",                          date: "2025.02.14" },
-  { id: 9,  category: "총회 의사록", title: "제6차 임시총회 의사록 (분담금 납부계획 조정 의결)",                   date: "2025.05.20" },
-  { id: 10, category: "총회 의사록", title: "제7차 임시총회 의사록 (차입금 조달 결의)",                            date: "2025.09.18" },
-  { id: 11, category: "총회 의사록", title: "2025년도 정기총회 의사록 (결산·감사 보고 및 2026 예산 승인)",         date: "2025.12.19", isImportant: true },
-  { id: 12, category: "총회 의사록", title: "제8차 임시총회 의사록 (사업시행인가 추진 결의)",                      date: "2026.03.12" },
-
-  // 이사회 회의록 (18건)
-  { id: 13, category: "이사회 회의록", title: "제1차 이사회 회의록 (조합 사무국 설치 결의)",                     date: "2022.12.10" },
-  { id: 14, category: "이사회 회의록", title: "제2차 이사회 회의록 (대행사 선정 심의)",                          date: "2023.01.25" },
-  { id: 15, category: "이사회 회의록", title: "제3차 이사회 회의록 (업무협약 MOU 체결 승인)",                    date: "2023.04.15" },
-  { id: 16, category: "이사회 회의록", title: "제4차 이사회 회의록 (용역비 집행 심의)",                          date: "2023.06.20" },
-  { id: 17, category: "이사회 회의록", title: "제5차 이사회 회의록 (분기별 예산 집행 현황 보고)",                date: "2023.09.18" },
-  { id: 18, category: "이사회 회의록", title: "제6차 이사회 회의록 (토지매입 추진상황 점검)",                    date: "2023.11.22" },
-  { id: 19, category: "이사회 회의록", title: "제7차 이사회 회의록 (2024년 사업추진 계획 수립)",                 date: "2024.01.15" },
-  { id: 20, category: "이사회 회의록", title: "제8차 이사회 회의록 (설계사 변경 검토)",                          date: "2024.03.20" },
-  { id: 21, category: "이사회 회의록", title: "제9차 이사회 회의록 (신탁계좌 운용 현황 심의)",                   date: "2024.05.28" },
-  { id: 22, category: "이사회 회의록", title: "제10차 이사회 회의록 (조합원 민원 대응 방안 협의)",               date: "2024.07.18" },
-  { id: 23, category: "이사회 회의록", title: "제11차 이사회 회의록 (외부감사 결과 보고 및 조치 계획)",          date: "2024.09.25" },
-  { id: 24, category: "이사회 회의록", title: "제12차 이사회 회의록 (2024 결산 예비 심의)",                      date: "2024.11.20" },
-  { id: 25, category: "이사회 회의록", title: "제13차 이사회 회의록 (2025년 예산안 사전 검토)",                  date: "2025.01.22" },
-  { id: 26, category: "이사회 회의록", title: "제14차 이사회 회의록 (소송 현황 및 법률비용 심의)",               date: "2025.03.19" },
-  { id: 27, category: "이사회 회의록", title: "제15차 이사회 회의록 (매입 부동산 권리 분석 보고)",               date: "2025.06.11" },
-  { id: 28, category: "이사회 회의록", title: "제16차 이사회 회의록 (분기 자금집행 적정성 심사)",                date: "2025.08.20" },
-  { id: 29, category: "이사회 회의록", title: "제17차 이사회 회의록 (사업시행인가 서류 준비 점검)",              date: "2025.11.13" },
-  { id: 30, category: "이사회 회의록", title: "제18차 이사회 회의록 (2026 상반기 운영 계획 확정)",               date: "2026.01.17" },
-
-  // 수발신 공문 (14건)
-  { id: 31, category: "수발신 공문", title: "[동작구청] 지역주택조합 설립인가 통보",                             date: "2022.11.28", isImportant: true, correspondenceType: "수신" },
-  { id: 32, category: "수발신 공문", title: "[동작구청] 2023년도 행정실태점검 시정조치 요구",                    date: "2023.08.15", correspondenceType: "수신" },
-  { id: 33, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (1차)",                date: "2023.09.20", correspondenceType: "회신" },
-  { id: 34, category: "수발신 공문", title: "[서울시] 지구단위계획 결정 고시 통보 (제2022-291호)",               date: "2023.10.05", isImportant: true, correspondenceType: "수신" },
-  { id: 35, category: "수발신 공문", title: "[조합→동작구청] 조합원 변동 현황 신고서",                          date: "2024.01.30", correspondenceType: "발신" },
-  { id: 36, category: "수발신 공문", title: "[동작구청] 2024년도 정기 행정실태점검 결과 통보",                   date: "2024.07.22", correspondenceType: "수신" },
-  { id: 37, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (2차)",                date: "2024.08.30", correspondenceType: "회신" },
-  { id: 38, category: "수발신 공문", title: "[조합→서울시] 사업시행인가 사전 협의 요청",                        date: "2024.11.15", correspondenceType: "발신" },
-  { id: 39, category: "수발신 공문", title: "[동작구청] 조합 운영 개선 권고 공문",                               date: "2025.02.10", correspondenceType: "수신" },
-  { id: 40, category: "수발신 공문", title: "[조합→동작구청] 조합 운영 개선 이행 보고서",          date: "2025.03.25", correspondenceType: "회신" },
-  { id: 41, category: "수발신 공문", title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",                    date: "2025.08.18", correspondenceType: "수신" },
-  { id: 42, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)",                date: "2025.09.30", correspondenceType: "회신" },
-  { id: 43, category: "수발신 공문", title: "[조합→서울시] 사업시행인가 본신청 접수",                            date: "2026.01.20", isImportant: true, correspondenceType: "발신" },
-  { id: 44, category: "수발신 공문", title: "[동작구청] 2026년 상반기 조합원 현황 확인 요청",                    date: "2026.04.05", correspondenceType: "수신" },
-
-  // 사업시행계획 (4건)
-  { id: 45, category: "사업시행계획", title: "대방동 11-103 일대 주택건설 사업시행계획서(안) 초안",              date: "2023.05.10" },
-  { id: 46, category: "사업시행계획", title: "대방동 11-103 일대 주택건설 사업시행계획서(안) 수정본",            date: "2024.08.22" },
-  { id: 47, category: "사업시행계획", title: "사업시행계획서 부속 도면 일체 (건축·토목·소방)",                    date: "2025.04.15" },
-  { id: 48, category: "사업시행계획", title: "사업시행인가 최종 신청본 (서울시 제출본)",                         date: "2026.01.18", isImportant: true },
-];
+export type CorrespondenceType = "발신" | "수신" | "회신";
+type CategoryFilter = "전체" | MeetingCategory | "수신 공문" | "발신 공문";
 
 const PAGE_SIZE = 10;
-const CATEGORIES: ("전체" | MeetingCategory)[] = [
+const CATEGORIES: CategoryFilter[] = [
   "전체",
   "정관 및 조합규약",
   "운영관리규정",
@@ -112,7 +45,9 @@ const CATEGORIES: ("전체" | MeetingCategory)[] = [
   "시공자 협약서",
   "총회 의사록",
   "이사회 회의록",
-  "수발신 공문",
+  "대의원 회의록",
+  "수신 공문",
+  "발신 공문",
   "사업시행계획",
   "외부회계감사",
   "내부감사",
@@ -130,6 +65,7 @@ function categoryBadge(cat: MeetingCategory) {
     case "총회 의사록":
       return "bg-sky-blue/10 text-sky-blue";
     case "이사회 회의록":
+    case "대의원 회의록":
       return "bg-violet-500/10 text-violet-600";
     case "수발신 공문":
       return "bg-amber-500/10 text-amber-600";
@@ -155,12 +91,6 @@ function categoryBadge(cat: MeetingCategory) {
   }
 }
 
-const correspondenceBadgeClass: Record<CorrespondenceType, string> = {
-  발신: "bg-sky-blue/10 text-sky-blue border-sky-blue/20",
-  수신: "bg-meadow-green/10 text-meadow-green border-meadow-green/20",
-  회신: "bg-ember-orange/10 text-ember-orange border-ember-orange/20",
-};
-
 function inferCorrespondenceType(doc: Pick<RowDocType, "category" | "title" | "correspondenceType">) {
   if (doc.category !== "수발신 공문") return undefined;
   if (doc.correspondenceType) return doc.correspondenceType;
@@ -171,23 +101,33 @@ function inferCorrespondenceType(doc: Pick<RowDocType, "category" | "title" | "c
   return "수신";
 }
 
-function CorrespondenceBadge({ type }: { type: CorrespondenceType }) {
+function categoryLabelForDoc(doc: Pick<RowDocType, "category" | "title" | "correspondenceType">) {
+  if (doc.category !== "수발신 공문") return doc.category;
+  const type = inferCorrespondenceType(doc);
+  return type === "수신" ? "수신 공문" : "발신 공문";
+}
+
+function categoryFilterLabel(category: CategoryFilter) {
+  if (category === "전체") return "전체 분류";
+  return category === "수발신 공문" ? "수신/발신 공문" : category;
+}
+
+function ReplyStatusBadge({ status }: { status?: "회신 필요" | "회신 완료" | "회신 불필요" }) {
+  if (!status) return null;
   return (
     <span
       className={cn(
         "inline-flex items-center justify-center rounded text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border mr-1.5 align-middle",
-        correspondenceBadgeClass[type]
+        status === "회신 완료"
+          ? "bg-meadow-green/10 text-meadow-green border-meadow-green/20"
+          : status === "회신 불필요"
+            ? "bg-stone-surface text-graphite border-stone-surface"
+          : "bg-ember-orange/10 text-ember-orange border-ember-orange/20"
       )}
     >
-      {type}
+      {status}
     </span>
   );
-}
-
-function CorrespondenceBadgeForDoc({ doc }: { doc: Pick<RowDocType, "category" | "title" | "correspondenceType"> }) {
-  const type = inferCorrespondenceType(doc);
-  if (!type) return null;
-  return <CorrespondenceBadge type={type} />;
 }
 
 export type RowDocType = {
@@ -197,6 +137,10 @@ export type RowDocType = {
   date: string;
   isImportant?: boolean;
   correspondenceType?: CorrespondenceType;
+  replyToDocumentId?: string | null;
+  replyNotRequired?: boolean;
+  replyDueDate?: string | null;
+  replyStatus?: "회신 필요" | "회신 완료" | "회신 불필요";
   isReal?: boolean;
   fileName?: string;
   fileSize?: number;
@@ -216,6 +160,9 @@ type DocumentEditFormState = {
   publishedAt: string;
   isStarred: boolean;
   correspondenceType: CorrespondenceType;
+  replyToDocumentId: string;
+  replyNotRequired: boolean;
+  replyDueDate: string;
 };
 
 type DeleteDocumentTarget = {
@@ -264,12 +211,27 @@ type MeetingsTableProps = {
   role?: string;
   onOpenPortal?: () => void;
   router: AppRouterInstance;
-  initialFilterCat?: "전체" | MeetingCategory;
+  initialFilterCat?: CategoryFilter;
   initialSearchQuery?: string;
+  initialCorrespondenceTypes?: CorrespondenceType[];
   onBackToFolders?: () => void;
   documents?: Document[];
   onViewDocument?: (document: Document) => void;
 };
+
+function getInitialCategoryFilter(
+  initialFilterCat: CategoryFilter,
+  initialCorrespondenceTypes?: CorrespondenceType[],
+): CategoryFilter {
+  if (initialFilterCat !== "수발신 공문") return initialFilterCat;
+  if (initialCorrespondenceTypes?.length === 1 && initialCorrespondenceTypes[0] === "수신") {
+    return "수신 공문";
+  }
+  if (initialCorrespondenceTypes?.some((type) => type === "발신" || type === "회신")) {
+    return "발신 공문";
+  }
+  return initialFilterCat;
+}
 
 export function MeetingsTable({ 
   isLoggedIn, 
@@ -277,13 +239,14 @@ export function MeetingsTable({
   router,
   initialFilterCat = "전체",
   initialSearchQuery = "",
+  initialCorrespondenceTypes,
   onBackToFolders,
   documents = [],
   onViewDocument
 }: MeetingsTableProps) {
   const isAdmin = role?.toUpperCase() === "ADMIN";
   const [page, setPage] = useState(1);
-  const [filterCat, setFilterCat] = useState<"전체" | MeetingCategory>(initialFilterCat);
+  const [filterCat, setFilterCat] = useState<CategoryFilter>(() => getInitialCategoryFilter(initialFilterCat, initialCorrespondenceTypes));
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [editingDoc, setEditingDoc] = useState<DocumentEditFormState | null>(null);
@@ -317,13 +280,29 @@ export function MeetingsTable({
     return dateStr.slice(0, 10);
   };
 
+  const formatOptionalDate = (dateStr?: string | null) => {
+    if (!dateStr) return "-";
+    return dateStr.slice(0, 10).replace(/-/g, ".");
+  };
+
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    setFilterCat(initialFilterCat);
+    setFilterCat(getInitialCategoryFilter(initialFilterCat, initialCorrespondenceTypes));
     setSearchQuery(initialSearchQuery);
     setPage(1);
-  }, [initialFilterCat, initialSearchQuery]);
+  }, [initialFilterCat, initialCorrespondenceTypes, initialSearchQuery]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  const repliedDocumentIds = useMemo(
+    () =>
+      new Set(
+        managedDocs
+          .filter((d) => d.category === "DISCLOSURE" && d.subCategory === "수발신 공문" && d.correspondenceType === "회신")
+          .map((d) => d.replyToDocumentId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+      ),
+    [managedDocs]
+  );
 
   const openDeleteModal = (id: string, title: string) => {
     setDeleteTarget({ id, title });
@@ -396,6 +375,9 @@ export function MeetingsTable({
       publishedAt: toDateInputValue(source.publishedAt || source.createdAt),
       isStarred: !!source.isStarred,
       correspondenceType: (source.correspondenceType as CorrespondenceType | null) || inferCorrespondenceType(doc) || "수신",
+      replyToDocumentId: source.replyToDocumentId || "",
+      replyNotRequired: !!source.replyNotRequired,
+      replyDueDate: toDateInputValue(source.replyDueDate),
     });
   };
 
@@ -462,6 +444,18 @@ export function MeetingsTable({
         category: "DISCLOSURE",
         subCategory: editingDoc.subCategory,
         correspondenceType: editingDoc.subCategory === "수발신 공문" ? editingDoc.correspondenceType : null,
+        replyToDocumentId:
+          editingDoc.subCategory === "수발신 공문" && editingDoc.correspondenceType === "회신"
+            ? editingDoc.replyToDocumentId || null
+            : null,
+        replyNotRequired:
+          editingDoc.subCategory === "수발신 공문" && editingDoc.correspondenceType === "수신"
+            ? editingDoc.replyNotRequired
+            : false,
+        replyDueDate:
+          editingDoc.subCategory === "수발신 공문" && editingDoc.correspondenceType === "수신" && !editingDoc.replyNotRequired
+            ? editingDoc.replyDueDate || null
+            : null,
         documentDate: editingDoc.documentDate,
         publishedAt: editingDoc.publishedAt,
         isStarred: editingDoc.isStarred,
@@ -476,7 +470,7 @@ export function MeetingsTable({
       }
 
       if (uploadedAttachments && editingDoc.replacementAttachments.length > 0) {
-        requestBody.attachments = uploadedAttachments.map((upload, index) => ({
+        requestBody.appendAttachments = uploadedAttachments.map((upload, index) => ({
           path: upload.path,
           name: editingDoc.replacementAttachments[index].name,
           size: editingDoc.replacementAttachments[index].size,
@@ -509,20 +503,8 @@ export function MeetingsTable({
     }
   };
 
-  // 필터 + 검색 적용 (실제 DB 문서와 목 데이터 결합)
+  // 필터 + 검색 적용 (실제 DB 문서만 사용)
   const filtered = useMemo(() => {
-    // 1. 목 데이터 필터링
-    let mockResult = MEETING_DOCS;
-    if (filterCat !== "전체") {
-      mockResult = mockResult.filter((d) => d.category === filterCat);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      mockResult = mockResult.filter((d) => d.title.toLowerCase().includes(q));
-    }
-    const mockSorted = [...mockResult].sort((a, b) => b.id - a.id);
-
-    // 2. 실제 DB 업로드 문서 필터링 (로그인한 경우에만)
     let realResult: RowDocType[] = [];
     if (isLoggedIn && managedDocs) {
       realResult = managedDocs
@@ -538,6 +520,9 @@ export function MeetingsTable({
               : d.createdAt.slice(0, 10).replace(/-/g, "."),
           isImportant: !!d.isStarred || d.title.includes("★") || d.title.includes("중요"),
           correspondenceType: (d.correspondenceType as CorrespondenceType | null) || undefined,
+          replyToDocumentId: d.replyToDocumentId || null,
+          replyNotRequired: !!d.replyNotRequired,
+          replyDueDate: d.replyDueDate || null,
           isReal: true,
           fileName: d.fileName,
           fileSize: d.fileSize,
@@ -546,9 +531,21 @@ export function MeetingsTable({
         .map((d) => ({
           ...d,
           correspondenceType: inferCorrespondenceType(d),
+          replyStatus:
+            d.category === "수발신 공문" && inferCorrespondenceType(d) === "수신"
+              ? d.replyNotRequired
+                ? "회신 불필요"
+                : repliedDocumentIds.has(String(d.id))
+                  ? "회신 완료"
+                  : "회신 필요"
+              : undefined,
         }));
 
-      if (filterCat !== "전체") {
+      if (filterCat === "수신 공문") {
+        realResult = realResult.filter((d) => d.category === "수발신 공문" && d.correspondenceType === "수신");
+      } else if (filterCat === "발신 공문") {
+        realResult = realResult.filter((d) => d.category === "수발신 공문" && (d.correspondenceType === "발신" || d.correspondenceType === "회신"));
+      } else if (filterCat !== "전체") {
         realResult = realResult.filter((d) => d.category === filterCat);
       }
       if (searchQuery.trim()) {
@@ -564,9 +561,8 @@ export function MeetingsTable({
       });
     }
 
-    // 실제 업로드 문서를 상단에 먼저 배치하고, 시연용 목 데이터는 아래에 배치
-    return [...realResult, ...mockSorted];
-  }, [filterCat, searchQuery, isLoggedIn, managedDocs]);
+    return realResult;
+  }, [filterCat, searchQuery, isLoggedIn, managedDocs, repliedDocumentIds]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -584,6 +580,30 @@ export function MeetingsTable({
     return nums;
   }, [currentPage, totalPages]);
 
+  const receivedCorrespondenceDocuments = useMemo(
+    () =>
+      managedDocs.filter(
+        (document) =>
+          document.category === "DISCLOSURE" &&
+          document.subCategory === "수발신 공문" &&
+          document.correspondenceType === "수신" &&
+          !document.replyNotRequired &&
+          !repliedDocumentIds.has(document.id)
+      ),
+    [managedDocs, repliedDocumentIds]
+  );
+
+  const renderReplyDueCell = (doc: RowDocType) => {
+    if (doc.category !== "수발신 공문") return "-";
+    if (doc.correspondenceType === "회신") {
+      return <ReplyStatusBadge status="회신 완료" />;
+    }
+    if (doc.correspondenceType === "수신" && !doc.replyNotRequired) {
+      return formatOptionalDate(doc.replyDueDate);
+    }
+    return "-";
+  };
+
   const handleRowClick = (doc: RowDocType) => {
     if (!isLoggedIn) {
       alert("이 문서는 대방동지역주택조합 정식 조합원 기밀 의무공개 자료입니다.\n자산 가치 보호를 위해 조합원 로그인 세션 내에서만 암호화 열람이 가능합니다.");
@@ -593,8 +613,6 @@ export function MeetingsTable({
         if (onViewDocument && doc.sourceDocument) {
           onViewDocument(doc.sourceDocument);
         }
-      } else {
-        alert("이 문서는 데모 시연용 가상 문서입니다.\n\n실제 PDF 파일의 등록, 인라인 열람 및 실시간 보안 감사 로그 기록 흐름을 연습하시려면, [운영자] 계정으로 로그인 후 [신규 정보공개 문서 등록]에서 '의무 정보 공개 자료'와 해당 세부 분류(문서함)를 지정해 직접 업로드해 보십시오!");
       }
     }
   };
@@ -657,11 +675,11 @@ export function MeetingsTable({
         <div className="relative">
           <select
             value={filterCat}
-            onChange={(e) => { setFilterCat(e.target.value as typeof filterCat); setPage(1); }}
+            onChange={(e) => { setFilterCat(e.target.value as CategoryFilter); setPage(1); }}
             className="appearance-none rounded-xl border border-stone-surface bg-white pl-4 pr-10 py-2.5 text-xs font-semibold text-charcoal-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue cursor-pointer"
           >
             {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>{cat === "전체" ? "전체 분류" : cat}</option>
+              <option key={cat} value={cat}>{categoryFilterLabel(cat)}</option>
             ))}
           </select>
           <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -703,20 +721,25 @@ export function MeetingsTable({
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-sm">
         {/* 데스크톱/태블릿 격자형 테이블 */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-24" />
+              <col />
+              <col className="w-24" />
+              {isAdmin && <col className="w-16" />}
+            </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface">
               <tr>
-                <th className="px-5 py-3.5 font-semibold text-ash w-14 text-center text-xs">No.</th>
-                <th className="px-5 py-3.5 font-semibold text-ash w-32 text-xs">분류</th>
-                <th className="px-5 py-3.5 font-semibold text-ash text-xs">문서 제목</th>
-                <th className="px-5 py-3.5 font-semibold text-ash w-28 text-center text-xs">발생일</th>
-                {isAdmin && <th className="px-5 py-3.5 font-semibold text-ash w-16 text-center text-xs">관리</th>}
+                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">발생일</th>
+                <th className="px-3 py-3.5 font-semibold text-ash text-xs">문서 제목</th>
+                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">회신기한</th>
+                {isAdmin && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50">
               {paged.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 5 : 4} className="px-5 py-16 text-center text-sm text-graphite">
+                  <td colSpan={isAdmin ? 4 : 3} className="px-5 py-16 text-center text-sm text-graphite">
                     검색 조건에 맞는 문서가 없습니다.
                   </td>
                 </tr>
@@ -731,36 +754,30 @@ export function MeetingsTable({
                       "hover:bg-sky-blue/[0.04]"
                     )}
                   >
-                    <td className="px-5 py-3.5 text-center text-graphite text-xs tabular-nums">
-                      {isAdmin && doc.isReal ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStarToggle(String(doc.id), !!doc.isImportant);
-                          }}
-                          disabled={starringId === doc.id}
-                          className="text-base leading-none transition-transform duration-150 active:scale-125 cursor-pointer disabled:opacity-50 select-none"
-                          title={doc.isImportant ? "중요 해제" : "중요 표시"}
-                        >
-                          {doc.isImportant ? "⭐" : "☆"}
-                        </button>
-                      ) : (
-                        (currentPage - 1) * PAGE_SIZE + idx + 1
-                      )}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap", categoryBadge(doc.category))}>
-                        {doc.category}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="leading-snug break-all">
+                    <td className="px-3 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">{doc.date}</td>
+                    <td className="px-3 py-3.5">
+                      <div className="flex items-start gap-2 leading-snug">
+                        {isAdmin && doc.isReal && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStarToggle(String(doc.id), !!doc.isImportant);
+                            }}
+                            disabled={starringId === doc.id}
+                            className="mt-0.5 shrink-0 text-base leading-none transition-transform duration-150 active:scale-125 cursor-pointer disabled:opacity-50 select-none"
+                            title={doc.isImportant ? "중요 해제" : "중요 표시"}
+                            aria-label={doc.isImportant ? `${doc.title} 중요 해제` : `${doc.title} 중요 표시`}
+                          >
+                            {doc.isImportant ? "⭐" : "☆"}
+                          </button>
+                        )}
+                        <div className="min-w-0 flex-1 break-all">
                         {doc.isImportant && (
                           <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
                             ★ 중요
                           </span>
                         )}
-                        <CorrespondenceBadgeForDoc doc={doc} />
+                        <ReplyStatusBadge status={doc.replyStatus} />
                         <span className={cn(
                           "font-semibold text-[13px] leading-snug hover:text-sky-blue transition-colors",
                           doc.isImportant ? "text-charcoal-primary" : "text-charcoal-primary/85"
@@ -773,11 +790,14 @@ export function MeetingsTable({
                             NEW
                           </span>
                         )}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">{doc.date}</td>
+                    <td className="px-3 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">
+                      {renderReplyDueCell(doc)}
+                    </td>
                     {isAdmin && (
-                      <td className="px-5 py-3.5 text-center">
+                      <td className="px-3 py-3.5 text-center">
                         <div className="flex items-center justify-center gap-1">
                           {renderEditButton(doc)}
                           {doc.isReal && (
@@ -853,11 +873,11 @@ export function MeetingsTable({
                       </button>
                     )}
                     <span className="text-[11px] font-mono text-ash tracking-tight">
-                      No. {(currentPage - 1) * PAGE_SIZE + idx + 1}
+                      발생일 {doc.date}
                     </span>
                   </div>
                   <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap", categoryBadge(doc.category))}>
-                    {doc.category}
+                    {categoryLabelForDoc(doc)}
                   </span>
                 </div>
                 {/* 중앙 제목 행 */}
@@ -867,7 +887,7 @@ export function MeetingsTable({
                       ★ 중요
                     </span>
                   )}
-                  <CorrespondenceBadgeForDoc doc={doc} />
+                  <ReplyStatusBadge status={doc.replyStatus} />
                   <span>{doc.title}</span>
                   {isRecent(doc.date) && (
                     <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full select-none shrink-0 shadow-3xs ml-1.5 align-middle">
@@ -878,7 +898,19 @@ export function MeetingsTable({
                 </div>
                 {/* 하단 등록일 및 열람 행 */}
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] text-ash font-mono">{doc.date}</span>
+                  <span className="text-[11px] text-ash font-mono">
+                    {doc.date}
+                    {doc.category === "수발신 공문" && doc.correspondenceType === "수신" && !doc.replyNotRequired && (
+                      <span className="ml-2 text-ember-orange">
+                        회신기한 {formatOptionalDate(doc.replyDueDate)}
+                      </span>
+                    )}
+                    {doc.category === "수발신 공문" && doc.correspondenceType === "회신" && (
+                      <span className="ml-2 text-meadow-green">
+                        회신 완료
+                      </span>
+                    )}
+                  </span>
                   <div className="flex items-center gap-1.5">
                     {isLoggedIn ? (
                       <span className="inline-flex items-center gap-1 text-meadow-green text-[10px] font-bold bg-meadow-green/10 px-2.5 py-1 rounded-full">
@@ -1061,6 +1093,7 @@ export function MeetingsTable({
             <DocumentUploadForm
               defaultCategory="DISCLOSURE"
               defaultSubCategory={filterCat !== "전체" ? filterCat : "총회 의사록"}
+              replyTargetDocuments={receivedCorrespondenceDocuments}
               onSuccess={(uploadedDocument) => {
                 if (uploadedDocument) {
                   setManagedDocs((prev) => [
@@ -1152,21 +1185,33 @@ export function MeetingsTable({
                     현재 첨부 파일: {editingDoc.fileName}
                   </p>
                   <label className="mt-3 block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-main-file">
-                    첨부 파일 교체 (PDF/HWP/Word)
+                    첨부파일 선택 (복수 선택 가능)
                   </label>
                   <input
                     id="edit-main-file"
                     type="file"
+                    multiple
                     accept=".pdf,.hwp,.hwpx,.doc,.docx"
                     onChange={(e) => {
-                      const nextFile = e.target.files && e.target.files.length > 0 ? e.target.files[0] : null;
-                      setEditingDoc((prev) => prev ? { ...prev, replacementFile: nextFile } : prev);
+                      const files = e.target.files ? Array.from(e.target.files) : [];
+                      if (files.length > 11) {
+                        setEditError("첨부파일은 본문 파일 1개와 추가 첨부파일 10개까지 선택 가능합니다.");
+                        setEditingDoc((prev) => prev ? { ...prev, replacementFile: null, replacementAttachments: [] } : prev);
+                        e.target.value = "";
+                        return;
+                      }
+                      setEditError("");
+                      setEditingDoc((prev) => prev ? {
+                        ...prev,
+                        replacementFile: files[0] || null,
+                        replacementAttachments: files.slice(1),
+                      } : prev);
                     }}
                     className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
                   />
                   {editingDoc.replacementFile && (
                     <p className="mt-2 text-[10px] font-medium text-sky-blue">
-                      새 첨부 파일: {editingDoc.replacementFile.name}
+                      새 본문 파일: {editingDoc.replacementFile.name}
                     </p>
                   )}
                 </div>
@@ -1185,7 +1230,7 @@ export function MeetingsTable({
                     <p className="mt-2 text-[10px] text-ash">등록된 추가 첨부파일이 없습니다.</p>
                   )}
                   <label className="mt-3 block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-attachments">
-                    추가 첨부파일 교체 (선택, 최대 10개)
+                    추가 첨부파일 추가 (선택, 최대 10개)
                   </label>
                   <input
                     id="edit-attachments"
@@ -1205,34 +1250,143 @@ export function MeetingsTable({
                     className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
                   />
                   {editingDoc.replacementAttachments.length > 0 && (
-                    <ul className="mt-2 space-y-1 text-[10px] text-sky-blue list-disc list-inside">
-                      {editingDoc.replacementAttachments.map((attachment, index) => (
-                        <li key={`${attachment.name}-${index}`} className="truncate">
-                          새 추가 첨부파일: {attachment.name}
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="mt-2 rounded-lg border border-sky-blue/15 bg-sky-blue/5 p-2.5">
+                      <p className="text-[10px] font-bold text-sky-blue">
+                        추가 예정 첨부파일 ({editingDoc.replacementAttachments.length}개)
+                      </p>
+                      <ul className="mt-1.5 space-y-1 text-[10px] text-sky-blue list-disc list-inside">
+                        {editingDoc.replacementAttachments.map((attachment, index) => (
+                          <li key={`${attachment.name}-${index}`} className="truncate">
+                            {attachment.name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
 
                 {editingDoc.subCategory === "수발신 공문" && (
-                  <div>
-                    <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-correspondence-type">
-                      수발신 구분 *
-                    </label>
-                    <select
-                      id="edit-doc-correspondence-type"
-                      value={editingDoc.correspondenceType}
-                      onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, correspondenceType: e.target.value as CorrespondenceType } : prev)}
-                      className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
-                    >
-                      {(["수신", "발신", "회신"] as const).map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-correspondence-type">
+                        수발신 구분 *
+                      </label>
+                      <select
+                        id="edit-doc-correspondence-type"
+                        value={editingDoc.correspondenceType === "회신" ? "발신" : editingDoc.correspondenceType}
+                        onChange={(e) => {
+                          const nextType = e.target.value as "수신" | "발신";
+                          setEditingDoc((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  correspondenceType: nextType,
+                                  replyToDocumentId: "",
+                                  replyNotRequired: nextType === "수신" ? prev.replyNotRequired : false,
+                                  replyDueDate: nextType === "수신" ? prev.replyDueDate : "",
+                                }
+                              : prev
+                          );
+                        }}
+                        className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
+                      >
+                        {(["수신", "발신"] as const).map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {(editingDoc.correspondenceType === "발신" || editingDoc.correspondenceType === "회신") && (
+                      <div className="flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
+                        <input
+                          id="edit-doc-is-reply-correspondence"
+                          type="checkbox"
+                          checked={editingDoc.correspondenceType === "회신"}
+                          onChange={(e) => setEditingDoc((prev) => prev ? {
+                            ...prev,
+                            correspondenceType: e.target.checked ? "회신" : "발신",
+                            replyToDocumentId: e.target.checked ? prev.replyToDocumentId : "",
+                          } : prev)}
+                          className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+                        />
+                        <div>
+                          <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="edit-doc-is-reply-correspondence">
+                            회신 공문으로 등록
+                          </label>
+                          <p className="mt-1 text-[11px] leading-relaxed text-graphite">
+                            기존 수신 공문에 대한 회신이면 선택합니다.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {editingDoc.correspondenceType === "회신" && (
+                      <div>
+                        <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-reply-target">
+                          회신 대상 수신 공문 (선택)
+                        </label>
+                        <select
+                          id="edit-doc-reply-target"
+                          value={editingDoc.replyToDocumentId}
+                          onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, replyToDocumentId: e.target.value } : prev)}
+                          className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
+                        >
+                          <option value="">대상 없음</option>
+                          {receivedCorrespondenceDocuments
+                            .filter((document) => document.id !== editingDoc.id)
+                            .map((document) => (
+                              <option key={document.id} value={document.id}>
+                                {document.title}
+                              </option>
+                            ))}
+                        </select>
+                        <p className="mt-1.5 text-[11px] leading-relaxed text-graphite">
+                          회신 대상 수신 공문을 선택하면 해당 수신 공문이 회신 완료로 표시됩니다.
+                        </p>
+                      </div>
+                    )}
+
+                    {editingDoc.correspondenceType === "수신" && (
+                      <div className="flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
+                        <input
+                          id="edit-doc-reply-not-required"
+                          type="checkbox"
+                          checked={editingDoc.replyNotRequired}
+                          onChange={(e) => setEditingDoc((prev) => prev ? {
+                            ...prev,
+                            replyNotRequired: e.target.checked,
+                            replyDueDate: e.target.checked ? "" : prev.replyDueDate,
+                          } : prev)}
+                          className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+                        />
+                        <div>
+                          <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="edit-doc-reply-not-required">
+                            회신 불필요
+                          </label>
+                          <p className="mt-1 text-[11px] leading-relaxed text-graphite">
+                            별도 회신 없이 보관만 필요한 수신 공문일 때 선택합니다.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {editingDoc.correspondenceType === "수신" && !editingDoc.replyNotRequired && (
+                      <div>
+                        <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-reply-due-date">
+                          회신기한
+                        </label>
+                        <input
+                          id="edit-doc-reply-due-date"
+                          type="date"
+                          value={editingDoc.replyDueDate}
+                          onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, replyDueDate: e.target.value } : prev)}
+                          className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="grid gap-4 sm:grid-cols-2">

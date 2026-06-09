@@ -1,6 +1,510 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Tighten disclosure submenu badge thickness and spacing.
+- Governing spec: `DESIGN.md`, protected disclosure submenu presentation.
+- Implementation plan: Reduce the active submenu badge vertical padding from 6px to 4.8px and reduce the desktop horizontal gap from 8px to 5.33px while keeping the existing pill shape, typography, and active/inactive states.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change is layout-only inside the existing disclosure submenu. It does not expose document contents publicly or add authentication, payment, voting, messaging, or new mutation behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The same submenu labels and selected state are shown. Only badge density and spacing changed.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The submenu keeps the existing rounded pill style, border contrast, focusable buttons, and horizontal scroll behavior. Focused disclosure tests passed. In-app browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Add a horizontal divider between the disclosure main menu and submenu.
+- Governing spec: `DESIGN.md`, protected disclosure submenu presentation.
+- Implementation plan: Remove the mistakenly added card-box dividers and replace the existing hard `border-t` with one restrained gradient line above the submenu badge row.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change is presentation-only inside the existing disclosure sticky submenu. It does not expose document contents publicly or add authentication, payment, voting, messaging, or new mutation behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The same main menu labels, submenu labels, and selected states remain visible. Only the separator location changed from card boxes to the menu/submenu boundary.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The divider uses a restrained warm-stone gradient line above the submenu row and preserves focusable buttons and horizontal scrolling. Focused disclosure tests passed. In-app browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Add related correspondence toggle in the PDF viewer header.
+- Governing spec: `DESIGN.md`, protected disclosure document viewer presentation.
+- Implementation plan: Find related correspondence from `replyToDocumentId`, show a top header button only when a received document has a reply or a reply document has an original received document, and switch the same PDF modal between those two documents without closing it.
+- Files or pages reviewed: `src/components/portal/pdf-viewer-modal.tsx`, `src/components/disclosure/disclosure-page-client-shell.tsx`, `src/components/portal/document-table.tsx`, `src/components/library/library-client.tsx`, `src/lib/document-relations.ts`, `src/__tests__/pdf-viewer-modal.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only links documents already present in the same logged-in/protected document dataset. It does not expose document contents publicly or add authentication, payment, voting, messaging, or new mutation behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The button is shown only when a real linked document exists. Reply documents offer `원 수신공문 보기`, and received documents with a reply offer `관련 회신공문 보기`.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The new action reuses the existing compact rounded header button pattern with an ember accent for the related-document action. Focused tests verify toggling between the reply PDF and its original received PDF. In-app browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Make disclosure submenu card selection reversible and promote selected cards.
+- Governing spec: `DESIGN.md`, protected disclosure document folder presentation.
+- Implementation plan: When a submenu badge or card body is selected, keep the matching card active, move it to the top of that section's card grid, and scroll the selected card toward the viewport center. Ignore clicks on nested buttons and form controls so existing document and edit actions keep working.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only affects the logged-in/public disclosure card navigation presentation. It does not expose document contents publicly or add authentication, payment, voting, messaging, or new mutation behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Selected submenu badges now consistently correspond to the active card. Direct card selection updates the submenu state instead of leaving the previously selected badge/card active.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The selected card keeps the existing sky-blue ring treatment and is promoted to the top of the same grid, reducing attention drift to lower cards. Focused tests verify submenu promotion and direct card reselection. In-app browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Add delegate meeting minutes to the public disclosure meetings submenu.
+- Governing spec: `DESIGN.md`, protected disclosure document folder presentation.
+- Implementation plan: Add `대의원 회의록` as a meeting document category, render a `대의원 회의록 문서함` card under `2. 회의`, add the submenu chip, and include the category in upload/edit filters.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/components/portal/document-upload-form.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change adds one existing-style protected disclosure document folder. It does not expose document contents publicly or add authentication, payment, voting, messaging, or new mutation behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The new folder is labeled as a document box and follows the same login/admin-gated folder flow as the existing meeting minutes folders.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The new card and submenu reuse the existing meeting folder layout, button labels, and category select controls. Focused tests verify card/submenu rendering and admin registration default category. In-app browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Hide unavailable received correspondence from reply-target selection.
+- Governing spec: `DESIGN.md`, protected disclosure correspondence admin flow.
+- Implementation plan: Build the reply-target list from received correspondence that is not `회신 불필요` and is not already referenced by a reply document, then pass only that pending list into upload/edit selection controls.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/components/portal/document-upload-form.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only narrows an existing admin/logged-in document selection list. It does not add public document access, authentication, payment, voting, messaging, or new mutation surfaces.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: `회신 불필요` and already `회신 완료` received correspondence are no longer offered as reply targets. Only pending received correspondence remains selectable.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The existing select control and labels are unchanged, and the option list is reduced to valid targets. Focused tests verify hidden unavailable options. In-app browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Simplify disclosure document folder columns and make the folder category selector control the visible list.
+- Governing spec: `DESIGN.md`, protected disclosure document list presentation.
+- Implementation plan: Remove `No.` and `분류` from the desktop document table, move `발생일` to the first column, reserve the remaining width for `문서 제목`, make the category select drive the list after initial folder entry, and show `회신 완료` in the `회신기한` column for reply documents in the sent folder.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only affects the logged-in disclosure document folder table and its existing admin controls. It does not add public document access, authentication, payment, voting, messaging, or new mutation surfaces.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The left category selector now reflects the actual selected folder list. Received correspondence still shows due-date values where applicable, while reply documents shown in the sent folder display `회신 완료` in the due-date column.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The table uses a simpler fixed layout: `발생일`, wide `문서 제목`, `회신기한`, and admin controls. Existing focusable edit/delete/star buttons remain accessible by label. Focused tests verify column removal, filter switching, and reply completion display. In-app browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Keep reply due dates as column data while showing reply completion as a title-row status badge.
+- Governing spec: `DESIGN.md`, protected disclosure correspondence presentation.
+- Implementation plan: Preserve the existing `회신기한` column for due-date values and keep `회신 완료`/`회신 필요`/`회신 불필요` as compact badges before the document title.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only confirms presentation behavior inside the logged-in disclosure document table. It does not add public document access, payment, voting, messaging, or authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Completed received correspondence keeps its original due date visible in the `회신기한` column while the completion state is shown as `회신 완료` next to the document title.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The display keeps the existing compact badge and date-column styling. Focused tests verify `회신 완료` and `회신기한` appear together for completed received correspondence. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Normalize sent/reply correspondence upload flow and add a reply-correspondence checkbox.
+- Governing spec: `DESIGN.md`, protected disclosure correspondence presentation and admin document management.
+- Implementation plan: Treat visible `수신 공문` and `발신 공문` folders as UI-only labels, save both through the legacy internal `수발신 공문` subcategory, default sent-folder uploads to `발신`, expose `회신 공문으로 등록` for sent/reply documents, and show the received-document target selector only when that checkbox is enabled.
+- Files or pages reviewed: `src/components/portal/document-upload-form.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/app/api/documents/route.ts`, `src/app/api/documents/[id]/route.ts`, focused upload/API/disclosure tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change remains inside the existing admin document upload/edit and logged-in disclosure list surfaces. It does not add public document access, payment, voting, messaging, or authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Visible correspondence folders remain split as `수신 공문` and `발신 공문`, while stored records use `수발신 공문` with `correspondenceType` as `수신`, `발신`, or `회신`. Reply documents are included in the sent folder and can link to a received document.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The implementation reuses existing select, checkbox, and compact form styling. Focused tests verify sent-folder normalization, reply checkbox behavior, target selection, and API-side normalization. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Add reply due date entry and display for received correspondence that requires a reply.
+- Governing spec: `DESIGN.md`, protected disclosure correspondence presentation and admin document management.
+- Implementation plan: Add nullable `replyDueDate` storage, show date inputs only for received correspondence when `회신 불필요` is not checked, clear the due date for sent/reply/no-reply cases, and display a compact `회신기한` column in the disclosure table.
+- Files or pages reviewed: `prisma/schema.prisma`, `src/app/api/documents/route.ts`, `src/app/api/documents/[id]/route.ts`, `src/components/portal/document-upload-form.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/lib/document-serializer.ts`, focused tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change remains inside the existing admin document upload/edit and logged-in disclosure list surfaces. It does not add public document access, payment, voting, messaging, or authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: A reply due date is accepted and shown only for received correspondence that still requires a reply. `회신 불필요`, sent correspondence, and reply correspondence clear or suppress the due-date value.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The implementation uses existing date inputs, compact table typography, and fixed-width date columns. Focused tests verify conditional input visibility, API persistence, serialization, and table display. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Widen the disclosure document title column in the desktop table.
+- Governing spec: `DESIGN.md`, protected disclosure document list presentation.
+- Implementation plan: Use a fixed desktop table layout with narrow fixed columns for number, category, date, and admin actions so the remaining width is reserved for the document title.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change is a layout-only adjustment inside the existing logged-in disclosure document table. It does not add public document access, upload, deletion, payment, voting, messaging, or authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The same document data, category labels, dates, and admin actions are shown. Only the column width allocation changed.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The table keeps the existing compact styling and focusable row actions while giving the title column the remaining width. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Remove standalone received/sent/reply direction badges from disclosure document title rows.
+- Governing spec: `DESIGN.md`, protected disclosure correspondence presentation.
+- Implementation plan: Keep correspondence direction visible through the existing category label (`수신 공문`/`발신 공문`) and remove only the small standalone direction badge from desktop and mobile title lines.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change is presentation-only inside the existing logged-in disclosure document table. It does not add public document access, upload, deletion, payment, voting, messaging, or authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Correspondence direction remains represented by the table category label, while document titles no longer receive an extra standalone `수신`, `발신`, or `회신` prefix.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: Removing the extra badge reduces title clutter without changing layout structure, controls, or focus behavior. Focused tests verify the category label remains and the standalone direction badge is absent. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Preserve received-correspondence no-reply metadata when rendering disclosure documents.
+- Governing spec: `DESIGN.md`, protected disclosure correspondence presentation and admin document management.
+- Implementation plan: Keep the existing save/API behavior, add serializer coverage for `replyToDocumentId` and `replyNotRequired`, and ensure refreshed disclosure pages receive the same reply metadata that was stored in the database.
+- Files or pages reviewed: `src/lib/document-serializer.ts`, `src/__tests__/document-serializer.test.ts`, focused correspondence tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The fix only changes server-to-client document data serialization for the existing logged-in disclosure/admin document surfaces. It does not add public document access, payment, voting, messaging, or new authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Saved `replyNotRequired` values are now preserved through `serializeDocuments`, so a received document marked as no-reply can continue to render as `회신 불필요` after page refresh.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: No layout or styling was changed. Focused tests verify the serializer preserves reply metadata and the disclosure/API flow still passes. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Split correspondence filtering into received/sent views and support received documents that do not require a reply.
+- Governing spec: `DESIGN.md`, protected disclosure correspondence presentation and admin document management.
+- Implementation plan: Keep the internal legacy `수발신 공문` subcategory for stored data, expose `수신 공문` and `발신 공문` filters, keep reply correspondence under sent correspondence, add `replyNotRequired` for received correspondence, and calculate visible status as `회신 필요`, `회신 완료`, or `회신 불필요`.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/components/portal/document-upload-form.tsx`, `src/app/api/documents/route.ts`, `src/app/api/documents/[id]/route.ts`, `prisma/schema.prisma`, focused correspondence tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change remains inside the existing admin document upload/edit and logged-in disclosure list surfaces. It does not add public document access, payment, voting, messaging, or new authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Received correspondence marked as `replyNotRequired` is shown as `회신 불필요`, linked reply correspondence still marks the source as `회신 완료`, and unprocessed received correspondence remains `회신 필요`. Reply documents stay grouped with sent correspondence.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The implementation reuses existing compact selects, checkboxes, table badges, and folder/list layouts. Focused tests verify the new checkbox, API persistence, split received/sent filters, and no-reply badge. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Add a minimal reply-processing flow for correspondence documents.
+- Governing spec: `DESIGN.md`, protected disclosure document registration and correspondence presentation.
+- Implementation plan: Keep the existing internal `수발신 공문` category for compatibility, display correspondence as received/sent folders and labels, store only `replyToDocumentId` for reply documents, and calculate received-document status as `회신 필요` or `회신 완료`.
+- Files or pages reviewed: `src/components/portal/document-upload-form.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/app/api/documents/route.ts`, `src/app/api/documents/[id]/route.ts`, `prisma/schema.prisma`, focused correspondence tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change stays inside the existing admin document registration/edit flow and logged-in disclosure document list. It does not add public document access, payment, voting, messaging, or new authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Reply completion is calculated only when an uploaded reply document references a received document through `replyToDocumentId`. Unreferenced received documents show `회신 필요`, and reply/sent documents remain grouped under the sent correspondence folder.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The implementation reuses existing select controls, compact status badges, and folder/table layouts. Focused tests verify the reply target selector, API persistence, received/sent filtering, and `회신 완료`/`회신 필요` labels. Local `/disclosure` on port 3000 returns 200 and renders the received/sent correspondence folders. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Split the administration `대관 공문서 문서함` into separate received and sent correspondence folders.
+- Governing spec: `DESIGN.md`, disclosure document navigation presentation.
+- Implementation plan: Keep uploaded documents under the existing `수발신 공문` category, add `수신 공문서 문서함` and `발신 공문서 문서함` cards, and filter folder counts/previews/table rows by saved correspondence direction.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: This is a disclosure navigation and filtering change inside the existing logged-in document surface. It does not add public document access, upload, deletion, payment, voting, messaging, or authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Received correspondence is shown in the received folder, while sent and reply correspondence is shown in the sent folder. The underlying upload category remains `수발신 공문`, so existing saved documents and edit behavior stay aligned with the current data model.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The existing folder-card and submenu layout is preserved while replacing the combined agency correspondence folder with two specific folders. Focused tests verify the new labels, card previews, and table filtering. Local `/disclosure` HTML on port 3000 includes `수신 공문서 문서함` and `발신 공문서 문서함`, while the old `대관 공문서 문서함` label is absent. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Split the information-disclosure top category `회의 및 행정` into separate `회의` and `행정` tabs.
+- Governing spec: `DESIGN.md`, disclosure document navigation presentation.
+- Implementation plan: Rename the meetings tab to `회의`, add a separate administration tab, move public-agency correspondence and business-plan notice folders under administration, and renumber the following tabs.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: This is a navigation and grouping change inside the existing disclosure page. It does not add public document access, upload, deletion, payment, voting, messaging, or authentication behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Meeting folders now contain only general meeting and board meeting records, while administration folders contain agency correspondence and business-plan notice documents. The old combined `회의 및 행정` label is no longer presented.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The existing tab and folder-card layout is preserved while adding one top-level tab. Focused tests verify the new tab labels, section split, and administration submenu. Local `/disclosure` HTML on port 3000 includes `2. 회의`, `3. 행정`, `4. 회계 및 감사`, and `5. 사업 및 감리`, while the old `2. 회의 및 행정` label is absent. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Reduce padding around the protected PDF viewer preview so the merged document occupies more of the modal viewport.
+- Governing spec: `DESIGN.md`, protected document viewer presentation.
+- Implementation plan: Tighten the preview scroll-area padding, reduce the PDF section header padding, and increase the iframe viewport height while keeping the existing modal shell and controls.
+- Files or pages reviewed: `src/components/portal/pdf-viewer-modal.tsx`, `src/__tests__/pdf-viewer-modal.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: This is a presentation-only change inside the existing authenticated PDF viewer modal. Document access, merge routing, download behavior, upload, deletion, payment, voting, and messaging behavior are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The viewer still labels merged PDFs only when PDF attachments exist and continues to show non-PDF attachments in the attachment list.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The layout keeps the existing warm modal and document controls while reducing excess inner padding from the preview area. Focused tests verify compact preview spacing and a taller iframe area. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Remove demo disclosure documents from the information-disclosure document boxes so only real uploaded documents appear in folder lists and card previews.
+- Governing spec: `DESIGN.md`, truthful protected disclosure document presentation.
+- Implementation plan: Stop combining static disclosure demo rows with uploaded documents, remove demo-only click messaging, and calculate folder counts/previews from actual uploaded disclosure documents only.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change removes static display-only demo rows and does not add new document access, upload, deletion, payment, voting, or messaging behavior. Real uploaded documents still use the existing protected viewer and admin controls.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Document folder counts and previews now reflect only actual uploaded disclosure documents. Demo-only rows and the `데모 시연용 가상 문서` message no longer appear in the disclosure document list.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The existing folder and table layouts are preserved while removing untruthful demo content. Focused tests verify that known demo disclosure titles are absent when no documents are uploaded. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Merge the main PDF and additional PDF attachments into one inline PDF viewer instead of showing separate stacked viewers.
+- Governing spec: `DESIGN.md`, protected disclosure document viewing flow.
+- Implementation plan: Add an authenticated merged PDF view route, combine the main PDF with PDF attachments in saved order, and point the modal to one merged inline PDF whenever PDF attachments exist.
+- Files or pages reviewed: `src/components/portal/pdf-viewer-modal.tsx`, `src/app/api/documents/[id]/merged-view/route.ts`, `src/__tests__/pdf-viewer-modal.test.tsx`, `src/__tests__/document-merged-view-api.test.ts`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The merged PDF route uses the same authenticated session, pending-user restriction, pending-document admin restriction, and audit log behavior as the existing protected viewer. It does not add public document access or new mutation behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The modal labels the preview as `통합 PDF 문서` only when actual PDF attachments exist. Non-PDF attachments remain in the attachment list as downloads and are not falsely included in the inline PDF merge.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The viewer keeps the existing modal shell and replaces multiple stacked PDF panes with one stable iframe, reducing scroll confusion while preserving attachment download controls. Focused tests verify a single merged iframe and server-side PDF page merging. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Preserve existing additional attachments during document edit, allow multiple files from the attachment picker, append newly added files, and show selected multiple attachments together in the edit modal so all attached PDFs continue to appear in the viewer sequence.
+- Governing spec: `DESIGN.md`, protected disclosure document management and viewer flow.
+- Implementation plan: Keep main-file replacement behavior, let the attachment picker accept multiple files, treat the first selected file as the main replacement, append the rest as additional attachments, and send `appendAttachments` through the admin-only document PATCH route so existing attachment records remain visible in the viewer.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/app/api/documents/[id]/route.ts`, `src/components/portal/pdf-viewer-modal.tsx`, focused disclosure/API/viewer tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only affects admin-side document editing and keeps attachment viewing behind the existing authenticated disclosure routes. No new public upload, mutation, payment, voting, or messaging surface was added.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The edit modal now uses `첨부파일 선택 (복수 선택 가능)` for the main file picker and `추가 첨부파일 추가` for append-only attachment selection, matching the actual save behavior. Existing attachments remain listed, newly selected attachments are shown as a combined pending list, and the PDF viewer continues to show the actual combined attachment set from the saved document record.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The edit modal keeps the current warm panel layout, allows multi-select on the attachment picker, and groups newly selected attachments in a compact count-and-list panel so multiple files are scannable at once. Focused tests verify the append-only PATCH payload, updated labels, multi-file selection, and multi-file pending list. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Show multiple attached PDF files consecutively inside the protected document viewer modal instead of limiting inline preview to the main document only.
 - Governing spec: `DESIGN.md`, protected document disclosure viewing flow.
 - Implementation plan: Keep the existing modal and download actions, add an inline attachment PDF viewer route, and stack the main document plus each PDF attachment in order while leaving non-PDF attachments as download-only.

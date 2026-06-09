@@ -16,6 +16,18 @@ type PdfViewerModalProps = {
   subCategory?: string | null;
   description?: string | null;
   attachments?: { id: string; fileName: string; fileSize: number }[];
+  relatedDocument?: {
+    id: string;
+    title: string;
+    fileName?: string;
+    documentDate?: string;
+    publishedAt?: string | null;
+    createdAt?: string;
+    fileSize?: number;
+    description?: string | null;
+    attachments?: { id: string; fileName: string; fileSize: number }[];
+  } | null;
+  relatedDocumentLabel?: string;
 };
 
 function isPdfFile(fileName: string) {
@@ -32,12 +44,36 @@ export function PdfViewerModal({
   createdAt,
   fileSize,
   description,
-  attachments
+  attachments,
+  relatedDocument,
+  relatedDocumentLabel
 }: PdfViewerModalProps) {
-  const previewFileName = fileName || documentTitle;
+  const [relatedViewState, setRelatedViewState] = useState({
+    sourceDocumentId: documentId,
+    isShowingRelatedDocument: false,
+  });
+  const isShowingRelatedDocument =
+    relatedViewState.sourceDocumentId === documentId && relatedViewState.isShowingRelatedDocument;
+  const activeDocument = isShowingRelatedDocument && relatedDocument
+    ? relatedDocument
+    : {
+        id: documentId,
+        title: documentTitle,
+        fileName,
+        documentDate,
+        publishedAt,
+        createdAt,
+        fileSize,
+        description,
+        attachments,
+      };
+  const previewFileName = activeDocument.fileName || activeDocument.title;
   const canPreviewInline = isPdfFile(previewFileName);
-  const pdfAttachments = (attachments || []).filter((attachment) => isPdfFile(attachment.fileName));
-  const previewKey = canPreviewInline ? `${documentId}:${previewFileName}` : null;
+  const pdfAttachments = (activeDocument.attachments || []).filter((attachment) => isPdfFile(attachment.fileName));
+  const shouldUseMergedPreview = canPreviewInline && pdfAttachments.length > 0;
+  const previewKey = canPreviewInline
+    ? `${activeDocument.id}:${previewFileName}:${pdfAttachments.map((attachment) => attachment.id).join(",")}`
+    : null;
   const [loadedPreviewKey, setLoadedPreviewKey] = useState<string | null>(null);
   const isLoading = canPreviewInline && loadedPreviewKey !== previewKey;
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -63,7 +99,7 @@ export function PdfViewerModal({
 
   const handleDownload = async () => {
     try {
-      const res = await fetch(`/api/documents/${documentId}/download`);
+      const res = await fetch(`/api/documents/${activeDocument.id}/download`);
       if (!res.ok) {
         alert("파일 다운로드 권한이 없거나 파일을 찾을 수 없습니다.");
         return;
@@ -72,7 +108,7 @@ export function PdfViewerModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = fileName || documentTitle;
+      a.download = activeDocument.fileName || activeDocument.title;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -140,35 +176,35 @@ export function PdfViewerModal({
             </span>
             <div className="min-w-0 relative">
               <div className="flex items-center gap-1.5 min-w-0">
-                <h3 className="text-sm font-bold text-charcoal-primary truncate leading-snug" title={documentTitle}>
-                  {documentTitle}
+                <h3 className="text-sm font-bold text-charcoal-primary truncate leading-snug" title={activeDocument.title}>
+                  {activeDocument.title}
                 </h3>
               </div>
-              {description && (
+              {activeDocument.description && (
                 <p className="mt-1 max-w-3xl text-xs leading-5 text-graphite">
                   <span className="mr-1 font-semibold text-charcoal-primary">문서 설명</span>
-                  {description}
+                  {activeDocument.description}
                 </p>
               )}
               
               <div className="flex items-center gap-2 text-[10px] text-ash font-medium tracking-tight mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">
                 <span>대방동 지역주택조합 실시간 보안 감사 열람 세션 가동 중</span>
-                {documentDate && (
+                {activeDocument.documentDate && (
                   <>
                     <span className="text-stone-surface select-none">|</span>
-                    <span className="text-graphite font-semibold">발생일: {formatDate(documentDate)}</span>
+                    <span className="text-graphite font-semibold">발생일: {formatDate(activeDocument.documentDate)}</span>
                   </>
                 )}
-                {(publishedAt || createdAt) && (
+                {(activeDocument.publishedAt || activeDocument.createdAt) && (
                   <>
                     <span className="text-stone-surface select-none">|</span>
-                    <span className="text-graphite">등록일: {formatDate(publishedAt || createdAt)}</span>
+                    <span className="text-graphite">등록일: {formatDate(activeDocument.publishedAt || activeDocument.createdAt)}</span>
                   </>
                 )}
-                {fileSize !== undefined && (
+                {activeDocument.fileSize !== undefined && (
                   <>
                     <span className="text-stone-surface select-none">|</span>
-                    <span className="text-graphite/80 font-mono text-[9px]">{formatSize(fileSize)}</span>
+                    <span className="text-graphite/80 font-mono text-[9px]">{formatSize(activeDocument.fileSize)}</span>
                   </>
                 )}
               </div>
@@ -176,6 +212,22 @@ export function PdfViewerModal({
           </div>
 
           <div className="flex items-center gap-2 shrink-0 ml-4">
+            {relatedDocument && (
+              <Button
+                onClick={() =>
+                  setRelatedViewState((current) => ({
+                    sourceDocumentId: documentId,
+                    isShowingRelatedDocument:
+                      current.sourceDocumentId === documentId ? !current.isShowingRelatedDocument : true,
+                  }))
+                }
+                variant="outline"
+                size="sm"
+                className="rounded-full h-8 px-3 text-[11px] font-bold border-ember-orange/30 bg-ember-orange/5 text-ember-orange hover:bg-ember-orange/10 cursor-pointer"
+              >
+                {isShowingRelatedDocument ? "원 문서 보기" : relatedDocumentLabel || "관련 문서 보기"}
+              </Button>
+            )}
             {/* 전체화면 토글 */}
             <Button
               onClick={() => setIsFullScreen(!isFullScreen)}
@@ -208,13 +260,13 @@ export function PdfViewerModal({
         </div>
 
         {/* 추가 첨부파일 목록 패널 (다중 첨부파일 존재 시 표출) */}
-        {attachments && attachments.length > 0 && (
+        {activeDocument.attachments && activeDocument.attachments.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 px-5 py-2.5 bg-[#f8f7f4] border-b border-stone-surface shrink-0 select-none">
             <span className="text-[11px] font-bold text-charcoal-primary flex items-center gap-1 select-none shrink-0">
-              📎 추가 첨부파일 ({attachments.length}개):
+              📎 추가 첨부파일 ({activeDocument.attachments.length}개):
             </span>
             <div className="flex flex-wrap gap-1.5 overflow-x-auto max-w-full scrollbar-none py-0.5">
-              {attachments.map((att) => (
+              {activeDocument.attachments.map((att) => (
                 <button
                   key={att.id}
                   onClick={() => handleAttachmentDownload(att.id, att.fileName)}
@@ -230,13 +282,17 @@ export function PdfViewerModal({
         )}
 
         {/* 본문 PDF 뷰어 영역 */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f0ede9] p-4 sm:p-5">
-          <div className="space-y-4">
+        <div data-testid="pdf-preview-scroll-area" className="min-h-0 flex-1 overflow-y-auto bg-[#f0ede9] p-1 sm:p-2">
+          <div className="space-y-2">
             <section className="overflow-hidden rounded-2xl border border-stone-surface bg-white shadow-sm">
-              <div className="flex items-center justify-between gap-3 border-b border-stone-surface bg-[#f8f7f4] px-4 py-2.5">
+              <div className="flex items-center justify-between gap-3 border-b border-stone-surface bg-[#f8f7f4] px-3 py-1.5">
                 <div>
-                  <p className="text-[11px] font-bold text-charcoal-primary">본문 문서</p>
-                  <p className="mt-0.5 text-[10px] text-ash">{previewFileName}</p>
+                  <p className="text-[11px] font-bold text-charcoal-primary">
+                    {shouldUseMergedPreview ? "통합 PDF 문서" : "본문 문서"}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-ash">
+                    {shouldUseMergedPreview ? `본문 및 추가 첨부 PDF ${pdfAttachments.length}개` : previewFileName}
+                  </p>
                 </div>
                 <Button
                   onClick={handleDownload}
@@ -249,9 +305,9 @@ export function PdfViewerModal({
               </div>
 
               {canPreviewInline ? (
-                <div className="relative h-[70vh] min-h-[480px] bg-[#f0ede9]">
+                <div data-testid="pdf-preview-frame-area" className="relative h-[76vh] min-h-[560px] bg-[#f0ede9]">
                   <iframe
-                    src={`/api/documents/${documentId}/view`}
+                    src={shouldUseMergedPreview ? `/api/documents/${activeDocument.id}/merged-view` : `/api/documents/${activeDocument.id}/view`}
                     className="relative z-10 h-full w-full border-none bg-[#f0ede9]"
                     onLoad={() => setLoadedPreviewKey(previewKey)}
                     title="문서 온라인 열람 뷰어"
@@ -288,12 +344,12 @@ export function PdfViewerModal({
               )}
             </section>
 
-            {pdfAttachments.map((attachment, index) => (
+            {!shouldUseMergedPreview && pdfAttachments.map((attachment, index) => (
               <section
                 key={attachment.id}
                 className="overflow-hidden rounded-2xl border border-stone-surface bg-white shadow-sm"
               >
-                <div className="flex items-center justify-between gap-3 border-b border-stone-surface bg-[#f8f7f4] px-4 py-2.5">
+                <div className="flex items-center justify-between gap-3 border-b border-stone-surface bg-[#f8f7f4] px-3 py-1.5">
                   <div>
                     <p className="text-[11px] font-bold text-charcoal-primary">추가 첨부 PDF {index + 1}</p>
                     <p className="mt-0.5 text-[10px] text-ash">{attachment.fileName}</p>
@@ -307,7 +363,7 @@ export function PdfViewerModal({
                     첨부 다운로드
                   </Button>
                 </div>
-                <div className="h-[70vh] min-h-[480px] bg-[#f0ede9]">
+                <div className="h-[76vh] min-h-[560px] bg-[#f0ede9]">
                   <iframe
                     src={`/api/documents/attachments/${attachment.id}/view`}
                     className="h-full w-full border-none bg-[#f0ede9]"

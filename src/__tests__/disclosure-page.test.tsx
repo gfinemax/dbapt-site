@@ -24,20 +24,81 @@ afterEach(() => {
 });
 
 describe("disclosure page", () => {
-  it("labels sent, received, and reply correspondence in the document title", () => {
+  it("keeps correspondence direction in the category label without prefixing the document title", () => {
     render(
       <MeetingsTable
-        isLoggedIn={false}
+        isLoggedIn
+        documents={[
+          {
+            id: "doc-sent",
+            title: "[조합→서울시] 사업시행인가 본신청 접수",
+            description: "발신 공문",
+            category: "DISCLOSURE",
+            subCategory: "수발신 공문",
+            correspondenceType: "발신",
+            fileName: "sent.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-06-01T00:00:00.000Z",
+            documentDate: "2026-06-01T00:00:00.000Z",
+            createdAt: "2026-06-01T00:00:00.000Z",
+          },
+          {
+            id: "doc-received",
+            title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",
+            description: "수신 공문",
+            category: "DISCLOSURE",
+            subCategory: "수발신 공문",
+            correspondenceType: "수신",
+            fileName: "received.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-06-02T00:00:00.000Z",
+            documentDate: "2026-06-02T00:00:00.000Z",
+            createdAt: "2026-06-02T00:00:00.000Z",
+          },
+          {
+            id: "doc-reply",
+            title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)",
+            description: "회신 공문",
+            category: "DISCLOSURE",
+            subCategory: "수발신 공문",
+            correspondenceType: "회신",
+            fileName: "reply.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-06-03T00:00:00.000Z",
+            documentDate: "2026-06-03T00:00:00.000Z",
+            createdAt: "2026-06-03T00:00:00.000Z",
+          },
+        ]}
         router={{ push: vi.fn() } as never}
         initialFilterCat="수발신 공문"
       />
     );
 
-    expect(screen.getAllByText("발신").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("수신").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("회신").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("발신 공문").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("수신 공문").length).toBeGreaterThan(0);
+    expect(screen.queryByText("발신")).not.toBeInTheDocument();
+    expect(screen.queryByText("수신")).not.toBeInTheDocument();
+    expect(screen.queryByText("회신")).not.toBeInTheDocument();
     expect(screen.getAllByText("[조합→서울시] 사업시행인가 본신청 접수").length).toBeGreaterThan(0);
     expect(screen.getAllByText("[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)").length).toBeGreaterThan(0);
+  });
+
+  it("does not render demo disclosure documents when no documents are uploaded", () => {
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={[]}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+      />
+    );
+
+    expect(screen.queryByText("[조합→서울시] 사업시행인가 본신청 접수")).not.toBeInTheDocument();
+    expect(screen.queryByText("[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)")).not.toBeInTheDocument();
+    expect(screen.queryByText(/데모 시연용/)).not.toBeInTheDocument();
   });
 
   it("places the construction partner agreement under operations and supervision", () => {
@@ -54,8 +115,725 @@ describe("disclosure page", () => {
     expect(screen.getByRole("heading", { name: "연간 자금운용계획" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "2026년도 연간 자금운용 계획 및 차입 예산서" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "4. 사업 및 감리" }));
+    fireEvent.click(screen.getByRole("button", { name: "5. 사업 및 감리" }));
     expect(screen.getByText("시공자 협약서")).toBeInTheDocument();
+  });
+
+  it("splits meeting and administration disclosures into separate top tabs", () => {
+    const { container } = render(<DisclosureClient />);
+
+    expect(screen.queryByRole("button", { name: "2. 회의 및 행정" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2. 회의" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "3. 행정" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "4. 회계 및 감사" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "5. 사업 및 감리" })).toBeInTheDocument();
+
+    const meetingsSection = container.querySelector("#section-meetings");
+    const administrationSection = container.querySelector("#section-administration");
+    expect(meetingsSection).toBeInTheDocument();
+    expect(administrationSection).toBeInTheDocument();
+    expect(within(meetingsSection as HTMLElement).getByText("총회의사록 문서함")).toBeInTheDocument();
+    expect(within(meetingsSection as HTMLElement).getByText("이사회 회의록 문서함")).toBeInTheDocument();
+    expect(within(meetingsSection as HTMLElement).getByText("대의원 회의록 문서함")).toBeInTheDocument();
+    expect(within(meetingsSection as HTMLElement).queryByText("대관 공문서 문서함")).not.toBeInTheDocument();
+    expect(within(administrationSection as HTMLElement).queryByText("대관 공문서 문서함")).not.toBeInTheDocument();
+    expect(within(administrationSection as HTMLElement).getByText("수신 공문서 문서함")).toBeInTheDocument();
+    expect(within(administrationSection as HTMLElement).getByText("발신 공문서 문서함")).toBeInTheDocument();
+    expect(within(administrationSection as HTMLElement).getByText("사업계획 및 고시문 문서함")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "3. 행정" }));
+    expect(screen.getByRole("button", { name: "수신 공문" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "발신 공문" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "사업시행계획" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "총회 의사록" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "2. 회의" }));
+    expect(screen.getByRole("button", { name: "총회 의사록" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "이사회 회의록" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "대의원 회의록" })).toBeInTheDocument();
+  });
+
+  it("separates agency correspondence folders by received and sent direction", () => {
+    const documents: Document[] = [
+      {
+        id: "doc-sent",
+        title: "[조합→서울시] 사업시행인가 본신청 접수",
+        description: "발신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "발신",
+        fileName: "sent.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-01T00:00:00.000Z",
+        documentDate: "2026-06-01T00:00:00.000Z",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      },
+      {
+        id: "doc-received",
+        title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",
+        description: "수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        fileName: "received.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-02T00:00:00.000Z",
+        documentDate: "2026-06-02T00:00:00.000Z",
+        createdAt: "2026-06-02T00:00:00.000Z",
+      },
+      {
+        id: "doc-reply",
+        title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)",
+        description: "회신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "회신",
+        fileName: "reply.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-03T00:00:00.000Z",
+        documentDate: "2026-06-03T00:00:00.000Z",
+        createdAt: "2026-06-03T00:00:00.000Z",
+      },
+    ];
+
+    const { container } = render(
+      <DisclosureClient
+        session={{ id: "member-1", loginId: "member", name: "조합원", role: "MEMBER" }}
+        documents={documents}
+      />
+    );
+
+    const administrationSection = container.querySelector("#section-administration");
+    expect(administrationSection).toBeInTheDocument();
+
+    const receivedFolder = within(administrationSection as HTMLElement)
+      .getByText("수신 공문서 문서함")
+      .closest(".stone-card");
+    const sentFolder = within(administrationSection as HTMLElement)
+      .getByText("발신 공문서 문서함")
+      .closest(".stone-card");
+
+    expect(receivedFolder).toBeInTheDocument();
+    expect(sentFolder).toBeInTheDocument();
+    expect(within(receivedFolder as HTMLElement).getByText("[동작구청] 2025년도 행정실태점검 시정조치 요구")).toBeInTheDocument();
+    expect(within(receivedFolder as HTMLElement).queryByText("[조합→서울시] 사업시행인가 본신청 접수")).not.toBeInTheDocument();
+    expect(within(sentFolder as HTMLElement).getByText("[조합→서울시] 사업시행인가 본신청 접수")).toBeInTheDocument();
+    expect(within(sentFolder as HTMLElement).getByText("[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)")).toBeInTheDocument();
+    expect(within(sentFolder as HTMLElement).queryByText("[동작구청] 2025년도 행정실태점검 시정조치 요구")).not.toBeInTheDocument();
+  });
+
+  it("opens folder-style registration for delegate meeting minutes", () => {
+    render(
+      <DisclosureClient
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={[]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "2. 회의" }));
+
+    const delegateHeading = screen.getByRole("heading", { name: "대의원 회의록 문서함" });
+    const delegateCard = delegateHeading.closest(".stone-card");
+    expect(delegateCard).toBeInTheDocument();
+
+    fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "문서함 열기" }));
+
+    expect(screen.getAllByRole("heading", { name: "대의원 회의록 문서함" }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "+ 신규 문서 등록" }));
+
+    expect(screen.getByRole("heading", { name: "신규 정보공개 문서 등록" })).toBeInTheDocument();
+    expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("대의원 회의록");
+  });
+
+  it("moves the selected submenu card to the top and lets direct card selection change the active card", () => {
+    const { container } = render(<DisclosureClient />);
+
+    fireEvent.click(screen.getByRole("button", { name: "2. 회의" }));
+    fireEvent.click(screen.getByRole("button", { name: "대의원 회의록" }));
+
+    const meetingsSection = container.querySelector("#section-meetings");
+    expect(meetingsSection).toBeInTheDocument();
+
+    let meetingCards = Array.from((meetingsSection as HTMLElement).querySelectorAll(".stone-card"));
+    expect(within(meetingCards[0] as HTMLElement).getByRole("heading", { name: "대의원 회의록 문서함" })).toBeInTheDocument();
+
+    const generalMeetingCard = within(meetingsSection as HTMLElement)
+      .getByRole("heading", { name: "총회의사록 문서함" })
+      .closest(".stone-card");
+    expect(generalMeetingCard).toBeInTheDocument();
+
+    fireEvent.click(generalMeetingCard as HTMLElement);
+
+    meetingCards = Array.from((meetingsSection as HTMLElement).querySelectorAll(".stone-card"));
+    expect(within(meetingCards[0] as HTMLElement).getByRole("heading", { name: "총회의사록 문서함" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "총회 의사록" })).toHaveClass("border-midnight");
+  });
+
+  it("filters correspondence tables by received or sent direction", () => {
+    const documents: Document[] = [
+      {
+        id: "doc-sent",
+        title: "[조합→서울시] 사업시행인가 본신청 접수",
+        description: "발신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "발신",
+        fileName: "sent.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-01T00:00:00.000Z",
+        documentDate: "2026-06-01T00:00:00.000Z",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      },
+      {
+        id: "doc-received",
+        title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",
+        description: "수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        fileName: "received.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-02T00:00:00.000Z",
+        documentDate: "2026-06-02T00:00:00.000Z",
+        createdAt: "2026-06-02T00:00:00.000Z",
+      },
+      {
+        id: "doc-reply",
+        title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)",
+        description: "회신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "회신",
+        fileName: "reply.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-03T00:00:00.000Z",
+        documentDate: "2026-06-03T00:00:00.000Z",
+        createdAt: "2026-06-03T00:00:00.000Z",
+      },
+    ];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={documents}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["발신", "회신"]}
+      />
+    );
+
+    expect(screen.getAllByText("[조합→서울시] 사업시행인가 본신청 접수").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)").length).toBeGreaterThan(0);
+    expect(screen.queryByText("[동작구청] 2025년도 행정실태점검 시정조치 요구")).not.toBeInTheDocument();
+  });
+
+  it("uses the selected category filter after opening a sent correspondence folder", () => {
+    const documents: Document[] = [
+      {
+        id: "doc-sent",
+        title: "[조합→서울시] 사업시행인가 본신청 접수",
+        description: "발신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "발신",
+        fileName: "sent.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-01T00:00:00.000Z",
+        documentDate: "2026-06-01T00:00:00.000Z",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      },
+      {
+        id: "doc-received",
+        title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",
+        description: "수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        fileName: "received.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-02T00:00:00.000Z",
+        documentDate: "2026-06-02T00:00:00.000Z",
+        createdAt: "2026-06-02T00:00:00.000Z",
+      },
+    ];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={documents}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["발신", "회신"]}
+      />
+    );
+
+    expect(screen.getByDisplayValue("발신 공문")).toBeInTheDocument();
+    expect(screen.getAllByText("[조합→서울시] 사업시행인가 본신청 접수").length).toBeGreaterThan(0);
+    expect(screen.queryByText("[동작구청] 2025년도 행정실태점검 시정조치 요구")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByDisplayValue("발신 공문"), {
+      target: { value: "수신 공문" },
+    });
+
+    expect(screen.getByDisplayValue("수신 공문")).toBeInTheDocument();
+    expect(screen.getAllByText("[동작구청] 2025년도 행정실태점검 시정조치 요구").length).toBeGreaterThan(0);
+    expect(screen.queryByText("[조합→서울시] 사업시행인가 본신청 접수")).not.toBeInTheDocument();
+  });
+
+  it("removes the category column and places occurrence date first", () => {
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={[
+          {
+            id: "doc-received",
+            title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",
+            description: "수신 공문",
+            category: "DISCLOSURE",
+            subCategory: "수발신 공문",
+            correspondenceType: "수신",
+            fileName: "received.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-06-02T00:00:00.000Z",
+            documentDate: "2026-06-02T00:00:00.000Z",
+            createdAt: "2026-06-02T00:00:00.000Z",
+          },
+        ]}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["수신"]}
+      />
+    );
+
+    const columnHeaders = screen.getAllByRole("columnheader").map((header) => header.textContent);
+    expect(columnHeaders.slice(0, 3)).toEqual(["발생일", "문서 제목", "회신기한"]);
+    expect(screen.queryByRole("columnheader", { name: "No." })).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "분류" })).not.toBeInTheDocument();
+  });
+
+  it("shows completed status in the due-date column for reply documents in the sent folder", () => {
+    const documents: Document[] = [
+      {
+        id: "doc-reply",
+        title: "[조합→동작구청] 행정실태점검 조치결과 보고서",
+        description: "회신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "회신",
+        fileName: "reply.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-03T00:00:00.000Z",
+        documentDate: "2026-06-03T00:00:00.000Z",
+        createdAt: "2026-06-03T00:00:00.000Z",
+      },
+    ];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={documents}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["발신", "회신"]}
+      />
+    );
+
+    const row = screen.getAllByText("[조합→동작구청] 행정실태점검 조치결과 보고서")
+      .map((element) => element.closest("tr"))
+      .find(Boolean);
+
+    expect(row).toBeInTheDocument();
+    expect(within(row as HTMLElement).getByText("회신 완료")).toBeInTheDocument();
+  });
+
+  it("offers only pending received correspondence as reply targets", () => {
+    const documents: Document[] = [
+      {
+        id: "received-pending",
+        title: "회신 필요 대상 수신 공문",
+        description: "회신 대상 선택 가능",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        replyNotRequired: false,
+        fileName: "received-pending.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-01T00:00:00.000Z",
+        documentDate: "2026-06-01T00:00:00.000Z",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      },
+      {
+        id: "received-no-reply",
+        title: "회신 불필요 수신 공문",
+        description: "선택지에서 제외",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        replyNotRequired: true,
+        fileName: "received-no-reply.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-02T00:00:00.000Z",
+        documentDate: "2026-06-02T00:00:00.000Z",
+        createdAt: "2026-06-02T00:00:00.000Z",
+      },
+      {
+        id: "received-completed",
+        title: "회신 완료 수신 공문",
+        description: "이미 회신 완료",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        replyNotRequired: false,
+        fileName: "received-completed.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-03T00:00:00.000Z",
+        documentDate: "2026-06-03T00:00:00.000Z",
+        createdAt: "2026-06-03T00:00:00.000Z",
+      },
+      {
+        id: "reply-completed",
+        title: "회신 완료 처리 공문",
+        description: "회신 처리 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "회신",
+        replyToDocumentId: "received-completed",
+        fileName: "reply-completed.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-04T00:00:00.000Z",
+        documentDate: "2026-06-04T00:00:00.000Z",
+        createdAt: "2026-06-04T00:00:00.000Z",
+      },
+    ];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        role="ADMIN"
+        documents={documents}
+        router={{ push: vi.fn(), refresh: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["발신", "회신"]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ 신규 문서 등록" }));
+    fireEvent.click(screen.getByLabelText("회신 공문으로 등록"));
+
+    const targetSelect = screen.getByLabelText("회신 대상 수신 공문 (선택)");
+    expect(within(targetSelect).getByRole("option", { name: "회신 필요 대상 수신 공문" })).toBeInTheDocument();
+    expect(within(targetSelect).queryByRole("option", { name: "회신 불필요 수신 공문" })).not.toBeInTheDocument();
+    expect(within(targetSelect).queryByRole("option", { name: "회신 완료 수신 공문" })).not.toBeInTheDocument();
+  });
+
+  it("marks received correspondence as complete when a reply document references it", () => {
+    const documents: Document[] = [
+      {
+        id: "received-1",
+        title: "동작구청 시정조치 요구 공문",
+        description: "회신이 필요한 수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        fileName: "received.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-01T00:00:00.000Z",
+        documentDate: "2026-06-01T00:00:00.000Z",
+        createdAt: "2026-06-01T00:00:00.000Z",
+      },
+      {
+        id: "received-2",
+        title: "서울시 보완 요청 수신 공문",
+        description: "아직 회신 전인 수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        fileName: "received-2.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-02T00:00:00.000Z",
+        documentDate: "2026-06-02T00:00:00.000Z",
+        createdAt: "2026-06-02T00:00:00.000Z",
+      },
+      {
+        id: "reply-1",
+        title: "동작구청 시정조치 회신 공문",
+        description: "회신 처리 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "회신",
+        replyToDocumentId: "received-1",
+        fileName: "reply.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-03T00:00:00.000Z",
+        documentDate: "2026-06-03T00:00:00.000Z",
+        createdAt: "2026-06-03T00:00:00.000Z",
+      },
+    ];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={documents}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["수신"]}
+      />
+    );
+
+    const completedRow = screen.getAllByText("동작구청 시정조치 요구 공문")
+      .map((element) => element.closest("tr"))
+      .find(Boolean);
+    const pendingRow = screen.getAllByText("서울시 보완 요청 수신 공문")
+      .map((element) => element.closest("tr"))
+      .find(Boolean);
+
+    expect(completedRow).toBeInTheDocument();
+    expect(pendingRow).toBeInTheDocument();
+    expect(within(completedRow as HTMLElement).getByText("회신 완료")).toBeInTheDocument();
+    expect(within(pendingRow as HTMLElement).getByText("회신 필요")).toBeInTheDocument();
+  });
+
+  it("marks received correspondence as not requiring a reply when flagged", () => {
+    const documents: Document[] = [
+      {
+        id: "received-no-reply",
+        title: "시정조치 대상 아님 안내 수신 공문",
+        description: "회신이 필요 없는 수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        replyNotRequired: true,
+        fileName: "received-no-reply.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-04T00:00:00.000Z",
+        documentDate: "2026-06-04T00:00:00.000Z",
+        createdAt: "2026-06-04T00:00:00.000Z",
+      },
+    ];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={documents}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["수신"]}
+      />
+    );
+
+    const row = screen.getAllByText("시정조치 대상 아님 안내 수신 공문")
+      .map((element) => element.closest("tr"))
+      .find(Boolean);
+
+    expect(row).toBeInTheDocument();
+    expect(within(row as HTMLElement).getByText("회신 불필요")).toBeInTheDocument();
+    expect(within(row as HTMLElement).queryByText("수신")).not.toBeInTheDocument();
+    expect(within(row as HTMLElement).queryByText("회신 필요")).not.toBeInTheDocument();
+  });
+
+  it("shows reply due date column values for received correspondence that requires a reply", () => {
+    const documents = [
+      {
+        id: "received-due",
+        title: "동작구청 보완 요청 수신 공문",
+        description: "회신기한이 있는 수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        replyNotRequired: false,
+        replyDueDate: "2026-06-20T00:00:00.000Z",
+        fileName: "received-due.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-04T00:00:00.000Z",
+        documentDate: "2026-06-04T00:00:00.000Z",
+        createdAt: "2026-06-04T00:00:00.000Z",
+      },
+    ] as Document[];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={documents}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["수신"]}
+      />
+    );
+
+    const row = screen.getAllByText("동작구청 보완 요청 수신 공문")
+      .map((element) => element.closest("tr"))
+      .find(Boolean);
+
+    expect(screen.getByText("회신기한")).toBeInTheDocument();
+    expect(row).toBeInTheDocument();
+    expect(within(row as HTMLElement).getByText("2026.06.20")).toBeInTheDocument();
+  });
+
+  it("keeps reply due date visible when received correspondence is completed", () => {
+    const documents = [
+      {
+        id: "received-completed-due",
+        title: "동작구청 회신 완료 대상 수신 공문",
+        description: "회신기한이 있고 회신 완료된 수신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "수신",
+        replyNotRequired: false,
+        replyDueDate: "2026-06-20T00:00:00.000Z",
+        fileName: "received-completed-due.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-04T00:00:00.000Z",
+        documentDate: "2026-06-04T00:00:00.000Z",
+        createdAt: "2026-06-04T00:00:00.000Z",
+      },
+      {
+        id: "reply-completed-due",
+        title: "동작구청 회신 완료 처리 공문",
+        description: "회신 처리 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "회신",
+        replyToDocumentId: "received-completed-due",
+        fileName: "reply-completed-due.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-05T00:00:00.000Z",
+        documentDate: "2026-06-05T00:00:00.000Z",
+        createdAt: "2026-06-05T00:00:00.000Z",
+      },
+    ] as Document[];
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={documents}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["수신"]}
+      />
+    );
+
+    const row = screen.getAllByText("동작구청 회신 완료 대상 수신 공문")
+      .map((element) => element.closest("tr"))
+      .find(Boolean);
+
+    expect(row).toBeInTheDocument();
+    expect(within(row as HTMLElement).getByText("회신 완료")).toBeInTheDocument();
+    expect(within(row as HTMLElement).getByText("2026.06.20")).toBeInTheDocument();
+  });
+
+  it("saves reply-not-required from the admin edit modal and updates the row status", async () => {
+    const routerRefresh = vi.fn();
+    const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+
+      if (url === "/api/documents/received-no-reply") {
+        const body = JSON.parse(String(init?.body));
+        return {
+          ok: true,
+          json: async () => ({
+            success: true,
+            document: {
+              id: "received-no-reply",
+              title: body.title,
+              description: body.description,
+              category: "DISCLOSURE",
+              subCategory: "수발신 공문",
+              correspondenceType: "수신",
+              replyNotRequired: body.replyNotRequired,
+              replyToDocumentId: null,
+              fileName: "received-no-reply.pdf",
+              fileSize: 1024,
+              status: "APPROVED",
+              publishedAt: "2026-06-04T00:00:00.000Z",
+              documentDate: "2026-06-04T00:00:00.000Z",
+              createdAt: "2026-06-04T00:00:00.000Z",
+              attachments: [],
+            },
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        role="ADMIN"
+        documents={[
+          {
+            id: "received-no-reply",
+            title: "시정조치 대상 아님 안내 수신 공문",
+            description: "회신이 필요 없는 수신 공문",
+            category: "DISCLOSURE",
+            subCategory: "수발신 공문",
+            correspondenceType: "수신",
+            replyNotRequired: false,
+            fileName: "received-no-reply.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-06-04T00:00:00.000Z",
+            documentDate: "2026-06-04T00:00:00.000Z",
+            createdAt: "2026-06-04T00:00:00.000Z",
+            attachments: [],
+          },
+        ]}
+        router={{ push: vi.fn(), refresh: routerRefresh } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["수신"]}
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "시정조치 대상 아님 안내 수신 공문 문서 수정" })[0]);
+    fireEvent.click(screen.getByLabelText("회신 불필요"));
+    fireEvent.click(screen.getByRole("button", { name: "수정 저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/received-no-reply",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"replyNotRequired\":true"),
+      }),
+    ));
+    expect(routerRefresh).toHaveBeenCalled();
+    expect(await screen.findAllByText("회신 불필요")).not.toHaveLength(0);
+  });
+
+  it("shows received and sent correspondence as separate category filters", () => {
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={[]}
+        router={{ push: vi.fn() } as never}
+      />
+    );
+
+    const categorySelect = screen.getByDisplayValue("전체 분류");
+    expect(within(categorySelect).getByRole("option", { name: "수신 공문" })).toBeInTheDocument();
+    expect(within(categorySelect).getByRole("option", { name: "발신 공문" })).toBeInTheDocument();
+    expect(within(categorySelect).queryByRole("option", { name: "수발신 공문" })).not.toBeInTheDocument();
   });
 
   it("shows management regulation cards with uploaded document previews", () => {
@@ -271,7 +1049,7 @@ describe("disclosure page", () => {
     expect(within(screen.getByLabelText("문서함 열기 상세 드로어")).queryByText("운영관리규정 최신본")).not.toBeInTheDocument();
   });
 
-  it("allows admins to replace files while editing uploaded report documents", () => {
+  it("shows append controls for additional attachments while editing uploaded report documents", () => {
     const documents: Document[] = [
       {
         id: "doc-progress-report",
@@ -318,8 +1096,247 @@ describe("disclosure page", () => {
     expect(screen.getByText("현재 첨부 파일: old-report.docx")).toBeInTheDocument();
     expect(screen.getByText("현재 추가 첨부파일")).toBeInTheDocument();
     expect(screen.getByText("old-extra.pdf")).toBeInTheDocument();
-    expect(screen.getByLabelText("첨부 파일 교체 (PDF/HWP/Word)")).toBeInTheDocument();
-    expect(screen.getByLabelText("추가 첨부파일 교체 (선택, 최대 10개)")).toBeInTheDocument();
+    expect(screen.getByLabelText("첨부파일 선택 (복수 선택 가능)")).toBeInTheDocument();
+    expect(screen.getByLabelText("추가 첨부파일 추가 (선택, 최대 10개)")).toBeInTheDocument();
+  });
+
+  it("lists multiple newly selected attachments together in the edit modal", () => {
+    render(
+      <MeetingsTable
+        isLoggedIn
+        role="ADMIN"
+        router={{ push: vi.fn(), refresh: vi.fn() } as never}
+        initialFilterCat="실적보고서"
+        documents={[
+          {
+            id: "doc-progress-report",
+            title: "23년 1사분기_실적보고서",
+            description: "분기별 사업 실적 보고서입니다.",
+            category: "DISCLOSURE",
+            subCategory: "실적보고서",
+            fileName: "old-report.docx",
+            fileSize: 13241,
+            status: "APPROVED",
+            publishedAt: "2026-06-09T00:00:00.000Z",
+            documentDate: "2023-04-01T00:00:00.000Z",
+            createdAt: "2026-06-09T00:00:00.000Z",
+            attachments: [
+              {
+                id: "att-old",
+                documentId: "doc-progress-report",
+                filePath: "documents/old/old-extra.pdf",
+                fileName: "old-extra.pdf",
+                fileSize: 2048,
+                createdAt: "2026-06-09T00:00:00.000Z",
+              },
+            ],
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "23년 1사분기_실적보고서 문서 수정" })[0]);
+
+    fireEvent.change(screen.getByLabelText("추가 첨부파일 추가 (선택, 최대 10개)"), {
+      target: {
+        files: [
+          new File(["pdf"], "new-extra-1.pdf", { type: "application/pdf" }),
+          new File(["pdf"], "new-extra-2.pdf", { type: "application/pdf" }),
+        ],
+      },
+    });
+
+    expect(screen.getByText("추가 예정 첨부파일 (2개)")).toBeInTheDocument();
+    expect(screen.getByText("new-extra-1.pdf")).toBeInTheDocument();
+    expect(screen.getByText("new-extra-2.pdf")).toBeInTheDocument();
+  });
+
+  it("splits multiple files selected from the main file control into main and additional attachments", () => {
+    render(
+      <MeetingsTable
+        isLoggedIn
+        role="ADMIN"
+        router={{ push: vi.fn(), refresh: vi.fn() } as never}
+        initialFilterCat="실적보고서"
+        documents={[
+          {
+            id: "doc-progress-report",
+            title: "23년 1사분기_실적보고서",
+            description: "분기별 사업 실적 보고서입니다.",
+            category: "DISCLOSURE",
+            subCategory: "실적보고서",
+            fileName: "old-report.docx",
+            fileSize: 13241,
+            status: "APPROVED",
+            publishedAt: "2026-06-09T00:00:00.000Z",
+            documentDate: "2023-04-01T00:00:00.000Z",
+            createdAt: "2026-06-09T00:00:00.000Z",
+            attachments: [],
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "23년 1사분기_실적보고서 문서 수정" })[0]);
+
+    const fileInput = screen.getByLabelText("첨부파일 선택 (복수 선택 가능)") as HTMLInputElement;
+    expect(fileInput).toHaveAttribute("multiple");
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [
+          new File(["main"], "new-main.pdf", { type: "application/pdf" }),
+          new File(["extra1"], "new-extra-1.pdf", { type: "application/pdf" }),
+          new File(["extra2"], "new-extra-2.pdf", { type: "application/pdf" }),
+        ],
+      },
+    });
+
+    expect(screen.getByText("새 본문 파일: new-main.pdf")).toBeInTheDocument();
+    expect(screen.getByText("추가 예정 첨부파일 (2개)")).toBeInTheDocument();
+    expect(screen.getByText("new-extra-1.pdf")).toBeInTheDocument();
+    expect(screen.getByText("new-extra-2.pdf")).toBeInTheDocument();
+  });
+
+  it("sends appendAttachments when admins add more attachments during edit", async () => {
+    const routerRefresh = vi.fn();
+    const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+
+      if (url === "/api/documents/upload-url") {
+        return {
+          ok: true,
+          json: async () => ({
+            uploads: [
+              {
+                path: "documents/2026-06-09/new-extra.pdf",
+                signedUrl: "https://storage.example/new-extra",
+                token: "new-extra-token",
+                contentType: "application/pdf",
+              },
+            ],
+          }),
+        };
+      }
+
+      if (url === "https://storage.example/new-extra") {
+        return {
+          ok: true,
+          text: async () => "",
+        };
+      }
+
+      if (url === "/api/documents/doc-progress-report") {
+        return {
+          ok: true,
+          json: async () => ({
+            success: true,
+            document: {
+              id: "doc-progress-report",
+              title: "23년 1사분기_실적보고서",
+              description: "분기별 사업 실적 보고서입니다.",
+              category: "DISCLOSURE",
+              subCategory: "실적보고서",
+              fileName: "old-report.docx",
+              fileSize: 13241,
+              status: "APPROVED",
+              publishedAt: "2026-06-09T00:00:00.000Z",
+              documentDate: "2023-04-01T00:00:00.000Z",
+              createdAt: "2026-06-09T00:00:00.000Z",
+              attachments: [
+                {
+                  id: "att-old",
+                  documentId: "doc-progress-report",
+                  filePath: "documents/old/old-extra.pdf",
+                  fileName: "old-extra.pdf",
+                  fileSize: 2048,
+                  createdAt: "2026-06-09T00:00:00.000Z",
+                },
+                {
+                  id: "att-new",
+                  documentId: "doc-progress-report",
+                  filePath: "documents/2026-06-09/new-extra.pdf",
+                  fileName: "new-extra.pdf",
+                  fileSize: 1024,
+                  createdAt: "2026-06-09T00:00:00.000Z",
+                },
+              ],
+            },
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        role="ADMIN"
+        router={{ push: vi.fn(), refresh: routerRefresh } as never}
+        initialFilterCat="실적보고서"
+        documents={[
+          {
+            id: "doc-progress-report",
+            title: "23년 1사분기_실적보고서",
+            description: "분기별 사업 실적 보고서입니다.",
+            category: "DISCLOSURE",
+            subCategory: "실적보고서",
+            fileName: "old-report.docx",
+            fileSize: 13241,
+            status: "APPROVED",
+            publishedAt: "2026-06-09T00:00:00.000Z",
+            documentDate: "2023-04-01T00:00:00.000Z",
+            createdAt: "2026-06-09T00:00:00.000Z",
+            attachments: [
+              {
+                id: "att-old",
+                documentId: "doc-progress-report",
+                filePath: "documents/old/old-extra.pdf",
+                fileName: "old-extra.pdf",
+                fileSize: 2048,
+                createdAt: "2026-06-09T00:00:00.000Z",
+              },
+            ],
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "23년 1사분기_실적보고서 문서 수정" })[0]);
+
+    const extraFileInput = screen.getByLabelText("추가 첨부파일 추가 (선택, 최대 10개)") as HTMLInputElement;
+    fireEvent.change(extraFileInput, {
+      target: {
+        files: [new File(["pdf"], "new-extra.pdf", { type: "application/pdf" })],
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "수정 저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/doc-progress-report",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"appendAttachments\""),
+      }),
+    ));
+    const patchCall = fetchMock.mock.calls.find(([url]) => url === "/api/documents/doc-progress-report");
+    expect(patchCall).toBeDefined();
+    expect(JSON.parse(String(patchCall?.[1]?.body))).toMatchObject({
+      title: "23년 1사분기_실적보고서",
+      subCategory: "실적보고서",
+      appendAttachments: [
+        {
+          path: "documents/2026-06-09/new-extra.pdf",
+          name: "new-extra.pdf",
+          size: 3,
+        },
+      ],
+    });
+    expect(JSON.parse(String(patchCall?.[1]?.body)).attachments).toBeUndefined();
+    expect(routerRefresh).toHaveBeenCalled();
   });
 
   it("shows admin-editable custom empty messages on disclosure cards", () => {
