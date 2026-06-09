@@ -50,3 +50,6 @@ next-env.d.ts
 # File uploads
 /uploads/
 /public/uploads/
+.next-dev.err.log
+.next-dev.out.log
+DATA_reference/
