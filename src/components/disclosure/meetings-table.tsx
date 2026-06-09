@@ -22,7 +22,7 @@ export type MeetingCategory =
   | "사업시행계획"
   | "외부회계감사"
   | "내부감사"
-  | "자금운용계획"
+  | "연간자금운용계획"
   | "에스크로 명세서"
   | "용역 계약서"
   | "공사진행/토지"
@@ -116,7 +116,7 @@ const CATEGORIES: ("전체" | MeetingCategory)[] = [
   "사업시행계획",
   "외부회계감사",
   "내부감사",
-  "자금운용계획",
+  "연간자금운용계획",
   "에스크로 명세서",
   "용역 계약서",
   "공사진행/토지",
@@ -145,7 +145,7 @@ function categoryBadge(cat: MeetingCategory) {
     case "시공자 협약서":
     case "외부회계감사":
     case "내부감사":
-    case "자금운용계획":
+    case "연간자금운용계획":
     case "에스크로 명세서":
     case "용역 계약서":
     case "공사진행/토지":
@@ -218,6 +218,11 @@ type DocumentEditFormState = {
   correspondenceType: CorrespondenceType;
 };
 
+type DeleteDocumentTarget = {
+  id: string;
+  title: string;
+};
+
 type SignedDocumentUpload = {
   path: string;
   signedUrl: string;
@@ -282,6 +287,7 @@ export function MeetingsTable({
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [editingDoc, setEditingDoc] = useState<DocumentEditFormState | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteDocumentTarget | null>(null);
 
   // 로컬에서 실시간으로 문서 상태(삭제/별표)를 제어하기 위한 state
   const [managedDocs, setManagedDocs] = useState<Document[]>(documents);
@@ -319,14 +325,14 @@ export function MeetingsTable({
   }, [initialFilterCat, initialSearchQuery]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  const openDeleteModal = (id: string, title: string) => {
+    setDeleteTarget({ id, title });
+  };
+
   // 문서 삭제 핸들러
-  const handleDelete = async (id: string, title: string) => {
-    if (
-      !confirm(
-        `"${title}" 문서를 정말 삭제하시겠습니까?\n\n삭제된 문서와 첨부파일은 복구할 수 없습니다.`
-      )
-    )
-      return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
@@ -336,6 +342,7 @@ export function MeetingsTable({
         return;
       }
       setManagedDocs((prev) => prev.filter((d) => d.id !== id));
+      setDeleteTarget(null);
       router.refresh();
     } catch (e) {
       console.error(e);
@@ -775,15 +782,16 @@ export function MeetingsTable({
                           {renderEditButton(doc)}
                           {doc.isReal && (
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                await handleDelete(String(doc.id), doc.title);
+                                openDeleteModal(String(doc.id), doc.title);
                               }}
-                              disabled={deletingId === doc.id}
+                              disabled={deletingId === String(doc.id)}
                               className="flex items-center justify-center size-7 rounded-full text-ash hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all duration-150 cursor-pointer disabled:opacity-40"
                               title="문서 삭제"
+                              aria-label={`${doc.title} 문서 삭제`}
                             >
-                              {deletingId === doc.id ? (
+                              {deletingId === String(doc.id) ? (
                                 <span className="size-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
                               ) : (
                                 <svg
@@ -885,15 +893,16 @@ export function MeetingsTable({
                       <>
                         {renderEditButton(doc)}
                         <button
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
-                            await handleDelete(String(doc.id), doc.title);
+                            openDeleteModal(String(doc.id), doc.title);
                           }}
-                          disabled={deletingId === doc.id}
+                          disabled={deletingId === String(doc.id)}
                           className="flex items-center justify-center size-7 rounded-full text-ash hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all duration-150 cursor-pointer disabled:opacity-40"
                           title="문서 삭제"
+                          aria-label={`${doc.title} 문서 삭제`}
                         >
-                          {deletingId === doc.id ? (
+                          {deletingId === String(doc.id) ? (
                             <span className="size-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
                           ) : (
                             <svg
@@ -964,6 +973,75 @@ export function MeetingsTable({
           </div>
         </div>
       </div>
+
+      {/* 문서 삭제 확인 팝업 모달 (관리자용) */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+          <button
+            type="button"
+            aria-label="삭제 확인 닫기"
+            onClick={() => {
+              if (!deletingId) setDeleteTarget(null);
+            }}
+            className="absolute inset-0 cursor-default"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${deleteTarget.title} 삭제 확인`}
+            className="relative w-full max-w-md rounded-2xl border border-stone-surface bg-warm-canvas p-6 text-left shadow-2xl animate-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-ember-orange/10 text-ember-orange">
+                <svg
+                  className="size-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </span>
+              <div>
+                <h3 className="text-base font-extrabold tracking-tight text-charcoal-primary">
+                  문서를 삭제할까요?
+                </h3>
+                <p className="mt-2 text-sm font-semibold leading-relaxed text-charcoal-primary">
+                  {deleteTarget.title}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-graphite">
+                  삭제된 문서와 첨부파일은 복구할 수 없습니다.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDeleteTarget(null)}
+                disabled={!!deletingId}
+                className="rounded-full border-stone-surface text-xs font-bold text-graphite hover:bg-stone-surface disabled:opacity-60"
+              >
+                취소
+              </Button>
+              <Button
+                type="button"
+                onClick={confirmDelete}
+                disabled={!!deletingId}
+                className="rounded-full bg-midnight px-5 text-xs font-bold text-white hover:bg-charcoal-primary disabled:opacity-60"
+              >
+                {deletingId === deleteTarget.id ? "삭제 중..." : "영구 삭제"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 신규 문서 등록 팝업 모달 (관리자용) */}
       {showUploadModal && (

@@ -1,6 +1,158 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Show multiple attached PDF files consecutively inside the protected document viewer modal instead of limiting inline preview to the main document only.
+- Governing spec: `DESIGN.md`, protected document disclosure viewing flow.
+- Implementation plan: Keep the existing modal and download actions, add an inline attachment PDF viewer route, and stack the main document plus each PDF attachment in order while leaving non-PDF attachments as download-only.
+- Files or pages reviewed: `src/components/portal/pdf-viewer-modal.tsx`, `src/app/api/documents/attachments/[attachmentId]/view/route.ts`, `src/__tests__/pdf-viewer-modal.test.tsx`, related library/disclosure viewer tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Attachment inline viewing stays behind the existing authenticated document session checks and only allows PDF attachments. Non-PDF files still require download and no new public document access path was added.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The modal now shows the actual main PDF followed by each actual attached PDF in upload order. Non-PDF attachments are explicitly presented as download-only, so the UI does not imply unsupported inline preview.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The modal keeps the existing warm panel and dark action styling, but restructures the body into labeled stacked sections so users can understand which iframe is the main document versus an additional attachment. Focused tests verify three sequential viewers render for one main PDF plus two attached PDFs. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Remove disclosure-card `기준일` and upload-count badges, and let admins edit the card title/content inline by clicking the card text.
+- Governing spec: `DESIGN.md`, protected information-disclosure presentation and admin-only content management.
+- Implementation plan: Remove nonessential card meta labels, add `DisclosureCardContent` overrides loaded into the disclosure page, persist admin edits through `/api/disclosure-card-contents`, and keep non-admin users on read-only card copy.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/app/api/disclosure-card-contents/route.ts`, `src/app/disclosure/page.tsx`, `src/components/disclosure/disclosure-page-client-shell.tsx`, Prisma migration/schema, focused disclosure/API tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Card title/content editing is only available to `ADMIN` sessions and persists through an admin-protected API. Public and member users only see the resulting card copy; no document access, upload, deletion, payment, voting, or messaging behavior was added.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Removing `기준일` and `업로드 n건` avoids showing ambiguous metadata on the card header. Uploaded document details remain truthfully shown only in the `등록 자료` panel and document folder table.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The edit form is inline inside the selected card, uses existing warm panel, stone border, labeled inputs, and dark pill save action. Admin card text has a document-specific accessible button label. Focused tests verify the removed meta labels and the inline edit/save flow. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Let admin/operating sessions delete uploaded disclosure documents and replace native browser delete confirms with in-app confirmation modals.
+- Governing spec: `DESIGN.md`, protected disclosure document management flow.
+- Implementation plan: Normalize admin role checks in the document mutation API, open a branded delete confirmation modal from disclosure folder tables and library material panels, and run focused API/UI regression tests.
+- Files or pages reviewed: `src/app/api/documents/[id]/route.ts`, `src/components/disclosure/meetings-table.tsx`, `src/components/library/library-client.tsx`, focused document API/disclosure/library tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Deletion remains restricted to admin sessions and real uploaded document records. The change does not expose public deletion, document viewing, upload, accounting, payment, voting, or messaging behavior.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The modal clearly names the selected document and states that deleted documents and attachments cannot be restored. It does not imply soft-delete or recovery behavior.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The modal uses the existing warm canvas, stone border, compact warning icon, and dark pill primary action pattern. Delete icon buttons now have document-specific accessible labels, and tests verify the modal appears before the DELETE request. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Rename the accounting disclosure card from `2026년도 연간 자금운용 계획 및 차입 예산서` to `연간 자금운용계획` and update its upload/document classification to `연간자금운용계획`.
+- Governing spec: `DESIGN.md`, protected disclosure document classification presentation.
+- Implementation plan: Existing disclosure card and document upload category labels; no API or access behavior change.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/components/portal/document-upload-form.tsx`, focused disclosure/upload form tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only renames an existing accounting disclosure card and classification option. Document access, upload permissions, viewing, and mutation routes are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The shorter card title still describes the same annual fund-operation plan category, and the upload form now uses the matching `연간자금운용계획` classification.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: Existing card, submenu, and select-option UI patterns are reused. Focused tests verify the new heading appears, the old long heading is absent, and the upload subcategory option uses `연간자금운용계획`. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Move empty disclosure guidance editing from a fixed modal into the clicked card and visually emphasize corrective-action guidance text in orange.
+- Governing spec: `DESIGN.md`, protected disclosure-card admin guidance editing.
+- Implementation plan: Existing admin-only empty guidance editing flow; no API, access, document upload, or document viewing behavior change.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`, authenticated `/disclosure` empty-card surfaces.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The edit control remains admin-only and still saves through the existing `/api/disclosure-empty-messages` route. Logged-out and non-admin document access behavior is unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Empty-card guidance still renders from saved `DisclosureEmptyMessage` records or the existing default message. Parenthesized `시정조치` text is only visually emphasized and does not add fabricated document status.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The editor now opens inline inside the target card, keeping the form visually tied to the content being changed. Labels remain attached to the title/body inputs, and `시정조치` phrases render as compact rounded badges using the existing Ember Orange token. Focused disclosure tests cover inline editor placement and orange badge rendering. Browser automation was unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Show the uploaded document description directly in the PDF viewer header.
+- Governing spec: `DESIGN.md`, protected document disclosure viewing flow.
+- Implementation plan: Existing PDF viewer modal presentation cleanup; no access, upload, or download behavior change.
+- Files or pages reviewed: `src/components/portal/pdf-viewer-modal.tsx`, `src/__tests__/pdf-viewer-modal.test.tsx`, protected document viewer surfaces in `/disclosure` and `/library`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only renders the already-loaded `description` field inside the existing viewer modal. Document session checks, `/view`, `/download`, and attachment controls are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The viewer now shows the real document description provided with the uploaded document record. It does not add placeholder document text or imply new document availability.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The description uses compact header text below the title with existing charcoal/graphite colors and no new controls. Focused modal tests verify the visible `문서 설명` label and description body. Browser verification is pending because callable browser automation was not exposed in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 
 - Feature: Remove the visible `읽기 가이드` inner boxes from disclosure cards and reduce unnecessary internal card whitespace.
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `공개자료` presentation scope.

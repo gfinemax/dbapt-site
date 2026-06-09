@@ -162,7 +162,7 @@ describe("library page", () => {
 
     expect(screen.queryByTitle("문서 온라인 열람 뷰어")).not.toBeInTheDocument();
     expect(screen.getByText("이 문서는 PDF 미리보기를 지원하지 않습니다.")).toBeInTheDocument();
-    expect(screen.getByText(/23년 1사분기_실적보고서\.docx/)).toBeInTheDocument();
+    expect(screen.getAllByText(/23년 1사분기_실적보고서\.docx/).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "문서 다운로드" })).toBeInTheDocument();
   });
 
@@ -194,9 +194,8 @@ describe("library page", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      });
+    });
     vi.stubGlobal("fetch", fetchMock);
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     vi.spyOn(window, "alert").mockImplementation(() => {});
 
     render(<LibraryClient isLoggedIn isAdmin documents={uploadedMeetingDocuments} />);
@@ -225,6 +224,10 @@ describe("library page", () => {
 
     const updatedEntry = screen.getByLabelText("수정된 정기총회 의사록 관리");
     fireEvent.click(within(updatedEntry).getByRole("button", { name: "삭제" }));
+
+    expect(screen.getByRole("dialog", { name: "수정된 정기총회 의사록 삭제 확인" })).toBeInTheDocument();
+    expect(screen.getByText("삭제된 문서와 첨부파일은 복구할 수 없습니다.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "영구 삭제" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
       "/api/documents/doc-regular-meeting",

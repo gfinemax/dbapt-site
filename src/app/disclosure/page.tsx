@@ -2,9 +2,19 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { serializeDocuments } from "@/lib/document-serializer";
 import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
-import { type DisclosureEmptyMessage } from "@/components/disclosure/disclosure-client";
+import { type DisclosureCardContent, type DisclosureEmptyMessage } from "@/components/disclosure/disclosure-client";
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
+
+type DisclosureCardContentDelegate = {
+  findMany: (args: { orderBy: { itemId: "asc" } }) => Promise<DisclosureCardContent[]>;
+};
+
+function getDisclosureCardContentDelegate() {
+  return (prisma as typeof prisma & {
+    disclosureCardContent?: DisclosureCardContentDelegate;
+  }).disclosureCardContent;
+}
 
 export default async function DisclosurePage() {
   const session = (await getSession()) as {
@@ -17,6 +27,7 @@ export default async function DisclosurePage() {
 
   let documents: Document[] = [];
   let emptyMessages: DisclosureEmptyMessage[] = [];
+  let cardContents: DisclosureCardContent[] = [];
   let logs: LogEntry[] = [];
   let refundInfo: {
     totalPaid: number;
@@ -26,6 +37,22 @@ export default async function DisclosurePage() {
   } | null = null;
   let pendingUsers: { id: string; name: string; email: string; signupName?: string | null; signupPhone?: string | null; signupMemo?: string | null; createdAt: string }[] = [];
   let approvedSocialUsers: { id: string; name: string; email: string; role: string; createdAt: string }[] = [];
+
+  try {
+    const disclosureCardContent = getDisclosureCardContentDelegate();
+    if (disclosureCardContent) {
+      const savedCardContents = await disclosureCardContent.findMany({
+        orderBy: { itemId: "asc" },
+      });
+      cardContents = savedCardContents.map((content) => ({
+        itemId: content.itemId,
+        title: content.title,
+        description: content.description,
+      }));
+    }
+  } catch (e) {
+    console.error("Error loading disclosure card content overrides:", e);
+  }
 
   if (session) {
     try {
@@ -138,6 +165,7 @@ export default async function DisclosurePage() {
       session={session}
       documents={documents}
       emptyMessages={emptyMessages}
+      cardContents={cardContents}
       logs={logs}
       refundInfo={refundInfo}
       pendingUsers={pendingUsers}

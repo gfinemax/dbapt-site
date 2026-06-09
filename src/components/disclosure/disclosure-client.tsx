@@ -20,6 +20,7 @@ type DisclosureClientProps = {
   documents?: Document[];
   onViewDocument?: (document: Document) => void;
   emptyMessages?: DisclosureEmptyMessage[];
+  cardContents?: DisclosureCardContent[];
 };
 
 export type DisclosureEmptyMessage = {
@@ -28,13 +29,26 @@ export type DisclosureEmptyMessage = {
   message: string;
 };
 
+export type DisclosureCardContent = {
+  itemId: string;
+  title: string;
+  description: string;
+};
+
 type EmptyMessageEditState = {
   subCategory: string;
   title: string;
   message: string;
 };
 
+type CardContentEditState = {
+  itemId: string;
+  title: string;
+  description: string;
+};
+
 const DEFAULT_EMPTY_MESSAGES: DisclosureEmptyMessage[] = [];
+const DEFAULT_CARD_CONTENTS: DisclosureCardContent[] = [];
 
 type TabId = "rules" | "meetings" | "accounting" | "operations";
 
@@ -172,7 +186,7 @@ const disclosureData = {
     items: [
       { id: "acc-1", title: "2025년도 정기 외부회계감사 정밀 보고서", desc: "주택법 제12조에 의거하여 독립된 공인회계법인으로부터 분담금 집행 일체를 정밀 감사받은 결과보고서입니다.", date: "2026.02", subCategory: "외부회계감사" },
       { id: "acc-2", title: "조합 내부 감사진 정기 분기별 감사 보고서", desc: "입주예정 조합원 대표 감사진이 조합 사무국 예산 수립 및 계약 집행 적정성을 자체 감사한 감독 결과입니다.", date: "2026.01", subCategory: "내부감사" },
-      { id: "acc-3", title: "2026년도 연간 자금운용 계획 및 차입 예산서", desc: "2026년 한 해 동안 집행 예정인 부동산 매입, 용역비, 차입 금융 조달(LOI 확보) 관련 전체 운용 계획입니다.", date: "2026.01", subCategory: "자금운용계획" },
+      { id: "acc-3", title: "연간 자금운용계획", desc: "2026년 한 해 동안 집행 예정인 부동산 매입, 용역비, 차입 금융 조달(LOI 확보) 관련 전체 운용 계획입니다.", date: "2026.01", subCategory: "연간자금운용계획" },
       { id: "acc-4", title: "신영부동산신탁 수탁 에스크로 자금입출금명세서", desc: "조합원 분담금 임의 유출 방지를 위해 에스크로 안전 계좌로 관리된 월별 자금 입출금 세부 내역서입니다.", date: "2026.02", subCategory: "에스크로 명세서" },
     ]
   },
@@ -209,7 +223,7 @@ const subMenus = {
   accounting: [
     { label: "외부회계감사", id: "acc-1" },
     { label: "내부감사", id: "acc-2" },
-    { label: "자금운용계획", id: "acc-3" },
+    { label: "연간자금운용계획", id: "acc-3" },
     { label: "에스크로 명세서", id: "acc-4" },
   ],
   operations: [
@@ -232,7 +246,39 @@ function getSubCategoryAliases(subCategory: string) {
   return subCategory === "실적보고서" ? ["실적보고서", "추진실적"] : [subCategory];
 }
 
-export function DisclosureClient({ onOpenPortal, session, documents = [], onViewDocument, emptyMessages }: DisclosureClientProps) {
+function renderEmptyMessageBody(message: string) {
+  return message.split(/(\([^()]+\))/g).map((part, index) => {
+    const emphasized = part.match(/^\(([^()]+)\)$/);
+    if (emphasized) {
+      const label = emphasized[1].trim();
+      const isCorrectiveAction = label.includes("시정조치");
+      return (
+        <span
+          key={`${part}-${index}`}
+          className={cn(
+            "mx-0.5 inline-flex rounded-full border px-1.5 py-0.5 text-[9px] font-bold",
+            isCorrectiveAction
+              ? "border-ember-orange/25 bg-ember-orange/10 text-ember-orange"
+              : "border-sky-blue/20 bg-sky-blue/10 text-sky-blue",
+          )}
+        >
+          {label}
+        </span>
+      );
+    }
+
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
+}
+
+export function DisclosureClient({
+  onOpenPortal,
+  session,
+  documents = [],
+  onViewDocument,
+  emptyMessages,
+  cardContents,
+}: DisclosureClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isLoggedIn = !!session;
@@ -244,9 +290,13 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
   const [selectedFolder, setSelectedFolder] = useState<DisclosureDocumentFolder | null>(null);
   const [mounted, setMounted] = useState(false);
   const [managedEmptyMessages, setManagedEmptyMessages] = useState<DisclosureEmptyMessage[]>(emptyMessages || DEFAULT_EMPTY_MESSAGES);
+  const [managedCardContents, setManagedCardContents] = useState<DisclosureCardContent[]>(cardContents || DEFAULT_CARD_CONTENTS);
   const [editingEmptyMessage, setEditingEmptyMessage] = useState<EmptyMessageEditState | null>(null);
+  const [editingCardContent, setEditingCardContent] = useState<CardContentEditState | null>(null);
   const [emptyMessageError, setEmptyMessageError] = useState("");
+  const [cardContentError, setCardContentError] = useState("");
   const [emptyMessageSaving, setEmptyMessageSaving] = useState(false);
+  const [cardContentSaving, setCardContentSaving] = useState(false);
   const isScrollingRef = useRef(false);
   const isSubTabClickRef = useRef(false);
 
@@ -266,6 +316,24 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
     setManagedEmptyMessages(emptyMessages || DEFAULT_EMPTY_MESSAGES);
   }, [emptyMessages]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setManagedCardContents(cardContents || DEFAULT_CARD_CONTENTS);
+  }, [cardContents]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const getCardContent = (item: { id: string; title: string; desc: string }) =>
+    managedCardContents.find((content) => content.itemId === item.id) || {
+      itemId: item.id,
+      title: item.title,
+      description: item.desc,
+    };
+
+  const openCardContentEditor = (content: DisclosureCardContent) => {
+    setCardContentError("");
+    setEditingCardContent({ ...content });
+  };
 
   const getDefaultEmptyMessage = (subCategory: string) => ({
     subCategory,
@@ -318,6 +386,45 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
       setEmptyMessageError("안내문 저장 중 오류가 발생했습니다.");
     } finally {
       setEmptyMessageSaving(false);
+    }
+  };
+
+  const handleCardContentSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingCardContent) return;
+
+    if (!editingCardContent.title.trim() || !editingCardContent.description.trim()) {
+      setCardContentError("카드 제목과 내용을 모두 입력해 주세요.");
+      return;
+    }
+
+    setCardContentSaving(true);
+    setCardContentError("");
+    try {
+      const res = await fetch("/api/disclosure-card-contents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingCardContent),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setCardContentError(data.error || "카드 문구 저장에 실패했습니다.");
+        return;
+      }
+
+      const savedContent = data.cardContent as DisclosureCardContent;
+      setManagedCardContents((prev) => [
+        savedContent,
+        ...prev.filter((content) => content.itemId !== savedContent.itemId),
+      ]);
+      setEditingCardContent(null);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setCardContentError("카드 문구 저장 중 오류가 발생했습니다.");
+    } finally {
+      setCardContentSaving(false);
     }
   };
 
@@ -675,6 +782,8 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                       const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
                       const itemSubCategory = "subCategory" in item ? item.subCategory : item.title;
                       const itemSubCategoryAliases = getSubCategoryAliases(itemSubCategory);
+                      const cardContent = getCardContent(item);
+                      const isEditingThisCardContent = editingCardContent?.itemId === item.id;
                       const realDocs = documents
                         .filter((doc) => doc.category === "DISCLOSURE" && itemSubCategoryAliases.includes(doc.subCategory || ""))
                         .sort((a, b) => {
@@ -685,19 +794,20 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                       const latestDoc = realDocs[0];
                       const displayDocs = realDocs.slice(0, 3);
                       const emptyMessage = getEmptyMessage(itemSubCategory);
+                      const isEditingThisEmptyMessage = editingEmptyMessage?.subCategory === itemSubCategory;
                       const documentFolder: DisclosureDocumentFolder = {
                         id: `${item.id}-folder`,
                         title: `${itemSubCategory} 문서함`,
-                        desc: item.desc,
+                        desc: cardContent.description,
                         date: item.date,
                         count: realDocs.length,
-                        searchKey: item.title,
+                        searchKey: cardContent.title,
                         categoryKey: "DISCLOSURE",
                         bbsCategory: itemSubCategory as MeetingCategory,
                         preview:
                           displayDocs.length > 0
                             ? displayDocs.map((doc) => doc.title)
-                            : [item.title],
+                            : [cardContent.title],
                       };
                       
                       return (
@@ -713,25 +823,106 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                           )}
                         >
                       <div>
-                        <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono">
-                          <span>기준일: {item.date}</span>
-                          <span className={cn(
-                            "rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider",
-                            realDocs.length > 0
-                              ? "bg-meadow-green/10 text-meadow-green"
-                              : isLoggedIn
-                                ? "bg-sky-blue/10 text-sky-blue"
-                                : "bg-ember-orange/10 text-ember-orange"
-                          )}>
-                            {realDocs.length > 0 ? `업로드 ${realDocs.length}건` : isLoggedIn ? "업로드 대기" : "보안 잠금"}
-                          </span>
-                        </div>
-                        <h3 className="text-[14.5px] font-bold text-charcoal-primary mt-2.5 leading-snug">
-                          {item.title}
-                        </h3>
-                        <p className="text-xs text-graphite mt-2 leading-5 font-normal">
-                          {item.desc}
-                        </p>
+                        {isEditingThisCardContent && editingCardContent ? (
+                          <form onSubmit={handleCardContentSubmit} className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <h3 className="text-[11px] font-bold text-charcoal-primary">공개자료 카드 문구 수정</h3>
+                                <p className="mt-0.5 text-[9px] font-semibold text-ash">
+                                  {itemSubCategory} 카드 문구를 수정합니다.
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingCardContent(null);
+                                  setCardContentError("");
+                                }}
+                                className="shrink-0 rounded-full border border-stone-surface bg-white px-2.5 py-1 text-[9px] font-bold text-graphite hover:bg-stone-surface"
+                              >
+                                닫기
+                              </button>
+                            </div>
+
+                            {cardContentError && (
+                              <div className="mt-3 rounded-lg bg-red-50 p-2 text-[10px] font-semibold text-red-600">
+                                {cardContentError}
+                              </div>
+                            )}
+
+                            <div className="mt-3">
+                              <label className="mb-1 block text-[10px] font-bold text-charcoal-primary" htmlFor={`card-title-${item.id}`}>
+                                카드 제목 *
+                              </label>
+                              <input
+                                id={`card-title-${item.id}`}
+                                type="text"
+                                value={editingCardContent.title}
+                                onChange={(e) => setEditingCardContent((prev) => prev ? { ...prev, title: e.target.value } : prev)}
+                                required
+                                className="w-full rounded-lg border border-[#f2f0ed] bg-white px-3 py-2 text-xs outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                              />
+                            </div>
+
+                            <div className="mt-3">
+                              <label className="mb-1 block text-[10px] font-bold text-charcoal-primary" htmlFor={`card-description-${item.id}`}>
+                                카드 내용 *
+                              </label>
+                              <textarea
+                                id={`card-description-${item.id}`}
+                                value={editingCardContent.description}
+                                onChange={(e) => setEditingCardContent((prev) => prev ? { ...prev, description: e.target.value } : prev)}
+                                required
+                                rows={3}
+                                className="w-full resize-none rounded-lg border border-[#f2f0ed] bg-white px-3 py-2 text-xs leading-relaxed outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                              />
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-end gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingCardContent(null);
+                                  setCardContentError("");
+                                }}
+                                className="h-7 rounded-full border-stone-surface px-3 text-[10px] font-bold text-graphite hover:bg-stone-surface"
+                              >
+                                취소
+                              </Button>
+                              <Button
+                                type="submit"
+                                disabled={cardContentSaving}
+                                className="h-7 rounded-full bg-midnight px-3 text-[10px] font-bold text-white hover:bg-black disabled:opacity-60"
+                              >
+                                {cardContentSaving ? "저장 중..." : "저장"}
+                              </Button>
+                            </div>
+                          </form>
+                        ) : isAdmin ? (
+                          <button
+                            type="button"
+                            onClick={() => openCardContentEditor(cardContent)}
+                            aria-label={`${cardContent.title} 카드 제목과 내용 수정`}
+                            className="block w-full rounded-xl text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/35"
+                          >
+                            <h3 className="text-[14.5px] font-bold text-charcoal-primary leading-snug">
+                              {cardContent.title}
+                            </h3>
+                            <p className="mt-2 text-xs font-normal leading-5 text-graphite">
+                              {cardContent.description}
+                            </p>
+                          </button>
+                        ) : (
+                          <>
+                            <h3 className="text-[14.5px] font-bold text-charcoal-primary leading-snug">
+                              {cardContent.title}
+                            </h3>
+                            <p className="mt-2 text-xs text-graphite leading-5 font-normal">
+                              {cardContent.description}
+                            </p>
+                          </>
+                        )}
                       </div>
 
                       {/* 로그인 유도 & 프리뷰 (비로그인 상태) vs 정식 자료실 액션 (로그인 상태) */}
@@ -778,23 +969,106 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                               </div>
                             ) : (
                               <div className="rounded-xl border border-dashed border-stone-surface bg-[#f8f7f4] p-3">
-                                <div className="flex items-start justify-between gap-3">
-                                  <p className="text-[11px] font-bold text-charcoal-primary">
-                                    {emptyMessage.title}
-                                  </p>
-                                  {isAdmin && (
-                                    <button
-                                      type="button"
-                                      onClick={() => openEmptyMessageEditor(itemSubCategory)}
-                                      className="shrink-0 rounded-full border border-stone-surface bg-white px-2.5 py-1 text-[9px] font-bold text-graphite hover:border-sky-blue hover:text-sky-blue"
-                                    >
-                                      안내문 수정
-                                    </button>
-                                  )}
-                                </div>
-                                <p className="mt-1 text-[10px] leading-4 text-graphite">
-                                  {emptyMessage.message}
-                                </p>
+                                {isEditingThisEmptyMessage && editingEmptyMessage ? (
+                                  <form onSubmit={handleEmptyMessageSubmit} className="space-y-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <h4 className="text-[11px] font-bold text-charcoal-primary">빈 자료 안내문 수정</h4>
+                                        <p className="mt-0.5 text-[9px] font-semibold text-ash">
+                                          {editingEmptyMessage.subCategory} 카드 안에서 바로 수정합니다.
+                                        </p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingEmptyMessage(null);
+                                          setEmptyMessageError("");
+                                        }}
+                                        className="shrink-0 rounded-full border border-stone-surface bg-white px-2.5 py-1 text-[9px] font-bold text-graphite hover:bg-stone-surface"
+                                      >
+                                        닫기
+                                      </button>
+                                    </div>
+
+                                    {emptyMessageError && (
+                                      <div className="rounded-lg bg-red-50 p-2 text-[10px] font-semibold text-red-600">
+                                        {emptyMessageError}
+                                      </div>
+                                    )}
+
+                                    <div>
+                                      <label className="mb-1 block text-[10px] font-bold text-charcoal-primary" htmlFor="empty-message-title">
+                                        안내 제목 *
+                                      </label>
+                                      <input
+                                        id="empty-message-title"
+                                        type="text"
+                                        value={editingEmptyMessage.title}
+                                        onChange={(e) => setEditingEmptyMessage((prev) => prev ? { ...prev, title: e.target.value } : prev)}
+                                        required
+                                        className="w-full rounded-lg border border-[#f2f0ed] bg-white px-3 py-2 text-xs outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                                      />
+                                    </div>
+
+                                    <div>
+                                      <label className="mb-1 block text-[10px] font-bold text-charcoal-primary" htmlFor="empty-message-body">
+                                        안내 본문 *
+                                      </label>
+                                      <textarea
+                                        id="empty-message-body"
+                                        value={editingEmptyMessage.message}
+                                        onChange={(e) => setEditingEmptyMessage((prev) => prev ? { ...prev, message: e.target.value } : prev)}
+                                        required
+                                        rows={4}
+                                        className="w-full resize-none rounded-lg border border-[#f2f0ed] bg-white px-3 py-2 text-xs leading-relaxed outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                                      />
+                                      <p className="mt-1 text-[9px] leading-4 text-ash">
+                                        괄호로 감싼 문구는 카드에서 강조 표시됩니다. 예: (실태조사 시정조치)
+                                      </p>
+                                    </div>
+
+                                    <div className="flex items-center justify-end gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setEditingEmptyMessage(null);
+                                          setEmptyMessageError("");
+                                        }}
+                                        className="h-7 rounded-full border-stone-surface px-3 text-[10px] font-bold text-graphite hover:bg-stone-surface"
+                                      >
+                                        취소
+                                      </Button>
+                                      <Button
+                                        type="submit"
+                                        disabled={emptyMessageSaving}
+                                        className="h-7 rounded-full bg-midnight px-3 text-[10px] font-bold text-white hover:bg-black disabled:opacity-60"
+                                      >
+                                        {emptyMessageSaving ? "저장 중..." : "저장"}
+                                      </Button>
+                                    </div>
+                                  </form>
+                                ) : (
+                                  <>
+                                    <div className="flex items-start justify-between gap-3">
+                                      <p className="text-[11px] font-bold text-charcoal-primary">
+                                        {emptyMessage.title}
+                                      </p>
+                                      {isAdmin && (
+                                        <button
+                                          type="button"
+                                          onClick={() => openEmptyMessageEditor(itemSubCategory)}
+                                          className="shrink-0 rounded-full border border-stone-surface bg-white px-2.5 py-1 text-[9px] font-bold text-graphite hover:border-sky-blue hover:text-sky-blue"
+                                        >
+                                          안내문 수정
+                                        </button>
+                                      )}
+                                    </div>
+                                    <p className="mt-1 text-[10px] leading-4 text-graphite">
+                                      {renderEmptyMessageBody(emptyMessage.message)}
+                                    </p>
+                                  </>
+                                )}
                               </div>
                             )}
                             <div className="flex items-center justify-between">
@@ -861,83 +1135,6 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
           );
         })}
       </div>
-
-      {/* 빈 자료 안내문 수정 팝업 모달 (관리자용) */}
-      {editingEmptyMessage && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
-          <div className="absolute inset-0" onClick={() => setEditingEmptyMessage(null)} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-warm-canvas border border-stone-surface shadow-2xl p-6 text-left animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-charcoal-primary">빈 자료 안내문 수정</h3>
-                <p className="mt-1 text-[11px] text-graphite">{editingEmptyMessage.subCategory} 카드에 표시됩니다.</p>
-              </div>
-              <button
-                onClick={() => setEditingEmptyMessage(null)}
-                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
-              >
-                닫기
-              </button>
-            </div>
-
-            <form onSubmit={handleEmptyMessageSubmit} className="soft-panel p-5 bg-white border border-[#f2f0ed] rounded-2xl">
-              {emptyMessageError && (
-                <div className="mb-4 rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-600">
-                  {emptyMessageError}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="empty-message-title">
-                    안내 제목 *
-                  </label>
-                  <input
-                    id="empty-message-title"
-                    type="text"
-                    value={editingEmptyMessage.title}
-                    onChange={(e) => setEditingEmptyMessage((prev) => prev ? { ...prev, title: e.target.value } : prev)}
-                    required
-                    className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition placeholder:text-[#848281] focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="empty-message-body">
-                    안내 본문 *
-                  </label>
-                  <textarea
-                    id="empty-message-body"
-                    value={editingEmptyMessage.message}
-                    onChange={(e) => setEditingEmptyMessage((prev) => prev ? { ...prev, message: e.target.value } : prev)}
-                    required
-                    rows={5}
-                    className="w-full resize-none rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm leading-relaxed outline-none transition placeholder:text-[#848281] focus:bg-white focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditingEmptyMessage(null)}
-                    className="rounded-full border-stone-surface text-xs font-bold text-graphite hover:bg-stone-surface"
-                  >
-                    취소
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={emptyMessageSaving}
-                    className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 disabled:opacity-60"
-                  >
-                    {emptyMessageSaving ? "저장 중..." : "안내문 저장"}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* 좌측 사이드 슬라이드 오버 (Drawer) 패널 - 문서함 열기 (React Portal로 body에 직접 마운트하여 stacking context 레이아웃 버그 완전 차단) */}
       {mounted && isLeftDrawerOpen && createPortal(

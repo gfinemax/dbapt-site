@@ -2,13 +2,18 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mockGetSession = vi.hoisted(() => vi.fn());
 const mockCreateDocumentSignedUpload = vi.hoisted(() => vi.fn());
+const mockSupabaseRemove = vi.hoisted(() => vi.fn());
 const mockPrisma = vi.hoisted(() => ({
   document: {
     create: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
   },
   disclosureEmptyMessage: {
+    upsert: vi.fn(),
+  },
+  disclosureCardContent: {
     upsert: vi.fn(),
   },
 }));
@@ -19,6 +24,16 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   prisma: mockPrisma,
+}));
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: vi.fn(() => ({
+    storage: {
+      from: vi.fn(() => ({
+        remove: mockSupabaseRemove,
+      })),
+    },
+  })),
 }));
 
 vi.mock("@/lib/document-storage", async (importOriginal) => {
@@ -186,6 +201,40 @@ describe("document upload API", () => {
     expect(await response.json()).toMatchObject({ success: true });
   });
 
+  it("deletes documents for normalized admin sessions", async () => {
+    process.env.SUPABASE_URL = "https://supabase.example";
+    process.env.SUPABASE_SECRET_KEY = "secret";
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: " admin " });
+    mockPrisma.document.findUnique.mockResolvedValue({
+      id: "doc-1",
+      filePath: "documents/2026/main.pdf",
+      attachmentPath: "documents/2026/legacy.pdf",
+      attachments: [
+        {
+          id: "att-1",
+          filePath: "documents/2026/extra.docx",
+        },
+      ],
+    });
+    mockSupabaseRemove.mockResolvedValue({ error: null });
+    mockPrisma.document.delete.mockResolvedValue({ id: "doc-1" });
+
+    const { DELETE } = await import("@/app/api/documents/[id]/route");
+    const response = await DELETE(
+      new Request("http://localhost/api/documents/doc-1", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "doc-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockSupabaseRemove).toHaveBeenCalledWith([
+      "documents/2026/main.pdf",
+      "documents/2026/legacy.pdf",
+      "documents/2026/extra.docx",
+    ]);
+    expect(mockPrisma.document.delete).toHaveBeenCalledWith({ where: { id: "doc-1" } });
+    expect(await response.json()).toMatchObject({ success: true });
+  });
+
   it("updates the main document file and replaces additional attachments for admins", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPrisma.document.findUnique.mockResolvedValue({
@@ -311,5 +360,50 @@ describe("document upload API", () => {
       },
     });
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("saves disclosure card title and content overrides for admins", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.disclosureCardContent.upsert.mockResolvedValue({
+      id: "card-content-1",
+      itemId: "rules-3",
+      title: "운영관리규정 수정 제목",
+      description: "운영관리규정 수정 본문입니다.",
+    });
+
+    const { PATCH } = await import("@/app/api/disclosure-card-contents/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/disclosure-card-contents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemId: "rules-3",
+          title: "운영관리규정 수정 제목",
+          description: "운영관리규정 수정 본문입니다.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.disclosureCardContent.upsert).toHaveBeenCalledWith({
+      where: { itemId: "rules-3" },
+      create: {
+        itemId: "rules-3",
+        title: "운영관리규정 수정 제목",
+        description: "운영관리규정 수정 본문입니다.",
+      },
+      update: {
+        title: "운영관리규정 수정 제목",
+        description: "운영관리규정 수정 본문입니다.",
+      },
+    });
+    expect(await response.json()).toMatchObject({
+      success: true,
+      cardContent: {
+        itemId: "rules-3",
+        title: "운영관리규정 수정 제목",
+        description: "운영관리규정 수정 본문입니다.",
+      },
+    });
   });
 });

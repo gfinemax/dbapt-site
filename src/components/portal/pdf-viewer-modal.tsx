@@ -36,11 +36,11 @@ export function PdfViewerModal({
 }: PdfViewerModalProps) {
   const previewFileName = fileName || documentTitle;
   const canPreviewInline = isPdfFile(previewFileName);
+  const pdfAttachments = (attachments || []).filter((attachment) => isPdfFile(attachment.fileName));
   const previewKey = canPreviewInline ? `${documentId}:${previewFileName}` : null;
   const [loadedPreviewKey, setLoadedPreviewKey] = useState<string | null>(null);
   const isLoading = canPreviewInline && loadedPreviewKey !== previewKey;
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
 
   // ESC 키 클릭 시 자동으로 모달 닫기
   useEffect(() => {
@@ -143,24 +143,13 @@ export function PdfViewerModal({
                 <h3 className="text-sm font-bold text-charcoal-primary truncate leading-snug" title={documentTitle}>
                   {documentTitle}
                 </h3>
-                {description && (
-                  <div className="relative shrink-0 flex items-center">
-                    <span 
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
-                      className="inline-flex size-4.5 items-center justify-center rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-black text-ash hover:text-charcoal-primary hover:border-ash cursor-help transition duration-150 select-none"
-                    >
-                      i
-                    </span>
-                    {showTooltip && (
-                      <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 bg-midnight text-white text-[11px] rounded-xl p-3.5 shadow-2xl z-[120] animate-in fade-in zoom-in-95 duration-150 leading-relaxed font-normal">
-                        <span className="block font-bold text-amber-orange mb-1 font-mono text-[9px] uppercase tracking-wider">Document Note</span>
-                        {description}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
+              {description && (
+                <p className="mt-1 max-w-3xl text-xs leading-5 text-graphite">
+                  <span className="mr-1 font-semibold text-charcoal-primary">문서 설명</span>
+                  {description}
+                </p>
+              )}
               
               <div className="flex items-center gap-2 text-[10px] text-ash font-medium tracking-tight mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">
                 <span>대방동 지역주택조합 실시간 보안 감사 열람 세션 가동 중</span>
@@ -241,47 +230,93 @@ export function PdfViewerModal({
         )}
 
         {/* 본문 PDF 뷰어 영역 */}
-        <div className="flex-1 bg-[#f0ede9] relative min-h-0">
-          {canPreviewInline ? (
-            <>
-              {/* iframe을 통한 브라우저 보안 렌더링 스트림 */}
-              <iframe
-                src={`/api/documents/${documentId}/view`}
-                className="w-full h-full border-none z-10 relative bg-[#f0ede9]"
-                onLoad={() => setLoadedPreviewKey(previewKey)}
-                title="문서 온라인 열람 뷰어"
-              />
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f0ede9] p-4 sm:p-5">
+          <div className="space-y-4">
+            <section className="overflow-hidden rounded-2xl border border-stone-surface bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-stone-surface bg-[#f8f7f4] px-4 py-2.5">
+                <div>
+                  <p className="text-[11px] font-bold text-charcoal-primary">본문 문서</p>
+                  <p className="mt-0.5 text-[10px] text-ash">{previewFileName}</p>
+                </div>
+                <Button
+                  onClick={handleDownload}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full border-stone-surface text-[10px] font-bold text-graphite hover:bg-stone-surface"
+                >
+                  본문 다운로드
+                </Button>
+              </div>
 
-              {/* 로딩 스켈레톤 상태 */}
-              {isLoading && (
-                <div className="absolute inset-0 bg-parchment-card flex flex-col items-center justify-center z-20 gap-4">
-                  <div className="w-10 h-10 border-4 border-midnight border-t-transparent rounded-full animate-spin" />
-                  <div className="text-center space-y-1.5">
-                    <p className="text-xs font-bold text-charcoal-primary">보안 문서를 안전하게 로드하는 중입니다</p>
-                    <p className="text-[10px] text-ash font-medium">조합원님의 세션 권한 및 실시간 감사 로그가 바인딩되고 있습니다.</p>
+              {canPreviewInline ? (
+                <div className="relative h-[70vh] min-h-[480px] bg-[#f0ede9]">
+                  <iframe
+                    src={`/api/documents/${documentId}/view`}
+                    className="relative z-10 h-full w-full border-none bg-[#f0ede9]"
+                    onLoad={() => setLoadedPreviewKey(previewKey)}
+                    title="문서 온라인 열람 뷰어"
+                  />
+
+                  {isLoading && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-parchment-card">
+                      <div className="h-10 w-10 rounded-full border-4 border-midnight border-t-transparent animate-spin" />
+                      <div className="space-y-1.5 text-center">
+                        <p className="text-xs font-bold text-charcoal-primary">보안 문서를 안전하게 로드하는 중입니다</p>
+                        <p className="text-[10px] font-medium text-ash">조합원님의 세션 권한 및 실시간 감사 로그가 바인딩되고 있습니다.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 bg-parchment-card px-6 py-10">
+                  <div className="flex size-14 items-center justify-center rounded-2xl border border-stone-surface bg-white text-[11px] font-black uppercase text-charcoal-primary">
+                    file
                   </div>
+                  <div className="max-w-md space-y-2 text-center">
+                    <p className="text-sm font-bold text-charcoal-primary">이 문서는 PDF 미리보기를 지원하지 않습니다.</p>
+                    <p className="text-xs leading-5 text-graphite">
+                      {previewFileName} 파일은 다운로드 후 Word 또는 한글 프로그램에서 확인해 주세요.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleDownload}
+                    className="rounded-full bg-midnight px-5 text-xs font-bold text-white hover:bg-midnight/90"
+                  >
+                    문서 다운로드
+                  </Button>
                 </div>
               )}
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-parchment-card flex flex-col items-center justify-center z-20 gap-4">
-              <div className="flex size-14 items-center justify-center rounded-2xl border border-stone-surface bg-white text-[11px] font-black uppercase text-charcoal-primary">
-                file
-              </div>
-              <div className="max-w-md text-center space-y-2 px-6">
-                <p className="text-sm font-bold text-charcoal-primary">이 문서는 PDF 미리보기를 지원하지 않습니다.</p>
-                <p className="text-xs leading-5 text-graphite">
-                  {previewFileName} 파일은 다운로드 후 Word 또는 한글 프로그램에서 확인해 주세요.
-                </p>
-              </div>
-              <Button
-                onClick={handleDownload}
-                className="rounded-full bg-midnight px-5 text-xs font-bold text-white hover:bg-midnight/90"
+            </section>
+
+            {pdfAttachments.map((attachment, index) => (
+              <section
+                key={attachment.id}
+                className="overflow-hidden rounded-2xl border border-stone-surface bg-white shadow-sm"
               >
-                문서 다운로드
-              </Button>
-            </div>
-          )}
+                <div className="flex items-center justify-between gap-3 border-b border-stone-surface bg-[#f8f7f4] px-4 py-2.5">
+                  <div>
+                    <p className="text-[11px] font-bold text-charcoal-primary">추가 첨부 PDF {index + 1}</p>
+                    <p className="mt-0.5 text-[10px] text-ash">{attachment.fileName}</p>
+                  </div>
+                  <Button
+                    onClick={() => handleAttachmentDownload(attachment.id, attachment.fileName)}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full border-stone-surface text-[10px] font-bold text-graphite hover:bg-stone-surface"
+                  >
+                    첨부 다운로드
+                  </Button>
+                </div>
+                <div className="h-[70vh] min-h-[480px] bg-[#f0ede9]">
+                  <iframe
+                    src={`/api/documents/attachments/${attachment.id}/view`}
+                    className="h-full w-full border-none bg-[#f0ede9]"
+                    title={`추가 첨부 PDF 열람 뷰어 ${index + 1}`}
+                  />
+                </div>
+              </section>
+            ))}
+          </div>
         </div>
       </div>
     </div>

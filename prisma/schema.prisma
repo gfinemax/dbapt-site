@@ -78,6 +78,16 @@ model DisclosureEmptyMessage {
   updatedAt   DateTime @updatedAt
 }
 
+// 2.2. 정보공개 카드 제목/본문 커스텀 문구
+model DisclosureCardContent {
+  id          String   @id @default(uuid())
+  itemId      String   @unique
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // 2.5. 문서 추가 첨부파일 정보 (1:N 관계)
 model Attachment {
   id         String   @id @default(uuid())

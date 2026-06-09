@@ -541,6 +541,7 @@ function MaterialEntryCard({
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(entry.title);
   const [draftDescription, setDraftDescription] = useState(entry.description);
   const [draftCategory, setDraftCategory] = useState(document?.category || "DISCLOSURE");
@@ -584,9 +585,8 @@ function MaterialEntryCard({
     }
   };
 
-  const handleDelete = async () => {
+  const confirmDelete = async () => {
     if (!document) return;
-    if (!confirm(`"${entry.title}" 문서를 삭제하시겠습니까?\n\n삭제된 문서는 복구할 수 없습니다.`)) return;
 
     setIsDeleting(true);
     try {
@@ -596,6 +596,7 @@ function MaterialEntryCard({
         alert(data.error || "문서 삭제에 실패했습니다.");
         return;
       }
+      setIsDeleteModalOpen(false);
       onDeleteDocument(document.id);
     } catch (error) {
       console.error(error);
@@ -749,13 +750,66 @@ function MaterialEntryCard({
                 </button>
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={() => setIsDeleteModalOpen(true)}
                   disabled={isDeleting}
                   className="inline-flex items-center gap-1.5 rounded-full border border-ember-orange/20 bg-ember-orange/10 px-3 py-1.5 text-[11px] font-bold text-ember-orange hover:bg-ember-orange/15 disabled:opacity-50"
                 >
                   <Trash2 className="size-3" aria-hidden="true" />
                   {isDeleting ? "삭제 중" : "삭제"}
                 </button>
+              </div>
+            )}
+            {isDeleteModalOpen && (
+              <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+                <button
+                  type="button"
+                  aria-label="삭제 확인 닫기"
+                  onClick={() => {
+                    if (!isDeleting) setIsDeleteModalOpen(false);
+                  }}
+                  className="absolute inset-0 cursor-default"
+                />
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={`${entry.title} 삭제 확인`}
+                  className="relative w-full max-w-md rounded-2xl border border-stone-surface bg-warm-canvas p-6 text-left shadow-2xl animate-in zoom-in-95 duration-200"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-ember-orange/10 text-ember-orange">
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-extrabold tracking-tight text-charcoal-primary">
+                        문서를 삭제할까요?
+                      </h3>
+                      <p className="mt-2 text-sm font-semibold leading-relaxed text-charcoal-primary">
+                        {entry.title}
+                      </p>
+                      <p className="mt-2 text-xs leading-relaxed text-graphite">
+                        삭제된 문서와 첨부파일은 복구할 수 없습니다.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsDeleteModalOpen(false)}
+                      disabled={isDeleting}
+                      className="rounded-full border border-stone-surface bg-white px-4 py-2 text-xs font-bold text-graphite hover:bg-stone-surface disabled:opacity-60"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmDelete}
+                      disabled={isDeleting}
+                      className="rounded-full bg-midnight px-5 py-2 text-xs font-bold text-white hover:bg-charcoal-primary disabled:opacity-60"
+                    >
+                      {isDeleting ? "삭제 중..." : "영구 삭제"}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </>

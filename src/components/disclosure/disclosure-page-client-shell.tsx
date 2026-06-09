@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AboutClient } from "@/components/about/about-client";
 import { PdfViewerModal } from "../portal/pdf-viewer-modal";
 import { SiteFooter } from "@/components/landing/site-footer";
-import { DisclosureClient, type DisclosureEmptyMessage } from "./disclosure-client";
+import { DisclosureClient, type DisclosureCardContent, type DisclosureEmptyMessage } from "./disclosure-client";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { type Document, type Attachment } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
@@ -21,6 +21,7 @@ type DisclosurePageClientShellProps = {
   } | null;
   documents?: Document[];
   emptyMessages?: DisclosureEmptyMessage[];
+  cardContents?: DisclosureCardContent[];
   logs?: LogEntry[];
   refundInfo?: {
     totalPaid: number;
@@ -50,6 +51,7 @@ export function DisclosurePageClientShell({
   session,
   documents = [],
   emptyMessages = [],
+  cardContents = [],
   logs = [],
   refundInfo,
   pendingUsers = [],
@@ -156,6 +158,7 @@ export function DisclosurePageClientShell({
           session={session} 
           documents={documents}
           emptyMessages={emptyMessages}
+          cardContents={cardContents}
           onViewDocument={(document) => {
             setActiveViewDoc({
               id: document.id,
@@ -322,6 +325,7 @@ export function DisclosurePageClientShell({
             session={session}
             documents={documents}
             emptyMessages={emptyMessages}
+            cardContents={cardContents}
             onViewDocument={(document) => {
               setIsDisclosureDrawerOpen(false);
               setActiveViewDoc({

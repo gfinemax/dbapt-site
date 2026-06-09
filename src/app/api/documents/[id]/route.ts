@@ -21,13 +21,17 @@ function getSupabaseAdmin() {
   });
 }
 
+function isAdminSession(session: Awaited<ReturnType<typeof getSession>>) {
+  return typeof session?.role === "string" && session.role.trim().toUpperCase() === "ADMIN";
+}
+
 // DELETE: 문서 삭제 (관리자 전용 – Supabase Storage 파일도 함께 정리)
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
   }
 
@@ -132,7 +136,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
   }
 
