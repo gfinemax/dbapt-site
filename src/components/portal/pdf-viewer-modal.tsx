@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 type PdfViewerModalProps = {
   documentId: string;
   documentTitle: string;
+  fileName?: string;
   onClose: () => void;
   documentDate?: string;
   publishedAt?: string;
@@ -17,9 +18,14 @@ type PdfViewerModalProps = {
   attachments?: { id: string; fileName: string; fileSize: number }[];
 };
 
+function isPdfFile(fileName: string) {
+  return fileName.trim().toLowerCase().endsWith(".pdf");
+}
+
 export function PdfViewerModal({ 
   documentId, 
   documentTitle, 
+  fileName,
   onClose,
   documentDate,
   publishedAt,
@@ -28,7 +34,11 @@ export function PdfViewerModal({
   description,
   attachments
 }: PdfViewerModalProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  const previewFileName = fileName || documentTitle;
+  const canPreviewInline = isPdfFile(previewFileName);
+  const previewKey = canPreviewInline ? `${documentId}:${previewFileName}` : null;
+  const [loadedPreviewKey, setLoadedPreviewKey] = useState<string | null>(null);
+  const isLoading = canPreviewInline && loadedPreviewKey !== previewKey;
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -62,7 +72,7 @@ export function PdfViewerModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = documentTitle.endsWith(".pdf") ? documentTitle : `${documentTitle}.pdf`;
+      a.download = fileName || documentTitle;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -232,22 +242,44 @@ export function PdfViewerModal({
 
         {/* 본문 PDF 뷰어 영역 */}
         <div className="flex-1 bg-[#f0ede9] relative min-h-0">
-          {/* iframe을 통한 브라우저 보안 렌더링 스트림 */}
-          <iframe
-            src={`/api/documents/${documentId}/view`}
-            className="w-full h-full border-none z-10 relative bg-[#f0ede9]"
-            onLoad={() => setIsLoading(false)}
-            title="문서 온라인 열람 뷰어"
-          />
+          {canPreviewInline ? (
+            <>
+              {/* iframe을 통한 브라우저 보안 렌더링 스트림 */}
+              <iframe
+                src={`/api/documents/${documentId}/view`}
+                className="w-full h-full border-none z-10 relative bg-[#f0ede9]"
+                onLoad={() => setLoadedPreviewKey(previewKey)}
+                title="문서 온라인 열람 뷰어"
+              />
 
-          {/* 로딩 스켈레톤 상태 */}
-          {isLoading && (
+              {/* 로딩 스켈레톤 상태 */}
+              {isLoading && (
+                <div className="absolute inset-0 bg-parchment-card flex flex-col items-center justify-center z-20 gap-4">
+                  <div className="w-10 h-10 border-4 border-midnight border-t-transparent rounded-full animate-spin" />
+                  <div className="text-center space-y-1.5">
+                    <p className="text-xs font-bold text-charcoal-primary">보안 문서를 안전하게 로드하는 중입니다</p>
+                    <p className="text-[10px] text-ash font-medium">조합원님의 세션 권한 및 실시간 감사 로그가 바인딩되고 있습니다.</p>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
             <div className="absolute inset-0 bg-parchment-card flex flex-col items-center justify-center z-20 gap-4">
-              <div className="w-10 h-10 border-4 border-midnight border-t-transparent rounded-full animate-spin" />
-              <div className="text-center space-y-1.5">
-                <p className="text-xs font-bold text-charcoal-primary">보안 문서를 안전하게 로드하는 중입니다</p>
-                <p className="text-[10px] text-ash font-medium">조합원님의 세션 권한 및 실시간 감사 로그가 바인딩되고 있습니다.</p>
+              <div className="flex size-14 items-center justify-center rounded-2xl border border-stone-surface bg-white text-[11px] font-black uppercase text-charcoal-primary">
+                file
               </div>
+              <div className="max-w-md text-center space-y-2 px-6">
+                <p className="text-sm font-bold text-charcoal-primary">이 문서는 PDF 미리보기를 지원하지 않습니다.</p>
+                <p className="text-xs leading-5 text-graphite">
+                  {previewFileName} 파일은 다운로드 후 Word 또는 한글 프로그램에서 확인해 주세요.
+                </p>
+              </div>
+              <Button
+                onClick={handleDownload}
+                className="rounded-full bg-midnight px-5 text-xs font-bold text-white hover:bg-midnight/90"
+              >
+                문서 다운로드
+              </Button>
             </div>
           )}
         </div>

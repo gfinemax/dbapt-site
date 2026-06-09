@@ -26,7 +26,7 @@ export type MeetingCategory =
   | "에스크로 명세서"
   | "용역 계약서"
   | "공사진행/토지"
-  | "추진실적"
+  | "실적보고서"
   | "감리 보고서";
 
 type MeetingDoc = {
@@ -35,8 +35,11 @@ type MeetingDoc = {
   title: string;
   date: string;        // YYYY.MM.DD
   isImportant?: boolean;
+  correspondenceType?: CorrespondenceType;
   isReal?: boolean;
 };
+
+type CorrespondenceType = "발신" | "수신" | "회신";
 
 // ── 풍부한 목 데이터 (실제 DB 연동 전 시연용) ──
 const MEETING_DOCS: MeetingDoc[] = [
@@ -75,20 +78,20 @@ const MEETING_DOCS: MeetingDoc[] = [
   { id: 30, category: "이사회 회의록", title: "제18차 이사회 회의록 (2026 상반기 운영 계획 확정)",               date: "2026.01.17" },
 
   // 수발신 공문 (14건)
-  { id: 31, category: "수발신 공문", title: "[동작구청] 지역주택조합 설립인가 통보",                             date: "2022.11.28", isImportant: true },
-  { id: 32, category: "수발신 공문", title: "[동작구청] 2023년도 행정실태점검 시정조치 요구",                    date: "2023.08.15" },
-  { id: 33, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (1차)",                date: "2023.09.20" },
-  { id: 34, category: "수발신 공문", title: "[서울시] 지구단위계획 결정 고시 통보 (제2022-291호)",               date: "2023.10.05", isImportant: true },
-  { id: 35, category: "수발신 공문", title: "[조합→동작구청] 조합원 변동 현황 신고서",                          date: "2024.01.30" },
-  { id: 36, category: "수발신 공문", title: "[동작구청] 2024년도 정기 행정실태점검 결과 통보",                   date: "2024.07.22" },
-  { id: 37, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (2차)",                date: "2024.08.30" },
-  { id: 38, category: "수발신 공문", title: "[조합→서울시] 사업시행인가 사전 협의 요청",                        date: "2024.11.15" },
-  { id: 39, category: "수발신 공문", title: "[동작구청] 조합 운영 개선 권고 공문",                               date: "2025.02.10" },
-  { id: 40, category: "수발신 공문", title: "[조합→동작구청] 조합 운영 개선 이행 보고서",          date: "2025.03.25" },
-  { id: 41, category: "수발신 공문", title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",                    date: "2025.08.18" },
-  { id: 42, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)",                date: "2025.09.30" },
-  { id: 43, category: "수발신 공문", title: "[조합→서울시] 사업시행인가 본신청 접수",                            date: "2026.01.20", isImportant: true },
-  { id: 44, category: "수발신 공문", title: "[동작구청] 2026년 상반기 조합원 현황 확인 요청",                    date: "2026.04.05" },
+  { id: 31, category: "수발신 공문", title: "[동작구청] 지역주택조합 설립인가 통보",                             date: "2022.11.28", isImportant: true, correspondenceType: "수신" },
+  { id: 32, category: "수발신 공문", title: "[동작구청] 2023년도 행정실태점검 시정조치 요구",                    date: "2023.08.15", correspondenceType: "수신" },
+  { id: 33, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (1차)",                date: "2023.09.20", correspondenceType: "회신" },
+  { id: 34, category: "수발신 공문", title: "[서울시] 지구단위계획 결정 고시 통보 (제2022-291호)",               date: "2023.10.05", isImportant: true, correspondenceType: "수신" },
+  { id: 35, category: "수발신 공문", title: "[조합→동작구청] 조합원 변동 현황 신고서",                          date: "2024.01.30", correspondenceType: "발신" },
+  { id: 36, category: "수발신 공문", title: "[동작구청] 2024년도 정기 행정실태점검 결과 통보",                   date: "2024.07.22", correspondenceType: "수신" },
+  { id: 37, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (2차)",                date: "2024.08.30", correspondenceType: "회신" },
+  { id: 38, category: "수발신 공문", title: "[조합→서울시] 사업시행인가 사전 협의 요청",                        date: "2024.11.15", correspondenceType: "발신" },
+  { id: 39, category: "수발신 공문", title: "[동작구청] 조합 운영 개선 권고 공문",                               date: "2025.02.10", correspondenceType: "수신" },
+  { id: 40, category: "수발신 공문", title: "[조합→동작구청] 조합 운영 개선 이행 보고서",          date: "2025.03.25", correspondenceType: "회신" },
+  { id: 41, category: "수발신 공문", title: "[동작구청] 2025년도 행정실태점검 시정조치 요구",                    date: "2025.08.18", correspondenceType: "수신" },
+  { id: 42, category: "수발신 공문", title: "[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)",                date: "2025.09.30", correspondenceType: "회신" },
+  { id: 43, category: "수발신 공문", title: "[조합→서울시] 사업시행인가 본신청 접수",                            date: "2026.01.20", isImportant: true, correspondenceType: "발신" },
+  { id: 44, category: "수발신 공문", title: "[동작구청] 2026년 상반기 조합원 현황 확인 요청",                    date: "2026.04.05", correspondenceType: "수신" },
 
   // 사업시행계획 (4건)
   { id: 45, category: "사업시행계획", title: "대방동 11-103 일대 주택건설 사업시행계획서(안) 초안",              date: "2023.05.10" },
@@ -117,7 +120,7 @@ const CATEGORIES: ("전체" | MeetingCategory)[] = [
   "에스크로 명세서",
   "용역 계약서",
   "공사진행/토지",
-  "추진실적",
+  "실적보고서",
   "감리 보고서",
 ];
 
@@ -146,10 +149,45 @@ function categoryBadge(cat: MeetingCategory) {
     case "에스크로 명세서":
     case "용역 계약서":
     case "공사진행/토지":
-    case "추진실적":
+    case "실적보고서":
     case "감리 보고서":
       return "bg-meadow-green/10 text-meadow-green";
   }
+}
+
+const correspondenceBadgeClass: Record<CorrespondenceType, string> = {
+  발신: "bg-sky-blue/10 text-sky-blue border-sky-blue/20",
+  수신: "bg-meadow-green/10 text-meadow-green border-meadow-green/20",
+  회신: "bg-ember-orange/10 text-ember-orange border-ember-orange/20",
+};
+
+function inferCorrespondenceType(doc: Pick<RowDocType, "category" | "title" | "correspondenceType">) {
+  if (doc.category !== "수발신 공문") return undefined;
+  if (doc.correspondenceType) return doc.correspondenceType;
+
+  const compactTitle = doc.title.replace(/\s/g, "");
+  if (/회신|답변|조치결과|이행보고/.test(compactTitle)) return "회신";
+  if (/\[?조합(?:→|->|=>|＞|>)/.test(compactTitle) || /발신/.test(compactTitle)) return "발신";
+  return "수신";
+}
+
+function CorrespondenceBadge({ type }: { type: CorrespondenceType }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center justify-center rounded text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border mr-1.5 align-middle",
+        correspondenceBadgeClass[type]
+      )}
+    >
+      {type}
+    </span>
+  );
+}
+
+function CorrespondenceBadgeForDoc({ doc }: { doc: Pick<RowDocType, "category" | "title" | "correspondenceType"> }) {
+  const type = inferCorrespondenceType(doc);
+  if (!type) return null;
+  return <CorrespondenceBadge type={type} />;
 }
 
 export type RowDocType = {
@@ -158,6 +196,7 @@ export type RowDocType = {
   title: string;
   date: string;
   isImportant?: boolean;
+  correspondenceType?: CorrespondenceType;
   isReal?: boolean;
   fileName?: string;
   fileSize?: number;
@@ -169,10 +208,51 @@ type DocumentEditFormState = {
   title: string;
   description: string;
   subCategory: MeetingCategory;
+  fileName: string;
+  attachments: NonNullable<Document["attachments"]>;
+  replacementFile: File | null;
+  replacementAttachments: File[];
   documentDate: string;
   publishedAt: string;
   isStarred: boolean;
+  correspondenceType: CorrespondenceType;
 };
+
+type SignedDocumentUpload = {
+  path: string;
+  signedUrl: string;
+  token: string;
+  contentType: string;
+};
+
+const MAX_DOCUMENT_UPLOAD_SIZE = 20 * 1024 * 1024;
+
+function normalizeMeetingCategory(category?: string | null): MeetingCategory {
+  if (category === "추진실적") return "실적보고서";
+  return (category || "총회 의사록") as MeetingCategory;
+}
+
+async function uploadToSignedUrl(upload: SignedDocumentUpload, file: File) {
+  const typedFile =
+    upload.contentType && file.type !== upload.contentType
+      ? new Blob([file], { type: upload.contentType })
+      : file;
+  const body = new FormData();
+  body.append("cacheControl", "3600");
+  body.append("", typedFile, file.name);
+
+  const response = await fetch(upload.signedUrl, {
+    method: "PUT",
+    headers: {
+      "x-upsert": "false",
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error("스토리지 업로드 중 오류가 발생했습니다.");
+  }
+}
 
 type MeetingsTableProps = {
   isLoggedIn: boolean;
@@ -183,7 +263,7 @@ type MeetingsTableProps = {
   initialSearchQuery?: string;
   onBackToFolders?: () => void;
   documents?: Document[];
-  onViewDocument?: (id: string, name: string) => void;
+  onViewDocument?: (document: Document) => void;
 };
 
 export function MeetingsTable({ 
@@ -300,10 +380,15 @@ export function MeetingsTable({
       id: source.id,
       title: source.title,
       description: source.description || "",
-      subCategory: (source.subCategory || doc.category) as MeetingCategory,
+      subCategory: normalizeMeetingCategory(source.subCategory || doc.category),
+      fileName: source.fileName,
+      attachments: source.attachments || [],
+      replacementFile: null,
+      replacementAttachments: [],
       documentDate: toDateInputValue(source.documentDate || source.createdAt),
       publishedAt: toDateInputValue(source.publishedAt || source.createdAt),
       isStarred: !!source.isStarred,
+      correspondenceType: (source.correspondenceType as CorrespondenceType | null) || inferCorrespondenceType(doc) || "수신",
     });
   };
 
@@ -319,18 +404,82 @@ export function MeetingsTable({
     setEditingId(editingDoc.id);
     setEditError("");
     try {
+      const replacementFiles = [
+        ...(editingDoc.replacementFile ? [editingDoc.replacementFile] : []),
+        ...editingDoc.replacementAttachments,
+      ];
+      const oversizedFile = replacementFiles.find((file) => file.size > MAX_DOCUMENT_UPLOAD_SIZE);
+      if (oversizedFile) {
+        setEditError(`${oversizedFile.name} 파일은 20MB 이하만 업로드할 수 있습니다.`);
+        return;
+      }
+
+      let uploadedMainFile: SignedDocumentUpload | null = null;
+      let uploadedAttachments: SignedDocumentUpload[] | null = null;
+
+      if (replacementFiles.length > 0) {
+        const uploadUrlResponse = await fetch("/api/documents/upload-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            files: replacementFiles.map((file) => ({
+              name: file.name,
+              size: file.size,
+            })),
+          }),
+        });
+        const uploadUrlData = await uploadUrlResponse.json();
+
+        if (!uploadUrlResponse.ok) {
+          setEditError(uploadUrlData.error || "문서 업로드 준비 중 문제가 발생했습니다.");
+          return;
+        }
+
+        const signedUploads = uploadUrlData.uploads as SignedDocumentUpload[];
+        if (!Array.isArray(signedUploads) || signedUploads.length !== replacementFiles.length) {
+          setEditError("문서 업로드 준비 정보가 올바르지 않습니다.");
+          return;
+        }
+
+        await Promise.all(signedUploads.map((upload, index) => uploadToSignedUrl(upload, replacementFiles[index])));
+
+        const attachmentStart = editingDoc.replacementFile ? 1 : 0;
+        uploadedMainFile = editingDoc.replacementFile ? signedUploads[0] : null;
+        uploadedAttachments =
+          editingDoc.replacementAttachments.length > 0 ? signedUploads.slice(attachmentStart) : null;
+      }
+
+      const requestBody: Record<string, unknown> = {
+        title: editingDoc.title,
+        description: editingDoc.description,
+        category: "DISCLOSURE",
+        subCategory: editingDoc.subCategory,
+        correspondenceType: editingDoc.subCategory === "수발신 공문" ? editingDoc.correspondenceType : null,
+        documentDate: editingDoc.documentDate,
+        publishedAt: editingDoc.publishedAt,
+        isStarred: editingDoc.isStarred,
+      };
+
+      if (uploadedMainFile && editingDoc.replacementFile) {
+        requestBody.file = {
+          path: uploadedMainFile.path,
+          name: editingDoc.replacementFile.name,
+          size: editingDoc.replacementFile.size,
+        };
+      }
+
+      if (uploadedAttachments && editingDoc.replacementAttachments.length > 0) {
+        requestBody.attachments = uploadedAttachments.map((upload, index) => ({
+          path: upload.path,
+          name: editingDoc.replacementAttachments[index].name,
+          size: editingDoc.replacementAttachments[index].size,
+        }));
+      }
+
       const res = await fetch(`/api/documents/${editingDoc.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: editingDoc.title,
-          description: editingDoc.description,
-          category: "DISCLOSURE",
-          subCategory: editingDoc.subCategory,
-          documentDate: editingDoc.documentDate,
-          publishedAt: editingDoc.publishedAt,
-          isStarred: editingDoc.isStarred,
-        }),
+        body: JSON.stringify(requestBody),
       });
       const data = await res.json();
 
@@ -373,7 +522,7 @@ export function MeetingsTable({
         .filter((d: Document) => d.category === "DISCLOSURE")
         .map((d: Document) => ({
           id: d.id, // String UUID
-          category: (d.subCategory || "총회 의사록") as MeetingCategory,
+          category: normalizeMeetingCategory(d.subCategory),
           title: d.title,
           date: d.documentDate 
             ? d.documentDate.slice(0, 10).replace(/-/g, ".") 
@@ -381,10 +530,15 @@ export function MeetingsTable({
               ? d.publishedAt.slice(0, 10).replace(/-/g, ".") 
               : d.createdAt.slice(0, 10).replace(/-/g, "."),
           isImportant: !!d.isStarred || d.title.includes("★") || d.title.includes("중요"),
+          correspondenceType: (d.correspondenceType as CorrespondenceType | null) || undefined,
           isReal: true,
           fileName: d.fileName,
           fileSize: d.fileSize,
           sourceDocument: d,
+        }))
+        .map((d) => ({
+          ...d,
+          correspondenceType: inferCorrespondenceType(d),
         }));
 
       if (filterCat !== "전체") {
@@ -429,8 +583,8 @@ export function MeetingsTable({
       router.push("/login");
     } else {
       if (doc.isReal) {
-        if (onViewDocument) {
-          onViewDocument(String(doc.id), doc.title);
+        if (onViewDocument && doc.sourceDocument) {
+          onViewDocument(doc.sourceDocument);
         }
       } else {
         alert("이 문서는 데모 시연용 가상 문서입니다.\n\n실제 PDF 파일의 등록, 인라인 열람 및 실시간 보안 감사 로그 기록 흐름을 연습하시려면, [운영자] 계정으로 로그인 후 [신규 정보공개 문서 등록]에서 '의무 정보 공개 자료'와 해당 세부 분류(문서함)를 지정해 직접 업로드해 보십시오!");
@@ -599,6 +753,7 @@ export function MeetingsTable({
                             ★ 중요
                           </span>
                         )}
+                        <CorrespondenceBadgeForDoc doc={doc} />
                         <span className={cn(
                           "font-semibold text-[13px] leading-snug hover:text-sky-blue transition-colors",
                           doc.isImportant ? "text-charcoal-primary" : "text-charcoal-primary/85"
@@ -704,6 +859,7 @@ export function MeetingsTable({
                       ★ 중요
                     </span>
                   )}
+                  <CorrespondenceBadgeForDoc doc={doc} />
                   <span>{doc.title}</span>
                   {isRecent(doc.date) && (
                     <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full select-none shrink-0 shadow-3xs ml-1.5 align-middle">
@@ -850,7 +1006,7 @@ export function MeetingsTable({
             <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
               <div>
                 <h3 className="text-sm font-bold text-charcoal-primary">정보공개 문서 수정</h3>
-                <p className="mt-1 text-[11px] text-graphite">첨부파일은 유지하고 문서 정보만 수정합니다.</p>
+                <p className="mt-1 text-[11px] text-graphite">문서 정보와 첨부파일을 함께 수정할 수 있습니다.</p>
               </div>
               <button
                 onClick={() => setEditingDoc(null)}
@@ -912,6 +1068,94 @@ export function MeetingsTable({
                     ))}
                   </select>
                 </div>
+
+                <div className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
+                  <p className="text-[11px] font-bold text-charcoal-primary">
+                    현재 첨부 파일: {editingDoc.fileName}
+                  </p>
+                  <label className="mt-3 block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-main-file">
+                    첨부 파일 교체 (PDF/HWP/Word)
+                  </label>
+                  <input
+                    id="edit-main-file"
+                    type="file"
+                    accept=".pdf,.hwp,.hwpx,.doc,.docx"
+                    onChange={(e) => {
+                      const nextFile = e.target.files && e.target.files.length > 0 ? e.target.files[0] : null;
+                      setEditingDoc((prev) => prev ? { ...prev, replacementFile: nextFile } : prev);
+                    }}
+                    className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
+                  />
+                  {editingDoc.replacementFile && (
+                    <p className="mt-2 text-[10px] font-medium text-sky-blue">
+                      새 첨부 파일: {editingDoc.replacementFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
+                  <p className="text-[11px] font-bold text-charcoal-primary">현재 추가 첨부파일</p>
+                  {editingDoc.attachments.length > 0 ? (
+                    <ul className="mt-2 space-y-1 text-[10px] text-graphite list-disc list-inside">
+                      {editingDoc.attachments.map((attachment) => (
+                        <li key={attachment.id} className="truncate">
+                          {attachment.fileName}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-[10px] text-ash">등록된 추가 첨부파일이 없습니다.</p>
+                  )}
+                  <label className="mt-3 block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-attachments">
+                    추가 첨부파일 교체 (선택, 최대 10개)
+                  </label>
+                  <input
+                    id="edit-attachments"
+                    type="file"
+                    multiple
+                    onChange={(e) => {
+                      const files = e.target.files ? Array.from(e.target.files) : [];
+                      if (files.length > 10) {
+                        setEditError("추가 첨부파일은 최대 10개까지만 등록 가능합니다.");
+                        setEditingDoc((prev) => prev ? { ...prev, replacementAttachments: [] } : prev);
+                        e.target.value = "";
+                        return;
+                      }
+                      setEditError("");
+                      setEditingDoc((prev) => prev ? { ...prev, replacementAttachments: files } : prev);
+                    }}
+                    className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
+                  />
+                  {editingDoc.replacementAttachments.length > 0 && (
+                    <ul className="mt-2 space-y-1 text-[10px] text-sky-blue list-disc list-inside">
+                      {editingDoc.replacementAttachments.map((attachment, index) => (
+                        <li key={`${attachment.name}-${index}`} className="truncate">
+                          새 추가 첨부파일: {attachment.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {editingDoc.subCategory === "수발신 공문" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-correspondence-type">
+                      수발신 구분 *
+                    </label>
+                    <select
+                      id="edit-doc-correspondence-type"
+                      value={editingDoc.correspondenceType}
+                      onChange={(e) => setEditingDoc((prev) => prev ? { ...prev, correspondenceType: e.target.value as CorrespondenceType } : prev)}
+                      className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
+                    >
+                      {(["수신", "발신", "회신"] as const).map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>

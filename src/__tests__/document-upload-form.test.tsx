@@ -11,8 +11,20 @@ describe("document upload form", () => {
     expect(subCategorySelect).toHaveTextContent("운영관리규정");
     expect(subCategorySelect).toHaveTextContent("회계관리규정");
     expect(subCategorySelect).toHaveTextContent("선거관리규정");
+    expect(subCategorySelect).toHaveTextContent("실적보고서");
+    expect(subCategorySelect).not.toHaveTextContent("추진실적");
 
     const fileInput = container.querySelector("#file-upload");
     expect(fileInput).toHaveAttribute("accept", ".pdf,.hwp,.hwpx,.doc,.docx");
+  });
+
+  it("shows correspondence type selection for correspondence documents", () => {
+    render(<DocumentUploadForm defaultSubCategory="수발신 공문" />);
+
+    const correspondenceSelect = screen.getByLabelText("수발신 구분 *");
+    expect(correspondenceSelect).toHaveValue("수신");
+    expect(correspondenceSelect).toHaveTextContent("수신");
+    expect(correspondenceSelect).toHaveTextContent("발신");
+    expect(correspondenceSelect).toHaveTextContent("회신");
   });
 });

@@ -502,6 +502,7 @@ function LibraryMaterialPanel({
           <PdfViewerModal
             documentId={activeViewDocument.id}
             documentTitle={activeViewDocument.title}
+            fileName={activeViewDocument.fileName}
             onClose={() => {
               setActiveViewDocument(null);
               requestAnimationFrame(() => {

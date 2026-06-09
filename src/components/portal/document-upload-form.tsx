@@ -29,9 +29,12 @@ const disclosureSubCategoryOptions = [
   "에스크로 명세서",
   "용역 계약서",
   "공사진행/토지",
-  "추진실적",
+  "실적보고서",
   "감리 보고서",
 ];
+
+const correspondenceTypeOptions = ["수신", "발신", "회신"] as const;
+type CorrespondenceType = (typeof correspondenceTypeOptions)[number];
 
 type SignedDocumentUpload = {
   path: string;
@@ -95,6 +98,8 @@ export function DocumentUploadForm({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
+  const [correspondenceType, setCorrespondenceType] = useState<CorrespondenceType>("수신");
+  const isCorrespondenceDocument = category === "DISCLOSURE" && subCategory === "수발신 공문";
 
   // 폴더 카드 변경 시 기본값이 실시간으로 폼에 반영되도록 보장
   useEffect(() => {
@@ -156,6 +161,7 @@ export function DocumentUploadForm({
           description,
           category,
           subCategory: category === "DISCLOSURE" ? subCategory : "",
+          correspondenceType: isCorrespondenceDocument ? correspondenceType : null,
           documentDate,
           publishedAt,
           isStarred,
@@ -187,6 +193,7 @@ export function DocumentUploadForm({
       setFile(null);
       setAttachments([]);
       setIsStarred(false);
+      setCorrespondenceType("수신");
       
       // Reset file input element
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
@@ -286,6 +293,26 @@ export function DocumentUploadForm({
                 className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
               >
                 {disclosureSubCategoryOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {isCorrespondenceDocument && (
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-correspondence-type">
+                수발신 구분 *
+              </label>
+              <select
+                id="upload-correspondence-type"
+                value={correspondenceType}
+                onChange={(e) => setCorrespondenceType(e.target.value as CorrespondenceType)}
+                className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
+              >
+                {correspondenceTypeOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>

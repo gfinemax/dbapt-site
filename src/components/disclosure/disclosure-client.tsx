@@ -18,7 +18,7 @@ type DisclosureClientProps = {
     email?: string;
   } | null;
   documents?: Document[];
-  onViewDocument?: (id: string, title: string) => void;
+  onViewDocument?: (document: Document) => void;
   emptyMessages?: DisclosureEmptyMessage[];
 };
 
@@ -183,7 +183,7 @@ const disclosureData = {
     items: [
       { id: "ops-1", title: "설계·용역·부동산 대행사별 정식 계약서 원본 일람", desc: "하우드엔지니어링(설계), 솔롱고스(매입), 월드(법률) 등 조합이 정식 체결하고 공증한 일체의 계약서 모음입니다.", date: "2025.07", subCategory: "용역 계약서" },
       { id: "ops-2", title: "대방동 현장 월별 공사진행 및 토지 매입 상황판", desc: "현장 토지 소유권 확보 소송 추진 현황과 토지매입 실무 핫라인 소통 기록, 매입 비율 현황 보고입니다.", date: "2026.02", subCategory: "공사진행/토지" },
-      { id: "ops-3", title: "분기별 조합 마일스톤 추진실적 실무 보고서", desc: "지구단위계획 완수 이후 소방·설비 설계 용역사 발주 등 단계별 마일스톤 도달 실적에 대한 조합 공식 보고입니다.", date: "2025.09", subCategory: "추진실적" },
+      { id: "ops-3", title: "분기별 사업실적보고서", desc: "지구단위계획 완수 이후 소방·설비 설계 용역사 발주 등 단계별 마일스톤 도달 실적에 대한 조합 공식 보고입니다.", date: "2025.09", subCategory: "실적보고서" },
       { id: "ops-4", title: "건축·소방 감리원 안전점검 및 월간 감리보고서", desc: "인허가 관련 정밀 안전 확보와 법령 준수를 위해 감리 기술자가 정밀 점검하고 관청에 제출한 공식 실적서입니다.", date: "2025.11", subCategory: "감리 보고서" },
       { id: "ops-5", title: "공동사업주체 시공예정사 간의 업무협약서", desc: "대한민국 1군 메이저 브랜드 건설사와 체결한 사업 공동 추진 실무 협약 및 브랜드 사용 계약서 원본입니다.", date: "2025.07", subCategory: "시공자 협약서", guide: ["협약 당사자", "업무 범위", "브랜드 사용 조건"] },
     ]
@@ -215,7 +215,7 @@ const subMenus = {
   operations: [
     { label: "용역 계약서", id: "ops-1" },
     { label: "공사진행/토지", id: "ops-2" },
-    { label: "추진실적", id: "ops-3" },
+    { label: "실적보고서", id: "ops-3" },
     { label: "감리 보고서", id: "ops-4" },
     { label: "시공자 협약서", id: "ops-5" },
   ],
@@ -226,6 +226,10 @@ function formatDisclosureDate(dateStr?: string | null) {
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return dateStr;
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function getSubCategoryAliases(subCategory: string) {
+  return subCategory === "실적보고서" ? ["실적보고서", "추진실적"] : [subCategory];
 }
 
 export function DisclosureClient({ onOpenPortal, session, documents = [], onViewDocument, emptyMessages }: DisclosureClientProps) {
@@ -670,8 +674,9 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                       const isSelected = activeSubTab === item.id;
                       const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
                       const itemSubCategory = "subCategory" in item ? item.subCategory : item.title;
+                      const itemSubCategoryAliases = getSubCategoryAliases(itemSubCategory);
                       const realDocs = documents
-                        .filter((doc) => doc.category === "DISCLOSURE" && doc.subCategory === itemSubCategory)
+                        .filter((doc) => doc.category === "DISCLOSURE" && itemSubCategoryAliases.includes(doc.subCategory || ""))
                         .sort((a, b) => {
                           const aTime = new Date(a.documentDate || a.publishedAt || a.createdAt).getTime();
                           const bTime = new Date(b.documentDate || b.publishedAt || b.createdAt).getTime();
@@ -757,7 +762,7 @@ export function DisclosureClient({ onOpenPortal, session, documents = [], onView
                                       </div>
                                       <Button
                                         onClick={() => {
-                                          if (onViewDocument) onViewDocument(doc.id, doc.title);
+                                          if (onViewDocument) onViewDocument(doc);
                                           else if (onOpenPortal) onOpenPortal("DISCLOSURE", doc.title);
                                           else window.dispatchEvent(new CustomEvent('open-portal', { detail: { category: "DISCLOSURE", search: doc.title } }));
                                         }}

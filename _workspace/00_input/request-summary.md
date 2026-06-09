@@ -69,3 +69,21 @@
 - Candidate governing specification: `DESIGN.md`, public `조합소개` presentation scope.
 - Candidate implementation plan: Update only the public signature PNG alpha channel and re-verify the existing about greeting rendering.
 - Unanswered decision: none.
+
+---
+
+- Requested feature slice: In the `수발신 공문` disclosure folder, show correspondence direction badges (`발신`, `수신`, `회신`) in the document-title area the same way `중요` is shown.
+- Explicitly included scope: Add title badges for existing mock correspondence rows and infer the same badge for uploaded real documents in the `수발신 공문` category from their title text.
+- Explicitly excluded scope: Do not add a new database field, change document permissions, change upload categories, alter public/private access, or modify unrelated disclosure folders.
+- Candidate governing specification: `DESIGN.md` plus existing public `공개자료`/protected document-list presentation.
+- Candidate implementation plan: Extend `MeetingsTable` title metadata rendering and add a focused disclosure-page regression test.
+- Unanswered decision: none.
+
+---
+
+- Requested feature slice: Add an explicit `발신/수신/회신` selector to the document registration flow when the selected document folder is `수발신 공문`.
+- Explicitly included scope: Persist the selected correspondence direction as document metadata, show the selector in the upload form and admin edit form, and use the stored value for the list badge.
+- Explicitly excluded scope: Do not change public/private document access, file upload permissions, category taxonomy beyond the new metadata field, or unrelated document folders.
+- Candidate governing specification: `DESIGN.md` plus existing protected document registration and `공개자료` document-list presentation.
+- Candidate implementation plan: Add a nullable `Document.correspondenceType` metadata field, wire upload/edit APIs and forms, and extend focused tests.
+- Unanswered decision: none.

@@ -49,6 +49,7 @@ model Document {
   description    String?                               // 문서 설명
   category       String                                // DISCLOSURE, ACCOUNTING, NOTICE
   subCategory    String?                               // 세부 카테고리 (예: 총회 의사록, 이사회 회의록 등)
+  correspondenceType String?                            // 수발신 공문 방향: 발신, 수신, 회신
   filePath       String                                // 업로드된 내부 파일 경로 (보안 저장)
   fileName       String                                // 원본 파일명
   fileSize       Int                                   // 파일 용량 (bytes)

@@ -61,3 +61,19 @@
 - Implementation boundary: Keep the change limited to `public/assets/about/chairman-signature.png` and the already-approved public `/about` greeting presentation. Do not alter the sign-off text, rendered size, layout, access rules, document workflows, authenticated surfaces, or profile imagery.
 - Request/spec conflicts: none.
 - Planning may continue: yes.
+
+---
+
+- Selected approved spec path: `DESIGN.md` and the existing `공개자료` document-list presentation under `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`.
+- Selected implementation plan: Extend `MeetingsTable` title badges for correspondence metadata.
+- Implementation boundary: Keep the change limited to visual title badges in the `수발신 공문` folder. Real uploaded documents are inferred from title text and existing subcategory only; no schema, API, permission, upload, or document access behavior changes.
+- Request/spec conflicts: none.
+- Planning may continue: yes.
+
+---
+
+- Selected approved spec path: `DESIGN.md` and existing protected information-disclosure document workflow under `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Selected implementation plan: Add correspondence direction metadata to the existing document registration/editing path.
+- Implementation boundary: Add only nullable `correspondenceType` metadata for `수발신 공문`. Keep uploads admin-only, preserve existing file access, and render the selector only when the selected folder is `수발신 공문`.
+- Request/spec conflicts: none.
+- Planning may continue: yes.

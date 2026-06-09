@@ -5,6 +5,7 @@ const mockCreateDocumentSignedUpload = vi.hoisted(() => vi.fn());
 const mockPrisma = vi.hoisted(() => ({
   document: {
     create: vi.fn(),
+    findUnique: vi.fn(),
     update: vi.fn(),
   },
   disclosureEmptyMessage: {
@@ -89,7 +90,8 @@ describe("document upload API", () => {
           title: "테스트",
           description: "자료확인",
           category: "DISCLOSURE",
-          subCategory: "정관 및 조합규약",
+          subCategory: "수발신 공문",
+          correspondenceType: "발신",
           documentDate: "2026-06-05",
           publishedAt: "2026-06-05",
           isStarred: false,
@@ -124,6 +126,7 @@ describe("document upload API", () => {
             },
           ],
         },
+        correspondenceType: "발신",
       }),
     }));
     expect(await response.json()).toMatchObject({ success: true });
@@ -136,7 +139,8 @@ describe("document upload API", () => {
       title: "수정된 문서",
       description: "수정 설명",
       category: "DISCLOSURE",
-      subCategory: "운영관리규정",
+      subCategory: "수발신 공문",
+      correspondenceType: "회신",
       documentDate: new Date("2026-06-01"),
       publishedAt: new Date("2026-06-05"),
       isStarred: true,
@@ -152,7 +156,8 @@ describe("document upload API", () => {
           title: "수정된 문서",
           description: "수정 설명",
           category: "DISCLOSURE",
-          subCategory: "운영관리규정",
+          subCategory: "수발신 공문",
+          correspondenceType: "회신",
           documentDate: "2026-06-01",
           publishedAt: "2026-06-05",
           isStarred: true,
@@ -168,7 +173,8 @@ describe("document upload API", () => {
         title: "수정된 문서",
         description: "수정 설명",
         category: "DISCLOSURE",
-        subCategory: "운영관리규정",
+        subCategory: "수발신 공문",
+        correspondenceType: "회신",
         documentDate: new Date("2026-06-01"),
         publishedAt: new Date("2026-06-05"),
         isStarred: true,
@@ -178,6 +184,95 @@ describe("document upload API", () => {
       },
     }));
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("updates the main document file and replaces additional attachments for admins", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.findUnique.mockResolvedValue({
+      id: "doc-1",
+      filePath: "documents/old/main.pdf",
+      attachmentPath: null,
+      attachments: [
+        {
+          id: "att-old",
+          filePath: "documents/old/old-attachment.docx",
+        },
+      ],
+    });
+    mockPrisma.document.update.mockResolvedValue({
+      id: "doc-1",
+      title: "수정된 문서",
+      filePath: "documents/2026-06-09/new-main.docx",
+      fileName: "new-main.docx",
+      fileSize: 4096,
+      attachments: [
+        {
+          id: "att-new",
+          filePath: "documents/2026-06-09/new-attachment.pdf",
+          fileName: "new-attachment.pdf",
+          fileSize: 2048,
+        },
+      ],
+    });
+
+    const { PATCH } = await import("@/app/api/documents/[id]/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/documents/doc-1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "수정된 문서",
+          file: {
+            path: "documents/2026-06-09/new-main.docx",
+            name: "new-main.docx",
+            size: 4096,
+          },
+          attachments: [
+            {
+              path: "documents/2026-06-09/new-attachment.pdf",
+              name: "new-attachment.pdf",
+              size: 2048,
+            },
+          ],
+        }),
+      }),
+      { params: Promise.resolve({ id: "doc-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "doc-1" },
+      data: expect.objectContaining({
+        title: "수정된 문서",
+        filePath: "documents/2026-06-09/new-main.docx",
+        fileName: "new-main.docx",
+        fileSize: 4096,
+        attachments: {
+          deleteMany: {},
+          create: [
+            {
+              filePath: "documents/2026-06-09/new-attachment.pdf",
+              fileName: "new-attachment.pdf",
+              fileSize: 2048,
+            },
+          ],
+        },
+      }),
+      include: {
+        attachments: true,
+      },
+    }));
+    expect(await response.json()).toMatchObject({
+      success: true,
+      document: {
+        fileName: "new-main.docx",
+        attachments: [
+          {
+            fileName: "new-attachment.pdf",
+          },
+        ],
+      },
+    });
   });
 
   it("saves disclosure empty-card messages for admins", async () => {

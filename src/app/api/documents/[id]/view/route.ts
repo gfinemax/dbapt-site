@@ -3,6 +3,10 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
 
+function isPdfFile(fileName: string) {
+  return fileName.trim().toLowerCase().endsWith(".pdf");
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -40,6 +44,13 @@ export async function GET(
       return NextResponse.json({ error: "해당 문서를 볼 수 있는 권한이 없습니다." }, { status: 403 });
     }
 
+    if (!isPdfFile(document.fileName)) {
+      return NextResponse.json(
+        { error: "PDF 미리보기를 지원하지 않는 문서 형식입니다. 다운로드로 확인해 주세요." },
+        { status: 415 }
+      );
+    }
+
     // 3. 보안 감사 로그 생성 (Append-only - VIEW 액션 타입)
     const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
     const userAgent = request.headers.get("user-agent") || "Unknown";
@@ -60,7 +71,7 @@ export async function GET(
 
     return new Response(fileBuffer, {
       headers: {
-        "Content-Type": "application/pdf",
+        "Content-Type": file.type || "application/pdf",
         // 'inline' 배치로 지정해 브라우저 내장 PDF 엔진으로 즉시 렌더링되게 설정
         "Content-Disposition": `inline; filename="${encodeURIComponent(document.fileName)}"`,
       },

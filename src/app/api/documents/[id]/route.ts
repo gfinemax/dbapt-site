@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createClient } from "@supabase/supabase-js";
+import {
+  isAllowedDocumentUploadExtension,
+  isSafeDocumentStoragePath,
+  MAX_DOCUMENT_UPLOAD_SIZE,
+} from "@/lib/document-storage";
 
 const DOCUMENTS_BUCKET = process.env.SUPABASE_DOCUMENTS_BUCKET || "documents";
 
@@ -77,13 +82,48 @@ const EDITABLE_DOCUMENT_FIELDS = [
   "description",
   "category",
   "subCategory",
+  "correspondenceType",
   "documentDate",
   "publishedAt",
   "isStarred",
+  "file",
+  "attachments",
 ] as const;
+
+const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신"]);
 
 function hasOwn(body: Record<string, unknown>, key: string) {
   return Object.prototype.hasOwnProperty.call(body, key);
+}
+
+type UploadedDocumentFile = {
+  path?: unknown;
+  name?: unknown;
+  size?: unknown;
+};
+
+function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string) {
+  const path = typeof file.path === "string" ? file.path.trim() : "";
+  const name = typeof file.name === "string" ? file.name.trim() : "";
+  const size = typeof file.size === "number" ? file.size : Number(file.size);
+
+  if (!path || !name || !Number.isFinite(size) || size <= 0) {
+    return { error: `${label} 정보가 올바르지 않습니다.` };
+  }
+
+  if (!isSafeDocumentStoragePath(path)) {
+    return { error: `${label} 저장 경로가 올바르지 않습니다.` };
+  }
+
+  if (size > MAX_DOCUMENT_UPLOAD_SIZE) {
+    return { error: `${label}은 20MB 이하만 업로드할 수 있습니다.` };
+  }
+
+  if (!isAllowedDocumentUploadExtension(name)) {
+    return { error: `${label}은 PDF, HWP, HWPX, Word 파일만 업로드할 수 있습니다.` };
+  }
+
+  return { path, name, size };
 }
 
 // PATCH: 문서 메타데이터 수정 및 별표(중요) 토글 (관리자 전용)
@@ -105,9 +145,17 @@ export async function PATCH(
       description?: string | null;
       category?: string;
       subCategory?: string | null;
+      correspondenceType?: string | null;
       documentDate?: Date;
       publishedAt?: Date | null;
       isStarred?: boolean;
+      filePath?: string;
+      fileName?: string;
+      fileSize?: number;
+      attachments?: {
+        deleteMany: Record<string, never>;
+        create: { filePath: string; fileName: string; fileSize: number }[];
+      };
     } = {};
 
     const hasEditableField = EDITABLE_DOCUMENT_FIELDS.some((field) => hasOwn(body, field));
@@ -141,6 +189,14 @@ export async function PATCH(
       data.subCategory = subCategory || null;
     }
 
+    if (hasOwn(body, "correspondenceType")) {
+      const correspondenceType = typeof body.correspondenceType === "string" ? body.correspondenceType.trim() : "";
+      if (correspondenceType && !CORRESPONDENCE_TYPES.has(correspondenceType)) {
+        return NextResponse.json({ error: "수발신 구분이 올바르지 않습니다." }, { status: 400 });
+      }
+      data.correspondenceType = correspondenceType || null;
+    }
+
     if (hasOwn(body, "documentDate")) {
       const documentDateStr = typeof body.documentDate === "string" ? body.documentDate : "";
       const documentDate = new Date(documentDateStr);
@@ -164,6 +220,40 @@ export async function PATCH(
         return NextResponse.json({ error: "isStarred 필드는 boolean 이어야 합니다." }, { status: 400 });
       }
       data.isStarred = body.isStarred;
+    }
+
+    if (hasOwn(body, "file")) {
+      const uploadedFile = validateUploadedDocumentFile(body.file as UploadedDocumentFile, "문서 파일");
+      if ("error" in uploadedFile) {
+        return NextResponse.json({ error: uploadedFile.error }, { status: 400 });
+      }
+
+      data.filePath = uploadedFile.path;
+      data.fileName = uploadedFile.name;
+      data.fileSize = uploadedFile.size;
+    }
+
+    if (hasOwn(body, "attachments")) {
+      const rawAttachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 10) : [];
+      const attachmentsData: { filePath: string; fileName: string; fileSize: number }[] = [];
+
+      for (const attachment of rawAttachments) {
+        const uploadedAttachment = validateUploadedDocumentFile(attachment as UploadedDocumentFile, "추가 첨부파일");
+        if ("error" in uploadedAttachment) {
+          return NextResponse.json({ error: uploadedAttachment.error }, { status: 400 });
+        }
+
+        attachmentsData.push({
+          filePath: uploadedAttachment.path,
+          fileName: uploadedAttachment.name,
+          fileSize: uploadedAttachment.size,
+        });
+      }
+
+      data.attachments = {
+        deleteMany: {},
+        create: attachmentsData,
+      };
     }
 
     const updated = await prisma.document.update({

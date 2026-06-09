@@ -14,6 +14,14 @@ type UploadedDocumentFile = {
   size?: unknown;
 };
 
+const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신"]);
+
+function normalizeCorrespondenceType(value: unknown, category: string, subCategory: string) {
+  if (category !== "DISCLOSURE" || subCategory !== "수발신 공문") return null;
+  const correspondenceType = typeof value === "string" ? value.trim() : "";
+  return CORRESPONDENCE_TYPES.has(correspondenceType) ? correspondenceType : "수신";
+}
+
 function validateUploadFile(file: File, label: string) {
   if (!file || file.size === 0) {
     return `${label}이 비어 있습니다.`;
@@ -108,6 +116,7 @@ export async function POST(request: Request) {
       const description = typeof body.description === "string" ? body.description : "";
       const category = typeof body.category === "string" ? body.category : "";
       const subCategory = typeof body.subCategory === "string" ? body.subCategory : "";
+      const correspondenceType = normalizeCorrespondenceType(body.correspondenceType, category, subCategory);
       const documentDateStr = typeof body.documentDate === "string" ? body.documentDate : "";
       const publishedAtStr = typeof body.publishedAt === "string" ? body.publishedAt : "";
       const isStarred = body.isStarred === true;
@@ -146,6 +155,7 @@ export async function POST(request: Request) {
           description: description || null,
           category,
           subCategory: subCategory || null,
+          correspondenceType,
           filePath: uploadedFile.path,
           fileName: uploadedFile.name,
           fileSize: uploadedFile.size,
@@ -170,6 +180,7 @@ export async function POST(request: Request) {
     const description = formData.get("description") as string;
     const category = formData.get("category") as string;
     const subCategory = formData.get("subCategory") as string;
+    const correspondenceType = normalizeCorrespondenceType(formData.get("correspondenceType"), category, subCategory);
     const documentDateStr = formData.get("documentDate") as string;
     const publishedAtStr = formData.get("publishedAt") as string;
     const file = formData.get("file") as File | null;
@@ -222,6 +233,7 @@ export async function POST(request: Request) {
         description: description || null,
         category,
         subCategory: subCategory || null,
+        correspondenceType,
         filePath: storagePath,
         fileName: file.name,
         fileSize: file.size,

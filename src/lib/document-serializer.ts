@@ -12,6 +12,7 @@ export function serializeDocuments(docs: PrismaDocWithAttachments[]): Document[]
     description: doc.description,
     category: doc.category,
     subCategory: doc.subCategory,
+    correspondenceType: doc.correspondenceType as Document["correspondenceType"],
     filePath: doc.filePath,
     fileName: doc.fileName,
     fileSize: doc.fileSize,

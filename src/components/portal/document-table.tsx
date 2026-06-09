@@ -19,6 +19,7 @@ export type Document = {
   description: string | null;
   category: string;
   subCategory?: string | null;
+  correspondenceType?: "발신" | "수신" | "회신" | null;
   fileName: string;
   fileSize: number;
   status: string;
@@ -59,6 +60,7 @@ export function DocumentTable({
   const [activeViewDoc, setActiveViewDoc] = useState<{
     id: string;
     title: string;
+    fileName?: string;
     documentDate?: string;
     createdAt?: string;
     publishedAt?: string | null;
@@ -290,6 +292,7 @@ export function DocumentTable({
     setActiveViewDoc({
       id: doc.id,
       title: doc.title,
+      fileName: doc.fileName,
       documentDate:
         doc.documentDate || doc.publishedAt || doc.createdAt || undefined,
       createdAt: doc.createdAt,
@@ -548,6 +551,7 @@ export function DocumentTable({
         <PdfViewerModal
           documentId={activeViewDoc.id}
           documentTitle={activeViewDoc.title}
+          fileName={activeViewDoc.fileName}
           onClose={() => setActiveViewDoc(null)}
           documentDate={activeViewDoc.documentDate}
           createdAt={activeViewDoc.createdAt}

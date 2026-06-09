@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DisclosureClient } from "@/components/disclosure/disclosure-client";
+import { MeetingsTable } from "@/components/disclosure/meetings-table";
 import { type Document } from "@/components/portal/document-table";
 
 vi.mock("next/navigation", () => ({
@@ -17,6 +18,22 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("disclosure page", () => {
+  it("labels sent, received, and reply correspondence in the document title", () => {
+    render(
+      <MeetingsTable
+        isLoggedIn={false}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+      />
+    );
+
+    expect(screen.getAllByText("발신").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("수신").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("회신").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("[조합→서울시] 사업시행인가 본신청 접수").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("[조합→동작구청] 행정실태점검 조치결과 보고서 (3차)").length).toBeGreaterThan(0);
+  });
+
   it("places the construction partner agreement under operations and supervision", () => {
     const { container } = render(<DisclosureClient />);
 
@@ -27,6 +44,7 @@ describe("disclosure page", () => {
     expect(operationsSection).toBeInTheDocument();
     expect(within(rulesSection as HTMLElement).queryByText("공동사업주체 시공예정사 간의 업무협약서")).not.toBeInTheDocument();
     expect(within(operationsSection as HTMLElement).getByText("공동사업주체 시공예정사 간의 업무협약서")).toBeInTheDocument();
+    expect(within(operationsSection as HTMLElement).getByText("분기별 사업실적보고서")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "4. 사업 및 감리" }));
     expect(screen.getByText("시공자 협약서")).toBeInTheDocument();
@@ -146,6 +164,57 @@ describe("disclosure page", () => {
     expect(screen.getByLabelText("문서 설명 (선택)")).toHaveValue("사무국 운영 및 문서 보존 절차");
     expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("운영관리규정");
     expect(screen.getByLabelText("중요 문서로 표시")).toBeChecked();
+  });
+
+  it("allows admins to replace files while editing uploaded report documents", () => {
+    const documents: Document[] = [
+      {
+        id: "doc-progress-report",
+        title: "23년 1사분기_실적보고서",
+        description: "분기별 사업 실적 보고서입니다.",
+        category: "DISCLOSURE",
+        subCategory: "추진실적",
+        fileName: "old-report.docx",
+        fileSize: 13241,
+        status: "APPROVED",
+        publishedAt: "2026-06-09T00:00:00.000Z",
+        documentDate: "2023-04-01T00:00:00.000Z",
+        createdAt: "2026-06-09T00:00:00.000Z",
+        attachments: [
+          {
+            id: "att-old",
+            documentId: "doc-progress-report",
+            filePath: "documents/old/old-extra.pdf",
+            fileName: "old-extra.pdf",
+            fileSize: 2048,
+            createdAt: "2026-06-09T00:00:00.000Z",
+          },
+        ],
+      },
+    ];
+
+    render(
+      <DisclosureClient
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={documents}
+      />
+    );
+
+    const reportHeading = screen.getByRole("heading", { name: "분기별 사업실적보고서" });
+    const reportCard = reportHeading.closest(".stone-card");
+    expect(reportCard).toBeInTheDocument();
+
+    fireEvent.click(within(reportCard as HTMLElement).getByRole("button", { name: "자료실 열기" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "23년 1사분기_실적보고서 문서 수정" })[0]);
+
+    expect(screen.getByRole("heading", { name: "정보공개 문서 수정" })).toBeInTheDocument();
+    expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("실적보고서");
+    expect(within(screen.getByLabelText("문서함 세부 분류 *")).queryByRole("option", { name: "추진실적" })).not.toBeInTheDocument();
+    expect(screen.getByText("현재 첨부 파일: old-report.docx")).toBeInTheDocument();
+    expect(screen.getByText("현재 추가 첨부파일")).toBeInTheDocument();
+    expect(screen.getByText("old-extra.pdf")).toBeInTheDocument();
+    expect(screen.getByLabelText("첨부 파일 교체 (PDF/HWP/Word)")).toBeInTheDocument();
+    expect(screen.getByLabelText("추가 첨부파일 교체 (선택, 최대 10개)")).toBeInTheDocument();
   });
 
   it("shows admin-editable custom empty messages on disclosure cards", () => {

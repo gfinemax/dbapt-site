@@ -137,6 +137,35 @@ describe("library page", () => {
     );
   });
 
+  it("shows a download prompt instead of a PDF iframe for uploaded Word documents", () => {
+    const wordDocuments: Document[] = [
+      {
+        id: "doc-quarter-report",
+        title: "23년 1사분기_실적보고서",
+        description: "분기별 조합 실무 보고서입니다.",
+        category: "ACCOUNTING",
+        subCategory: "실적보고서",
+        fileName: "23년 1사분기_실적보고서.docx",
+        fileSize: 13241,
+        status: "APPROVED",
+        publishedAt: "2026-06-09T00:00:00.000Z",
+        documentDate: "2023-04-01T00:00:00.000Z",
+        createdAt: "2026-06-09T00:00:00.000Z",
+      },
+    ];
+
+    render(<LibraryClient isLoggedIn documents={wordDocuments} />);
+
+    const auditCard = screen.getAllByTestId("library-item-audit-report")[0];
+    fireEvent.click(within(auditCard).getByRole("button", { name: "자료 확인" }));
+    fireEvent.click(screen.getByRole("button", { name: "23년 1사분기_실적보고서 상세 열람" }));
+
+    expect(screen.queryByTitle("문서 온라인 열람 뷰어")).not.toBeInTheDocument();
+    expect(screen.getByText("이 문서는 PDF 미리보기를 지원하지 않습니다.")).toBeInTheDocument();
+    expect(screen.getByText(/23년 1사분기_실적보고서\.docx/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "문서 다운로드" })).toBeInTheDocument();
+  });
+
   it("does not mix static index placeholders with uploaded rule materials", () => {
     render(<LibraryClient isLoggedIn documents={uploadedRuleDocuments} />);
 

@@ -426,6 +426,110 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Let administrators replace the main document file and additional attachments from `정보공개 문서 수정`, and rename the disclosure subcategory `추진실적` to `실적보고서`.
+- Governing spec: Existing protected document disclosure and admin document management workflow.
+- Implementation plan: Reuse the existing signed document upload flow for replacement files and keep the admin-only document PATCH route as the mutation boundary.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/components/disclosure/disclosure-client.tsx`, `src/components/portal/document-upload-form.tsx`, `src/app/api/documents/[id]/route.ts`, `src/__tests__/disclosure-page.test.tsx`, `src/__tests__/document-upload-api.test.ts`, `src/__tests__/document-upload-form.test.tsx`, `/disclosure`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: File replacement controls render only inside the existing administrator edit modal for real uploaded documents. Upload preparation still goes through `/api/documents/upload-url`, and document mutation still goes through the admin-only `/api/documents/[id]` PATCH route.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The modal now states that document information and attachments can be edited together, shows the current main file and current additional attachments, and only sends replacement file metadata when the administrator selects new files. Legacy `추진실적` documents are normalized into the visible `실적보고서` category so existing uploaded reports remain discoverable.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The new file controls use labeled inputs inside the existing warm recessed edit modal style. Focused component/API tests passed, `/disclosure` returned 200 and included `실적보고서`, `pnpm build` passed, and the pending `correspondenceType` nullable-column migration was deployed so the current Prisma client matches the database. Codex in-app browser automation returned unavailable in this session, so interactive desktop/mobile browser inspection could not be completed.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Add explicit `수발신 구분` selection for `수발신 공문` document registration and editing.
+- Governing spec: `DESIGN.md` plus existing protected document registration and public disclosure document-list presentation.
+- Implementation plan: Add nullable document correspondence metadata and wire upload/edit forms, APIs, serialization, and list badges.
+- Files or pages reviewed: `prisma/schema.prisma`, `src/components/portal/document-upload-form.tsx`, `src/components/disclosure/meetings-table.tsx`, document API routes, focused tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The selector appears only when the document folder is `수발신 공문`. Upload, edit, and document access remain admin/protected as before; no public upload or private-file exposure changed.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Newly uploaded/edited documents store the selected `발신`, `수신`, or `회신` value as metadata. Older rows still fall back to title inference, so existing documents are not misrepresented as missing metadata.
+
+## Design And Accessibility Review
+- Finding: PASS with browser-tool limitation.
+- Evidence: The new field uses the existing labeled select styling in the upload/edit forms and the existing compact badge style in title rows. Focused tests verify the selector options and API persistence. In-app browser runtime was unavailable in this sandbox session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Rename the operations disclosure card from `분기별 조합 마일스톤 추진실적 실무 보고서` to `분기별 사업실적보고서`.
+- Governing spec: Existing public `공개자료` presentation scope.
+- Implementation plan: Small copy update inside the existing disclosure card data.
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/__tests__/disclosure-page.test.tsx`, `/disclosure`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change updates only one public card title and does not alter routes, authentication, document access, upload, download, admin controls, or private data exposure.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The card remains under `4. 사업 및 감리` with the same `추진실적` subcategory and description. Only the visible title was shortened to the requested business-performance wording.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The existing card renderer, typography, spacing, status badges, and actions are unchanged. Focused disclosure tests passed, and the local `/disclosure` server response includes `분기별 사업실적보고서` while no longer containing the previous title. Codex in-app browser automation remains unavailable in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Show `발신`, `수신`, and `회신` badges in the `수발신 공문` document-title area.
+- Governing spec: `DESIGN.md` plus existing `공개자료` document-list presentation.
+- Implementation plan: Extend `MeetingsTable` title metadata rendering and focused disclosure-page test coverage.
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`, `/disclosure` document folder behavior.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change adds visual badges only for rows categorized as `수발신 공문`. No schema, API, permission, upload category, download, or public/private access behavior changed.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Mock correspondence rows have explicit `correspondenceType` values. Uploaded real documents infer the badge from existing title patterns such as `조합→`, `회신`, `조치결과`, and `이행 보고`; no fabricated document contents or operational results are added.
+
+## Design And Accessibility Review
+- Finding: PASS with browser-tool limitation.
+- Evidence: The badges reuse the compact title-badge pattern beside `★ 중요`, with restrained sky/green/orange accents and no layout surface change. Focused tests verify `발신`, `수신`, and `회신` render in the `수발신 공문` table. In-app browser runtime failed to start in this sandbox, so visual browser inspection could not be completed.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Make the chairman signature image background transparent.
 - Governing spec: `DESIGN.md`, public `조합소개` presentation scope.
 - Implementation plan: Update only the signature PNG alpha channel and keep the existing sign-off rendering beside `대방동 지역주택조합 조합장`.
@@ -910,6 +1014,32 @@
 ## Design And Accessibility Review
 - Finding: PASS with one verification limitation.
 - Evidence: Focused landing test confirms hero entry actions are hidden after login. Browser check at `http://localhost:3000/` confirmed logged-in hero text remains visible, `조합원 로그인` and `사업정보 보기` are absent from the hero, and there is no horizontal overflow at the checked desktop viewport. Mobile viewport resizing was not available through the connected browser backend in this session.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Show a download prompt instead of embedding non-PDF uploaded documents in the PDF viewer.
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Implementation plan: Existing protected document disclosure flow; no access or upload scope expansion.
+- Files or pages reviewed: `src/components/portal/pdf-viewer-modal.tsx`, `src/app/api/documents/[id]/view/route.ts`, `src/components/disclosure/disclosure-client.tsx`, `src/components/disclosure/disclosure-page-client-shell.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/components/library/library-client.tsx`, `src/components/portal/document-table.tsx`, `/library`, `/disclosure`.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Document access remains session-gated and admin upload behavior is unchanged. The `/view` route now rejects non-PDF files with 415 instead of streaming them as PDFs, while existing `/download` remains the path for Word/HWP files.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The modal no longer claims Word/HWP files are PDF-previewable. It shows a clear download prompt for `.docx` and other non-PDF files, while PDF files still use the existing inline viewer.
+
+## Design And Accessibility Review
+- Finding: PASS with one browser-tool limitation.
+- Evidence: The fallback uses the existing warm canvas, recessed panel, stone border, and dark pill action styling. Focused tests passed for the non-PDF fallback and existing PDF iframe path. The local dev server is running, but the Codex in-app browser returned unavailable and Playwright is not installed, so interactive browser verification could not be completed in this session.
 
 ## Outcome
 - Result: PASS

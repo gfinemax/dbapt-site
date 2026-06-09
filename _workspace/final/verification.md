@@ -844,6 +844,75 @@
 
 ---
 
+# Verification Addendum: Correspondence Direction Badges
+
+## Implemented Change
+
+- Added `발신`, `수신`, and `회신` title badges for the `수발신 공문` document folder.
+- Added explicit correspondence metadata to the existing mock correspondence rows.
+- Added inference for real uploaded `수발신 공문` documents from title patterns:
+  - `회신`, `답변`, `조치결과`, `이행 보고` -> `회신`
+  - `조합→`, `조합->`, `조합>`, or `발신` -> `발신`
+  - otherwise -> `수신`
+- Rendered the new badge beside `★ 중요` on both desktop table rows and mobile cards.
+- Kept `onViewDocument` aligned with the current `DisclosureClient` callback type so the production build type-checks.
+
+## Checks Run
+
+- `pnpm test -- src/__tests__/disclosure-page.test.tsx`: passed, 1 file and 6 tests. Existing jsdom `window.scrollTo` not-implemented warnings were emitted after tab interactions.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed in unrelated existing environment/state checks:
+  - `src/__tests__/portal-auth-flow.test.tsx`: Prisma seed/database verification errors.
+  - `src/__tests__/news-admin-controls.test.tsx`: Supabase Storage requests failed with sandbox network `EACCES`.
+
+## Browser Checks
+
+- A temporary Next dev server started successfully inside a same-command PowerShell job, and `/disclosure?tab=meetings` returned HTTP 200.
+- In-app Browser verification could not be completed because the Browser runtime repeatedly failed to initialize with a Windows sandbox setup error, and background dev-server process separation also exited silently in this session.
+- The title-badge state itself is covered by the focused `MeetingsTable` rendering test.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Full-suite `pnpm test` remains blocked by unrelated DB seed and Supabase Storage/network environment failures.
+- Live desktop/mobile browser visual inspection remains pending because the in-app browser runtime was unavailable in this session.
+
+---
+
+# Verification Addendum: Correspondence Type Selector
+
+## Implemented Change
+
+- Added nullable `Document.correspondenceType` metadata and migration `20260609093000_add_document_correspondence_type`.
+- Added `수발신 구분 *` select to `DocumentUploadForm` when `문서함 세부 분류` is `수발신 공문`.
+- Sends selected `수신`, `발신`, or `회신` value through `POST /api/documents`.
+- Added `correspondenceType` support to `PATCH /api/documents/[id]`.
+- Added the same selector to the admin metadata edit modal for uploaded `수발신 공문` documents.
+- Updated document serialization/type definitions and list mapping so stored metadata drives the title badge, with title inference kept as legacy fallback.
+
+## Checks Run
+
+- `.\node_modules\.bin\prisma.CMD generate`: passed.
+- Focused tests: `pnpm test -- src/__tests__/document-upload-form.test.tsx src/__tests__/document-upload-api.test.ts src/__tests__/disclosure-page.test.tsx` passed, 3 files and 12 tests. Existing jsdom `window.scrollTo` warnings were emitted.
+- `pnpm lint`: passed with one existing warning in `src/components/portal/document-table.tsx` for unused `handleDownload`.
+- `pnpm build`: passed.
+- `pnpm test`: failed only in unrelated existing environment/state checks:
+  - `src/__tests__/portal-auth-flow.test.tsx`: Prisma seed/database verification errors.
+  - `src/__tests__/news-admin-controls.test.tsx`: Supabase Storage fetch failed with sandbox network `EACCES`.
+
+## Browser Checks
+
+- In-app Browser verification could not be completed because the Browser runtime failed to initialize in this Windows sandbox session.
+- The new selector and metadata persistence are covered by focused component/API tests.
+
+## Unresolved Risks Or Follow-Up Specs
+
+- Apply the new Prisma migration in the target database before using the selector in that environment.
+- Full-suite `pnpm test` remains blocked by unrelated DB seed and Supabase Storage/network environment failures.
+- Live browser visual inspection remains pending because the in-app browser runtime was unavailable in this session.
+
+---
+
 # Verification Addendum: Chairman Signature Transparent Background
 
 ## Implemented Change

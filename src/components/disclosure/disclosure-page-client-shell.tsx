@@ -64,6 +64,7 @@ export function DisclosurePageClientShell({
   const [activeViewDoc, setActiveViewDoc] = useState<{ 
     id: string; 
     title: string; 
+    fileName?: string;
     documentDate?: string;
     fileSize?: number;
     category?: string;
@@ -155,24 +156,20 @@ export function DisclosurePageClientShell({
           session={session} 
           documents={documents}
           emptyMessages={emptyMessages}
-          onViewDocument={(id, title) => {
-            const matched = documents.find(d => d.id === id);
-            if (matched) {
-              setActiveViewDoc({
-                id,
-                title,
-                documentDate: matched.documentDate || matched.publishedAt || matched.createdAt || undefined,
-                fileSize: matched.fileSize,
-                category: matched.category,
-                subCategory: matched.subCategory,
-                description: matched.description,
-                attachmentName: matched.attachmentName,
-                attachments: matched.attachments,
-                publishedAt: matched.publishedAt
-              });
-            } else {
-              setActiveViewDoc({ id, title });
-            }
+          onViewDocument={(document) => {
+            setActiveViewDoc({
+              id: document.id,
+              title: document.title,
+              fileName: document.fileName,
+              documentDate: document.documentDate || document.publishedAt || document.createdAt || undefined,
+              fileSize: document.fileSize,
+              category: document.category,
+              subCategory: document.subCategory,
+              description: document.description,
+              attachmentName: document.attachmentName,
+              attachments: document.attachments,
+              publishedAt: document.publishedAt
+            });
           }}
         />
       </main>
@@ -325,25 +322,21 @@ export function DisclosurePageClientShell({
             session={session}
             documents={documents}
             emptyMessages={emptyMessages}
-            onViewDocument={(id, title) => {
+            onViewDocument={(document) => {
               setIsDisclosureDrawerOpen(false);
-              const matched = documents.find(d => d.id === id);
-              if (matched) {
-                setActiveViewDoc({
-                  id,
-                  title,
-                  documentDate: matched.documentDate || matched.publishedAt || matched.createdAt || undefined,
-                  fileSize: matched.fileSize,
-                  category: matched.category,
-                  subCategory: matched.subCategory,
-                  description: matched.description,
-                  attachmentName: matched.attachmentName,
-                  attachments: matched.attachments,
-                  publishedAt: matched.publishedAt
-                });
-              } else {
-                setActiveViewDoc({ id, title });
-              }
+              setActiveViewDoc({
+                id: document.id,
+                title: document.title,
+                fileName: document.fileName,
+                documentDate: document.documentDate || document.publishedAt || document.createdAt || undefined,
+                fileSize: document.fileSize,
+                category: document.category,
+                subCategory: document.subCategory,
+                description: document.description,
+                attachmentName: document.attachmentName,
+                attachments: document.attachments,
+                publishedAt: document.publishedAt
+              });
             }}
             onOpenPortal={(cat, search) => {
               setIsDisclosureDrawerOpen(false);
@@ -360,6 +353,7 @@ export function DisclosurePageClientShell({
         <PdfViewerModal
           documentId={activeViewDoc.id}
           documentTitle={activeViewDoc.title}
+          fileName={activeViewDoc.fileName}
           onClose={() => setActiveViewDoc(null)}
           documentDate={activeViewDoc.documentDate}
           fileSize={activeViewDoc.fileSize}
