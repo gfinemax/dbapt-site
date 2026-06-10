@@ -687,14 +687,7 @@ export function DisclosureClient({
               {/* 개별 자료 목록 */}
               {tabKey === "meetings" || tabKey === "administration" ? (
                 <div className="grid gap-6 md:grid-cols-2">
-                  {[...data.items]
-                    .sort((a, b) => {
-                      const aSelected = activeSubTab === a.id;
-                      const bSelected = activeSubTab === b.id;
-                      if (aSelected && !bSelected) return -1;
-                      if (!aSelected && bSelected) return 1;
-                      return 0;
-                    })
+                  {data.items
                     .map((item) => {
                       const folderItem = item as DisclosureDocumentFolder;
 
@@ -848,14 +841,7 @@ export function DisclosureClient({
                 </div>
               ) : (
                 <div className="grid gap-6 md:grid-cols-2">
-                  {[...data.items]
-                    .sort((a, b) => {
-                      const aSelected = activeSubTab === a.id;
-                      const bSelected = activeSubTab === b.id;
-                      if (aSelected && !bSelected) return -1;
-                      if (!aSelected && bSelected) return 1;
-                      return 0;
-                    })
+                  {data.items
                     .map((item) => {
                       const isSelected = activeSubTab === item.id;
                       const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);

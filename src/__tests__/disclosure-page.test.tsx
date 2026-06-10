@@ -256,7 +256,7 @@ describe("disclosure page", () => {
     expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("대의원 의사록");
   });
 
-  it("moves the selected submenu card to the top and lets direct card selection change the active card", () => {
+  it("lets direct card selection change the active card without changing list order", () => {
     const { container } = render(<DisclosureClient />);
 
     fireEvent.click(screen.getByRole("button", { name: "2. 의사록" }));
@@ -266,7 +266,8 @@ describe("disclosure page", () => {
     expect(meetingsSection).toBeInTheDocument();
 
     let meetingCards = Array.from((meetingsSection as HTMLElement).querySelectorAll(".stone-card"));
-    expect(within(meetingCards[0] as HTMLElement).getByRole("heading", { name: "대의원 의사록 문서함" })).toBeInTheDocument();
+    expect(within(meetingCards[0] as HTMLElement).getByRole("heading", { name: "총회의사록 문서함" })).toBeInTheDocument();
+    expect(within(meetingCards[2] as HTMLElement).getByRole("heading", { name: "대의원 의사록 문서함" })).toBeInTheDocument();
 
     const generalMeetingCard = within(meetingsSection as HTMLElement)
       .getByRole("heading", { name: "총회의사록 문서함" })
@@ -277,6 +278,7 @@ describe("disclosure page", () => {
 
     meetingCards = Array.from((meetingsSection as HTMLElement).querySelectorAll(".stone-card"));
     expect(within(meetingCards[0] as HTMLElement).getByRole("heading", { name: "총회의사록 문서함" })).toBeInTheDocument();
+    expect(within(meetingCards[2] as HTMLElement).getByRole("heading", { name: "대의원 의사록 문서함" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "총회 의사록" })).toHaveClass("border-midnight");
   });
 
