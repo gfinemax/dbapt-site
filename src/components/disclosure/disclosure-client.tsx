@@ -140,22 +140,22 @@ const disclosureData = {
         title: "총회의사록 문서함", 
         desc: "창립총회 및 최근 임시총회 안건 의결 결과, 조합원 서명 날인 등이 기재된 정식 공증 의사록 문서 보존 문서함입니다.", 
         date: "최근 업데이트: 2026.01", 
-        count: 12,
+        count: 0,
         searchKey: "총회",
         categoryKey: "DISCLOSURE",
         bbsCategory: "총회 의사록",
-        preview: ["창립총회 의사록 (공증 완료)", "2025년 제1차 정기총회 의사록", "2025년 제2차 임시총회 의사록"]
+        preview: []
       },
       { 
         id: "meetings-2", 
         title: "이사회 의사록 문서함", 
         desc: "사무국 예산 조율, 협력사 계약 심의 등 이사회 및 감사 정례 의결 의사록이 안전하게 일괄 보관되어 있습니다.", 
         date: "최근 업데이트: 2026.01", 
-        count: 18,
+        count: 0,
         searchKey: "이사회",
         categoryKey: "DISCLOSURE",
         bbsCategory: "이사회 의사록",
-        preview: ["제12차 정기 이사회 의사록", "2026년 신년 이사회 의결서", "제11차 임시 이사회 의사록"]
+        preview: []
       },
       {
         id: "meetings-3",
@@ -166,7 +166,7 @@ const disclosureData = {
         searchKey: "대의원",
         categoryKey: "DISCLOSURE",
         bbsCategory: "대의원 의사록",
-        preview: ["대의원회 의사록", "대의원 안건 보고서", "대의원 의결 확인서"]
+        preview: []
       },
     ]
   },
@@ -185,7 +185,7 @@ const disclosureData = {
         categoryKey: "DISCLOSURE",
         bbsCategory: "공문서",
         correspondenceTypes: ["수신"],
-        preview: ["동작구청 행정실태조사 수신공문", "서울특별시 지구단위계획 관련 수신", "관계기관 보완 요청 공문"]
+        preview: []
       },
       { 
         id: "administration-2", 
@@ -197,7 +197,7 @@ const disclosureData = {
         categoryKey: "DISCLOSURE",
         bbsCategory: "공문서",
         correspondenceTypes: ["발신", "회신"],
-        preview: ["시정요구 조치 결과보고 제출문", "사업시행 관련 보완자료 제출 공문", "유관기관 협의 회신 공문"]
+        preview: []
       },
       { 
         id: "administration-4", 
@@ -209,7 +209,7 @@ const disclosureData = {
         categoryKey: "DISCLOSURE",
         bbsCategory: "공문서",
         correspondenceTypes: ["기타"],
-        preview: ["조합원 안내 협조전", "용역 진행 보고서", "기타 행정 통지문"]
+        preview: []
       }
     ]
   },
