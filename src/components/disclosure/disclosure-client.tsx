@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { MeetingsTable, type MeetingCategory } from "./meetings-table";
+import { MeetingsTable, type MeetingCategory, type CorrespondenceType } from "./meetings-table";
 import { type Document } from "@/components/portal/document-table";
 
 type DisclosureClientProps = {
@@ -1265,6 +1265,7 @@ export function DisclosureClient({
                   router={router}
                   initialFilterCat={selectedFolder.bbsCategory as MeetingCategory}
                   initialSearchQuery=""
+                  initialCorrespondenceTypes={selectedFolder.correspondenceTypes as CorrespondenceType[]}
                   onBackToFolders={() => setIsLeftDrawerOpen(false)}
                   documents={documents}
                   onViewDocument={onViewDocument}
