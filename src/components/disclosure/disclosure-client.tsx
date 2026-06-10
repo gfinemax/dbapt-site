@@ -763,21 +763,13 @@ export function DisclosureClient({
                         >
                           <div>
                             {/* Folder Top Meta */}
-                            <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono">
-                              <span className="flex items-center gap-1.5 text-sky-blue font-bold">
-                                <span>📂</span> 문서 보존함
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                {hasStarred && (
-                                  <span className="bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[9px] font-extrabold text-amber-600 flex items-center gap-0.5 select-none shadow-2xs">
-                                    ⭐ 중요 자료 보유
-                                  </span>
-                                )}
-                                <span className="bg-stone-surface px-2.5 py-0.5 rounded-full text-[9px] font-bold text-charcoal-primary font-mono">
-                                  총 {totalCount}건 보관
+                            {hasStarred && (
+                              <div className="flex items-center justify-end text-[10px] font-bold text-ash font-mono mb-2">
+                                <span className="bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[9px] font-extrabold text-amber-600 flex items-center gap-0.5 select-none shadow-2xs">
+                                  ⭐ 중요 자료 보유
                                 </span>
                               </div>
-                            </div>
+                            )}
 
                             <h3 className="text-[14.5px] font-bold text-charcoal-primary mt-3.5 leading-snug">
                               {folderItem.title}
