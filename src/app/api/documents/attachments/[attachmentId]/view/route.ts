@@ -75,6 +75,10 @@ export async function GET(
     });
   } catch (e) {
     console.error("View attachment dynamic route error:", e);
-    return NextResponse.json({ error: "첨부파일 열람 중 문제가 발생했습니다." }, { status: 500 });
+    const detail = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      { error: `첨부파일 열람 중 문제가 발생했습니다. (상세 오류: ${detail})` },
+      { status: 500 }
+    );
   }
 }

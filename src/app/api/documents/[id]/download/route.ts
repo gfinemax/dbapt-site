@@ -55,6 +55,10 @@ export async function GET(
     });
   } catch (e) {
     console.error("Download dynamic route error:", e);
-    return NextResponse.json({ error: "파일 다운로드 중 문제가 발생했습니다." }, { status: 500 });
+    const detail = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      { error: `파일 다운로드 중 문제가 발생했습니다. (상세 오류: ${detail})` },
+      { status: 500 }
+    );
   }
 }
