@@ -21,7 +21,7 @@ describe("document upload form", () => {
   });
 
   it("shows correspondence type selection for correspondence documents", () => {
-    render(<DocumentUploadForm defaultSubCategory="수발신 공문" />);
+    render(<DocumentUploadForm defaultSubCategory="공문서" />);
 
     const correspondenceSelect = screen.getByLabelText("수발신 구분 *");
     expect(correspondenceSelect).toHaveValue("수신");
@@ -40,7 +40,7 @@ describe("document upload form", () => {
             title: "동작구청 시정명령 수신 공문",
             description: null,
             category: "DISCLOSURE",
-            subCategory: "수발신 공문",
+            subCategory: "공문서",
             correspondenceType: "수신",
             fileName: "received.pdf",
             fileSize: 1024,
@@ -53,7 +53,7 @@ describe("document upload form", () => {
       />
     );
 
-    expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("수발신 공문");
+    expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("공문서");
     expect(screen.getByLabelText("수발신 구분 *")).toHaveValue("발신");
     expect(screen.queryByLabelText("회신 대상 수신 공문 (선택)")).not.toBeInTheDocument();
 
@@ -64,7 +64,7 @@ describe("document upload form", () => {
   });
 
   it("allows received correspondence to be marked as not requiring a reply", () => {
-    render(<DocumentUploadForm defaultSubCategory="수발신 공문" />);
+    render(<DocumentUploadForm defaultSubCategory="공문서" />);
 
     expect(screen.getByLabelText("회신 불필요")).toBeInTheDocument();
 
@@ -73,7 +73,7 @@ describe("document upload form", () => {
   });
 
   it("shows reply due date only for received correspondence that requires a reply", () => {
-    render(<DocumentUploadForm defaultSubCategory="수발신 공문" />);
+    render(<DocumentUploadForm defaultSubCategory="공문서" />);
 
     expect(screen.getByLabelText("회신기한")).toBeInTheDocument();
 
@@ -88,14 +88,14 @@ describe("document upload form", () => {
   it("shows received correspondence targets only when registering a reply correspondence", () => {
     render(
       <DocumentUploadForm
-        defaultSubCategory="수발신 공문"
+        defaultSubCategory="공문서"
         replyTargetDocuments={[
           {
             id: "received-1",
             title: "동작구청 시정조치 요구 공문",
             description: null,
             category: "DISCLOSURE",
-            subCategory: "수발신 공문",
+            subCategory: "공문서",
             correspondenceType: "수신",
             fileName: "received.pdf",
             fileSize: 1024,
@@ -109,7 +109,7 @@ describe("document upload form", () => {
             title: "서울시 제출 공문",
             description: null,
             category: "DISCLOSURE",
-            subCategory: "수발신 공문",
+            subCategory: "공문서",
             correspondenceType: "발신",
             fileName: "sent.pdf",
             fileSize: 1024,

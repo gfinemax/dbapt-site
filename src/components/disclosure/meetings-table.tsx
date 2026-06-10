@@ -15,23 +15,25 @@ export type MeetingCategory =
   | "선거관리규정"
   | "기타 내부 운영규정"
   | "조합원 연명부"
-  | "시공자 협약서"
   | "총회 의사록"
-  | "이사회 회의록"
-  | "대의원 회의록"
-  | "수발신 공문"
+  | "이사회 의사록"
+  | "대의원 의사록"
+  | "공문서"
   | "사업시행계획"
-  | "외부회계감사"
-  | "내부감사"
+  | "회계감사보고서"
   | "연간자금운용계획"
-  | "에스크로 명세서"
+  | "월별 자금 입출금"
+  | "분담금 납부"
+  | "추가 분담금 산출"
+  | "토지확보"
   | "용역 계약서"
-  | "공사진행/토지"
+  | "공사시행"
+  | "분양"
   | "실적보고서"
   | "감리 보고서";
 
-export type CorrespondenceType = "발신" | "수신" | "회신";
-type CategoryFilter = "전체" | MeetingCategory | "수신 공문" | "발신 공문";
+export type CorrespondenceType = "발신" | "수신" | "회신" | "기타";
+type CategoryFilter = "전체" | MeetingCategory | "수신 공문" | "발신 공문" | "기타 공문";
 
 const PAGE_SIZE = 10;
 const CATEGORIES: CategoryFilter[] = [
@@ -42,19 +44,22 @@ const CATEGORIES: CategoryFilter[] = [
   "선거관리규정",
   "기타 내부 운영규정",
   "조합원 연명부",
-  "시공자 협약서",
   "총회 의사록",
-  "이사회 회의록",
-  "대의원 회의록",
+  "이사회 의사록",
+  "대의원 의사록",
   "수신 공문",
   "발신 공문",
+  "기타 공문",
   "사업시행계획",
-  "외부회계감사",
-  "내부감사",
+  "회계감사보고서",
   "연간자금운용계획",
-  "에스크로 명세서",
+  "월별 자금 입출금",
+  "분담금 납부",
+  "추가 분담금 산출",
+  "토지확보",
   "용역 계약서",
-  "공사진행/토지",
+  "공사시행",
+  "분양",
   "실적보고서",
   "감리 보고서",
 ];
@@ -64,10 +69,10 @@ function categoryBadge(cat: MeetingCategory) {
   switch (cat) {
     case "총회 의사록":
       return "bg-sky-blue/10 text-sky-blue";
-    case "이사회 회의록":
-    case "대의원 회의록":
+    case "이사회 의사록":
+    case "대의원 의사록":
       return "bg-violet-500/10 text-violet-600";
-    case "수발신 공문":
+    case "공문서":
       return "bg-amber-500/10 text-amber-600";
     case "사업시행계획":
       return "bg-emerald-500/10 text-emerald-600";
@@ -78,13 +83,15 @@ function categoryBadge(cat: MeetingCategory) {
     case "기타 내부 운영규정":
     case "조합원 연명부":
       return "bg-sky-blue/10 text-sky-blue";
-    case "시공자 협약서":
-    case "외부회계감사":
-    case "내부감사":
+    case "회계감사보고서":
     case "연간자금운용계획":
-    case "에스크로 명세서":
+    case "월별 자금 입출금":
+    case "분담금 납부":
+    case "추가 분담금 산출":
+    case "토지확보":
     case "용역 계약서":
-    case "공사진행/토지":
+    case "공사시행":
+    case "분양":
     case "실적보고서":
     case "감리 보고서":
       return "bg-meadow-green/10 text-meadow-green";
@@ -92,7 +99,7 @@ function categoryBadge(cat: MeetingCategory) {
 }
 
 function inferCorrespondenceType(doc: Pick<RowDocType, "category" | "title" | "correspondenceType">) {
-  if (doc.category !== "수발신 공문") return undefined;
+  if ((doc.category as string) !== "수발신 공문" && doc.category !== "공문서") return undefined;
   if (doc.correspondenceType) return doc.correspondenceType;
 
   const compactTitle = doc.title.replace(/\s/g, "");
@@ -102,14 +109,16 @@ function inferCorrespondenceType(doc: Pick<RowDocType, "category" | "title" | "c
 }
 
 function categoryLabelForDoc(doc: Pick<RowDocType, "category" | "title" | "correspondenceType">) {
-  if (doc.category !== "수발신 공문") return doc.category;
+  if ((doc.category as string) !== "수발신 공문" && doc.category !== "공문서") return doc.category;
   const type = inferCorrespondenceType(doc);
-  return type === "수신" ? "수신 공문" : "발신 공문";
+  if (type === "수신") return "수신 공문";
+  if (type === "기타") return "기타 공문";
+  return "발신 공문";
 }
 
 function categoryFilterLabel(category: CategoryFilter) {
   if (category === "전체") return "전체 분류";
-  return category === "수발신 공문" ? "수신/발신 공문" : category;
+  return (category as string) === "수발신 공문" || category === "공문서" ? "수신/발신/기타 공문" : category;
 }
 
 function ReplyStatusBadge({ status }: { status?: "회신 필요" | "회신 완료" | "회신 불필요" }) {
@@ -181,6 +190,11 @@ const MAX_DOCUMENT_UPLOAD_SIZE = 20 * 1024 * 1024;
 
 function normalizeMeetingCategory(category?: string | null): MeetingCategory {
   if (category === "추진실적") return "실적보고서";
+  if (category === "수발신 공문") return "공문서";
+  if (category === "이사회 회의록") return "이사회 의사록";
+  if (category === "대의원 회의록") return "대의원 의사록";
+  if (category === "외부회계감사" || category === "내부감사") return "회계감사보고서";
+  if (category === "에스크로 명세서") return "월별 자금 입출금";
   return (category || "총회 의사록") as MeetingCategory;
 }
 
@@ -223,14 +237,17 @@ function getInitialCategoryFilter(
   initialFilterCat: CategoryFilter,
   initialCorrespondenceTypes?: CorrespondenceType[],
 ): CategoryFilter {
-  if (initialFilterCat !== "수발신 공문") return initialFilterCat;
+  if ((initialFilterCat as string) !== "수발신 공문" && initialFilterCat !== "공문서") return initialFilterCat;
   if (initialCorrespondenceTypes?.length === 1 && initialCorrespondenceTypes[0] === "수신") {
     return "수신 공문";
+  }
+  if (initialCorrespondenceTypes?.length === 1 && initialCorrespondenceTypes[0] === "기타") {
+    return "기타 공문";
   }
   if (initialCorrespondenceTypes?.some((type) => type === "발신" || type === "회신")) {
     return "발신 공문";
   }
-  return initialFilterCat;
+  return (initialFilterCat as string) === "수발신 공문" ? "공문서" : initialFilterCat;
 }
 
 export function MeetingsTable({ 
@@ -297,7 +314,7 @@ export function MeetingsTable({
     () =>
       new Set(
         managedDocs
-          .filter((d) => d.category === "DISCLOSURE" && d.subCategory === "수발신 공문" && d.correspondenceType === "회신")
+          .filter((d) => d.category === "DISCLOSURE" && (d.subCategory === "수발신 공문" || d.subCategory === "공문서") && d.correspondenceType === "회신")
           .map((d) => d.replyToDocumentId)
           .filter((id): id is string => typeof id === "string" && id.length > 0)
       ),
@@ -443,17 +460,24 @@ export function MeetingsTable({
         description: editingDoc.description,
         category: "DISCLOSURE",
         subCategory: editingDoc.subCategory,
-        correspondenceType: editingDoc.subCategory === "수발신 공문" ? editingDoc.correspondenceType : null,
+        correspondenceType:
+          ((editingDoc.subCategory as string) === "수발신 공문" || editingDoc.subCategory === "공문서")
+            ? editingDoc.correspondenceType
+            : null,
         replyToDocumentId:
-          editingDoc.subCategory === "수발신 공문" && editingDoc.correspondenceType === "회신"
+          ((editingDoc.subCategory as string) === "수발신 공문" || editingDoc.subCategory === "공문서") &&
+          editingDoc.correspondenceType === "회신"
             ? editingDoc.replyToDocumentId || null
             : null,
         replyNotRequired:
-          editingDoc.subCategory === "수발신 공문" && editingDoc.correspondenceType === "수신"
+          ((editingDoc.subCategory as string) === "수발신 공문" || editingDoc.subCategory === "공문서") &&
+          editingDoc.correspondenceType === "수신"
             ? editingDoc.replyNotRequired
             : false,
         replyDueDate:
-          editingDoc.subCategory === "수발신 공문" && editingDoc.correspondenceType === "수신" && !editingDoc.replyNotRequired
+          ((editingDoc.subCategory as string) === "수발신 공문" || editingDoc.subCategory === "공문서") &&
+          editingDoc.correspondenceType === "수신" &&
+          !editingDoc.replyNotRequired
             ? editingDoc.replyDueDate || null
             : null,
         documentDate: editingDoc.documentDate,
@@ -532,7 +556,7 @@ export function MeetingsTable({
           ...d,
           correspondenceType: inferCorrespondenceType(d),
           replyStatus:
-            d.category === "수발신 공문" && inferCorrespondenceType(d) === "수신"
+            ((d.category as string) === "수발신 공문" || d.category === "공문서") && inferCorrespondenceType(d) === "수신"
               ? d.replyNotRequired
                 ? "회신 불필요"
                 : repliedDocumentIds.has(String(d.id))
@@ -542,11 +566,17 @@ export function MeetingsTable({
         }));
 
       if (filterCat === "수신 공문") {
-        realResult = realResult.filter((d) => d.category === "수발신 공문" && d.correspondenceType === "수신");
+        realResult = realResult.filter((d) => ((d.category as string) === "수발신 공문" || d.category === "공문서") && d.correspondenceType === "수신");
       } else if (filterCat === "발신 공문") {
-        realResult = realResult.filter((d) => d.category === "수발신 공문" && (d.correspondenceType === "발신" || d.correspondenceType === "회신"));
+        realResult = realResult.filter((d) => ((d.category as string) === "수발신 공문" || d.category === "공문서") && (d.correspondenceType === "발신" || d.correspondenceType === "회신"));
+      } else if (filterCat === "기타 공문") {
+        realResult = realResult.filter((d) => ((d.category as string) === "수발신 공문" || d.category === "공문서") && d.correspondenceType === "기타");
       } else if (filterCat !== "전체") {
-        realResult = realResult.filter((d) => d.category === filterCat);
+        realResult = realResult.filter((d) =>
+          d.category === filterCat ||
+          ((filterCat as string) === "수발신 공문" && d.category === "공문서") ||
+          (filterCat === "공문서" && (d.category as string) === "수발신 공문")
+        );
       }
       if (searchQuery.trim()) {
         const q = searchQuery.trim().toLowerCase();
@@ -585,7 +615,7 @@ export function MeetingsTable({
       managedDocs.filter(
         (document) =>
           document.category === "DISCLOSURE" &&
-          document.subCategory === "수발신 공문" &&
+          (document.subCategory === "수발신 공문" || document.subCategory === "공문서") &&
           document.correspondenceType === "수신" &&
           !document.replyNotRequired &&
           !repliedDocumentIds.has(document.id)
@@ -594,7 +624,7 @@ export function MeetingsTable({
   );
 
   const renderReplyDueCell = (doc: RowDocType) => {
-    if (doc.category !== "수발신 공문") return "-";
+    if ((doc.category as string) !== "수발신 공문" && doc.category !== "공문서") return "-";
     if (doc.correspondenceType === "회신") {
       return <ReplyStatusBadge status="회신 완료" />;
     }
@@ -900,16 +930,16 @@ export function MeetingsTable({
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[11px] text-ash font-mono">
                     {doc.date}
-                    {doc.category === "수발신 공문" && doc.correspondenceType === "수신" && !doc.replyNotRequired && (
+                    {(((doc.category as string) === "수발신 공문" || doc.category === "공문서") && doc.correspondenceType === "수신" && !doc.replyNotRequired && (
                       <span className="ml-2 text-ember-orange">
                         회신기한 {formatOptionalDate(doc.replyDueDate)}
                       </span>
-                    )}
-                    {doc.category === "수발신 공문" && doc.correspondenceType === "회신" && (
+                    )) || null}
+                    {(((doc.category as string) === "수발신 공문" || doc.category === "공문서") && doc.correspondenceType === "회신" && (
                       <span className="ml-2 text-meadow-green">
                         회신 완료
                       </span>
-                    )}
+                    )) || null}
                   </span>
                   <div className="flex items-center gap-1.5">
                     {isLoggedIn ? (
@@ -1265,7 +1295,7 @@ export function MeetingsTable({
                   )}
                 </div>
 
-                {editingDoc.subCategory === "수발신 공문" && (
+                {((editingDoc.subCategory as string) === "수발신 공문" || editingDoc.subCategory === "공문서") && (
                   <>
                     <div>
                       <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-doc-correspondence-type">

@@ -19,35 +19,38 @@ const disclosureSubCategoryOptions = [
   "선거관리규정",
   "기타 내부 운영규정",
   "조합원 연명부",
-  "시공자 협약서",
   "총회 의사록",
-  "이사회 회의록",
-  "대의원 회의록",
-  "수발신 공문",
+  "이사회 의사록",
+  "대의원 의사록",
+  "공문서",
   "사업시행계획",
-  "외부회계감사",
-  "내부감사",
+  "회계감사보고서",
   "연간자금운용계획",
-  "에스크로 명세서",
+  "월별 자금 입출금",
+  "분담금 납부",
+  "추가 분담금 산출",
+  "토지확보",
   "용역 계약서",
-  "공사진행/토지",
+  "공사시행",
+  "분양",
   "실적보고서",
   "감리 보고서",
 ];
 
-const correspondenceTypeOptions = ["수신", "발신"] as const;
+const correspondenceTypeOptions = ["수신", "발신", "기타"] as const;
 type VisibleCorrespondenceType = (typeof correspondenceTypeOptions)[number];
 
 function getSubCategoryLabel(option: string) {
-  return option === "수발신 공문" ? "수신/발신 공문" : option;
+  return option === "공문서" ? "수신/발신/기타 공문" : option;
 }
 
 function normalizeDefaultSubCategory(subCategory: string) {
-  return subCategory === "수신 공문" || subCategory === "발신 공문" ? "수발신 공문" : subCategory;
+  return subCategory === "수신 공문" || subCategory === "발신 공문" || subCategory === "기타 공문" || subCategory === "공문서" || subCategory === "수발신 공문" ? "공문서" : subCategory;
 }
 
 function getDefaultCorrespondenceType(subCategory: string): VisibleCorrespondenceType {
   if (subCategory === "발신 공문") return "발신";
+  if (subCategory === "기타 공문") return "기타";
   return "수신";
 }
 
@@ -119,11 +122,11 @@ export function DocumentUploadForm({
   const [replyToDocumentId, setReplyToDocumentId] = useState("");
   const [replyNotRequired, setReplyNotRequired] = useState(false);
   const [replyDueDate, setReplyDueDate] = useState("");
-  const isCorrespondenceDocument = category === "DISCLOSURE" && subCategory === "수발신 공문";
+  const isCorrespondenceDocument = category === "DISCLOSURE" && (subCategory === "공문서" || subCategory === "수발신 공문");
   const receivedCorrespondenceDocuments = replyTargetDocuments.filter(
     (document) =>
       document.category === "DISCLOSURE" &&
-      document.subCategory === "수발신 공문" &&
+      (document.subCategory === "공문서" || document.subCategory === "수발신 공문") &&
       document.correspondenceType === "수신" &&
       !document.replyNotRequired
   );

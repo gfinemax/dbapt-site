@@ -101,7 +101,7 @@ describe("disclosure page", () => {
     expect(screen.queryByText(/데모 시연용/)).not.toBeInTheDocument();
   });
 
-  it("places the construction partner agreement under operations and supervision", () => {
+  it("places the business documents under operations and supervision", () => {
     const { container } = render(<DisclosureClient />);
 
     const rulesSection = container.querySelector("#section-rules");
@@ -109,22 +109,30 @@ describe("disclosure page", () => {
 
     expect(rulesSection).toBeInTheDocument();
     expect(operationsSection).toBeInTheDocument();
-    expect(within(rulesSection as HTMLElement).queryByText("공동사업주체 시공예정사 간의 업무협약서")).not.toBeInTheDocument();
-    expect(within(operationsSection as HTMLElement).getByText("공동사업주체 시공예정사 간의 업무협약서")).toBeInTheDocument();
     expect(within(operationsSection as HTMLElement).getByText("분기별 사업실적보고서")).toBeInTheDocument();
+    expect(within(operationsSection as HTMLElement).getByText("토지 사용권원 및 소유권 확보 비율 명세서")).toBeInTheDocument();
+    expect(within(operationsSection as HTMLElement).getByText("사업시행계획서 문서함")).toBeInTheDocument();
+    expect(within(operationsSection as HTMLElement).getByText("공사시행 및 월별 공사진행 보고서")).toBeInTheDocument();
+    expect(within(operationsSection as HTMLElement).getByText("분양신청 및 관련 자료 문서함")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "연간 자금운용계획" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "2026년도 연간 자금운용 계획 및 차입 예산서" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "5. 사업 및 감리" }));
-    expect(screen.getByText("시공자 협약서")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "토지확보" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "용역 계약서" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "사업시행계획서" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "공사시행" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "실적보고서" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "감리 보고서" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "분양" })).toBeInTheDocument();
   });
 
   it("splits meeting and administration disclosures into separate top tabs", () => {
     const { container } = render(<DisclosureClient />);
 
     expect(screen.queryByRole("button", { name: "2. 회의 및 행정" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "2. 회의" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "3. 행정" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2. 의사록" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "3. 공문서" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "4. 회계 및 감사" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "5. 사업 및 감리" })).toBeInTheDocument();
 
@@ -133,24 +141,24 @@ describe("disclosure page", () => {
     expect(meetingsSection).toBeInTheDocument();
     expect(administrationSection).toBeInTheDocument();
     expect(within(meetingsSection as HTMLElement).getByText("총회의사록 문서함")).toBeInTheDocument();
-    expect(within(meetingsSection as HTMLElement).getByText("이사회 회의록 문서함")).toBeInTheDocument();
-    expect(within(meetingsSection as HTMLElement).getByText("대의원 회의록 문서함")).toBeInTheDocument();
+    expect(within(meetingsSection as HTMLElement).getByText("이사회 의사록 문서함")).toBeInTheDocument();
+    expect(within(meetingsSection as HTMLElement).getByText("대의원 의사록 문서함")).toBeInTheDocument();
     expect(within(meetingsSection as HTMLElement).queryByText("대관 공문서 문서함")).not.toBeInTheDocument();
     expect(within(administrationSection as HTMLElement).queryByText("대관 공문서 문서함")).not.toBeInTheDocument();
     expect(within(administrationSection as HTMLElement).getByText("수신 공문서 문서함")).toBeInTheDocument();
     expect(within(administrationSection as HTMLElement).getByText("발신 공문서 문서함")).toBeInTheDocument();
-    expect(within(administrationSection as HTMLElement).getByText("사업계획 및 고시문 문서함")).toBeInTheDocument();
+    expect(within(administrationSection as HTMLElement).getByText("기타 공문서 문서함")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "3. 행정" }));
+    fireEvent.click(screen.getByRole("button", { name: "3. 공문서" }));
     expect(screen.getByRole("button", { name: "수신 공문" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "발신 공문" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "사업시행계획" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "기타 공문" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "총회 의사록" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "2. 회의" }));
+    fireEvent.click(screen.getByRole("button", { name: "2. 의사록" }));
     expect(screen.getByRole("button", { name: "총회 의사록" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "이사회 회의록" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "대의원 회의록" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "이사회 의사록" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "대의원 의사록" })).toBeInTheDocument();
   });
 
   it("separates agency correspondence folders by received and sent direction", () => {
@@ -233,32 +241,32 @@ describe("disclosure page", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "2. 회의" }));
+    fireEvent.click(screen.getByRole("button", { name: "2. 의사록" }));
 
-    const delegateHeading = screen.getByRole("heading", { name: "대의원 회의록 문서함" });
+    const delegateHeading = screen.getByRole("heading", { name: "대의원 의사록 문서함" });
     const delegateCard = delegateHeading.closest(".stone-card");
     expect(delegateCard).toBeInTheDocument();
 
     fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "문서함 열기" }));
 
-    expect(screen.getAllByRole("heading", { name: "대의원 회의록 문서함" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("heading", { name: "대의원 의사록 문서함" }).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "+ 신규 문서 등록" }));
 
     expect(screen.getByRole("heading", { name: "신규 정보공개 문서 등록" })).toBeInTheDocument();
-    expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("대의원 회의록");
+    expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("대의원 의사록");
   });
 
   it("moves the selected submenu card to the top and lets direct card selection change the active card", () => {
     const { container } = render(<DisclosureClient />);
 
-    fireEvent.click(screen.getByRole("button", { name: "2. 회의" }));
-    fireEvent.click(screen.getByRole("button", { name: "대의원 회의록" }));
+    fireEvent.click(screen.getByRole("button", { name: "2. 의사록" }));
+    fireEvent.click(screen.getByRole("button", { name: "대의원 의사록" }));
 
     const meetingsSection = container.querySelector("#section-meetings");
     expect(meetingsSection).toBeInTheDocument();
 
     let meetingCards = Array.from((meetingsSection as HTMLElement).querySelectorAll(".stone-card"));
-    expect(within(meetingCards[0] as HTMLElement).getByRole("heading", { name: "대의원 회의록 문서함" })).toBeInTheDocument();
+    expect(within(meetingCards[0] as HTMLElement).getByRole("heading", { name: "대의원 의사록 문서함" })).toBeInTheDocument();
 
     const generalMeetingCard = within(meetingsSection as HTMLElement)
       .getByRole("heading", { name: "총회의사록 문서함" })

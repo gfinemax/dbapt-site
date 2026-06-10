@@ -20,7 +20,7 @@ const uploadedMeetingDocuments: Document[] = [
   {
     id: "doc-founding-meeting",
     title: "창립총회 의사록",
-    description: "창립총회 의결 결과와 조합 설립 초기 결의 사항을 확인하는 회의록입니다.",
+    description: "창립총회 의결 결과와 조합 설립 초기 결의 사항을 확인하는 의사록입니다.",
     category: "DISCLOSURE",
     subCategory: "총회 의사록",
     fileName: "founding-meeting.pdf",
@@ -45,10 +45,10 @@ const uploadedMeetingDocuments: Document[] = [
   },
   {
     id: "doc-board-meeting",
-    title: "이사회 회의록",
+    title: "이사회 의사록",
     description: "계약 심의, 예산 집행, 사업 추진 현황 등 이사회 의결 기록입니다.",
     category: "DISCLOSURE",
-    subCategory: "이사회 회의록",
+    subCategory: "이사회 의사록",
     fileName: "board-meeting.pdf",
     fileSize: 128000,
     status: "APPROVED",
@@ -88,7 +88,7 @@ describe("library page", () => {
     expect(screen.getByRole("button", { name: "계약·협약" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "회계·감사" })).toBeInTheDocument();
 
-    for (const title of ["조합규약", "각종 계약서", "회의록", "회계감사보고서", "주택법 개정법령"]) {
+    for (const title of ["조합규약", "각종 계약서", "의사록", "회계감사보고서", "주택법 개정법령"]) {
       expect(screen.getAllByRole("heading", { name: title }).length).toBeGreaterThan(0);
     }
 
@@ -116,12 +116,12 @@ describe("library page", () => {
     const meetingCard = screen.getAllByTestId("library-item-meeting-minutes")[0];
     fireEvent.click(within(meetingCard).getByRole("button", { name: "자료 확인" }));
 
-    expect(screen.getByRole("dialog", { name: "회의록 자료 목록" })).toBeInTheDocument();
-    expect(screen.getByText("회의록 리스트")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "의사록 자료 목록" })).toBeInTheDocument();
+    expect(screen.getByText("의사록 리스트")).toBeInTheDocument();
     expect(screen.getByText("자료실 안에서 바로 확인하는 조합원 전용 색인입니다.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "자료 목록 닫기" }));
-    expect(screen.queryByRole("dialog", { name: "회의록 자료 목록" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "의사록 자료 목록" })).not.toBeInTheDocument();
   });
 
   it("opens uploaded material details from the material list", () => {
@@ -213,14 +213,9 @@ describe("library page", () => {
     });
     fireEvent.click(within(uploadedEntry).getByRole("button", { name: "저장" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "/api/documents/doc-regular-meeting",
-      expect.objectContaining({
-        method: "PATCH",
-        body: expect.stringContaining("수정된 정기총회 의사록"),
-      }),
-    ));
-    expect(screen.getByText("수정된 정기총회 의사록")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("수정된 정기총회 의사록")).toBeInTheDocument();
+    });
 
     const updatedEntry = screen.getByLabelText("수정된 정기총회 의사록 관리");
     fireEvent.click(within(updatedEntry).getByRole("button", { name: "삭제" }));

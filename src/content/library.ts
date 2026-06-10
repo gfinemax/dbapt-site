@@ -45,7 +45,7 @@ export const libraryItems: LibraryItem[] = [
   },
   {
     id: "meeting-minutes",
-    title: "회의록",
+    title: "의사록",
     description: "총회와 이사회 등 주요 회의 결과를 확인할 수 있는 자료입니다.",
     category: "meetings",
     source: "공개자료",
@@ -66,7 +66,7 @@ export const libraryItems: LibraryItem[] = [
   {
     id: "audit-report",
     title: "회계감사보고서",
-    description: "회계감사와 내부감사 등 자금 집행 확인 자료의 열람 위치를 안내합니다.",
+    description: "회계감사보고서와 월별 자금 입출금 등 자금 집행 확인 자료의 열람 위치를 안내합니다.",
     category: "accounting",
     source: "공개자료",
     sourceHref: "/disclosure?tab=accounting",

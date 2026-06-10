@@ -87,7 +87,7 @@ export function LibraryClient({ isLoggedIn = false, isAdmin = false, documents =
                   메뉴가 달라도 자료는 한곳에서 찾습니다
                 </h2>
                 <p className="mt-4 text-sm leading-relaxed text-graphite">
-                  조합규약, 회의록, 계약서처럼 공개자료 메뉴에 있는 문서도 자료실에서 함께 안내합니다.
+                  조합규약, 의사록, 계약서처럼 공개자료 메뉴에 있는 문서도 자료실에서 함께 안내합니다.
                   권한이 필요한 자료는 제목과 위치만 보여주고 실제 열람은 로그인 후 진행합니다.
                 </p>
               </div>
@@ -323,18 +323,18 @@ const fallbackMaterialEntries: Record<string, MaterialEntry[]> = {
   "meeting-minutes": [
     {
       title: "창립총회 의사록",
-      description: "창립총회 의결 결과와 조합 설립 초기 결의 사항을 확인하는 회의록입니다.",
-      meta: "회의록 리스트 · 총회",
+      description: "창립총회 의결 결과와 조합 설립 초기 결의 사항을 확인하는 의사록입니다.",
+      meta: "의사록 리스트 · 총회",
     },
     {
       title: "정기총회 의사록",
       description: "결산, 예산, 규약 변경 등 정기총회 주요 결의 내용을 확인합니다.",
-      meta: "회의록 리스트 · 총회",
+      meta: "의사록 리스트 · 총회",
     },
     {
-      title: "이사회 회의록",
+      title: "이사회 의사록",
       description: "계약 심의, 예산 집행, 사업 추진 현황 등 이사회 의결 기록입니다.",
-      meta: "회의록 리스트 · 이사회",
+      meta: "의사록 리스트 · 이사회",
     },
   ],
   "service-contracts": [
@@ -352,12 +352,12 @@ const fallbackMaterialEntries: Record<string, MaterialEntry[]> = {
   "audit-report": [
     {
       title: "회계감사보고서",
-      description: "외부감사와 내부감사 등 자금 집행 확인 자료의 열람 위치를 안내합니다.",
+      description: "정기 외부회계감사 보고서 및 자금 집행 확인 자료의 열람 위치를 안내합니다.",
       meta: "공개자료 · 회계감사",
     },
     {
-      title: "자금집행 실적 보고서",
-      description: "분기별 자금 집행과 감사 결과를 확인하는 보호 자료입니다.",
+      title: "월별 자금 입출금 명세서",
+      description: "신탁사 에스크로 계좌를 통한 월별 자금 입출금 내역을 확인하는 보호 자료입니다.",
       meta: "공개자료 · 회계",
     },
   ],
@@ -387,7 +387,7 @@ function getRealMaterialEntries(itemId: string, documents: Document[]): Material
       case "service-contracts":
         return /계약|협약|용역/.test(text);
       case "audit-report":
-        return doc.category === "ACCOUNTING" || /회계|감사|자금/.test(text);
+        return doc.category === "ACCOUNTING" || /회계|감사|자금|분담금/.test(text);
       default:
         return false;
     }
@@ -430,7 +430,7 @@ function LibraryMaterialPanel({
     },
   ];
   const entries = realEntries.length > 0 ? realEntries : fallbackEntries;
-  const listLabel = item.id === "meeting-minutes" ? "회의록 리스트" : `${item.title} 리스트`;
+  const listLabel = item.id === "meeting-minutes" ? "의사록 리스트" : `${item.title} 리스트`;
 
   return (
     <div className="fixed inset-0 z-[90]">

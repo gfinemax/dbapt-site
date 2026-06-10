@@ -67,8 +67,8 @@ type DisclosureDocumentFolder = {
 
 const tabs = [
   { id: "rules", label: "1. 규약 및 연명부" },
-  { id: "meetings", label: "2. 회의" },
-  { id: "administration", label: "3. 행정" },
+  { id: "meetings", label: "2. 의사록" },
+  { id: "administration", label: "3. 공문서" },
   { id: "accounting", label: "4. 회계 및 감사" },
   { id: "operations", label: "5. 사업 및 감리" },
 ] as const;
@@ -131,7 +131,7 @@ const disclosureData = {
     ]
   },
   meetings: {
-    title: "회의",
+    title: "의사록",
     subtitle: "총회, 이사회, 대의원회 의결록을 별도 문서함으로 보관합니다.",
     badge: "Meetings",
     items: [
@@ -148,31 +148,31 @@ const disclosureData = {
       },
       { 
         id: "meetings-2", 
-        title: "이사회 회의록 문서함", 
-        desc: "사무국 예산 조율, 협력사 계약 심의 등 이사회 및 감사 정례 의결 회의록이 안전하게 일괄 보관되어 있습니다.", 
+        title: "이사회 의사록 문서함", 
+        desc: "사무국 예산 조율, 협력사 계약 심의 등 이사회 및 감사 정례 의결 의사록이 안전하게 일괄 보관되어 있습니다.", 
         date: "최근 업데이트: 2026.01", 
         count: 18,
         searchKey: "이사회",
         categoryKey: "DISCLOSURE",
-        bbsCategory: "이사회 회의록",
-        preview: ["제12차 정기 이사회 회의록", "2026년 신년 이사회 의결서", "제11차 임시 이사회 회의록"]
+        bbsCategory: "이사회 의사록",
+        preview: ["제12차 정기 이사회 의사록", "2026년 신년 이사회 의결서", "제11차 임시 이사회 의사록"]
       },
       {
         id: "meetings-3",
-        title: "대의원 회의록 문서함",
+        title: "대의원 의사록 문서함",
         desc: "대의원회 안건 보고, 의결 결과, 참석자 확인 등 대의원 회의 관련 기록을 별도 보관하는 문서함입니다.",
         date: "최근 업데이트: 2026.01",
         count: 0,
         searchKey: "대의원",
         categoryKey: "DISCLOSURE",
-        bbsCategory: "대의원 회의록",
-        preview: ["대의원회 회의록", "대의원 안건 보고서", "대의원 의결 확인서"]
+        bbsCategory: "대의원 의사록",
+        preview: ["대의원회 의사록", "대의원 안건 보고서", "대의원 의결 확인서"]
       },
     ]
   },
   administration: {
-    title: "행정",
-    subtitle: "구청, 서울시 등 유관기관 수발신 공문과 사업시행 관련 행정 문서를 보관합니다.",
+    title: "공문서",
+    subtitle: "구청, 서울시 등 유관기관 공문서와 사업시행 관련 행정 문서를 보관합니다.",
     badge: "Administration",
     items: [
       { 
@@ -183,7 +183,7 @@ const disclosureData = {
         count: 0,
         searchKey: "수신",
         categoryKey: "DISCLOSURE",
-        bbsCategory: "수발신 공문",
+        bbsCategory: "공문서",
         correspondenceTypes: ["수신"],
         preview: ["동작구청 행정실태조사 수신공문", "서울특별시 지구단위계획 관련 수신", "관계기관 보완 요청 공문"]
       },
@@ -195,21 +195,22 @@ const disclosureData = {
         count: 0,
         searchKey: "발신",
         categoryKey: "DISCLOSURE",
-        bbsCategory: "수발신 공문",
+        bbsCategory: "공문서",
         correspondenceTypes: ["발신", "회신"],
         preview: ["시정요구 조치 결과보고 제출문", "사업시행 관련 보완자료 제출 공문", "유관기관 협의 회신 공문"]
       },
       { 
-        id: "administration-3", 
-        title: "사업계획 및 고시문 문서함", 
-        desc: "대방동 11-103 일대 주택건설 사업계획서(안) 및 지구단위계획 결정 고시(서울시 고시 제2022-291호) 등 인허가 원본 문서입니다.", 
-        date: "최근 업데이트: 2025.08", 
-        count: 4,
-        searchKey: "사업시행계획",
+        id: "administration-4", 
+        title: "기타 공문서 문서함", 
+        desc: "수신 및 발신 분류에 속하지 않는 협조전, 보고서 및 기타 행정 서류를 보관합니다.", 
+        date: "최근 업데이트: 2026.01", 
+        count: 0,
+        searchKey: "기타",
         categoryKey: "DISCLOSURE",
-        bbsCategory: "사업시행계획",
-        preview: ["주택건설 사업계획 승인 고시문", "지구단위계획 결정 고시 원본", "환경영향평가 협의 의견서"]
-      },
+        bbsCategory: "공문서",
+        correspondenceTypes: ["기타"],
+        preview: ["조합원 안내 협조전", "용역 진행 보고서", "기타 행정 통지문"]
+      }
     ]
   },
   accounting: {
@@ -217,10 +218,11 @@ const disclosureData = {
     subtitle: "자금관리 신탁사의 에스크로 입출금 내역과 외부감사인의 투명한 회계보고서입니다.",
     badge: "Accounting & Audit",
     items: [
-      { id: "acc-1", title: "2025년도 정기 외부회계감사 정밀 보고서", desc: "주택법 제12조에 의거하여 독립된 공인회계법인으로부터 분담금 집행 일체를 정밀 감사받은 결과보고서입니다.", date: "2026.02", subCategory: "외부회계감사" },
-      { id: "acc-2", title: "조합 내부 감사진 정기 분기별 감사 보고서", desc: "입주예정 조합원 대표 감사진이 조합 사무국 예산 수립 및 계약 집행 적정성을 자체 감사한 감독 결과입니다.", date: "2026.01", subCategory: "내부감사" },
-      { id: "acc-3", title: "연간 자금운용계획", desc: "2026년 한 해 동안 집행 예정인 부동산 매입, 용역비, 차입 금융 조달(LOI 확보) 관련 전체 운용 계획입니다.", date: "2026.01", subCategory: "연간자금운용계획" },
-      { id: "acc-4", title: "신영부동산신탁 수탁 에스크로 자금입출금명세서", desc: "조합원 분담금 임의 유출 방지를 위해 에스크로 안전 계좌로 관리된 월별 자금 입출금 세부 내역서입니다.", date: "2026.02", subCategory: "에스크로 명세서" },
+      { id: "acc-1", title: "정기 외부회계감사 보고서", desc: "독립된 공인회계법인으로부터 분담금 집행 일체를 정밀 감사받은 결과보고서입니다. (의무공개 대상)", date: "2026.02", subCategory: "회계감사보고서" },
+      { id: "acc-3", title: "연간 자금운용계획", desc: "조합의 사업비 조달 및 집행, 예산 수립 관련 연간 전체 자금 운용 계획입니다. (의무공개 대상)", date: "2026.01", subCategory: "연간자금운용계획" },
+      { id: "acc-4", title: "월별 자금 입출금 명세서", desc: "신탁사 수탁 계좌를 통해 안전하게 집행된 월별 자금 입출금 세부 명세서입니다. (의무공개 대상)", date: "2026.02", subCategory: "월별 자금 입출금" },
+      { id: "acc-5", title: "조합원 분담금 납부 현황", desc: "전체 조합원의 분담금 납부 현황 및 미납금 관리 내역입니다. (의무공개 대상)", date: "수시 업데이트", subCategory: "분담금 납부" },
+      { id: "acc-6", title: "추가 분담금 산출 명세서", desc: "사업비 변경 등에 따른 추가 분담금 발생 여부 및 산출 근거 자료입니다. (의무공개 대상)", date: "수시 업데이트", subCategory: "추가 분담금 산출" },
     ]
   },
   operations: {
@@ -228,11 +230,13 @@ const disclosureData = {
     subtitle: "조합이 체결한 정식 용역 계약 원본과 감리전문가의 월간 실적서입니다.",
     badge: "Operations, Contracts & Supervision",
     items: [
+      { id: "ops-6", title: "토지 사용권원 및 소유권 확보 비율 명세서", desc: "토지 사용권원 및 소유권 확보 비율을 공개합니다. (의무공개 대상)", date: "수시 업데이트", subCategory: "토지확보" },
       { id: "ops-1", title: "설계·용역·부동산 대행사별 정식 계약서 원본 일람", desc: "하우드엔지니어링(설계), 솔롱고스(매입), 월드(법률) 등 조합이 정식 체결하고 공증한 일체의 계약서 모음입니다.", date: "2025.07", subCategory: "용역 계약서" },
-      { id: "ops-2", title: "대방동 현장 월별 공사진행 및 토지 매입 상황판", desc: "현장 토지 소유권 확보 소송 추진 현황과 토지매입 실무 핫라인 소통 기록, 매입 비율 현황 보고입니다.", date: "2026.02", subCategory: "공사진행/토지" },
+      { id: "ops-7", title: "사업시행계획서 문서함", desc: "대방동 11-103 일대 주택건설 사업계획서(안) 및 지구단위계획 결정 고시(서울시 고시 제2022-291호) 등 인허가 원본 문서입니다.", date: "최근 업데이트: 2025.08", subCategory: "사업시행계획" },
+      { id: "ops-2", title: "공사시행 및 월별 공사진행 보고서", desc: "월별 공사진행 상황에 관한 서류 (의무공개 대상)", date: "2026.02", subCategory: "공사시행" },
       { id: "ops-3", title: "분기별 사업실적보고서", desc: "지구단위계획 완수 이후 소방·설비 설계 용역사 발주 등 단계별 마일스톤 도달 실적에 대한 조합 공식 보고입니다.", date: "2025.09", subCategory: "실적보고서" },
       { id: "ops-4", title: "건축·소방 감리원 안전점검 및 월간 감리보고서", desc: "인허가 관련 정밀 안전 확보와 법령 준수를 위해 감리 기술자가 정밀 점검하고 관청에 제출한 공식 실적서입니다.", date: "2025.11", subCategory: "감리 보고서" },
-      { id: "ops-5", title: "공동사업주체 시공예정사 간의 업무협약서", desc: "대한민국 1군 메이저 브랜드 건설사와 체결한 사업 공동 추진 실무 협약 및 브랜드 사용 계약서 원본입니다.", date: "2025.07", subCategory: "시공자 협약서", guide: ["협약 당사자", "업무 범위", "브랜드 사용 조건"] },
+      { id: "ops-8", title: "분양신청 및 관련 자료 문서함", desc: "분양신청에 관한 서류 및 관련 자료로 구성되어 있습니다.", date: "수시 업데이트", subCategory: "분양" },
     ]
   }
 };
@@ -249,26 +253,29 @@ const subMenus = {
   ],
   meetings: [
     { label: "총회 의사록", id: "meetings-1" },
-    { label: "이사회 회의록", id: "meetings-2" },
-    { label: "대의원 회의록", id: "meetings-3" },
+    { label: "이사회 의사록", id: "meetings-2" },
+    { label: "대의원 의사록", id: "meetings-3" },
   ],
   administration: [
     { label: "수신 공문", id: "administration-1" },
     { label: "발신 공문", id: "administration-2" },
-    { label: "사업시행계획", id: "administration-3" },
+    { label: "기타 공문", id: "administration-4" },
   ],
   accounting: [
-    { label: "외부회계감사", id: "acc-1" },
-    { label: "내부감사", id: "acc-2" },
+    { label: "회계감사보고서", id: "acc-1" },
     { label: "연간자금운용계획", id: "acc-3" },
-    { label: "에스크로 명세서", id: "acc-4" },
+    { label: "월별 자금 입출금", id: "acc-4" },
+    { label: "분담금 납부", id: "acc-5" },
+    { label: "추가 분담금 산출", id: "acc-6" },
   ],
   operations: [
+    { label: "토지확보", id: "ops-6" },
     { label: "용역 계약서", id: "ops-1" },
-    { label: "공사진행/토지", id: "ops-2" },
+    { label: "사업시행계획서", id: "ops-7" },
+    { label: "공사시행", id: "ops-2" },
     { label: "실적보고서", id: "ops-3" },
     { label: "감리 보고서", id: "ops-4" },
-    { label: "시공자 협약서", id: "ops-5" },
+    { label: "분양", id: "ops-8" },
   ],
 } as const;
 
@@ -280,7 +287,11 @@ function formatDisclosureDate(dateStr?: string | null) {
 }
 
 function getSubCategoryAliases(subCategory: string) {
-  return subCategory === "실적보고서" ? ["실적보고서", "추진실적"] : [subCategory];
+  if (subCategory === "실적보고서") return ["실적보고서", "추진실적"];
+  if (subCategory === "공문서") return ["공문서", "수발신 공문"];
+  if (subCategory === "이사회 의사록") return ["이사회 의사록", "이사회 회의록"];
+  if (subCategory === "대의원 의사록") return ["대의원 의사록", "대의원 회의록"];
+  return [subCategory];
 }
 
 function renderEmptyMessageBody(message: string) {
@@ -487,7 +498,7 @@ export function DisclosureClient({
   // URL에서 탭 정보를 읽어와 초기 활성화 탭 설정
   useEffect(() => {
     const tabParam = searchParams.get("tab") as TabId;
-    if (tabParam && ["rules", "meetings", "accounting", "operations"].includes(tabParam)) {
+    if (tabParam && ["rules", "meetings", "administration", "accounting", "operations"].includes(tabParam)) {
       // 탭 파라미터가 있을 경우 비동기 상태 업데이트 및 지연 스크롤
       const timer = setTimeout(() => {
         setActiveTab(tabParam);
@@ -689,11 +700,16 @@ export function DisclosureClient({
 
                       // 1. 실제 DB 문서 중 해당 카테고리의 문서 필터링
                       const realDocs = documents.filter(
-                        (d) =>
-                          d.category === "DISCLOSURE" &&
-                          d.subCategory === folderItem.bbsCategory &&
-                          (!folderItem.correspondenceTypes ||
-                            (d.correspondenceType && folderItem.correspondenceTypes.includes(d.correspondenceType)))
+                        (d) => {
+                          const normalizedSub = d.subCategory === "수발신 공문" ? "공문서" :
+                                                d.subCategory === "이사회 회의록" ? "이사회 의사록" :
+                                                d.subCategory === "대의원 회의록" ? "대의원 의사록" :
+                                                d.subCategory;
+                          return d.category === "DISCLOSURE" &&
+                                 normalizedSub === folderItem.bbsCategory &&
+                                 (!folderItem.correspondenceTypes ||
+                                   (d.correspondenceType && folderItem.correspondenceTypes.includes(d.correspondenceType)));
+                        }
                       );
 
                       // 2. 중요 표시 문서가 있는지 계산

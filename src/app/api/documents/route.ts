@@ -14,17 +14,23 @@ type UploadedDocumentFile = {
   size?: unknown;
 };
 
-const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신"]);
+const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신", "기타"]);
 
 function normalizeSubCategory(value: string) {
-  return value === "수신 공문" || value === "발신 공문" ? "수발신 공문" : value;
+  if (value === "수신 공문" || value === "발신 공문" || value === "기타 공문" || value === "수발신 공문") {
+    return "공문서";
+  }
+  if (value === "이사회 회의록") return "이사회 의사록";
+  if (value === "대의원 회의록") return "대의원 의사록";
+  return value;
 }
 
 function normalizeCorrespondenceType(value: unknown, category: string, subCategory: string, rawSubCategory = subCategory) {
-  if (category !== "DISCLOSURE" || subCategory !== "수발신 공문") return null;
+  if (category !== "DISCLOSURE" || (subCategory !== "수발신 공문" && subCategory !== "공문서")) return null;
   const correspondenceType = typeof value === "string" ? value.trim() : "";
   if (CORRESPONDENCE_TYPES.has(correspondenceType)) return correspondenceType;
   if (rawSubCategory === "발신 공문") return "발신";
+  if (rawSubCategory === "기타 공문") return "기타";
   return "수신";
 }
 

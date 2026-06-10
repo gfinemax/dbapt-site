@@ -98,10 +98,15 @@ const EDITABLE_DOCUMENT_FIELDS = [
   "appendAttachments",
 ] as const;
 
-const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신"]);
+const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신", "기타"]);
 
 function normalizeSubCategory(value: string) {
-  return value === "수신 공문" || value === "발신 공문" ? "수발신 공문" : value;
+  if (value === "수신 공문" || value === "발신 공문" || value === "기타 공문" || value === "수발신 공문") {
+    return "공문서";
+  }
+  if (value === "이사회 회의록") return "이사회 의사록";
+  if (value === "대의원 회의록") return "대의원 의사록";
+  return value;
 }
 
 function hasOwn(body: Record<string, unknown>, key: string) {
