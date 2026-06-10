@@ -518,6 +518,21 @@ export function DisclosureClient({
     isSubTabClickRef.current = false;
 
     const timer = setTimeout(() => {
+      if (activeSubTab !== "all") {
+        const cardElement = document.getElementById(`card-${activeSubTab}`);
+        if (cardElement) {
+          isScrollingRef.current = true;
+          cardElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+          setTimeout(() => {
+            isScrollingRef.current = false;
+          }, 850);
+          return;
+        }
+      }
+
       const element = document.getElementById(`section-${activeTab}`);
       if (!element) return;
 
@@ -727,6 +742,7 @@ export function DisclosureClient({
                       
                       return (
                         <div 
+                          id={`card-${folderItem.id}`}
                           key={folderItem.id}
                           onClick={(e) => {
                             const target = e.target as HTMLElement;
@@ -877,6 +893,7 @@ export function DisclosureClient({
                       
                       return (
                         <div 
+                          id={`card-${item.id}`}
                           key={item.id}
                           onClick={(e) => {
                             const target = e.target as HTMLElement;
