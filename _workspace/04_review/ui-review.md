@@ -1,28 +1,25 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 회계 및 감사 하위 메뉴 수정 (Accounting & Audit Submenus Update)
-- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md` and `DESIGN.md`
-- Implementation plan: [implementation_plan.md](file:///C:/Users/finemax/.gemini/antigravity-ide/brain/11feac89-4da8-4c97-ba9d-9c976fd4ae95/implementation_plan.md)
+- Feature: 조직도 관계선 및 보고 체계 수정
+- Governing spec: `DESIGN.md`
+- Implementation plan: Current chat-approved organization chart implementation plan
 - Files or pages reviewed:
-  - [disclosure-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/disclosure-client.tsx)
-  - [meetings-table.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/disclosure/meetings-table.tsx)
-  - [document-upload-form.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/portal/document-upload-form.tsx)
-  - [library-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/library/library-client.tsx)
-  - [library.ts](file:///c:/workspace/antigravity/dbapt-site/src/content/library.ts)
-  - [landing.ts](file:///c:/workspace/antigravity/dbapt-site/src/content/landing.ts)
+  - [about-client.tsx](file:///c:/workspace/antigravity/dbapt-site/src/components/about/about-client.tsx)
+  - [about-client.test.tsx](file:///c:/workspace/antigravity/dbapt-site/src/__tests__/about-client.test.tsx)
+  - `/about` desktop and mobile screenshots generated with local Chrome headless
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: Public and private boundaries are strictly preserved. Only category display names, upload dropdown options, and list matching logic were updated. No working authentication or unauthorized document access behaviors were added or modified.
+- Evidence: Change is limited to public `/about` organization chart presentation. No public navigation, authenticated access, document disclosure, payment/accounting, voting, messaging, or data mutation behavior was added or modified.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: The submenus correctly display the 5 mandatory categories: "회계감사보고서", "연간자금운용계획", "월별 자금 입출금", "분담금 납부", and "추가 분담금 산출". Each displays appropriate legally mandatory info markers ("의무공개 대상"), keeping expectations realistic and truthful without implying active automated banking/accounting integrations.
+- Evidence: The chart now presents `감사` as `독립 감사`, keeps `이사회` and `조합장` in the governance/execution line, and marks `전문 협력사` as `자문·협력`. It does not imply a new live workflow or operational integration.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: All UI text elements use the Pretendard font as required. Layout and mobile responsiveness are preserved, styling is done with vanilla Tailwind classes conforming to the aesthetic guidelines, and keyboard focus is maintained.
+- Evidence: The chart keeps the warm canvas, stone card outline, restrained accents, and Pretendard-based page styling. Desktop connectors are decorative SVG hidden from assistive tech; mobile stacks cards without horizontal overflow in the checked screenshot.
 
 ## Outcome
 - Result: PASS

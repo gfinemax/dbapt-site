@@ -87,3 +87,12 @@
 - Candidate governing specification: `DESIGN.md` plus existing protected document registration and `공개자료` document-list presentation.
 - Candidate implementation plan: Add a nullable `Document.correspondenceType` metadata field, wire upload/edit APIs and forms, and extend focused tests.
 - Unanswered decision: none.
+
+---
+
+- Requested feature slice: Revise the public `/about` organization chart so audit independence, board-chair execution flow, and professional partner advisory status are visually accurate.
+- Explicitly included scope: Separate `감사` from the board/chair governance line with independent-audit presentation and dashed oversight relation; keep `이사회` and `조합장` in a connected 심의·의결/집행 line; move `전문 협력사` out of the `사무국` vertical stack into a dashed `자문·협력` partner position.
+- Explicitly excluded scope: Do not change access rules, authenticated portal behavior, partner status cards, document workflows, routes, or non-organization about-page sections.
+- Candidate governing specification: `DESIGN.md`, public `조합소개` presentation scope.
+- Candidate implementation plan: Current chat-approved organization chart implementation plan.
+- Unanswered decision: none.

@@ -77,3 +77,11 @@
 - Implementation boundary: Add only nullable `correspondenceType` metadata for `수발신 공문`. Keep uploads admin-only, preserve existing file access, and render the selector only when the selected folder is `수발신 공문`.
 - Request/spec conflicts: none.
 - Planning may continue: yes.
+
+---
+
+- Selected approved spec path: `DESIGN.md`.
+- Selected implementation plan: Current chat-approved organization chart implementation plan.
+- Implementation boundary: Keep the change limited to public `/about` organization chart presentation. Clarify existing organizational relationships using layout, badges, and solid/dashed connectors without adding working features, access changes, or new partner data.
+- Request/spec conflicts: none.
+- Planning may continue: yes.

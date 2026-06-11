@@ -117,19 +117,19 @@ const organizationNodes = [
   },
   {
     title: "조합장",
-    description: "조합 운영 총괄 및 대외 업무 대표",
+    description: "이사회 의결 안건 집행 및 조합 운영 총괄",
     icon: "🧭",
     tone: "bg-sky-blue/10 text-sky-blue",
   },
   {
     title: "이사회",
-    description: "예산, 계약, 사업 추진 안건 심의",
+    description: "예산, 계약, 사업 추진 안건 심의·의결",
     icon: "📋",
     tone: "bg-meadow-green/10 text-midnight",
   },
   {
     title: "감사",
-    description: "자금 집행과 업무 절차의 독립 점검",
+    description: "조합장과 이사회 업무 및 자금 집행의 독립 점검",
     icon: "🔎",
     tone: "bg-sunburst-yellow/15 text-charcoal-primary",
   },
@@ -141,22 +141,20 @@ const organizationNodes = [
   },
   {
     title: "전문 협력사",
-    description: "신탁, 설계, 법무, 회계, 금융, 사업관리 실무 지원",
+    description: "신탁, 설계, 법무, 회계 등 분야별 계약·자문·실무 지원",
     icon: "🤝",
     tone: "bg-ember-orange/10 text-ember-orange",
   },
 ];
 
-const governanceOrganizationNodes = [
+const governanceLineOrganizationNodes = [
   organizationNodes[2],
   organizationNodes[1],
-  organizationNodes[3],
 ];
 
-const secretariatOrganizationNodes = [
-  organizationNodes[4],
-  organizationNodes[5],
-];
+const auditOrganizationNode = organizationNodes[3];
+const executionOrganizationNode = organizationNodes[4];
+const advisoryOrganizationNode = organizationNodes[5];
 
 function OrganizationNodeCard({
   node,
@@ -636,27 +634,32 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                 </h3>
               </div>
               <p className="max-w-md text-xs leading-5 text-graphite">
-                조합원 총회를 최상위 의사결정 기구로 두고, 조합장·이사회·감사·사무국이 역할을 나누어 사업을 운영합니다.
+                조합원 총회를 최상위 의결 기구로 두고, 이사회 심의·의결, 조합장 집행, 감사의 독립 점검, 사무국 실무 수행 체계로 운영합니다.
               </p>
             </div>
 
             <div data-organization-chart className="relative overflow-hidden rounded-[24px] border border-stone-surface bg-parchment-card px-4 py-7 sm:px-7 sm:py-10">
               <svg
-                className="pointer-events-none absolute left-6 right-6 top-[144px] bottom-[102px] hidden md:block"
-                viewBox="0 0 1000 520"
+                className="pointer-events-none absolute left-6 right-6 top-[144px] bottom-[110px] hidden md:block"
+                viewBox="0 0 1000 620"
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >
                 <g fill="none" stroke="#d8d2ca" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3">
-                  <path d="M500 0 V82" />
-                  <path d="M500 82 H176 Q148 82 148 110 V128" />
-                  <path d="M500 82 V128" />
-                  <path d="M500 82 H824 Q852 82 852 110 V128" />
-                  <path d="M500 286 V404" />
+                  <path d="M500 0 V88" />
+                  <path d="M500 88 H285 Q260 88 260 116 V138" />
+                  <path d="M500 88 V138" />
+                  <path d="M500 34 H780 Q820 34 820 78 V138" />
+                  <path d="M260 302 H500" />
+                  <path d="M500 302 V418" />
+                </g>
+                <g fill="none" stroke="#d8d2ca" strokeDasharray="8 9" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3">
+                  <path d="M800 302 C700 350 470 350 285 302" />
+                  <path d="M535 318 C630 372 710 378 810 418" />
                 </g>
               </svg>
 
-              <div className="relative z-10 mx-auto flex max-w-4xl flex-col">
+              <div className="relative z-10 mx-auto flex max-w-5xl flex-col">
                 <div className="mx-auto w-full max-w-[420px]">
                   <OrganizationNodeCard
                     node={organizationNodes[0]}
@@ -666,31 +669,50 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                 </div>
 
                 <div
-                  data-testid="organization-governance-row"
-                  className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[repeat(3,minmax(0,260px))] md:justify-center"
+                  className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[minmax(0,260px)_minmax(0,260px)_minmax(0,230px)] md:justify-center md:gap-8"
                 >
-                  {governanceOrganizationNodes.map((node) => (
-                    <div key={node.title} className="flex h-full flex-col">
-                      <OrganizationNodeCard node={node} className="h-full min-h-[148px]" />
-                    </div>
-                  ))}
+                  <div
+                    data-testid="organization-governance-line"
+                    className="grid gap-4 md:col-span-2 md:grid-cols-2 md:gap-8"
+                  >
+                    {governanceLineOrganizationNodes.map((node) => (
+                      <div key={node.title} className="flex h-full flex-col">
+                        <OrganizationNodeCard
+                          node={node}
+                          badge={node.title === "이사회" ? "심의·의결" : "집행 대표"}
+                          className="h-full min-h-[148px]"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div data-testid="organization-audit-node" className="flex h-full flex-col">
+                    <OrganizationNodeCard
+                      node={auditOrganizationNode}
+                      badge="독립 감사"
+                      className="h-full min-h-[148px] border-dashed border-[#d8d2ca] bg-white/95"
+                    />
+                  </div>
                 </div>
 
                 <div
-                  data-testid="organization-secretariat-stack"
-                  className="mt-12 flex flex-col items-center gap-4 md:mt-20"
+                  className="mt-12 grid gap-4 md:mt-20 md:grid-cols-[minmax(0,260px)_minmax(0,260px)_minmax(0,230px)] md:justify-center md:gap-8"
                 >
-                  {secretariatOrganizationNodes.map((node, index) => (
-                    <div key={node.title} className="relative flex w-full max-w-[640px] flex-col">
-                      {index > 0 && (
-                        <span
-                          className="pointer-events-none absolute -top-4 left-1/2 hidden h-4 w-px -translate-x-1/2 bg-[#d8d2ca] md:block"
-                          aria-hidden="true"
-                        />
-                      )}
-                      <OrganizationNodeCard node={node} className="h-full min-h-[136px]" />
-                    </div>
-                  ))}
+                  <div className="hidden md:block" aria-hidden="true" />
+                  <div data-testid="organization-execution-stack" className="flex h-full flex-col">
+                    <OrganizationNodeCard
+                      node={executionOrganizationNode}
+                      badge="실무 집행"
+                      className="h-full min-h-[136px]"
+                    />
+                  </div>
+                  <div data-testid="organization-advisory-node" className="flex h-full flex-col">
+                    <OrganizationNodeCard
+                      node={advisoryOrganizationNode}
+                      badge="자문·협력"
+                      className="h-full min-h-[136px] border-dashed border-[#d8d2ca] bg-white/95"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

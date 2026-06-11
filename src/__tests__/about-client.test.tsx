@@ -26,18 +26,23 @@ describe("about client", () => {
     expect(screen.getByText("사무국")).toBeInTheDocument();
     expect(screen.getByText("전문 협력사")).toBeInTheDocument();
 
-    const governanceRow = screen.getByTestId("organization-governance-row");
-    expect(Array.from(governanceRow.querySelectorAll("h4")).map((heading) => heading.textContent)).toEqual([
+    const governanceLine = screen.getByTestId("organization-governance-line");
+    expect(Array.from(governanceLine.querySelectorAll("h4")).map((heading) => heading.textContent)).toEqual([
       "이사회",
       "조합장",
-      "감사",
     ]);
 
-    const secretariatStack = screen.getByTestId("organization-secretariat-stack");
-    expect(Array.from(secretariatStack.querySelectorAll("h4")).map((heading) => heading.textContent)).toEqual([
-      "사무국",
-      "전문 협력사",
-    ]);
+    const auditNode = screen.getByTestId("organization-audit-node");
+    expect(auditNode).toHaveTextContent("감사");
+    expect(auditNode).toHaveTextContent("독립 감사");
+
+    const executionStack = screen.getByTestId("organization-execution-stack");
+    expect(Array.from(executionStack.querySelectorAll("h4")).map((heading) => heading.textContent)).toEqual(["사무국"]);
+
+    const advisoryNode = screen.getByTestId("organization-advisory-node");
+    expect(advisoryNode).toHaveTextContent("전문 협력사");
+    expect(advisoryNode).toHaveTextContent("자문·협력");
+    expect(executionStack).not.toHaveTextContent("전문 협력사");
 
     expect(screen.getByRole("heading", { name: "협력사 현황" })).toBeInTheDocument();
     expect(screen.getByText("자금관리 신탁사: 신영부동산신탁")).toBeInTheDocument();
