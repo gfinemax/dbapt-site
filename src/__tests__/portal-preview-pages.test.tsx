@@ -127,4 +127,22 @@ describe("role-specific portal preview pages", () => {
     expect(screen.queryByText("admin / admin123")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /화면 보기/ })).not.toBeInTheDocument();
   });
+
+  it("warns mobile embedded browser users before Google OAuth", async () => {
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (Linux; Android 14; SM-S928N Build/UP1A) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/125.0.0.0 Mobile Safari/537.36 wv",
+    );
+    const Page = findPage("../app/login/page.tsx");
+    if (!Page) return;
+
+    render(await Page({ searchParams: Promise.resolve({}) }));
+
+    expect(
+      await screen.findByText(/앱 안에서 열린 브라우저에서는 Google 로그인이 차단될 수 있습니다/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "외부 브라우저에서 Google 로그인" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("intent://"),
+    );
+  });
 });

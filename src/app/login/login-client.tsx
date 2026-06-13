@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StatusPage } from "@/components/landing/status-page";
@@ -10,9 +10,94 @@ type LoginClientProps = {
   googleError?: string | null;
 };
 
+type BrowserOAuthState = {
+  isEmbedded: boolean;
+  isAndroid: boolean;
+  googleAuthHref: string;
+};
+
+const GOOGLE_AUTH_PATH = "/api/auth/google";
+const DEFAULT_BROWSER_OAUTH_STATE: BrowserOAuthState = {
+  isEmbedded: false,
+  isAndroid: false,
+  googleAuthHref: GOOGLE_AUTH_PATH,
+};
+
+function isEmbeddedOAuthUserAgent(userAgent: string) {
+  const normalized = userAgent.toLowerCase();
+  const isAndroidWebView = /\bwv\b/.test(normalized) || /version\/[\d.]+.*chrome/.test(normalized);
+  const isIosWebView = /\b(ipad|iphone|ipod)\b/.test(normalized) && !normalized.includes("safari");
+  const isKnownInAppBrowser =
+    /kakaotalk|naver|instagram|fbav|fban|line\/|daumapps|everytimeapp|snapchat|whale/.test(normalized);
+
+  return isAndroidWebView || isIosWebView || isKnownInAppBrowser;
+}
+
+function buildAndroidBrowserIntent(targetUrl: URL) {
+  const scheme = targetUrl.protocol.replace(":", "") || "https";
+  const hostAndPath = `${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`;
+  const fallbackUrl = encodeURIComponent(targetUrl.toString());
+
+  return `intent://${hostAndPath}#Intent;scheme=${scheme};package=com.android.chrome;S.browser_fallback_url=${fallbackUrl};end`;
+}
+
+function buildGoogleAuthHref(path: string, userAgent: string, origin: string) {
+  const targetUrl = new URL(path, origin);
+  const isEmbedded = isEmbeddedOAuthUserAgent(userAgent);
+  const isAndroid = /android/i.test(userAgent);
+
+  if (isEmbedded && isAndroid) {
+    return buildAndroidBrowserIntent(targetUrl);
+  }
+
+  return `${targetUrl.pathname}${targetUrl.search}`;
+}
+
+function getSignupGoogleAuthPath(form: HTMLFormElement) {
+  const params = new URLSearchParams();
+  const formData = new FormData(form);
+
+  for (const field of ["signupName", "signupPhone", "signupMemo"]) {
+    const value = formData.get(field);
+    if (typeof value === "string" && value.trim()) {
+      params.set(field, value.trim());
+    }
+  }
+
+  const query = params.toString();
+  return query ? `${GOOGLE_AUTH_PATH}?${query}` : GOOGLE_AUTH_PATH;
+}
+
+function subscribeUserAgent() {
+  return () => undefined;
+}
+
+function getClientUserAgent() {
+  return typeof window === "undefined" ? "" : window.navigator.userAgent;
+}
+
+function getServerUserAgent() {
+  return "";
+}
+
 export function LoginClient({ googleError = null }: LoginClientProps) {
   const router = useRouter();
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const userAgent = useSyncExternalStore(subscribeUserAgent, getClientUserAgent, getServerUserAgent);
+  const browserOAuth = useMemo<BrowserOAuthState>(() => {
+    if (!userAgent || typeof window === "undefined") {
+      return DEFAULT_BROWSER_OAUTH_STATE;
+    }
+
+    const isEmbedded = isEmbeddedOAuthUserAgent(userAgent);
+    const isAndroid = /android/i.test(userAgent);
+
+    return {
+      isEmbedded,
+      isAndroid,
+      googleAuthHref: buildGoogleAuthHref(GOOGLE_AUTH_PATH, userAgent, window.location.origin),
+    };
+  }, [userAgent]);
   const [state, formAction, isPending] = useActionState(loginAction, null);
   const showDemoCredentials = process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === "true" || process.env.NODE_ENV === "development";
   const googleErrorMessage =
@@ -32,6 +117,14 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
       router.refresh();
     }
   }, [state, router]);
+
+  const handleSignupSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (!browserOAuth.isEmbedded || !browserOAuth.isAndroid) return;
+
+    event.preventDefault();
+    const path = getSignupGoogleAuthPath(event.currentTarget);
+    window.location.href = buildGoogleAuthHref(path, window.navigator.userAgent, window.location.origin);
+  };
 
   return (
     <StatusPage
@@ -100,7 +193,9 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
             </div>
 
             <a
-              href="/api/auth/google"
+              href={browserOAuth.googleAuthHref}
+              target={browserOAuth.isEmbedded && !browserOAuth.isAndroid ? "_blank" : undefined}
+              rel={browserOAuth.isEmbedded && !browserOAuth.isAndroid ? "noreferrer" : undefined}
               className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-[#f2f0ed] bg-[#f8f7f4] px-6 py-3.5 text-[14px] font-medium text-[#474645] transition duration-200 hover:bg-[#f2f0ed] active:bg-[#e8e6e1]"
             >
               <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -109,8 +204,21 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
               </svg>
-              Google 계정으로 계속하기
+              {browserOAuth.isEmbedded ? "외부 브라우저에서 Google 로그인" : "Google 계정으로 계속하기"}
             </a>
+
+            {browserOAuth.isEmbedded && (
+              <div role="alert" className="rounded-xl bg-[#f8f7f4] p-3 text-xs leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                <p className="font-semibold text-charcoal-primary">
+                  앱 안에서 열린 브라우저에서는 Google 로그인이 차단될 수 있습니다.
+                </p>
+                <p className="mt-1">
+                  {browserOAuth.isAndroid
+                    ? "위 버튼을 누르면 Chrome에서 Google 로그인을 다시 시작합니다."
+                    : "상단 메뉴에서 Safari 또는 Chrome으로 열어 Google 로그인을 다시 시도해 주세요."}
+                </p>
+              </div>
+            )}
           </form>
         </section>
 
@@ -193,7 +301,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   <li>2. 사무국이 조합원 명부와 신청 정보를 대조합니다.</li>
                   <li>3. 승인 후 정식 조합원 또는 환불 조합원 권한이 부여됩니다.</li>
                 </ol>
-                <form action="/api/auth/google" method="get" className="mt-4 space-y-3">
+                <form action={GOOGLE_AUTH_PATH} method="get" onSubmit={handleSignupSubmit} className="mt-4 space-y-3">
                   <div>
                     <label className="mb-1.5 block font-semibold text-charcoal-primary" htmlFor="signupName">
                       신청자 이름
