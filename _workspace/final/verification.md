@@ -8,6 +8,7 @@
 - 승인된 공개자료 생성/수정 뒤 서버 알림 코디네이터를 호출하도록 문서 API를 연결했다.
 - 알림 코디네이터 실패는 문서 업로드/수정 응답 실패로 전파하지 않고 서버 로그로만 남긴다.
 - 운영 CLI를 추가했다: `notify:group`, `notify:member`, `notify:rule`, `notify:dry-run`.
+- 다음 운영 slice로 연락처/알림 가능 상태 설정 CLI와 알림 로그 조회 CLI를 추가했다.
 
 ## 주요 변경 파일
 
@@ -22,7 +23,10 @@
 - `scripts/notify-member.ts`
 - `scripts/notify-rule.ts`
 - `scripts/notify-dry-run.ts`
+- `scripts/notify-contact.ts`
+- `scripts/notify-logs.ts`
 - `src/__tests__/disclosure-notifications.test.ts`
+- `src/__tests__/notification-operations.test.ts`
 - `src/__tests__/document-upload-api.test.ts`
 - `package.json`
 
@@ -33,10 +37,13 @@
 - `pnpm notify:member -- --help`: PASS
 - `pnpm notify:rule -- --help`: PASS
 - `pnpm notify:dry-run -- --help`: PASS
+- `pnpm notify:contact -- --help`: PASS
+- `pnpm notify:logs -- --help`: PASS
 - `pnpm test src/__tests__/disclosure-notifications.test.ts`: PASS
+- `pnpm test src/__tests__/notification-operations.test.ts`: PASS
 - `pnpm test src/__tests__/document-upload-api.test.ts`: PASS
 - `pnpm lint`: PASS, 기존 `src/components/portal/document-table.tsx` unused warning 1개 유지
-- `pnpm test`: PASS, 23 files / 147 tests
+- `pnpm test`: PASS, 24 files / 151 tests
 - `pnpm build`: PASS
 
 ## DB 적용

@@ -182,3 +182,46 @@ pnpm build
 - [ ] **Step 3: Record verification**
 
 Update `_workspace/final/verification.md` with changed files, command results, and remaining live-send policy risk.
+
+---
+
+### Task 6: Dry-Run Operations Hardening
+
+**Files:**
+- Create: `src/lib/notifications/notification-operations.ts`
+- Create: `src/__tests__/notification-operations.test.ts`
+- Create: `scripts/notify-contact.ts`
+- Create: `scripts/notify-logs.ts`
+- Modify: `package.json`
+- Modify: `_workspace/final/verification.md`
+
+- [ ] **Step 1: Write failing tests**
+
+Cover:
+
+- Korean mobile phone values normalize to digits-only format.
+- invalid phone values are rejected before writing to DB.
+- contact update input builds the exact `User` update shape.
+- notification log summary masks phone values and includes document title/status/counts.
+
+- [ ] **Step 2: Verify red**
+
+Run: `pnpm test src/__tests__/notification-operations.test.ts`
+
+Expected: FAIL because `notification-operations.ts` does not exist.
+
+- [ ] **Step 3: Implement operations helpers and CLI scripts**
+
+Add `notify:contact` for setting phone/opt-in/enabled fields and `notify:logs` for reviewing recent notification logs.
+
+- [ ] **Step 4: Verify green and smoke test CLI help**
+
+Run:
+
+```powershell
+pnpm test src/__tests__/notification-operations.test.ts
+pnpm notify:contact -- --help
+pnpm notify:logs -- --help
+```
+
+Expected: PASS.

@@ -14,7 +14,9 @@
     "notify:group": "node --experimental-strip-types scripts/notify-group.ts",
     "notify:member": "node --experimental-strip-types scripts/notify-member.ts",
     "notify:rule": "node --experimental-strip-types scripts/notify-rule.ts",
-    "notify:dry-run": "node --experimental-strip-types scripts/notify-dry-run.ts"
+    "notify:dry-run": "node --experimental-strip-types scripts/notify-dry-run.ts",
+    "notify:contact": "node --experimental-strip-types scripts/notify-contact.ts",
+    "notify:logs": "node --experimental-strip-types scripts/notify-logs.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
