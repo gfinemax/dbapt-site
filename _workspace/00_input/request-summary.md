@@ -1,8 +1,8 @@
 # 요청 요약
 
-- 요청 기능: 스마트폰에서 Google 로그인 시 `403 disallowed_useragent` 오류가 발생하는 문제를 완화한다.
-- 증상: Google OAuth 승인 화면이 앱 내장 브라우저/WebView에서 열리며 Google의 보안 브라우저 정책에 의해 차단된다.
-- 구현 범위: 로그인 화면에서 내장 브라우저 계열 user-agent를 감지하고, Android에서는 외부 Chrome intent로 `/api/auth/google` OAuth 시작 URL을 다시 열도록 안내/버튼을 제공한다.
-- 제외 범위: Google OAuth client 설정 변경, 모바일 앱 WebView 설정 변경, 카카오/오픈채팅 자동화, 인증 권한 정책 변경.
-- 적용 기준: 직접 사용자 버그 리포트 및 Google OAuth `disallowed_useragent` 정책.
-- 미결정 사항: iOS 앱 내장 브라우저는 웹 페이지가 Safari를 강제 실행할 수 없어 안내 문구와 새 창 시도만 제공한다.
+- 요청 기능: 스마트폰에서 공개자료 열람 모달을 열었을 때 헤더와 버튼 레이아웃이 깨지는 문제를 모바일 가독성 중심으로 개선한다.
+- 증상: PDF 열람 모달 상단에서 문서 제목이 매우 좁은 폭에 갇혀 한 글자씩 세로로 쪼개지고, `전체 화면`, `다운로드`, `닫기` 버튼이 제목 영역을 밀어낸다.
+- 구현 범위: `PdfViewerModal`의 모바일 헤더, 액션 버튼 행, 본문 문서 카드 상단을 반응형으로 재배치한다.
+- 제외 범위: PDF 파일 생성/병합 API, 권한 정책, 문서 목록 카드, 다운로드 동작, 인증 흐름.
+- 적용 기준: 직접 사용자 스크린샷 버그 리포트 및 `DESIGN.md`의 warm canvas, stone border, pill button 규칙.
+- 미결정 사항: Codex in-app Browser가 현재 세션에서 unavailable이라 실제 브라우저 스크린샷 검증은 수행하지 못했다.

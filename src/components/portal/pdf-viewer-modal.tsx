@@ -158,25 +158,33 @@ export function PdfViewerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 sm:p-6 transition-all duration-300 animate-in fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-xs p-2 sm:p-6 transition-all duration-300 animate-in fade-in">
       {/* 바깥쪽 클릭 시 닫기 */}
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* 모달 창 본체 (DESIGN.md 가이드라인인 warm-canvas 백그라운드 및 recessed card 느낌 준용) */}
       <div
-        className={`relative bg-warm-canvas border border-stone-surface shadow-2xl rounded-2xl flex flex-col transition-all duration-300 overflow-hidden w-full max-w-5xl ${
+        data-testid="pdf-viewer-panel"
+        className={`relative bg-warm-canvas border border-stone-surface shadow-2xl rounded-2xl flex flex-col transition-all duration-300 overflow-hidden w-full max-w-5xl max-sm:h-[92svh] max-sm:w-[calc(100vw-16px)] max-sm:max-w-none ${
           isFullScreen ? "h-[95vh] max-w-[95vw]" : "h-[85vh]"
         }`}
       >
         {/* 상단 헤더 영역 */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-surface bg-white shrink-0">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="flex size-7 items-center justify-center rounded-full bg-midnight text-xs font-semibold text-white shrink-0 select-none">
+        <div
+          data-testid="pdf-viewer-header"
+          className="flex flex-col gap-3 border-b border-stone-surface bg-white px-4 py-3 shrink-0 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
+        >
+          <div className="flex w-full min-w-0 items-start gap-3 sm:flex-1 sm:items-center">
+            <span className="mt-0.5 flex size-8 items-center justify-center rounded-full bg-midnight text-xs font-semibold text-white shrink-0 select-none sm:mt-0 sm:size-7">
               📄
             </span>
-            <div className="min-w-0 relative">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <h3 className="text-sm font-bold text-charcoal-primary truncate leading-snug" title={activeDocument.title}>
+            <div className="min-w-0 flex-1 relative">
+              <div className="min-w-0">
+                <h3
+                  data-testid="pdf-viewer-title"
+                  className="text-[15px] font-bold leading-6 text-charcoal-primary whitespace-normal break-keep [overflow-wrap:anywhere] sm:truncate sm:text-sm sm:leading-snug"
+                  title={activeDocument.title}
+                >
                   {activeDocument.title}
                 </h3>
               </div>
@@ -187,23 +195,25 @@ export function PdfViewerModal({
                 </p>
               )}
               
-              <div className="flex items-center gap-2 text-[10px] text-ash font-medium tracking-tight mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">
-                <span>대방동 지역주택조합 실시간 보안 감사 열람 세션 가동 중</span>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium tracking-tight text-ash">
+                <span className="rounded-full bg-parchment-card px-2 py-0.5 text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                  보안 열람 세션
+                </span>
                 {activeDocument.documentDate && (
                   <>
-                    <span className="text-stone-surface select-none">|</span>
+                    <span className="hidden text-stone-surface select-none sm:inline">|</span>
                     <span className="text-graphite font-semibold">발생일: {formatDate(activeDocument.documentDate)}</span>
                   </>
                 )}
                 {(activeDocument.publishedAt || activeDocument.createdAt) && (
                   <>
-                    <span className="text-stone-surface select-none">|</span>
+                    <span className="hidden text-stone-surface select-none sm:inline">|</span>
                     <span className="text-graphite">등록일: {formatDate(activeDocument.publishedAt || activeDocument.createdAt)}</span>
                   </>
                 )}
                 {activeDocument.fileSize !== undefined && (
                   <>
-                    <span className="text-stone-surface select-none">|</span>
+                    <span className="hidden text-stone-surface select-none sm:inline">|</span>
                     <span className="text-graphite/80 font-mono text-[9px]">{formatSize(activeDocument.fileSize)}</span>
                   </>
                 )}
@@ -211,7 +221,7 @@ export function PdfViewerModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-4">
+          <div data-testid="pdf-viewer-actions" className="grid w-full grid-cols-3 gap-2 sm:ml-4 sm:flex sm:w-auto sm:items-center sm:gap-2 sm:shrink-0">
             {relatedDocument && (
               <Button
                 onClick={() =>
@@ -223,7 +233,7 @@ export function PdfViewerModal({
                 }
                 variant="outline"
                 size="sm"
-                className="rounded-full h-8 px-3 text-[11px] font-bold border-ember-orange/30 bg-ember-orange/5 text-ember-orange hover:bg-ember-orange/10 cursor-pointer"
+                className="col-span-3 rounded-full h-9 px-3 text-[11px] font-bold border-ember-orange/30 bg-ember-orange/5 text-ember-orange hover:bg-ember-orange/10 cursor-pointer sm:col-span-1 sm:h-8"
               >
                 {isShowingRelatedDocument ? "원 문서 보기" : relatedDocumentLabel || "관련 문서 보기"}
               </Button>
@@ -233,7 +243,7 @@ export function PdfViewerModal({
               onClick={() => setIsFullScreen(!isFullScreen)}
               variant="outline"
               size="sm"
-              className="rounded-full h-8 px-3 text-[11px] font-bold border-stone-surface text-graphite hover:bg-stone-surface cursor-pointer"
+              className="rounded-full h-9 px-2 text-[11px] font-bold border-stone-surface text-graphite hover:bg-stone-surface cursor-pointer sm:h-8 sm:px-3"
             >
               {isFullScreen ? "화면 축소" : "전체 화면"}
             </Button>
@@ -242,14 +252,14 @@ export function PdfViewerModal({
               onClick={handleDownload}
               variant="outline"
               size="sm"
-              className="rounded-full h-8 px-3 text-[11px] font-bold border-stone-surface text-graphite hover:bg-stone-surface cursor-pointer"
+              className="rounded-full h-9 px-2 text-[11px] font-bold border-stone-surface text-graphite hover:bg-stone-surface cursor-pointer sm:h-8 sm:px-3"
             >
               다운로드
             </Button>
             {/* 닫기 */}
             <button
               onClick={onClose}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-xs font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
+              className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] px-2 text-[11px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer sm:h-8 sm:px-3 sm:text-xs"
             >
               <svg className="w-3.5 h-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -285,12 +295,12 @@ export function PdfViewerModal({
         <div data-testid="pdf-preview-scroll-area" className="min-h-0 flex-1 overflow-y-auto bg-[#f0ede9] p-1 sm:p-2">
           <div className="space-y-2">
             <section className="overflow-hidden rounded-2xl border border-stone-surface bg-white shadow-sm">
-              <div className="flex items-center justify-between gap-3 border-b border-stone-surface bg-[#f8f7f4] px-3 py-1.5">
-                <div>
+              <div className="flex flex-col gap-2 border-b border-stone-surface bg-[#f8f7f4] px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1.5">
+                <div className="min-w-0">
                   <p className="text-[11px] font-bold text-charcoal-primary">
                     {shouldUseMergedPreview ? "통합 PDF 문서" : "본문 문서"}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-ash">
+                  <p className="mt-0.5 break-keep text-[10px] leading-4 text-ash [overflow-wrap:anywhere]">
                     {shouldUseMergedPreview ? `본문 및 추가 첨부 PDF ${pdfAttachments.length}개` : previewFileName}
                   </p>
                 </div>
@@ -298,7 +308,7 @@ export function PdfViewerModal({
                   onClick={handleDownload}
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-stone-surface text-[10px] font-bold text-graphite hover:bg-stone-surface"
+                  className="w-full rounded-full border-stone-surface text-[10px] font-bold text-graphite hover:bg-stone-surface sm:w-auto"
                 >
                   본문 다운로드
                 </Button>
@@ -363,7 +373,7 @@ export function PdfViewerModal({
                     첨부 다운로드
                   </Button>
                 </div>
-                <div className="h-[76vh] min-h-[560px] bg-[#f0ede9]">
+                <div className="h-[76vh] min-h-[560px] bg-[#f0ede9] max-sm:min-h-[420px]">
                   <iframe
                     src={`/api/documents/attachments/${attachment.id}/view`}
                     className="h-full w-full border-none bg-[#f0ede9]"

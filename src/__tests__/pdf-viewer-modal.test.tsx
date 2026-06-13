@@ -56,6 +56,23 @@ describe("PdfViewerModal", () => {
     expect(screen.getByTestId("pdf-preview-frame-area")).toHaveClass("h-[76vh]", "min-h-[560px]");
   });
 
+  it("keeps the viewer header readable on mobile widths", () => {
+    render(
+      <PdfViewerModal
+        documentId="doc-1"
+        documentTitle="2026년 6월 13일 열린 제2차 이사회 의사록"
+        fileName="2026년 제2차 이사회 의사록.pdf"
+        documentDate="2026-06-13"
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("pdf-viewer-panel")).toHaveClass("max-sm:h-[92svh]", "max-sm:w-[calc(100vw-16px)]");
+    expect(screen.getByTestId("pdf-viewer-header")).toHaveClass("flex-col", "sm:flex-row");
+    expect(screen.getByTestId("pdf-viewer-title")).toHaveClass("whitespace-normal", "break-keep");
+    expect(screen.getByTestId("pdf-viewer-actions")).toHaveClass("grid", "grid-cols-3", "sm:flex");
+  });
+
   it("toggles between a reply document and its related received document", () => {
     render(
       <PdfViewerModal
