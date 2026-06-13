@@ -96,3 +96,30 @@
 - Candidate governing specification: `DESIGN.md`, public `조합소개` presentation scope.
 - Candidate implementation plan: Current chat-approved organization chart implementation plan.
 - Unanswered decision: none.
+
+---
+
+- Requested feature slice: Fill the footer's `대방동 지역주택조합` office information with the provided address and contact number.
+- Explicitly included scope: Replace the temporary footer copy with `(06947) 서울시 동작구 여의대방로 36길 102-11`, `1층 대방동지역주택조합사무실`, and `02-822-1508`.
+- Explicitly excluded scope: Do not change routes, navigation, map behavior, authenticated portal features, document disclosure, accounting/payment, voting, messaging, or other page content.
+- Candidate governing specification: `DESIGN.md`, public footer/contact presentation scope.
+- Candidate implementation plan: Update the shared `SiteFooter` component and add a focused footer rendering regression test.
+- Unanswered decision: none.
+
+---
+
+- Requested feature slice: Add the developer credit `태훈아빠` to the public footer.
+- Explicitly included scope: Show a small footer credit using `홈페이지 제작 및 유지보수: 태훈아빠`.
+- Explicitly excluded scope: Do not change official contact information, routes, navigation, authenticated portal features, document disclosure, accounting/payment, voting, messaging, or other page content.
+- Candidate governing specification: `DESIGN.md`, public footer presentation scope.
+- Candidate implementation plan: Update the shared `SiteFooter` component and extend the focused footer rendering regression test.
+- Unanswered decision: none.
+
+---
+
+- Requested feature slice: Make the footer address and contact information display in one line when space allows.
+- Explicitly included scope: Change the shared footer address block from stacked lines to a wrapping inline row while keeping the same address, contact number, and developer credit text.
+- Explicitly excluded scope: Do not change official contact values, developer credit wording, routes, navigation, authenticated portal features, document disclosure, accounting/payment, voting, messaging, or other page content.
+- Candidate governing specification: `DESIGN.md`, public footer presentation scope.
+- Candidate implementation plan: Update the shared `SiteFooter` address layout and keep the focused footer rendering regression test passing.
+- Unanswered decision: none.

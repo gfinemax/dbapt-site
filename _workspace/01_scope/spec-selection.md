@@ -8,6 +8,30 @@
 
 ---
 
+- Selected approved spec path: `DESIGN.md`.
+- Selected implementation plan: Update the shared public `SiteFooter` address block to an inline wrapping row while preserving the existing text content.
+- Implementation boundary: Keep the change limited to footer address/contact layout. Do not add new links, access changes, map integrations, document workflows, or authenticated functionality.
+- Request/spec conflicts: none.
+- Planning may continue: yes.
+
+---
+
+- Selected approved spec path: `DESIGN.md`.
+- Selected implementation plan: Add a small developer credit to the shared public `SiteFooter` and extend the focused footer rendering test.
+- Implementation boundary: Keep the change limited to footer credit presentation. Do not add developer contact actions, new navigation, access changes, map integrations, document workflows, or authenticated functionality.
+- Request/spec conflicts: none.
+- Planning may continue: yes.
+
+---
+
+- Selected approved spec path: `DESIGN.md`.
+- Selected implementation plan: Update the shared public `SiteFooter` contact copy and add a focused footer rendering test.
+- Implementation boundary: Keep the change limited to footer presentation. Do not add new public services, access changes, map integrations, document workflows, or authenticated functionality.
+- Request/spec conflicts: none.
+- Planning may continue: yes.
+
+---
+
 - Selected approved spec path: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`.
 - Selected implementation plan: Reuse the existing protected document drawer/table and `DocumentUploadForm`.
 - Implementation boundary: Keep `/disclosure` as a public informational preview page, keep upload mutation inside the authenticated admin document workflow, and expose the same folder-table registration surface only to logged-in admin sessions.

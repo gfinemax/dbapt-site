@@ -6,7 +6,15 @@ export function SiteFooter() {
       <div className="site-container flex flex-col justify-between gap-6 text-sm text-muted-foreground sm:flex-row">
         <div>
           <p className="font-semibold text-charcoal-primary">대방동 지역주택조합</p>
-          <p className="mt-2">조합사무실 연락처 및 주소는 개통 전 확정하여 안내합니다.</p>
+          <address className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 not-italic leading-6">
+            <span>(06947) 서울시 동작구 여의대방로 36길 102-11</span>
+            <span>1층 대방동지역주택조합사무실</span>
+            <span aria-hidden="true" className="text-stone-surface">
+              ·
+            </span>
+            <span>연락처 02-822-1508</span>
+          </address>
+          <p className="mt-3 text-xs text-ash">홈페이지 제작 및 유지보수: 태훈아빠</p>
         </div>
         <div className="flex gap-5 font-medium text-graphite">
           <Link href="/terms">이용약관</Link>
