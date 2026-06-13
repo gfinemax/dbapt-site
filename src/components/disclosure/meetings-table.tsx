@@ -179,6 +179,8 @@ type DeleteDocumentTarget = {
   title: string;
 };
 
+type OpenChatCopyStatus = "copying" | "copied" | "error";
+
 type SignedDocumentUpload = {
   path: string;
   signedUrl: string;
@@ -275,6 +277,7 @@ export function MeetingsTable({
   const [starringId, setStarringId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editError, setEditError] = useState("");
+  const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, OpenChatCopyStatus>>({});
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -681,6 +684,62 @@ export function MeetingsTable({
     );
   };
 
+  const handleOpenChatCopy = async (doc: RowDocType) => {
+    if (!doc.sourceDocument) return;
+    const documentId = doc.sourceDocument.id;
+    setOpenChatCopyStatus((prev) => ({ ...prev, [documentId]: "copying" }));
+    try {
+      const res = await fetch(`/api/openchat/announcements?documentId=${encodeURIComponent(documentId)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.announcement?.message) {
+        throw new Error(data.error || "생성된 오픈채팅 공지문이 없습니다.");
+      }
+
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("클립보드 복사를 지원하지 않는 브라우저입니다.");
+      }
+
+      await navigator.clipboard.writeText(data.announcement.message);
+      await fetch("/api/openchat/announcements", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ announcementId: data.announcement.id }),
+      });
+
+      setOpenChatCopyStatus((prev) => ({ ...prev, [documentId]: "copied" }));
+    } catch (e) {
+      console.error(e);
+      setOpenChatCopyStatus((prev) => ({ ...prev, [documentId]: "error" }));
+    }
+  };
+
+  const renderOpenChatCopyButton = (doc: RowDocType) => {
+    if (!isAdmin || !doc.isReal || !doc.sourceDocument) return null;
+    const status = openChatCopyStatus[doc.sourceDocument.id];
+
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleOpenChatCopy(doc);
+        }}
+        disabled={status === "copying"}
+        className="flex items-center justify-center size-7 rounded-full text-ash hover:bg-meadow-green/10 hover:text-meadow-green active:scale-90 transition-all duration-150 cursor-pointer disabled:opacity-50"
+        title={status === "copied" ? "공지문 복사됨" : status === "error" ? "공지문 복사 실패" : "오픈채팅 공지문 복사"}
+        aria-label={`${doc.title} 오픈채팅 공지문 복사`}
+      >
+        {status === "copying" ? (
+          <span className="size-3.5 rounded-full border-2 border-meadow-green border-t-transparent animate-spin" />
+        ) : status === "copied" ? (
+          <span className="text-[13px] font-black text-meadow-green">✓</span>
+        ) : (
+          <span className="text-[12px] font-black">톡</span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* 폴더 카드로 돌아가기 액션 바 */}
@@ -829,6 +888,7 @@ export function MeetingsTable({
                     {isAdmin && (
                       <td className="px-3 py-3.5 text-center">
                         <div className="flex items-center justify-center gap-1">
+                          {renderOpenChatCopyButton(doc)}
                           {renderEditButton(doc)}
                           {doc.isReal && (
                             <button
@@ -953,6 +1013,7 @@ export function MeetingsTable({
                     )}
                     {doc.isReal && isAdmin && (
                       <>
+                        {renderOpenChatCopyButton(doc)}
                         {renderEditButton(doc)}
                         <button
                           onClick={(e) => {

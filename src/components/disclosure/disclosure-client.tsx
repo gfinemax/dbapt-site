@@ -47,6 +47,8 @@ type CardContentEditState = {
   description: string;
 };
 
+type OpenChatCopyStatus = "copying" | "copied" | "error";
+
 const DEFAULT_EMPTY_MESSAGES: DisclosureEmptyMessage[] = [];
 const DEFAULT_CARD_CONTENTS: DisclosureCardContent[] = [];
 
@@ -358,6 +360,7 @@ export function DisclosureClient({
   const [cardContentError, setCardContentError] = useState("");
   const [emptyMessageSaving, setEmptyMessageSaving] = useState(false);
   const [cardContentSaving, setCardContentSaving] = useState(false);
+  const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, OpenChatCopyStatus>>({});
   const isScrollingRef = useRef(false);
   const isSubTabClickRef = useRef(false);
 
@@ -486,6 +489,34 @@ export function DisclosureClient({
       setCardContentError("카드 문구 저장 중 오류가 발생했습니다.");
     } finally {
       setCardContentSaving(false);
+    }
+  };
+
+  const handleOpenChatCopy = async (document: Document) => {
+    setOpenChatCopyStatus((prev) => ({ ...prev, [document.id]: "copying" }));
+    try {
+      const res = await fetch(`/api/openchat/announcements?documentId=${encodeURIComponent(document.id)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.announcement?.message) {
+        throw new Error(data.error || "생성된 오픈채팅 공지문이 없습니다.");
+      }
+
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("클립보드 복사를 지원하지 않는 브라우저입니다.");
+      }
+
+      await navigator.clipboard.writeText(data.announcement.message);
+      await fetch("/api/openchat/announcements", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ announcementId: data.announcement.id }),
+      });
+
+      setOpenChatCopyStatus((prev) => ({ ...prev, [document.id]: "copied" }));
+    } catch (e) {
+      console.error(e);
+      setOpenChatCopyStatus((prev) => ({ ...prev, [document.id]: "error" }));
     }
   };
 
@@ -1049,8 +1080,8 @@ export function DisclosureClient({
                                 </div>
                                 <ul className="mt-2 space-y-1.5">
                                   {displayDocs.map((doc) => (
-                                    <li key={doc.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-1.5">
-                                      <div className="min-w-0">
+                                    <li key={doc.id} className="flex flex-col gap-2 rounded-lg bg-white px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                                      <div className="min-w-0 sm:flex-1">
                                         <p className="truncate text-[11px] font-bold text-charcoal-primary">
                                           {doc.title}
                                         </p>
@@ -1059,18 +1090,42 @@ export function DisclosureClient({
                                           {doc.isStarred ? " · 중요" : ""}
                                         </p>
                                       </div>
-                                      <Button
-                                        onClick={() => {
-                                          if (onViewDocument) onViewDocument(doc);
-                                          else if (onOpenPortal) onOpenPortal("DISCLOSURE", doc.title);
-                                          else window.dispatchEvent(new CustomEvent('open-portal', { detail: { category: "DISCLOSURE", search: doc.title } }));
-                                        }}
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-7 shrink-0 rounded-full border-sky-blue/30 px-2.5 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/5"
-                                      >
-                                        문서 보기
-                                      </Button>
+                                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 self-end sm:self-auto">
+                                        {isAdmin && (
+                                          <Button
+                                            onClick={() => handleOpenChatCopy(doc)}
+                                            disabled={openChatCopyStatus[doc.id] === "copying"}
+                                            variant="outline"
+                                            size="sm"
+                                            aria-label={`${doc.title} 오픈채팅 공지문 복사`}
+                                            className="h-7 rounded-full border-meadow-green/30 px-2.5 text-[10px] font-bold text-meadow-green hover:bg-meadow-green/5 disabled:opacity-60"
+                                          >
+                                            {openChatCopyStatus[doc.id] === "copying" ? "복사 중" : "공지문 복사"}
+                                          </Button>
+                                        )}
+                                        <Button
+                                          onClick={() => {
+                                            if (onViewDocument) onViewDocument(doc);
+                                            else if (onOpenPortal) onOpenPortal("DISCLOSURE", doc.title);
+                                            else window.dispatchEvent(new CustomEvent('open-portal', { detail: { category: "DISCLOSURE", search: doc.title } }));
+                                          }}
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-7 rounded-full border-sky-blue/30 px-2.5 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/5"
+                                        >
+                                          문서 보기
+                                        </Button>
+                                        {isAdmin && openChatCopyStatus[doc.id] === "copied" && (
+                                          <span className="shrink-0 text-[9px] font-bold text-meadow-green">
+                                            공지문 복사됨
+                                          </span>
+                                        )}
+                                        {isAdmin && openChatCopyStatus[doc.id] === "error" && (
+                                          <span className="shrink-0 text-[9px] font-bold text-ember-orange">
+                                            복사 실패
+                                          </span>
+                                        )}
+                                      </div>
                                     </li>
                                   ))}
                                 </ul>

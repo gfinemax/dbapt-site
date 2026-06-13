@@ -1121,6 +1121,80 @@ describe("disclosure page", () => {
     expect(within(operatingCard as HTMLElement).getByText("운영관리규정 수정 본문입니다.")).toBeInTheDocument();
   });
 
+  it("lets admins copy generated OpenChat announcements from uploaded disclosure cards", async () => {
+    const copyText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: copyText },
+    });
+    const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.startsWith("/api/openchat/announcements?documentId=doc-delegate-minutes")) {
+        return {
+          ok: true,
+          json: async () => ({
+            announcement: {
+              id: "announcement-1",
+              message: "[대방동 지역주택조합 공개자료 안내]\n대의원 회의록",
+            },
+          }),
+        };
+      }
+      if (url === "/api/openchat/announcements" && init?.method === "PATCH") {
+        return {
+          ok: true,
+          json: async () => ({
+            result: {
+              status: "COPIED",
+            },
+          }),
+        };
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const documents: Document[] = [
+      {
+        id: "doc-delegate-minutes",
+        title: "2023년 1차_대방동지주택_회의록",
+        description: "대의원 회의록입니다.",
+        category: "DISCLOSURE",
+        subCategory: "대의원 의사록",
+        fileName: "delegate-minutes.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-14T00:00:00.000Z",
+        documentDate: "2023-10-21T00:00:00.000Z",
+        createdAt: "2026-06-13T15:07:12.955Z",
+      },
+    ];
+
+    render(
+      <DisclosureClient
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={documents}
+      />
+    );
+
+    const delegateHeading = screen.getByRole("heading", { name: "대의원 의사록 문서함" });
+    const delegateCard = delegateHeading.closest(".stone-card");
+    expect(delegateCard).toBeInTheDocument();
+
+    fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "2023년 1차_대방동지주택_회의록 오픈채팅 공지문 복사" }));
+
+    await waitFor(() => expect(copyText).toHaveBeenCalledWith("[대방동 지역주택조합 공개자료 안내]\n대의원 회의록"));
+    expect(fetchMock).toHaveBeenCalledWith("/api/openchat/announcements?documentId=doc-delegate-minutes");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/openchat/announcements",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ announcementId: "announcement-1" }),
+      }),
+    );
+    expect(within(delegateCard as HTMLElement).getByText("공지문 복사됨")).toBeInTheDocument();
+  });
+
   it("confirms uploaded document deletion with an in-app modal", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
