@@ -140,6 +140,7 @@ const disclosureData = {
         title: "총회의사록 문서함", 
         desc: "창립총회 및 최근 임시총회 안건 의결 결과, 조합원 서명 날인 등이 기재된 정식 공증 의사록 문서 보존 문서함입니다.", 
         date: "최근 업데이트: 2026.01", 
+        subCategory: "총회 의사록",
         count: 0,
         searchKey: "총회",
         categoryKey: "DISCLOSURE",
@@ -151,6 +152,7 @@ const disclosureData = {
         title: "이사회 의사록 문서함", 
         desc: "사무국 예산 조율, 협력사 계약 심의 등 이사회 및 감사 정례 의결 의사록이 안전하게 일괄 보관되어 있습니다.", 
         date: "최근 업데이트: 2026.01", 
+        subCategory: "이사회 의사록",
         count: 0,
         searchKey: "이사회",
         categoryKey: "DISCLOSURE",
@@ -162,6 +164,7 @@ const disclosureData = {
         title: "대의원 의사록 문서함",
         desc: "대의원회 안건 보고, 의결 결과, 참석자 확인 등 대의원 회의 관련 기록을 별도 보관하는 문서함입니다.",
         date: "최근 업데이트: 2026.01",
+        subCategory: "대의원 의사록",
         count: 0,
         searchKey: "대의원",
         categoryKey: "DISCLOSURE",
@@ -180,6 +183,7 @@ const disclosureData = {
         title: "수신 공문서 문서함", 
         desc: "동작구청, 서울시 등 관청에서 조합으로 접수된 공식 수신 공문과 행정 실태조사 관련 수신자료를 보관합니다.", 
         date: "최근 업데이트: 2026.01", 
+        subCategory: "공문서",
         count: 0,
         searchKey: "수신",
         categoryKey: "DISCLOSURE",
@@ -192,6 +196,7 @@ const disclosureData = {
         title: "발신 공문서 문서함", 
         desc: "조합에서 동작구청, 서울시 등 유관기관으로 제출한 발신 공문과 회신·조치결과 보고 문서를 보관합니다.", 
         date: "최근 업데이트: 2026.01", 
+        subCategory: "공문서",
         count: 0,
         searchKey: "발신",
         categoryKey: "DISCLOSURE",
@@ -204,6 +209,7 @@ const disclosureData = {
         title: "기타 공문서 문서함", 
         desc: "수신 및 발신 분류에 속하지 않는 협조전, 보고서 및 기타 행정 서류를 보관합니다.", 
         date: "최근 업데이트: 2026.01", 
+        subCategory: "공문서",
         count: 0,
         searchKey: "기타",
         categoryKey: "DISCLOSURE",
@@ -292,6 +298,13 @@ function getSubCategoryAliases(subCategory: string) {
   if (subCategory === "이사회 의사록") return ["이사회 의사록", "이사회 회의록"];
   if (subCategory === "대의원 의사록") return ["대의원 의사록", "대의원 회의록"];
   return [subCategory];
+}
+
+function normalizeDisclosureSubCategory(subCategory: string) {
+  if (subCategory === "수발신 공문") return "공문서";
+  if (subCategory === "이사회 회의록") return "이사회 의사록";
+  if (subCategory === "대의원 회의록") return "대의원 의사록";
+  return subCategory;
 }
 
 function renderEmptyMessageBody(message: string) {
@@ -700,7 +713,7 @@ export function DisclosureClient({
 
               {/* 개별 자료 목록 */}
               {/* 개별 자료 목록 */}
-              {tabKey === "meetings" || tabKey === "administration" ? (
+              {false ? (
                 <div className="grid gap-6 md:grid-cols-2">
                   {data.items
                     .map((item) => {
@@ -854,11 +867,22 @@ export function DisclosureClient({
                       const isSelected = activeSubTab === item.id;
                       const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
                       const itemSubCategory = "subCategory" in item ? item.subCategory : item.title;
-                      const itemSubCategoryAliases = getSubCategoryAliases(itemSubCategory);
+                      const itemSubCategoryAliases = getSubCategoryAliases(itemSubCategory).map(normalizeDisclosureSubCategory);
                       const cardContent = getCardContent(item);
                       const isEditingThisCardContent = editingCardContent?.itemId === item.id;
                       const realDocs = documents
-                        .filter((doc) => doc.category === "DISCLOSURE" && itemSubCategoryAliases.includes(doc.subCategory || ""))
+                        .filter((doc) => {
+                          const normalizedSubCategory = normalizeDisclosureSubCategory(doc.subCategory || "");
+                          const itemCorrespondenceTypes =
+                            "correspondenceTypes" in item ? item.correspondenceTypes : undefined;
+
+                          return (
+                            doc.category === "DISCLOSURE" &&
+                            itemSubCategoryAliases.includes(normalizedSubCategory) &&
+                            (!itemCorrespondenceTypes ||
+                              (doc.correspondenceType && itemCorrespondenceTypes.includes(doc.correspondenceType)))
+                          );
+                        })
                         .sort((a, b) => {
                           const aTime = new Date(a.documentDate || a.publishedAt || a.createdAt).getTime();
                           const bTime = new Date(b.documentDate || b.publishedAt || b.createdAt).getTime();
@@ -877,6 +901,8 @@ export function DisclosureClient({
                         searchKey: cardContent.title,
                         categoryKey: "DISCLOSURE",
                         bbsCategory: itemSubCategory as MeetingCategory,
+                        correspondenceTypes:
+                          "correspondenceTypes" in item ? item.correspondenceTypes : undefined,
                         preview:
                           displayDocs.length > 0
                             ? displayDocs.map((doc) => doc.title)

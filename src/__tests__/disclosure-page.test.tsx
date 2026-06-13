@@ -256,6 +256,117 @@ describe("disclosure page", () => {
     expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("대의원 의사록");
   });
 
+  it("uses the shared disclosure card layout for meeting and correspondence folders", () => {
+    const documents: Document[] = [
+      {
+        id: "delegate-minutes",
+        title: "대의원회 의사록 최신본",
+        description: "대의원회 의결 결과",
+        category: "DISCLOSURE",
+        subCategory: "대의원 의사록",
+        fileName: "delegate-minutes.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-06T00:00:00.000Z",
+        documentDate: "2026-06-06T00:00:00.000Z",
+        createdAt: "2026-06-06T00:00:00.000Z",
+      },
+      {
+        id: "sent-correspondence",
+        title: "서울시 발신 공문 최신본",
+        description: "사업시행계획 협의 발신 공문",
+        category: "DISCLOSURE",
+        subCategory: "수발신 공문",
+        correspondenceType: "발신",
+        fileName: "sent-correspondence.pdf",
+        fileSize: 1024,
+        status: "APPROVED",
+        publishedAt: "2026-06-07T00:00:00.000Z",
+        documentDate: "2026-06-07T00:00:00.000Z",
+        createdAt: "2026-06-07T00:00:00.000Z",
+      },
+    ];
+
+    const { container } = render(
+      <DisclosureClient
+        session={{ id: "member-1", loginId: "member", name: "조합원", role: "MEMBER" }}
+        documents={documents}
+      />
+    );
+
+    const meetingsSection = container.querySelector("#section-meetings");
+    const administrationSection = container.querySelector("#section-administration");
+    expect(meetingsSection).toBeInTheDocument();
+    expect(administrationSection).toBeInTheDocument();
+
+    const delegateCard = within(meetingsSection as HTMLElement)
+      .getByRole("heading", { name: "대의원 의사록 문서함" })
+      .closest(".stone-card");
+    const sentCard = within(administrationSection as HTMLElement)
+      .getByRole("heading", { name: "발신 공문서 문서함" })
+      .closest(".stone-card");
+
+    expect(delegateCard).toBeInTheDocument();
+    expect(sentCard).toBeInTheDocument();
+    expect(within(delegateCard as HTMLElement).getByText("등록 자료")).toBeInTheDocument();
+    expect(within(delegateCard as HTMLElement).getByText("대의원회 의사록 최신본")).toBeInTheDocument();
+    expect(within(delegateCard as HTMLElement).getByRole("button", { name: "자료실 열기" })).toBeInTheDocument();
+    expect(within(delegateCard as HTMLElement).queryByText("문서함 내부 수납 목록")).not.toBeInTheDocument();
+    expect(within(delegateCard as HTMLElement).queryByRole("button", { name: "문서함 열기" })).not.toBeInTheDocument();
+
+    expect(within(sentCard as HTMLElement).getByText("등록 자료")).toBeInTheDocument();
+    expect(within(sentCard as HTMLElement).getByText("서울시 발신 공문 최신본")).toBeInTheDocument();
+    expect(within(sentCard as HTMLElement).queryByText("대의원회 의사록 최신본")).not.toBeInTheDocument();
+    expect(within(sentCard as HTMLElement).getByRole("button", { name: "자료실 열기" })).toBeInTheDocument();
+  });
+
+  it("lets admins edit meeting folder card title and content", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        cardContent: {
+          itemId: "meetings-3",
+          title: "대의원회 의결 기록",
+          description: "대의원회 의결 자료를 모아 둔 문서함입니다.",
+        },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <DisclosureClient
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={[]}
+      />
+    );
+
+    const delegateHeading = screen.getByRole("heading", { name: "대의원 의사록 문서함" });
+    const delegateCard = delegateHeading.closest(".stone-card");
+    expect(delegateCard).toBeInTheDocument();
+
+    fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "대의원 의사록 문서함 카드 제목과 내용 수정" }));
+
+    expect(within(delegateCard as HTMLElement).getByRole("heading", { name: "공개자료 카드 문구 수정" })).toBeInTheDocument();
+    fireEvent.change(within(delegateCard as HTMLElement).getByLabelText("카드 제목 *"), {
+      target: { value: "대의원회 의결 기록" },
+    });
+    fireEvent.change(within(delegateCard as HTMLElement).getByLabelText("카드 내용 *"), {
+      target: { value: "대의원회 의결 자료를 모아 둔 문서함입니다." },
+    });
+    fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/disclosure-card-contents",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"itemId\":\"meetings-3\""),
+      }),
+    ));
+    expect(within(delegateCard as HTMLElement).getByText("대의원회 의결 기록")).toBeInTheDocument();
+    expect(within(delegateCard as HTMLElement).getByText("대의원회 의결 자료를 모아 둔 문서함입니다.")).toBeInTheDocument();
+  });
+
   it("lets direct card selection change the active card without changing list order", () => {
     const { container } = render(<DisclosureClient />);
 
