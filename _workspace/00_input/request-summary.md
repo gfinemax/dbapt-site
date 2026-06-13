@@ -1,7 +1,7 @@
 # 요청 요약
 
-- 요청 기능: 이전 dry-run 구현의 다음 단계로, 실제 수신자 검토를 위한 운영 도구를 보강한다.
-- 구현 범위: 조합원 연락처/알림 가능 상태 설정 CLI, 공개자료 알림 로그 조회 CLI, 관련 포맷/검증 유틸과 테스트.
-- 제외 범위: 공개 구독 UI, 마케팅 메시지, 브라우저로 노출되는 카카오 자격 증명, 실제 카카오 공급사 live 발송, 새 DB migration.
-- 적용 spec: `docs/superpowers/specs/2026-06-13-disclosure-kakao-group-notification-design.md`
-- 미결정 사항: live 발송 정책은 아직 미확정이므로 구현 기본값은 dry-run으로 둔다.
+- 요청 기능: 공개자료 등록/수정 시 카카오톡 오픈채팅방에 붙여넣을 공지문을 자동 생성하고 운영자가 CLI로 조회/복사할 수 있게 구현한다.
+- 구현 범위: `OpenChatAnnouncement` DB 모델, 공지문 생성/갱신/복사 상태 서비스, 문서 생성/수정 route 연결, 운영 CLI.
+- 제외 범위: 오픈채팅방 직접 자동 게시, 카카오톡 PC/개인 계정/비공식 봇 자동화, 새 공개 UI 또는 관리자 UI.
+- 적용 spec: `docs/superpowers/specs/2026-06-13-openchat-disclosure-announcement-design.md`
+- 미결정 사항: none

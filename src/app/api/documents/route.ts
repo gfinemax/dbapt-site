@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notifyDisclosureDocumentApproved } from "@/lib/notifications/disclosure-notifications";
+import { upsertOpenChatAnnouncementForDocument } from "@/lib/notifications/openchat-announcements";
 import {
   isAllowedDocumentUploadExtension,
   isSafeDocumentStoragePath,
@@ -16,6 +17,7 @@ type UploadedDocumentFile = {
 };
 
 type DisclosureNotificationDocument = Parameters<typeof notifyDisclosureDocumentApproved>[0]["document"];
+type OpenChatAnnouncementDocument = Parameters<typeof upsertOpenChatAnnouncementForDocument>[0]["document"];
 
 const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신", "기타"]);
 
@@ -100,6 +102,14 @@ async function triggerDisclosureNotification(document: DisclosureNotificationDoc
     await notifyDisclosureDocumentApproved({ document });
   } catch (error) {
     console.error("Disclosure notification error:", error);
+  }
+}
+
+async function triggerOpenChatAnnouncement(document: OpenChatAnnouncementDocument) {
+  try {
+    await upsertOpenChatAnnouncementForDocument({ document });
+  } catch (error) {
+    console.error("OpenChat announcement error:", error);
   }
 }
 
@@ -221,6 +231,7 @@ export async function POST(request: Request) {
       });
 
       await triggerDisclosureNotification(document);
+      await triggerOpenChatAnnouncement(document);
 
       return NextResponse.json({ success: true, document });
     }
@@ -308,6 +319,7 @@ export async function POST(request: Request) {
     });
 
     await triggerDisclosureNotification(document);
+    await triggerOpenChatAnnouncement(document);
 
     return NextResponse.json({ success: true, document });
   } catch (e) {

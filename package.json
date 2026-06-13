@@ -16,7 +16,10 @@
     "notify:rule": "node --experimental-strip-types scripts/notify-rule.ts",
     "notify:dry-run": "node --experimental-strip-types scripts/notify-dry-run.ts",
     "notify:contact": "node --experimental-strip-types scripts/notify-contact.ts",
-    "notify:logs": "node --experimental-strip-types scripts/notify-logs.ts"
+    "notify:logs": "node --experimental-strip-types scripts/notify-logs.ts",
+    "openchat:announcements": "node --experimental-strip-types scripts/openchat-announcements.ts",
+    "openchat:copy": "node --experimental-strip-types scripts/openchat-copy.ts",
+    "openchat:generate": "node --experimental-strip-types scripts/openchat-generate.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

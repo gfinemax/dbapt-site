@@ -75,6 +75,7 @@ model Document {
   logs         DocumentLog[]
   attachments  Attachment[]
   disclosureNotifications DisclosureNotification[]
+  openChatAnnouncements OpenChatAnnouncement[]
 
   @@index([replyToDocumentId])
 }
@@ -187,6 +188,22 @@ model DisclosureNotificationRecipient {
   @@index([notificationId])
   @@index([userId])
   @@index([groupId])
+  @@index([status, createdAt])
+}
+
+// 2.4.4. 오픈채팅방 복사용 공개자료 공지문
+model OpenChatAnnouncement {
+  id         String   @id @default(uuid())
+  documentId String
+  status     String   @default("DRAFT") // DRAFT, COPIED, ARCHIVED
+  message    String
+  copiedAt   DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, status])
   @@index([status, createdAt])
 }
 

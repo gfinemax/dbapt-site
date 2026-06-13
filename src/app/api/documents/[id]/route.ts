@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notifyDisclosureDocumentApproved } from "@/lib/notifications/disclosure-notifications";
+import { upsertOpenChatAnnouncementForDocument } from "@/lib/notifications/openchat-announcements";
 import { createClient } from "@supabase/supabase-js";
 import {
   isAllowedDocumentUploadExtension,
@@ -11,6 +12,7 @@ import {
 
 const DOCUMENTS_BUCKET = process.env.SUPABASE_DOCUMENTS_BUCKET || "documents";
 type DisclosureNotificationDocument = Parameters<typeof notifyDisclosureDocumentApproved>[0]["document"];
+type OpenChatAnnouncementDocument = Parameters<typeof upsertOpenChatAnnouncementForDocument>[0]["document"];
 
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -32,6 +34,14 @@ async function triggerDisclosureNotification(document: DisclosureNotificationDoc
     await notifyDisclosureDocumentApproved({ document });
   } catch (error) {
     console.error("Disclosure notification error:", error);
+  }
+}
+
+async function triggerOpenChatAnnouncement(document: OpenChatAnnouncementDocument) {
+  try {
+    await upsertOpenChatAnnouncementForDocument({ document });
+  } catch (error) {
+    console.error("OpenChat announcement error:", error);
   }
 }
 
@@ -366,6 +376,7 @@ export async function PATCH(
     });
 
     await triggerDisclosureNotification(updated);
+    await triggerOpenChatAnnouncement(updated);
 
     return NextResponse.json({ success: true, document: updated });
   } catch (e) {
