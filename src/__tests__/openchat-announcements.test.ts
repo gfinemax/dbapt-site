@@ -77,6 +77,38 @@ describe("openchat announcements", () => {
     expect(message).not.toContain("documents/2026/private.pdf");
   });
 
+  it("uses the Vercel disclosure URL when no site URL is configured", async () => {
+    const { buildOpenChatAnnouncementMessage } = await import("@/lib/notifications/openchat-announcements");
+
+    const message = buildOpenChatAnnouncementMessage({
+      document: approvedDisclosure,
+    });
+
+    expect(message).toContain("https://dbapt-site.vercel.app/disclosure");
+    expect(message).not.toContain("https://www.dbapt.com/disclosure");
+  });
+
+  it("does not use the public site URL for OpenChat announcements", async () => {
+    const previousSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    process.env.NEXT_PUBLIC_SITE_URL = "https://www.dbapt.com";
+    const { buildOpenChatAnnouncementMessage } = await import("@/lib/notifications/openchat-announcements");
+
+    try {
+      const message = buildOpenChatAnnouncementMessage({
+        document: approvedDisclosure,
+      });
+
+      expect(message).toContain("https://dbapt-site.vercel.app/disclosure");
+      expect(message).not.toContain("https://www.dbapt.com/disclosure");
+    } finally {
+      if (previousSiteUrl === undefined) {
+        delete process.env.NEXT_PUBLIC_SITE_URL;
+      } else {
+        process.env.NEXT_PUBLIC_SITE_URL = previousSiteUrl;
+      }
+    }
+  });
+
   it("updates an existing draft announcement for the same document", async () => {
     const { upsertOpenChatAnnouncementForDocument } = await import("@/lib/notifications/openchat-announcements");
     const prisma = createMockPrisma({

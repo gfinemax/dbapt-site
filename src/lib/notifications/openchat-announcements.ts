@@ -82,7 +82,7 @@ function normalizeOneLine(value: string) {
 }
 
 function normalizeSiteUrl(siteUrl?: string) {
-  const value = siteUrl || process.env.NEXT_PUBLIC_SITE_URL || "https://www.dbapt.com";
+  const value = siteUrl || process.env.OPENCHAT_SITE_URL || "https://dbapt-site.vercel.app";
   return value.replace(/\/+$/, "");
 }
 
