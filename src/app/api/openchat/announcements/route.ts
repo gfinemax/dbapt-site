@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
   markOpenChatAnnouncementCopied,
+  upsertOpenChatAnnouncementForDocument,
   type OpenChatAnnouncementPrisma,
 } from "@/lib/notifications/openchat-announcements";
 
@@ -43,11 +44,33 @@ export async function GET(request: Request) {
     },
   });
 
-  if (!announcement) {
-    return NextResponse.json({ error: "생성된 오픈채팅 공지문이 없습니다." }, { status: 404 });
+  if (announcement) {
+    return NextResponse.json({ success: true, announcement });
   }
 
-  return NextResponse.json({ success: true, announcement });
+  const document = await prisma.document.findUnique({ where: { id: documentId } });
+  if (!document) {
+    return NextResponse.json({ error: "문서를 찾을 수 없습니다." }, { status: 404 });
+  }
+
+  const result = await upsertOpenChatAnnouncementForDocument({
+    prisma: prisma as unknown as OpenChatAnnouncementPrisma,
+    document,
+  });
+
+  if (!result.announcementId || !result.message) {
+    return NextResponse.json({ error: "오픈채팅 공지문 생성 대상 문서가 아닙니다." }, { status: 422 });
+  }
+
+  return NextResponse.json({
+    success: true,
+    announcement: {
+      id: result.announcementId,
+      documentId,
+      status: "DRAFT",
+      message: result.message,
+    },
+  });
 }
 
 export async function PATCH(request: Request) {
