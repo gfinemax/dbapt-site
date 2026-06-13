@@ -23,7 +23,7 @@ export default async function RootLayout({
   } | null;
 
   return (
-    <html lang="ko" className="h-full antialiased">
+    <html lang="ko" data-scroll-behavior="smooth" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans pb-16 md:pb-0">
         <GlobalHeader session={session} />
         {children}
