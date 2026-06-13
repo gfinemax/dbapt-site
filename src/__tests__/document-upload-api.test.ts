@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const mockGetSession = vi.hoisted(() => vi.fn());
 const mockCreateDocumentSignedUpload = vi.hoisted(() => vi.fn());
 const mockSupabaseRemove = vi.hoisted(() => vi.fn());
+const mockNotifyDisclosureDocumentApproved = vi.hoisted(() => vi.fn());
 const mockPrisma = vi.hoisted(() => ({
   document: {
     create: vi.fn(),
@@ -24,6 +25,10 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   prisma: mockPrisma,
+}));
+
+vi.mock("@/lib/notifications/disclosure-notifications", () => ({
+  notifyDisclosureDocumentApproved: mockNotifyDisclosureDocumentApproved,
 }));
 
 vi.mock("@supabase/supabase-js", () => ({
@@ -48,6 +53,7 @@ vi.mock("@/lib/document-storage", async (importOriginal) => {
 describe("document upload API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNotifyDisclosureDocumentApproved.mockResolvedValue({ status: "SKIPPED", skippedReason: "DRY_RUN" });
   });
 
   it("creates signed upload targets for admin document files", async () => {
@@ -149,6 +155,90 @@ describe("document upload API", () => {
       }),
     }));
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("triggers disclosure notification dry-run after approved disclosure metadata is saved", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const createdDocument = {
+      id: "doc-1",
+      title: "공개자료",
+      category: "DISCLOSURE",
+      subCategory: "공문서",
+      correspondenceType: "수신",
+      status: "APPROVED",
+      publishedAt: new Date("2026-06-05"),
+      attachments: [],
+    };
+    mockPrisma.document.create.mockResolvedValue(createdDocument);
+
+    const { POST } = await import("@/app/api/documents/route");
+    const response = await POST(
+      new Request("http://localhost/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "공개자료",
+          category: "DISCLOSURE",
+          subCategory: "공문서",
+          correspondenceType: "수신",
+          documentDate: "2026-06-05",
+          publishedAt: "2026-06-05",
+          file: {
+            path: "documents/2026-06-05/main.pdf",
+            name: "main.pdf",
+            size: 1024,
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockNotifyDisclosureDocumentApproved).toHaveBeenCalledWith({ document: createdDocument });
+  });
+
+  it("does not fail document creation when disclosure notification dry-run fails", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const createdDocument = {
+      id: "doc-1",
+      title: "공개자료",
+      category: "DISCLOSURE",
+      subCategory: "공문서",
+      correspondenceType: null,
+      status: "APPROVED",
+      publishedAt: new Date("2026-06-05"),
+      attachments: [],
+    };
+    mockPrisma.document.create.mockResolvedValue(createdDocument);
+    mockNotifyDisclosureDocumentApproved.mockRejectedValueOnce(new Error("notification failed"));
+
+    const { POST } = await import("@/app/api/documents/route");
+    const response = await POST(
+      new Request("http://localhost/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "공개자료",
+          category: "DISCLOSURE",
+          subCategory: "공문서",
+          documentDate: "2026-06-05",
+          publishedAt: "2026-06-05",
+          file: {
+            path: "documents/2026-06-05/main.pdf",
+            name: "main.pdf",
+            size: 1024,
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      success: true,
+      document: {
+        id: "doc-1",
+        title: "공개자료",
+      },
+    });
   });
 
   it("saves reply due date for received correspondence that requires a reply", async () => {
@@ -290,6 +380,40 @@ describe("document upload API", () => {
       },
     }));
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("triggers disclosure notification dry-run after approved disclosure metadata is updated", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const updatedDocument = {
+      id: "doc-1",
+      title: "수정된 공개자료",
+      category: "DISCLOSURE",
+      subCategory: "이사회 의사록",
+      correspondenceType: null,
+      status: "APPROVED",
+      publishedAt: new Date("2026-06-05"),
+      attachments: [],
+    };
+    mockPrisma.document.update.mockResolvedValue(updatedDocument);
+
+    const { PATCH } = await import("@/app/api/documents/[id]/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/documents/doc-1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "수정된 공개자료",
+          category: "DISCLOSURE",
+          subCategory: "이사회 의사록",
+          documentDate: "2026-06-01",
+          publishedAt: "2026-06-05",
+        }),
+      }),
+      { params: Promise.resolve({ id: "doc-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockNotifyDisclosureDocumentApproved).toHaveBeenCalledWith({ document: updatedDocument });
   });
 
   it("updates reply due date for received correspondence", async () => {

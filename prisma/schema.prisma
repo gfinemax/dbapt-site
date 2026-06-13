@@ -21,6 +21,9 @@ model User {
   signupName    String?                              // 가입 신청서 입력 이름
   signupPhone   String?                              // 가입 신청서 연락처
   signupMemo    String?                              // 가입 신청서 관리자 전달 메모
+  phone         String?                              // 운영 알림 발송용 검증 연락처
+  kakaoNotificationOptIn Boolean @default(false)     // 알림톡 발송 가능 동의/운영 확인 상태
+  kakaoNotificationEnabled Boolean @default(false)   // 알림톡 발송 활성 상태
   role          String      @default("PENDING")      // PENDING(대기), MEMBER(정식), REFUND(환불), ADMIN(관리자)
   isActive      Boolean     @default(true)           // 계정 활성 상태
   createdAt     DateTime    @default(now())
@@ -40,6 +43,8 @@ model User {
   coopNews      CoopNews[]
   freePosts     FreePost[]
   freeComments  FreeComment[]
+  notificationGroupMembers NotificationGroupMember[]
+  disclosureNotificationRecipients DisclosureNotificationRecipient[]
 }
 
 // 2. 정보공개 및 회계 보고 문서
@@ -69,6 +74,7 @@ model Document {
   // 관계 정의
   logs         DocumentLog[]
   attachments  Attachment[]
+  disclosureNotifications DisclosureNotification[]
 
   @@index([replyToDocumentId])
 }
@@ -91,6 +97,97 @@ model DisclosureCardContent {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// 2.3. 공개자료 알림톡 수신 그룹
+model NotificationGroup {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     NotificationGroupMember[]
+  disclosureRules DisclosureNotificationRule[]
+  disclosureNotificationRecipients DisclosureNotificationRecipient[]
+}
+
+// 2.4. 공개자료 알림톡 수신 그룹 구성원
+model NotificationGroupMember {
+  id        String   @id @default(uuid())
+  groupId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  group     NotificationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+// 2.4.1. 공개자료 분류별 알림톡 발송 규칙
+model DisclosureNotificationRule {
+  id                 String   @id @default(uuid())
+  category           String   @default("DISCLOSURE")
+  subCategory        String
+  correspondenceType String?
+  groupId            String
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  group              NotificationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([category, subCategory, correspondenceType, isActive])
+  @@index([groupId])
+}
+
+// 2.4.2. 공개자료 알림톡 문서 단위 발송 로그
+model DisclosureNotification {
+  id               String   @id @default(uuid())
+  documentId       String
+  trigger          String
+  status           String   @default("PENDING")
+  matchedRuleCount Int      @default(0)
+  recipientCount   Int      @default(0)
+  sentCount        Int      @default(0)
+  failedCount      Int      @default(0)
+  skippedReason    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  document         Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  recipients       DisclosureNotificationRecipient[]
+
+  @@index([documentId, trigger])
+  @@index([status, createdAt])
+}
+
+// 2.4.3. 공개자료 알림톡 수신자별 발송 로그
+model DisclosureNotificationRecipient {
+  id                String   @id @default(uuid())
+  notificationId    String
+  userId            String
+  groupId           String
+  phoneMasked       String?
+  status            String   @default("PENDING")
+  providerMessageId String?
+  errorCode         String?
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  notification      DisclosureNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group             NotificationGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId])
+  @@index([userId])
+  @@index([groupId])
+  @@index([status, createdAt])
 }
 
 // 2.5. 문서 추가 첨부파일 정보 (1:N 관계)

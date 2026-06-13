@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { notifyDisclosureDocumentApproved } from "@/lib/notifications/disclosure-notifications";
 import {
   isAllowedDocumentUploadExtension,
   isSafeDocumentStoragePath,
@@ -13,6 +14,8 @@ type UploadedDocumentFile = {
   name?: unknown;
   size?: unknown;
 };
+
+type DisclosureNotificationDocument = Parameters<typeof notifyDisclosureDocumentApproved>[0]["document"];
 
 const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신", "기타"]);
 
@@ -90,6 +93,14 @@ function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string)
   }
 
   return { path, name, size };
+}
+
+async function triggerDisclosureNotification(document: DisclosureNotificationDocument) {
+  try {
+    await notifyDisclosureDocumentApproved({ document });
+  } catch (error) {
+    console.error("Disclosure notification error:", error);
+  }
 }
 
 // 1. GET: List documents (gated by session and role)
@@ -209,6 +220,8 @@ export async function POST(request: Request) {
         },
       });
 
+      await triggerDisclosureNotification(document);
+
       return NextResponse.json({ success: true, document });
     }
 
@@ -293,6 +306,8 @@ export async function POST(request: Request) {
         attachments: true,
       },
     });
+
+    await triggerDisclosureNotification(document);
 
     return NextResponse.json({ success: true, document });
   } catch (e) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { notifyDisclosureDocumentApproved } from "@/lib/notifications/disclosure-notifications";
 import { createClient } from "@supabase/supabase-js";
 import {
   isAllowedDocumentUploadExtension,
@@ -9,6 +10,7 @@ import {
 } from "@/lib/document-storage";
 
 const DOCUMENTS_BUCKET = process.env.SUPABASE_DOCUMENTS_BUCKET || "documents";
+type DisclosureNotificationDocument = Parameters<typeof notifyDisclosureDocumentApproved>[0]["document"];
 
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -23,6 +25,14 @@ function getSupabaseAdmin() {
 
 function isAdminSession(session: Awaited<ReturnType<typeof getSession>>) {
   return typeof session?.role === "string" && session.role.trim().toUpperCase() === "ADMIN";
+}
+
+async function triggerDisclosureNotification(document: DisclosureNotificationDocument) {
+  try {
+    await notifyDisclosureDocumentApproved({ document });
+  } catch (error) {
+    console.error("Disclosure notification error:", error);
+  }
 }
 
 // DELETE: 문서 삭제 (관리자 전용 – Supabase Storage 파일도 함께 정리)
@@ -354,6 +364,8 @@ export async function PATCH(
         attachments: true,
       },
     });
+
+    await triggerDisclosureNotification(updated);
 
     return NextResponse.json({ success: true, document: updated });
   } catch (e) {
