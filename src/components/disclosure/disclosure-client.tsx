@@ -866,7 +866,7 @@ export function DisclosureClient({
                     .map((item) => {
                       const isSelected = activeSubTab === item.id;
                       const isAnySelectedInThisSection = subMenus[tabKey].some((sub) => sub.id === activeSubTab);
-                      const itemSubCategory = "subCategory" in item ? item.subCategory : item.title;
+                      const itemSubCategory = item.subCategory;
                       const itemSubCategoryAliases = getSubCategoryAliases(itemSubCategory).map(normalizeDisclosureSubCategory);
                       const cardContent = getCardContent(item);
                       const isEditingThisCardContent = editingCardContent?.itemId === item.id;

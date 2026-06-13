@@ -233,7 +233,7 @@ describe("disclosure page", () => {
     expect(within(sentFolder as HTMLElement).queryByText("[동작구청] 2025년도 행정실태점검 시정조치 요구")).not.toBeInTheDocument();
   });
 
-  it("opens folder-style registration for delegate meeting minutes", () => {
+  it("opens shared card registration for delegate meeting minutes", () => {
     render(
       <DisclosureClient
         session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
@@ -247,7 +247,7 @@ describe("disclosure page", () => {
     const delegateCard = delegateHeading.closest(".stone-card");
     expect(delegateCard).toBeInTheDocument();
 
-    fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "문서함 열기" }));
+    fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "자료실 열기" }));
 
     expect(screen.getAllByRole("heading", { name: "대의원 의사록 문서함" }).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "+ 신규 문서 등록" }));

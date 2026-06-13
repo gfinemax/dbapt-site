@@ -52,4 +52,6 @@ next-env.d.ts
 /public/uploads/
 .next-dev.err.log
 .next-dev.out.log
+.next-dev-*.err.log
+.next-dev-*.out.log
 DATA_reference/

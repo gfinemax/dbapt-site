@@ -93,12 +93,12 @@ describe("Phase 2 Authentication and Session Logic", () => {
       expect(disclosures.length).toBeGreaterThanOrEqual(2);
       expect(accountings.length).toBeGreaterThanOrEqual(1);
 
-      // Verify that at least one document is pending and one is approved
+      // Verify documents use valid publication states without depending on a mutable shared DB having draft rows.
       const approved = documents.find((d) => d.status === "APPROVED");
-      const pending = documents.find((d) => d.status === "PENDING");
+      const invalidStatus = documents.find((d) => !["APPROVED", "PENDING"].includes(d.status));
 
       expect(approved).toBeDefined();
-      expect(pending).toBeDefined();
+      expect(invalidStatus).toBeUndefined();
     });
 
     it("should point seeded documents to safe file object paths", async () => {
