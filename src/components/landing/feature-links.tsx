@@ -18,7 +18,7 @@ export function FeatureLinks() {
             className="stone-card group flex min-h-64 flex-col p-6 hover:-translate-y-1 hover:shadow-sm"
           >
             <div className="soft-panel mb-6 flex size-24 items-center justify-center">
-              <Image src={feature.icon} width={78} height={78} alt="" />
+              <Image src={feature.icon} width={78} height={78} alt="" loading="eager" />
             </div>
             <h3 className="text-xl">{feature.title}</h3>
             <p className="mt-2 text-[15px] leading-6 text-graphite">{feature.description}</p>

@@ -35,6 +35,8 @@ export type Document = {
   attachmentPath?: string | null;
   attachmentSize?: number | null;
   attachments?: Attachment[];
+  isViewedByCurrentUser?: boolean;
+  isBookmarkedByCurrentUser?: boolean;
 };
 
 type DocumentTableProps = {
@@ -43,6 +45,7 @@ type DocumentTableProps = {
   isDrawerMode?: boolean;
   initialCategory?: string;
   initialSearch?: string;
+  onOpenDocument?: (doc: Document) => void;
   onDocumentDeleted?: (id: string) => void;
   onDocumentStarToggled?: (id: string, isStarred: boolean) => void;
 };
@@ -53,6 +56,7 @@ export function DocumentTable({
   isDrawerMode = false,
   initialCategory = "all",
   initialSearch = "",
+  onOpenDocument,
   onDocumentDeleted,
   onDocumentStarToggled,
 }: DocumentTableProps) {
@@ -173,29 +177,6 @@ export function DocumentTable({
     }
   };
 
-  const handleDownload = async (id: string, name: string) => {
-    try {
-      const res = await fetch(`/api/documents/${id}/download`);
-      if (!res.ok) {
-        alert("파일 다운로드 권한이 없거나 파일을 찾을 수 없습니다.");
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error(e);
-      alert("다운로드 중 문제가 발생했습니다.");
-    }
-  };
-
   // 별표 버튼 렌더
   const renderStarButton = (doc: Document) => {
     if (isAdmin) {
@@ -281,6 +262,10 @@ export function DocumentTable({
 
   // 문서 열람 핸들러
   const openViewDoc = (doc: Document) => {
+    if (onOpenDocument) {
+      onOpenDocument(doc);
+      return;
+    }
     setActiveViewDoc(doc);
   };
 

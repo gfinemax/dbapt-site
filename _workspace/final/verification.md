@@ -1,52 +1,65 @@
-# 구현 완료 검증
+# Verification
 
-## 구현 요약
+## Implemented Feature
 
-- 공개자료 등록/수정 시 오픈채팅방에 붙여넣을 공지문을 자동 생성한다.
-- 카카오 오픈채팅방에 직접 자동 게시하지 않고, 관리자 복사용 공지문만 DB에 저장한다.
-- `OpenChatAnnouncement` 모델과 migration을 추가했다.
-- 문서 생성/수정 API에서 문서 저장 성공 후 오픈채팅 공지문 코디네이터를 호출한다.
-- 공지문 생성 실패는 문서 저장 응답 실패로 전파하지 않고 서버 로그로만 남긴다.
-- 운영 CLI를 추가했다: `openchat:announcements`, `openchat:copy`, `openchat:generate`.
+- Reduced repeated `자료 대기` labels in the pending contribution dashboard.
+- Changed null summary values to compact `대기` labels inside the four metric cards.
+- Replaced the dominant black pending progress panel with a lower-emphasis parchment panel.
+- Replaced the previous left/right split with a horizontal band layout.
+- Changed pending payment stage hints to a responsive stage grid: 5 columns at 800px and 2 columns on mobile.
+- Split long stage labels into readable title/detail lines while preserving full labels as accessible names.
+- Left-aligned the payment stage heading and description to prevent broken heading text and awkward right-aligned copy.
+- Restored direct portal document viewing by giving `PortalShell` its own PDF viewer state when no external document opener is supplied.
+- Changed successful document bookmarking to switch into `내 보관함` immediately.
+- Changed the PDF viewer to open in full viewport mode by default, with `화면 축소` as the initial toggle action.
+- Shortened the empty recent ledger copy.
+- Made the summary metric grid render as 2x2 on mobile and 4 columns on wide screens.
 
-## 주요 변경 파일
+## Changed File Summary
 
-- `prisma/schema.prisma`
-- `prisma/migrations/20260613234500_add_openchat_announcements/migration.sql`
-- `src/lib/notifications/openchat-announcements.ts`
-- `src/app/api/documents/route.ts`
-- `src/app/api/documents/[id]/route.ts`
-- `scripts/openchat-announcements.ts`
-- `scripts/openchat-copy.ts`
-- `scripts/openchat-generate.ts`
-- `src/__tests__/openchat-announcements.test.ts`
-- `src/__tests__/document-upload-api.test.ts`
-- `package.json`
-- `_workspace/00_input/request-summary.md`
-- `_workspace/01_scope/spec-selection.md`
-- `docs/superpowers/plans/2026-06-13-openchat-disclosure-announcements.md`
+- UI: `src/components/portal/contribution-dashboard.tsx`
+- Tests: `src/__tests__/contribution-dashboard-component.test.tsx`
+- Harness notes: `_workspace/00_input/request-summary.md`, `_workspace/01_scope/spec-selection.md`, `_workspace/04_review/ui-review.md`, `_workspace/final/verification.md`
 
-## 검증 결과
+## Checks Run
 
-- `pnpm exec prisma generate`: PASS
-- `pnpm openchat:announcements -- --help`: PASS
-- `pnpm openchat:copy -- --help`: PASS
-- `pnpm openchat:generate -- --help`: PASS
-- `pnpm test src/__tests__/openchat-announcements.test.ts`: PASS
-- `pnpm test src/__tests__/document-upload-api.test.ts`: PASS
-- `pnpm exec prisma migrate status`: 신규 migration `20260613234500_add_openchat_announcements` 미적용 확인
-- `pnpm exec prisma migrate deploy`: PASS, Supabase Postgres에 신규 migration 적용 완료
-- `pnpm lint`: PASS, 기존 `src/components/portal/document-table.tsx` unused warning 1개 유지
-- `pnpm test`: PASS, 25 files / 161 tests
-- `pnpm build`: PASS
+- `pnpm test -- src/__tests__/contribution-dashboard-component.test.tsx`: PASS, 1 file / 4 tests.
+- `pnpm test -- src/__tests__/contribution-dashboard-component.test.tsx src/__tests__/contribution-dashboard.test.ts src/__tests__/portal-shell.test.tsx src/__tests__/personal-library-drawer-host.test.tsx`: PASS, 4 files / 11 tests.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx src/__tests__/personal-document-hub.test.tsx`: PASS, 2 files / 9 tests.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx src/__tests__/personal-document-hub.test.tsx src/__tests__/personal-document-bookmarks-api.test.ts src/__tests__/personal-library-drawer-host.test.tsx src/__tests__/pdf-viewer-modal.test.tsx src/__tests__/document-merged-view-api.test.ts`: PASS, 6 files / 19 tests.
+- `pnpm test -- src/__tests__/pdf-viewer-modal.test.tsx`: PASS, 1 file / 6 tests.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx src/__tests__/personal-library-drawer-host.test.tsx src/__tests__/pdf-viewer-modal.test.tsx`: PASS, 3 files / 13 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 33 files / 189 tests. jsdom printed expected `Window's scrollTo()` not implemented notices.
+- `pnpm build`: PASS.
 
-## UI 검증
+## Browser Checks
 
-- visible UI 변경 없음
-- `dbapt-site-ui-review` 및 브라우저 레이아웃 검증 대상 아님
+- In-app Browser `iab` was unavailable and the connected Chrome extension could not create a controllable tab, so Chrome headless CDP was used.
+- `/portal/member` 800x900 with a synthetic member session:
+  - dashboard rendered
+  - exact `자료 대기` labels reduced to 1
+  - lower-emphasis progress panel rendered full-width inside the dashboard
+  - stage grid used 5 columns in 1 row
+  - visible stage labels rendered as number, title, and optional detail without duplicated hidden copy
+  - no horizontal overflow: `scrollWidth=800`, `clientWidth=800`
+- `/portal/member` mobile 390x844 with a synthetic member session:
+  - dashboard rendered
+  - exact `자료 대기` labels reduced to 1
+  - stage grid used 2 columns and wrapped into 3 rows
+  - visible stage labels rendered as number, title, and optional detail without duplicated hidden copy
+  - progress panel background was parchment: `rgb(248, 247, 244)`
+  - no horizontal overflow: `scrollWidth=390`, `clientWidth=390`
+- `/portal/member` desktop 1000x900 with a synthetic member session:
+  - clicking the first `열람` button created `data-testid="pdf-viewer-panel"`
+  - viewer iframe source was `/api/documents/<id>/view`
+  - no horizontal overflow: `scrollWidth=1000`, `clientWidth=1000`
+- `/portal/member` desktop 1200x900 with a synthetic member session:
+  - clicking `열람` opened the viewer panel at `w-[95vw]` and `h-[95vh]`
+  - measured panel size: `1140x855`
+  - initial viewer toggle button was `화면 축소`
+  - no horizontal overflow: `scrollWidth=1200`, `clientWidth=1200`
 
-## 남은 리스크
+## Unresolved Risks Or Follow-Up Specs
 
-- 오픈채팅방 직접 자동 게시 기능은 공식 API 제약 때문에 구현 범위에서 제외했다.
-- 관리자는 `openchat:copy` 출력문을 오픈채팅방에 직접 붙여넣어야 한다.
-- 관리자 UI의 "공지문 복사" 버튼은 후속 visible UI 작업으로 분리한다.
+- none

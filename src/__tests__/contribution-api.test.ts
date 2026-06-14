@@ -10,6 +10,15 @@ const prismaMock = {
     findUnique: vi.fn(),
     upsert: vi.fn(),
   },
+  memberContributionProfile: {
+    findUnique: vi.fn(),
+  },
+  contributionLedgerEntry: {
+    findMany: vi.fn(),
+  },
+  contributionViewLog: {
+    create: vi.fn(),
+  },
   paymentNotice: {
     findMany: vi.fn(),
     create: vi.fn(),
@@ -55,6 +64,37 @@ describe("contribution payment APIs", () => {
       noticeMessage: "연체 미납금 납부 안내 대상입니다.",
       updatedAt: new Date("2026-06-01T00:00:00.000Z"),
     });
+    prismaMock.memberContributionProfile.findUnique.mockResolvedValue({
+      userId: "member-1",
+      selectedUnitLabel: "30평형",
+      unitAreaM2: 84.9,
+      dataStatus: "SYNCED",
+      syncedAt: new Date("2026-06-01T00:00:00.000Z"),
+      paymentPlan: {
+        totalPlannedAmount: 120_000_000,
+        stages: [
+          {
+            id: "stage-1",
+            label: "신청금(가입필증)",
+            category: "APPLICATION_CERTIFICATE_FEE",
+            amount: 30_000_000,
+            dueDate: new Date("2026-01-31T00:00:00.000Z"),
+            sortOrder: 1,
+          },
+        ],
+      },
+    });
+    prismaMock.contributionLedgerEntry.findMany.mockResolvedValue([
+      {
+        id: "ledger-1",
+        amount: 30_000_000,
+        paidAt: new Date("2026-01-10T00:00:00.000Z"),
+        memo: "신청금 납부",
+        source: "ERP",
+        stage: { label: "신청금(가입필증)" },
+      },
+    ]);
+    prismaMock.contributionViewLog.create.mockResolvedValue({ id: "view-log-1" });
     prismaMock.paymentNotice.findMany.mockResolvedValue([
       {
         id: "notice-1",
@@ -78,8 +118,34 @@ describe("contribution payment APIs", () => {
     expect(prismaMock.contributionSummary.findUnique).toHaveBeenCalledWith({
       where: { userId: "member-1" },
     });
+    expect(prismaMock.memberContributionProfile.findUnique).toHaveBeenCalledWith({
+      where: { userId: "member-1" },
+      include: {
+        paymentPlan: {
+          include: {
+            stages: {
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        },
+      },
+    });
+    expect(prismaMock.contributionLedgerEntry.findMany).toHaveBeenCalledWith({
+      where: { userId: "member-1" },
+      include: {
+        stage: {
+          select: { label: true },
+        },
+      },
+      orderBy: { paidAt: "desc" },
+      take: 20,
+    });
     expect(body.summary.totalDue).toBe(120_000_000);
     expect(body.summary.nextDueDate).toBe("2026-06-30T00:00:00.000Z");
+    expect(body.dashboard.selectedUnitLabel).toBe("30평형");
+    expect(body.dashboard.paymentProgress).toBe(79);
+    expect(body.dashboard.stageSummary[0].label).toBe("신청금(가입필증)");
+    expect(body.dashboard.ledgerEntries[0].sourceLabel).toBe("ERP 반영");
     expect(body.notices).toHaveLength(1);
   });
 

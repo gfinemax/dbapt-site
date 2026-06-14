@@ -10,11 +10,13 @@ import { AboutClient } from "@/components/about/about-client";
 import { DisclosureClient } from "@/components/disclosure/disclosure-client";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { type Document } from "@/components/portal/document-table";
+import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 import { ContributionSummaryMini } from "@/components/portal/contribution-summary-mini";
-import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
+import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 import { cn } from "@/lib/utils";
 import { getPersonalLibraryLabel } from "@/lib/personal-library-label";
+import { getPdfRelatedDocument } from "@/lib/document-relations";
 
 type HomeClientProps = {
   session?: {
@@ -49,6 +51,7 @@ type HomeClientProps = {
     createdAt: string;
   }[];
   contributionSummary?: ContributionSummaryView | null;
+  contributionDashboard?: ContributionDashboardView | null;
   paymentNotices?: PaymentNoticeView[];
 };
 
@@ -60,6 +63,7 @@ export function HomeClient({
   pendingUsers = [],
   approvedSocialUsers = [],
   contributionSummary,
+  contributionDashboard,
   paymentNotices = [],
 }: HomeClientProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -69,11 +73,13 @@ export function HomeClient({
   const [portalSearch, setPortalSearch] = useState<string>("");
   const [showAnnouncePopup, setShowAnnouncePopup] = useState(false);
   const [isDoNotShowAnnounceToday, setIsDoNotShowAnnounceToday] = useState(false);
+  const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
+  const activeViewDocRelation = activeViewDoc ? getPdfRelatedDocument(activeViewDoc, documents) : null;
   const personalLibraryLabel = getPersonalLibraryLabel(session);
 
   // 드로어 또는 안내 팝업 활성화 시 본문 스크롤 차단 처리 (디테일한 UX 보장)
   useEffect(() => {
-    if (isDrawerOpen || isAboutDrawerOpen || isDisclosureDrawerOpen || showAnnouncePopup) {
+    if (isDrawerOpen || isAboutDrawerOpen || isDisclosureDrawerOpen || showAnnouncePopup || activeViewDoc) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -81,7 +87,7 @@ export function HomeClient({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isDrawerOpen, isAboutDrawerOpen, isDisclosureDrawerOpen, showAnnouncePopup]);
+  }, [activeViewDoc, isAboutDrawerOpen, isDisclosureDrawerOpen, isDrawerOpen, showAnnouncePopup]);
 
   // 커스텀 이벤트 리스너: 글로벌 헤더에서 포털/소개/공개자료 열기 및 닫기 요청 수신
   useEffect(() => {
@@ -108,6 +114,7 @@ export function HomeClient({
       setIsDisclosureDrawerOpen(true);
     };
     const handleClosePortal = () => {
+      setActiveViewDoc(null);
       setIsDrawerOpen(false);
       setIsAboutDrawerOpen(false);
       setIsDisclosureDrawerOpen(false);
@@ -191,7 +198,10 @@ export function HomeClient({
       {/* 백드롭 오버레이 (Dim & Blur) */}
       {isDrawerOpen && (
         <div
-          onClick={() => setIsDrawerOpen(false)}
+          onClick={() => {
+            setActiveViewDoc(null);
+            setIsDrawerOpen(false);
+          }}
           className="fixed inset-0 z-40 bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
         />
       )}
@@ -217,7 +227,10 @@ export function HomeClient({
           
           {/* 닫기 버튼 (DESIGN.md 규격: Pill Light 스타일 응용) */}
           <button
-            onClick={() => setIsDrawerOpen(false)}
+            onClick={() => {
+              setActiveViewDoc(null);
+              setIsDrawerOpen(false);
+            }}
             className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-xs font-medium text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
           >
             <svg className="w-3.5 h-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -239,10 +252,12 @@ export function HomeClient({
               pendingUsers={pendingUsers}
               approvedSocialUsers={approvedSocialUsers}
               contributionSummary={contributionSummary}
+              contributionDashboard={contributionDashboard}
               paymentNotices={paymentNotices}
               isDrawerMode={true}
               initialCategory={portalCategory}
               initialSearch={portalSearch}
+              onOpenDocument={setActiveViewDoc}
             />
           ) : (
             <div className="py-20 text-center">
@@ -253,6 +268,25 @@ export function HomeClient({
           )}
         </div>
       </div>
+
+      {activeViewDoc && (
+        <PdfViewerModal
+          documentId={activeViewDoc.id}
+          documentTitle={activeViewDoc.title}
+          fileName={activeViewDoc.fileName}
+          onClose={() => setActiveViewDoc(null)}
+          documentDate={activeViewDoc.documentDate || activeViewDoc.publishedAt || activeViewDoc.createdAt || undefined}
+          createdAt={activeViewDoc.createdAt}
+          publishedAt={activeViewDoc.publishedAt || undefined}
+          fileSize={activeViewDoc.fileSize}
+          category={activeViewDoc.category}
+          subCategory={activeViewDoc.subCategory}
+          description={activeViewDoc.description}
+          attachments={activeViewDoc.attachments}
+          relatedDocument={activeViewDocRelation?.document}
+          relatedDocumentLabel={activeViewDocRelation?.label}
+        />
+      )}
 
       {/* ==========================================
           [NEW] 조합원 로그인 전용 자료실 알림 팝업 모달 (LG U+ 레퍼런스 스타일 완벽 재현)

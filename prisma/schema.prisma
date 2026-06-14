@@ -11,71 +11,77 @@ datasource db {
 
 // 1. 사용자 계정 및 권한
 model User {
-  id            String      @id @default(uuid())
-  loginId       String?     @unique                  // 로그인 아이디 (구글 로그인 유저는 null 가능)
-  passwordHash  String?                              // 암호화된 비밀번호 (구글 로그인 유저는 null 가능)
-  name          String?                              // 조합원 성명 (구글 이름 자동 매핑)
-  email         String?     @unique                  // 구글 로그인 이메일
-  emailVerified DateTime?
-  image         String?                              // 구글 프로필 이미지 URL
-  signupName    String?                              // 가입 신청서 입력 이름
-  signupPhone   String?                              // 가입 신청서 연락처
-  signupMemo    String?                              // 가입 신청서 관리자 전달 메모
-  phone         String?                              // 운영 알림 발송용 검증 연락처
-  kakaoNotificationOptIn Boolean @default(false)     // 알림톡 발송 가능 동의/운영 확인 상태
-  kakaoNotificationEnabled Boolean @default(false)   // 알림톡 발송 활성 상태
-  role          String      @default("PENDING")      // PENDING(대기), MEMBER(정식), REFUND(환불), ADMIN(관리자)
-  isActive      Boolean     @default(true)           // 계정 활성 상태
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  
+  id                       String    @id @default(uuid())
+  loginId                  String?   @unique // 로그인 아이디 (구글 로그인 유저는 null 가능)
+  passwordHash             String? // 암호화된 비밀번호 (구글 로그인 유저는 null 가능)
+  name                     String? // 조합원 성명 (구글 이름 자동 매핑)
+  email                    String?   @unique // 구글 로그인 이메일
+  emailVerified            DateTime?
+  image                    String? // 구글 프로필 이미지 URL
+  signupName               String? // 가입 신청서 입력 이름
+  signupPhone              String? // 가입 신청서 연락처
+  signupMemo               String? // 가입 신청서 관리자 전달 메모
+  phone                    String? // 운영 알림 발송용 검증 연락처
+  kakaoNotificationOptIn   Boolean   @default(false) // 알림톡 발송 가능 동의/운영 확인 상태
+  kakaoNotificationEnabled Boolean   @default(false) // 알림톡 발송 활성 상태
+  role                     String    @default("PENDING") // PENDING(대기), MEMBER(정식), REFUND(환불), ADMIN(관리자)
+  isActive                 Boolean   @default(true) // 계정 활성 상태
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
   // NextAuth 관계
-  accounts      Account[]
-  sessions      Session[]
-  
+  accounts Account[]
+  sessions Session[]
+
   // 관계 정의
-  documentLogs  DocumentLog[]
-  refundInfo    RefundInfo?
-  contributionSummary ContributionSummary?
-  paymentNotices PaymentNotice[]
-  createdPaymentImportBatches PaymentImportBatch[] @relation("PaymentImportCreatedBy")
-  approvedPaymentImportBatches PaymentImportBatch[] @relation("PaymentImportApprovedBy")
-  coopNews      CoopNews[]
-  freePosts     FreePost[]
-  freeComments  FreeComment[]
-  notificationGroupMembers NotificationGroupMember[]
+  documentLogs                     DocumentLog[]
+  personalDocumentBookmarks        PersonalDocumentBookmark[]
+  refundInfo                       RefundInfo?
+  contributionSummary              ContributionSummary?
+  contributionProfile              MemberContributionProfile?
+  contributionLedgerEntries        ContributionLedgerEntry[]
+  contributionViewLogs             ContributionViewLog[]
+  contributionSyncRunsStarted      ContributionSyncRun[]             @relation("ContributionSyncStartedBy")
+  paymentNotices                   PaymentNotice[]
+  createdPaymentImportBatches      PaymentImportBatch[]              @relation("PaymentImportCreatedBy")
+  approvedPaymentImportBatches     PaymentImportBatch[]              @relation("PaymentImportApprovedBy")
+  coopNews                         CoopNews[]
+  freePosts                        FreePost[]
+  freeComments                     FreeComment[]
+  notificationGroupMembers         NotificationGroupMember[]
   disclosureNotificationRecipients DisclosureNotificationRecipient[]
 }
 
 // 2. 정보공개 및 회계 보고 문서
 model Document {
-  id             String       @id @default(uuid())
-  title          String                                // 문서 제목
-  description    String?                               // 문서 설명
-  category       String                                // DISCLOSURE, ACCOUNTING, NOTICE
-  subCategory    String?                               // 세부 카테고리 (예: 총회 의사록, 이사회 회의록 등)
-  correspondenceType String?                            // 수발신 공문 방향: 발신, 수신, 회신
-  replyToDocumentId String?                             // 회신 공문이 참조하는 수신 공문 ID
-  replyNotRequired Boolean @default(false)               // 수신 공문 중 회신 불필요 여부
-  replyDueDate   DateTime?                              // 수신 공문 회신 기한
-  filePath       String                                // 업로드된 내부 파일 경로 (보안 저장)
-  fileName       String                                // 원본 파일명
-  fileSize       Int                                   // 파일 용량 (bytes)
-  attachmentPath String?                               // 추가 첨부파일 저장 경로
-  attachmentName String?                               // 추가 첨부파일 원본 파일명
-  attachmentSize Int?                                  // 추가 첨부파일 용량 (bytes)
-  isStarred      Boolean      @default(false)           // 중요 문서 별표 마킹
-  status         String       @default("PENDING")      // PENDING, APPROVED
-  publishedAt    DateTime?                             // 실제 조합원 대상 공개 일시
-  documentDate   DateTime     @default(now())          // 실제 총회 개최일 / 이사회 개최일 / 공문 발생일
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                 String    @id @default(uuid())
+  title              String // 문서 제목
+  description        String? // 문서 설명
+  category           String // DISCLOSURE, ACCOUNTING, NOTICE
+  subCategory        String? // 세부 카테고리 (예: 총회 의사록, 이사회 회의록 등)
+  correspondenceType String? // 수발신 공문 방향: 발신, 수신, 회신
+  replyToDocumentId  String? // 회신 공문이 참조하는 수신 공문 ID
+  replyNotRequired   Boolean   @default(false) // 수신 공문 중 회신 불필요 여부
+  replyDueDate       DateTime? // 수신 공문 회신 기한
+  filePath           String // 업로드된 내부 파일 경로 (보안 저장)
+  fileName           String // 원본 파일명
+  fileSize           Int // 파일 용량 (bytes)
+  attachmentPath     String? // 추가 첨부파일 저장 경로
+  attachmentName     String? // 추가 첨부파일 원본 파일명
+  attachmentSize     Int? // 추가 첨부파일 용량 (bytes)
+  isStarred          Boolean   @default(false) // 중요 문서 별표 마킹
+  status             String    @default("PENDING") // PENDING, APPROVED
+  publishedAt        DateTime? // 실제 조합원 대상 공개 일시
+  documentDate       DateTime  @default(now()) // 실제 총회 개최일 / 이사회 개최일 / 공문 발생일
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   // 관계 정의
-  logs         DocumentLog[]
-  attachments  Attachment[]
+  logs                    DocumentLog[]
+  personalBookmarks       PersonalDocumentBookmark[]
+  attachments             Attachment[]
   disclosureNotifications DisclosureNotification[]
-  openChatAnnouncements OpenChatAnnouncement[]
+  openChatAnnouncements   OpenChatAnnouncement[]
 
   @@index([replyToDocumentId])
 }
@@ -110,8 +116,8 @@ model NotificationGroup {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members     NotificationGroupMember[]
-  disclosureRules DisclosureNotificationRule[]
+  members                          NotificationGroupMember[]
+  disclosureRules                  DisclosureNotificationRule[]
   disclosureNotificationRecipients DisclosureNotificationRecipient[]
 }
 
@@ -122,8 +128,8 @@ model NotificationGroupMember {
   userId    String
   createdAt DateTime @default(now())
 
-  group     NotificationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group NotificationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, userId])
   @@index([userId])
@@ -140,7 +146,7 @@ model DisclosureNotificationRule {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  group              NotificationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group NotificationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([category, subCategory, correspondenceType, isActive])
   @@index([groupId])
@@ -160,8 +166,8 @@ model DisclosureNotification {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  document         Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  recipients       DisclosureNotificationRecipient[]
+  document   Document                          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  recipients DisclosureNotificationRecipient[]
 
   @@index([documentId, trigger])
   @@index([status, createdAt])
@@ -181,9 +187,9 @@ model DisclosureNotificationRecipient {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  notification      DisclosureNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group             NotificationGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  notification DisclosureNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group        NotificationGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([notificationId])
   @@index([userId])
@@ -193,15 +199,15 @@ model DisclosureNotificationRecipient {
 
 // 2.4.4. 오픈채팅방 복사용 공개자료 공지문
 model OpenChatAnnouncement {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   documentId String
-  status     String   @default("DRAFT") // DRAFT, COPIED, ARCHIVED
+  status     String    @default("DRAFT") // DRAFT, COPIED, ARCHIVED
   message    String
   copiedAt   DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId, status])
   @@index([status, createdAt])
@@ -211,103 +217,237 @@ model OpenChatAnnouncement {
 model Attachment {
   id         String   @id @default(uuid())
   documentId String
-  filePath   String                                // 업로드된 내부 파일 경로 (보안 저장)
-  fileName   String                                // 원본 파일명
-  fileSize   Int                                   // 파일 용량 (bytes)
+  filePath   String // 업로드된 내부 파일 경로 (보안 저장)
+  fileName   String // 원본 파일명
+  fileSize   Int // 파일 용량 (bytes)
   createdAt  DateTime @default(now())
 
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
 
 // 3. 보안 감사 로그 (열람 및 다운로드 이력)
 model DocumentLog {
-  id          String      @id @default(uuid())
-  userId      String
-  documentId  String
-  actionType  String      // VIEW, DOWNLOAD
-  ipAddress   String?     // 열람자 IP
-  userAgent   String?     // 브라우저 정보
-  createdAt   DateTime    @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  documentId String
+  actionType String // VIEW, DOWNLOAD
+  ipAddress  String? // 열람자 IP
+  userAgent  String? // 브라우저 정보
+  createdAt  DateTime @default(now())
 
   // 관계 정의
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  document    Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+// 3.1. 조합원 개인 자료 보관함
+model PersonalDocumentBookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  documentId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+  @@index([documentId])
 }
 
 // 4. 환불 조합원 전용 환불 정보 (1:1 매핑)
 model RefundInfo {
-  id             String      @id @default(uuid())
-  userId         String      @unique
-  totalPaid      Int         // 총 납부액
-  refundAmount   Int         // 정산금액 (환불예정액)
-  processedState String      // 정산 상태
-  targetDate     DateTime?   // 지급 예정일
-  updatedAt      DateTime    @updatedAt
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  totalPaid      Int // 총 납부액
+  refundAmount   Int // 정산금액 (환불예정액)
+  processedState String // 정산 상태
+  targetDate     DateTime? // 지급 예정일
+  updatedAt      DateTime  @updatedAt
 
-  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // 4.5. 조합원/환불자 개인별 분담금 납부 현황
 model ContributionSummary {
-  id            String      @id @default(uuid())
-  userId        String      @unique
-  totalDue      Int         @default(0)               // 총 고지액
-  totalPaid     Int         @default(0)               // 총 납부액
-  unpaidAmount  Int         @default(0)               // 미납 원금
-  overdueAmount Int         @default(0)               // 연체 미납액
-  lateFee       Int         @default(0)               // 연체료
-  nextDueDate   DateTime?                             // 다음 납부기한
-  status        String      @default("NORMAL")        // NORMAL, UNPAID, OVERDUE
-  noticeMessage String?                               // 본인 화면 안내 문구
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  totalDue      Int       @default(0) // 총 고지액
+  totalPaid     Int       @default(0) // 총 납부액
+  unpaidAmount  Int       @default(0) // 미납 원금
+  overdueAmount Int       @default(0) // 연체 미납액
+  lateFee       Int       @default(0) // 연체료
+  nextDueDate   DateTime? // 다음 납부기한
+  status        String    @default("NORMAL") // NORMAL, UNPAID, OVERDUE
+  noticeMessage String? // 본인 화면 안내 문구
   sourceBatchId String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status])
 }
 
+// 4.5.1. 조합원별 신청 평형 및 납부계획 매핑
+model MemberContributionProfile {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  paymentPlanId     String?
+  selectedUnitLabel String?
+  unitAreaM2        Float?
+  dataStatus        String    @default("WAITING") // WAITING, PARTIAL, SYNCED
+  source            String    @default("INTERNAL") // INTERNAL, ERP, IMPORT
+  externalMemberId  String?
+  syncedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user        User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentPlan ContributionPaymentPlan? @relation(fields: [paymentPlanId], references: [id], onDelete: SetNull)
+
+  @@index([paymentPlanId])
+  @@index([dataStatus])
+  @@index([externalMemberId])
+}
+
+// 4.5.2. 평형/버전별 분담금 납부계획
+model ContributionPaymentPlan {
+  id                 String    @id @default(uuid())
+  name               String
+  unitLabel          String?
+  unitAreaM2         Float?
+  totalPlannedAmount Int?
+  version            String    @default("v1")
+  status             String    @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
+  source             String    @default("INTERNAL") // INTERNAL, ERP, IMPORT
+  externalId         String?
+  syncedAt           DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  stages   ContributionPaymentStage[]
+  profiles MemberContributionProfile[]
+
+  @@index([status, version])
+  @@index([externalId])
+}
+
+// 4.5.3. 납부 단계: 신청금/계약금/분담금/중도금/잔금 등
+model ContributionPaymentStage {
+  id          String    @id @default(uuid())
+  planId      String
+  label       String
+  category    String    @default("OTHER")
+  amount      Int?
+  dueDate     DateTime?
+  sortOrder   Int       @default(0)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  plan          ContributionPaymentPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  ledgerEntries ContributionLedgerEntry[]
+
+  @@index([planId, sortOrder])
+  @@index([category])
+}
+
+// 4.5.4. 조합원별 실제 분담금 납부 원장
+model ContributionLedgerEntry {
+  id         String   @id @default(uuid())
+  userId     String
+  stageId    String?
+  label      String?
+  amount     Int
+  paidAt     DateTime
+  method     String?
+  memo       String?
+  source     String   @default("MANUAL") // MANUAL, IMPORT, ERP
+  externalId String?
+  createdAt  DateTime @default(now())
+
+  user  User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stage ContributionPaymentStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+
+  @@unique([source, externalId])
+  @@index([userId, paidAt])
+  @@index([stageId])
+}
+
+// 4.5.5. ERP/수동 동기화 실행 이력
+model ContributionSyncRun {
+  id          String    @id @default(uuid())
+  source      String    @default("ERP")
+  status      String    @default("PENDING") // PENDING, SUCCESS, FAILED
+  startedById String?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  rowCount    Int       @default(0)
+  errorCount  Int       @default(0)
+  message     String?
+
+  startedBy User? @relation("ContributionSyncStartedBy", fields: [startedById], references: [id], onDelete: SetNull)
+
+  @@index([status, startedAt])
+  @@index([source, startedAt])
+  @@index([startedById])
+}
+
+// 4.5.6. 개인 분담금 대시보드 조회 감사 로그
+model ContributionViewLog {
+  id         String   @id @default(uuid())
+  userId     String
+  actionType String   @default("VIEW_DASHBOARD")
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([actionType, createdAt])
+}
+
 // 4.6. 분담금 자료 업로드/API 수신 배치
 model PaymentImportBatch {
-  id           String             @id @default(uuid())
-  source       String             @default("MANUAL_API") // MANUAL_API, EXCEL, EXTERNAL_API
-  status       String             @default("PENDING")    // PENDING, APPROVED, REJECTED
-  rowCount     Int                @default(0)
-  errorCount   Int                @default(0)
+  id           String    @id @default(uuid())
+  source       String    @default("MANUAL_API") // MANUAL_API, EXCEL, EXTERNAL_API
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  rowCount     Int       @default(0)
+  errorCount   Int       @default(0)
   createdById  String
   approvedById String?
   approvedAt   DateTime?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  createdBy    User               @relation("PaymentImportCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-  approvedBy   User?              @relation("PaymentImportApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
-  rows         PaymentImportRow[]
+  createdBy  User               @relation("PaymentImportCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy User?              @relation("PaymentImportApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  rows       PaymentImportRow[]
 
   @@index([status, createdAt])
 }
 
 // 4.7. 배치별 개인 납부 행 검증 결과
 model PaymentImportRow {
-  id                String             @id @default(uuid())
+  id                String    @id @default(uuid())
   batchId           String
   loginId           String
   memberName        String?
   targetUserId      String?
-  totalDue          Int                @default(0)
-  totalPaid         Int                @default(0)
-  unpaidAmount      Int                @default(0)
-  overdueAmount     Int                @default(0)
-  lateFee           Int                @default(0)
+  totalDue          Int       @default(0)
+  totalPaid         Int       @default(0)
+  unpaidAmount      Int       @default(0)
+  overdueAmount     Int       @default(0)
+  lateFee           Int       @default(0)
   nextDueDate       DateTime?
-  status            String             @default("NORMAL")
+  status            String    @default("NORMAL")
   noticeMessage     String?
-  validationStatus  String             @default("VALID") // VALID, ERROR
+  validationStatus  String    @default("VALID") // VALID, ERROR
   validationMessage String?
-  createdAt         DateTime           @default(now())
+  createdAt         DateTime  @default(now())
 
-  batch             PaymentImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  batch PaymentImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@index([batchId])
   @@index([loginId])
@@ -316,23 +456,23 @@ model PaymentImportRow {
 
 // 4.8. 미납/연체 안내 초안과 승인/발송 추적
 model PaymentNotice {
-  id            String      @id @default(uuid())
+  id            String    @id @default(uuid())
   userId        String
   sourceBatchId String?
-  type          String      @default("UNPAID")       // UNPAID, OVERDUE
-  status        String      @default("DRAFT")        // DRAFT, APPROVED, SENT, CANCELLED
+  type          String    @default("UNPAID") // UNPAID, OVERDUE
+  status        String    @default("DRAFT") // DRAFT, APPROVED, SENT, CANCELLED
   title         String
   message       String
-  unpaidAmount  Int         @default(0)
-  overdueAmount Int         @default(0)
-  lateFee       Int         @default(0)
+  unpaidAmount  Int       @default(0)
+  overdueAmount Int       @default(0)
+  lateFee       Int       @default(0)
   dueDate       DateTime?
   approvedAt    DateTime?
   sentAt        DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([status, createdAt])
@@ -340,18 +480,18 @@ model PaymentNotice {
 
 // OAuth 계정 정보 저장 테이블 (NextAuth 표준)
 model Account {
-  id                 String  @id @default(uuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -369,57 +509,57 @@ model Session {
 
 // 5. 조합소식 (공지사항 및 주/월간소식)
 model CoopNews {
-  id           String      @id @default(uuid())
-  category     String      // NOTICE (공지사항), WEEKLY_MONTHLY (주/월간소식)
-  title        String
-  content      String      // markdown or HTML text
-  viewCount    Int         @default(0)
-  isStarred    Boolean     @default(false)
-  imagePath    String?     // 주/월간소식 메인 썸네일
-  attachmentPath String?   // 공지/조합뉴스 공개 첨부파일 경로
-  attachmentName String?   // 공지/조합뉴스 공개 첨부파일 원본명
-  attachmentSize Int?      // 공지/조합뉴스 공개 첨부파일 크기(bytes)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  authorId     String
-  author       User        @relation(fields: [authorId], references: [id])
+  id             String   @id @default(uuid())
+  category       String // NOTICE (공지사항), WEEKLY_MONTHLY (주/월간소식)
+  title          String
+  content        String // markdown or HTML text
+  viewCount      Int      @default(0)
+  isStarred      Boolean  @default(false)
+  imagePath      String? // 주/월간소식 메인 썸네일
+  attachmentPath String? // 공지/조합뉴스 공개 첨부파일 경로
+  attachmentName String? // 공지/조합뉴스 공개 첨부파일 원본명
+  attachmentSize Int? // 공지/조합뉴스 공개 첨부파일 크기(bytes)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
 }
 
 // 6. 자유게시판 글
 model FreePost {
-  id           String      @id @default(uuid())
-  title        String
-  content      String
-  imagePath    String?     // 첨부 이미지 경로
-  isStarred    Boolean     @default(false)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  authorId     String
-  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments     FreeComment[]
+  id        String        @id @default(uuid())
+  title     String
+  content   String
+  imagePath String? // 첨부 이미지 경로
+  isStarred Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  FreeComment[]
 }
 
 // 7. 자유게시판 댓글
 model FreeComment {
-  id           String      @id @default(uuid())
-  content      String
-  createdAt    DateTime    @default(now())
-  postId       String
-  post         FreePost    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parentId     String?
-  parent       FreeComment? @relation("FreeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies      FreeComment[] @relation("FreeCommentReplies")
-  authorId     String
-  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id        String        @id @default(uuid())
+  content   String
+  createdAt DateTime      @default(now())
+  postId    String
+  post      FreePost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    FreeComment?  @relation("FreeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   FreeComment[] @relation("FreeCommentReplies")
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([postId, parentId])
 }
 
 // 8. FAQ 자주 묻는 질문
 model FAQ {
-  id           String      @id @default(uuid())
-  question     String
-  answer       String
-  category     String      // LOAN (중도금대출), TAX (세무), ADMIN (조합행정)
-  createdAt    DateTime    @default(now())
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String // LOAN (중도금대출), TAX (세무), ADMIN (조합행정)
+  createdAt DateTime @default(now())
 }

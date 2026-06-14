@@ -1,8 +1,31 @@
-# 요청 요약
+# Request Summary
 
-- 요청 기능: 스마트폰에서 공개자료 열람 모달을 열었을 때 헤더와 버튼 레이아웃이 깨지는 문제를 모바일 가독성 중심으로 개선한다.
-- 증상: PDF 열람 모달 상단에서 문서 제목이 매우 좁은 폭에 갇혀 한 글자씩 세로로 쪼개지고, `전체 화면`, `다운로드`, `닫기` 버튼이 제목 영역을 밀어낸다.
-- 구현 범위: `PdfViewerModal`의 모바일 헤더, 액션 버튼 행, 본문 문서 카드 상단을 반응형으로 재배치한다.
-- 제외 범위: PDF 파일 생성/병합 API, 권한 정책, 문서 목록 카드, 다운로드 동작, 인증 흐름.
-- 적용 기준: 직접 사용자 스크린샷 버그 리포트 및 `DESIGN.md`의 warm canvas, stone border, pill button 규칙.
-- 미결정 사항: Codex in-app Browser가 현재 세션에서 unavailable이라 실제 브라우저 스크린샷 검증은 수행하지 못했다.
+## Requested Feature Slice
+
+Refine the logged-in `내 분담금 현황` dashboard layout after visual review:
+
+- reduce repeated `자료 대기` text in the pending state
+- make the empty progress area lower emphasis instead of a dominant black card
+- keep the left side as compact summary/progress
+- replace the left/right split with a horizontal band layout for summary, progress, payment stages, and recent ledger
+- refine text hierarchy, labels, and alignment for better readability
+- fix today's public-document `열람` action so direct portal pages open the PDF viewer
+- make successful `보관` actions switch to `내 보관함` so the saved document is immediately visible
+- open the PDF viewer in full viewport mode by default instead of a narrow side-sized panel
+- improve mobile density without horizontal overflow
+
+## Explicitly Excluded Scope
+
+- Changing contribution data calculations
+- Adding real ERP integration
+- Adding admin sync UI
+- Showing fake payment amounts
+- Changing public pages
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`
+
+## Unanswered Decision
+
+none

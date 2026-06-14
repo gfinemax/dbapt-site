@@ -76,7 +76,7 @@ export function PdfViewerModal({
     : null;
   const [loadedPreviewKey, setLoadedPreviewKey] = useState<string | null>(null);
   const isLoading = canPreviewInline && loadedPreviewKey !== previewKey;
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(true);
 
   // ESC 키 클릭 시 자동으로 모달 닫기
   useEffect(() => {
@@ -165,8 +165,8 @@ export function PdfViewerModal({
       {/* 모달 창 본체 (DESIGN.md 가이드라인인 warm-canvas 백그라운드 및 recessed card 느낌 준용) */}
       <div
         data-testid="pdf-viewer-panel"
-        className={`relative bg-warm-canvas border border-stone-surface shadow-2xl rounded-2xl flex flex-col transition-all duration-300 overflow-hidden w-full max-w-5xl max-sm:h-[92svh] max-sm:w-[calc(100vw-16px)] max-sm:max-w-none ${
-          isFullScreen ? "h-[95vh] max-w-[95vw]" : "h-[85vh]"
+        className={`relative bg-warm-canvas border border-stone-surface shadow-2xl rounded-2xl flex flex-col transition-all duration-300 overflow-hidden max-sm:h-[92svh] max-sm:w-[calc(100vw-16px)] max-sm:max-w-none ${
+          isFullScreen ? "h-[95vh] w-[95vw] max-w-none" : "h-[85vh] w-full max-w-5xl"
         }`}
       >
         {/* 상단 헤더 영역 */}

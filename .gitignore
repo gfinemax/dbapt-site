@@ -1,5 +1,6 @@
 .worktrees/
 .tmp/
+.superpowers/
 
 # dependencies
 /node_modules

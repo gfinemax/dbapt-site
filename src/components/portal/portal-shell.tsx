@@ -8,11 +8,16 @@ import { portalProfiles, portalRoleOrder, type PortalRole } from "@/content/port
 import { cn } from "@/lib/utils";
 import { logoutAction, approveUserAction, updateSignupNameAction } from "@/lib/auth";
 import { DocumentTable, type Document } from "./document-table";
+import { PersonalDocumentHub } from "./personal-document-hub";
+import { PdfViewerModal } from "./pdf-viewer-modal";
+import { ContributionDashboard } from "./contribution-dashboard";
 import { DocumentUploadForm } from "./document-upload-form";
 import { AuditLogsTable, type LogEntry } from "./audit-logs-table";
 import { ContributionSummaryMini } from "./contribution-summary-mini";
 import { PortalHamburger } from "./portal-hamburger";
-import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
+import { buildContributionDashboardView } from "@/lib/contribution-dashboard";
+import { getPdfRelatedDocument } from "@/lib/document-relations";
+import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 
 // 헬퍼 함수 파일 레벨 최상단 배치 (ESLint 선언 순서 및 렌더링 낭비 방지)
 const getRoleLabel = (r: string) => {
@@ -79,6 +84,7 @@ type PortalShellProps = {
     targetDate: string | null;
   } | null;
   contributionSummary?: ContributionSummaryView | null;
+  contributionDashboard?: ContributionDashboardView | null;
   paymentNotices?: PaymentNoticeView[];
   pendingUsers?: {
     id: string;
@@ -99,6 +105,7 @@ type PortalShellProps = {
   isDrawerMode?: boolean;
   initialCategory?: string;
   initialSearch?: string;
+  onOpenDocument?: (doc: Document) => void;
 };
 
 export function PortalShell({
@@ -108,19 +115,32 @@ export function PortalShell({
   logs = [],
   refundInfo,
   contributionSummary,
+  contributionDashboard,
   paymentNotices = [],
   pendingUsers = [],
   approvedSocialUsers = [],
   isDrawerMode = false,
   initialCategory = "all",
   initialSearch = "",
+  onOpenDocument,
 }: PortalShellProps) {
   const router = useRouter();
   const profile = portalProfiles[role];
   const isLoggedIn = !!session;
+  const resolvedContributionDashboard =
+    contributionDashboard ??
+    buildContributionDashboardView({
+      summary: contributionSummary ?? null,
+      profile: null,
+      stages: [],
+      ledgerEntries: [],
+    });
 
   // 문서 목록을 로컬 상태로 관리하여 삭제/별표 변경 시 즉각 반영
   const [managedDocs, setManagedDocs] = useState<Document[]>(documents);
+  const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
+  const activeViewDocRelation = activeViewDoc ? getPdfRelatedDocument(activeViewDoc, managedDocs) : null;
+  const handleOpenDocument = onOpenDocument ?? setActiveViewDoc;
 
   const handleDocumentDeleted = (id: string) => {
     setManagedDocs(prev => prev.filter(d => d.id !== id));
@@ -431,47 +451,9 @@ export function PortalShell({
             {/* 1. Account Specific Status Cards */}
             <section className="grid gap-6 md:grid-cols-2">
               {role === "member" && (
-                <article className="stone-card p-6 bg-white">
-                  <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-semibold", getContributionStatusClass(contributionSummary?.status))}>
-                    {getContributionStatusLabel(contributionSummary?.status)}
-                  </span>
-                  <h2 className="mt-4 text-xl font-semibold">내 분담금 현황</h2>
-                  <p className="mt-2 text-sm text-graphite">
-                    {contributionSummary?.noticeMessage || "승인된 분담금 납부자료가 반영되면 본인의 수납 상세 내역이 표시됩니다."}
-                  </p>
-                  <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#f2f0ed] pt-4 text-sm">
-                    <div>
-                      <div className="text-xs text-graphite/70">총 고지액</div>
-                      <div className="text-lg font-bold text-charcoal-primary mt-1">{formatNumber(contributionSummary?.totalDue || 0)} 원</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-graphite/70">총 납부액</div>
-                      <div className="text-lg font-bold text-charcoal-primary mt-1">{formatNumber(contributionSummary?.totalPaid || 0)} 원</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-graphite/70">미납액</div>
-                      <div className={cn("text-lg font-bold mt-1", contributionSummary?.unpaidAmount ? "text-ember-orange" : "text-meadow-green")}>
-                        {formatNumber(contributionSummary?.unpaidAmount || 0)} 원
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-graphite/70">연체 미납 / 연체료</div>
-                      <div className={cn("text-lg font-bold mt-1", contributionSummary?.overdueAmount ? "text-ember-orange" : "text-meadow-green")}>
-                        {formatNumber(contributionSummary?.overdueAmount || 0)} 원 / {formatNumber(contributionSummary?.lateFee || 0)} 원
-                      </div>
-                    </div>
-                    <div className="col-span-2 mt-1 border-t border-[#f2f0ed] pt-3 text-xs text-graphite">
-                      다음 납부기한: <strong className="text-charcoal-primary">{formatDate(contributionSummary?.nextDueDate || null)}</strong>
-                    </div>
-                    {paymentNotices.length > 0 && (
-                      <div className="col-span-2 rounded-2xl border border-dashed border-stone-surface bg-parchment-card p-4 text-xs text-graphite">
-                        <div className="font-bold text-charcoal-primary">{paymentNotices[0].title}</div>
-                        <p className="mt-1 leading-relaxed">{paymentNotices[0].message}</p>
-                        <p className="mt-2 text-[10px] text-ash">상태: {paymentNotices[0].status} · 관리자 승인 전 발송되지 않습니다.</p>
-                      </div>
-                    )}
-                  </div>
-                </article>
+                <div className="md:col-span-2">
+                  <ContributionDashboard dashboard={resolvedContributionDashboard} paymentNotices={paymentNotices} />
+                </div>
               )}
 
               {role === "refund" && (refundInfo || contributionSummary) && (
@@ -761,19 +743,12 @@ export function PortalShell({
 
             {/* 2. Interactive Document Table */}
             {role !== "admin" && (
-              <section id="portal-documents-section" className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
-                <h3 className="text-lg font-semibold text-charcoal-primary mb-2">공개 자료실</h3>
-                <p className="text-xs text-graphite mb-6">검색 및 카테고리 필터를 활용하여 해당 문서의 원본 PDF 파일을 안전하게 조회/다운로드할 수 있습니다.</p>
-                <DocumentTable 
-                  documents={managedDocs} 
-                  role={role} 
-                  isDrawerMode={isDrawerMode} 
-                  initialCategory={initialCategory}
-                  initialSearch={initialSearch}
-                  onDocumentDeleted={handleDocumentDeleted}
-                  onDocumentStarToggled={handleDocumentStarToggled}
-                />
-              </section>
+              <PersonalDocumentHub
+                documents={managedDocs}
+                role={role}
+                isDrawerMode={isDrawerMode}
+                onOpenDocument={handleOpenDocument}
+              />
             )}
 
             {/* 3. Document list for Admin */}
@@ -789,6 +764,7 @@ export function PortalShell({
                   initialSearch={initialSearch}
                   onDocumentDeleted={handleDocumentDeleted}
                   onDocumentStarToggled={handleDocumentStarToggled}
+                  onOpenDocument={handleOpenDocument}
                 />
               </section>
             )}
@@ -999,6 +975,25 @@ export function PortalShell({
             </div>
           </div>
         </div>
+      )}
+
+      {activeViewDoc && !onOpenDocument && (
+        <PdfViewerModal
+          documentId={activeViewDoc.id}
+          documentTitle={activeViewDoc.title}
+          fileName={activeViewDoc.fileName}
+          onClose={() => setActiveViewDoc(null)}
+          documentDate={activeViewDoc.documentDate || activeViewDoc.publishedAt || activeViewDoc.createdAt || undefined}
+          createdAt={activeViewDoc.createdAt}
+          publishedAt={activeViewDoc.publishedAt || undefined}
+          fileSize={activeViewDoc.fileSize}
+          category={activeViewDoc.category}
+          subCategory={activeViewDoc.subCategory}
+          description={activeViewDoc.description}
+          attachments={activeViewDoc.attachments}
+          relatedDocument={activeViewDocRelation?.document}
+          relatedDocumentLabel={activeViewDocRelation?.label}
+        />
       )}
     </main>
   );

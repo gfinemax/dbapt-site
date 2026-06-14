@@ -4,8 +4,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 import { type Document } from "@/components/portal/document-table";
+import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 import { getPersonalLibraryLabel } from "@/lib/personal-library-label";
-import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
+import { getPdfRelatedDocument } from "@/lib/document-relations";
+import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 
 type PersonalLibrarySession = {
   id: string;
@@ -27,6 +29,7 @@ type PersonalLibraryDrawerHostProps = {
     targetDate: string | null;
   } | null;
   contributionSummary?: ContributionSummaryView | null;
+  contributionDashboard?: ContributionDashboardView | null;
   paymentNotices?: PaymentNoticeView[];
   pendingUsers?: {
     id: string;
@@ -65,6 +68,7 @@ export function PersonalLibraryDrawerHost({
   logs = [],
   refundInfo,
   contributionSummary,
+  contributionDashboard,
   paymentNotices = [],
   pendingUsers = [],
   approvedSocialUsers = [],
@@ -72,14 +76,16 @@ export function PersonalLibraryDrawerHost({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [portalCategory, setPortalCategory] = useState("all");
   const [portalSearch, setPortalSearch] = useState("");
+  const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
+  const activeViewDocRelation = activeViewDoc ? getPdfRelatedDocument(activeViewDoc, documents) : null;
   const personalLibraryLabel = getPersonalLibraryLabel(session);
 
   useEffect(() => {
-    document.body.style.overflow = isDrawerOpen ? "hidden" : "";
+    document.body.style.overflow = isDrawerOpen || activeViewDoc ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isDrawerOpen]);
+  }, [activeViewDoc, isDrawerOpen]);
 
   useEffect(() => {
     const handleOpenPortal = (event?: Event) => {
@@ -92,7 +98,10 @@ export function PersonalLibraryDrawerHost({
       }
       setIsDrawerOpen(true);
     };
-    const handleClosePortal = () => setIsDrawerOpen(false);
+    const handleClosePortal = () => {
+      setActiveViewDoc(null);
+      setIsDrawerOpen(false);
+    };
 
     window.addEventListener("open-portal", handleOpenPortal);
     window.addEventListener("close-portal", handleClosePortal);
@@ -109,7 +118,10 @@ export function PersonalLibraryDrawerHost({
       {isDrawerOpen && (
         <>
           <div
-            onClick={() => setIsDrawerOpen(false)}
+            onClick={() => {
+              setActiveViewDoc(null);
+              setIsDrawerOpen(false);
+            }}
             className="fixed inset-0 z-40 bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
           />
 
@@ -128,7 +140,10 @@ export function PersonalLibraryDrawerHost({
               </div>
 
               <button
-                onClick={() => setIsDrawerOpen(false)}
+                onClick={() => {
+                  setActiveViewDoc(null);
+                  setIsDrawerOpen(false);
+                }}
                 className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-xs font-medium text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -147,12 +162,14 @@ export function PersonalLibraryDrawerHost({
                   logs={logs}
                   refundInfo={refundInfo}
                   contributionSummary={contributionSummary}
+                  contributionDashboard={contributionDashboard}
                   paymentNotices={paymentNotices}
                   pendingUsers={pendingUsers}
                   approvedSocialUsers={approvedSocialUsers}
                   isDrawerMode
                   initialCategory={portalCategory}
                   initialSearch={portalSearch}
+                  onOpenDocument={setActiveViewDoc}
                 />
               ) : (
                 <div className="py-20 text-center">
@@ -164,6 +181,25 @@ export function PersonalLibraryDrawerHost({
             </div>
           </div>
         </>
+      )}
+
+      {activeViewDoc && (
+        <PdfViewerModal
+          documentId={activeViewDoc.id}
+          documentTitle={activeViewDoc.title}
+          fileName={activeViewDoc.fileName}
+          onClose={() => setActiveViewDoc(null)}
+          documentDate={activeViewDoc.documentDate || activeViewDoc.publishedAt || activeViewDoc.createdAt || undefined}
+          createdAt={activeViewDoc.createdAt}
+          publishedAt={activeViewDoc.publishedAt || undefined}
+          fileSize={activeViewDoc.fileSize}
+          category={activeViewDoc.category}
+          subCategory={activeViewDoc.subCategory}
+          description={activeViewDoc.description}
+          attachments={activeViewDoc.attachments}
+          relatedDocument={activeViewDocRelation?.document}
+          relatedDocumentLabel={activeViewDocRelation?.label}
+        />
       )}
     </>
   );

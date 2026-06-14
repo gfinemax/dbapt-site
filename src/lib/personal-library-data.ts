@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/db";
 import { serializeContributionSummary, serializePaymentNotices } from "@/lib/contribution-serializer";
+import { loadContributionDashboardData } from "@/lib/contribution-dashboard-data";
 import { serializeDocuments } from "@/lib/document-serializer";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 import { type Document } from "@/components/portal/document-table";
-import type { ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
+import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 
 export type PersonalLibrarySession = {
   id: string;
@@ -23,6 +24,7 @@ export type PersonalLibraryData = {
     targetDate: string | null;
   } | null;
   contributionSummary: ContributionSummaryView | null;
+  contributionDashboard: ContributionDashboardView | null;
   paymentNotices: PaymentNoticeView[];
   pendingUsers: {
     id: string;
@@ -47,6 +49,7 @@ export const emptyPersonalLibraryData = (): PersonalLibraryData => ({
   logs: [],
   refundInfo: null,
   contributionSummary: null,
+  contributionDashboard: null,
   paymentNotices: [],
   pendingUsers: [],
   approvedSocialUsers: [],
@@ -86,6 +89,37 @@ export async function loadPersonalLibraryData(
   ]);
   data.contributionSummary = serializeContributionSummary(summary);
   data.paymentNotices = serializePaymentNotices(notices);
+  data.contributionDashboard = await loadContributionDashboardData(session.id, data.contributionSummary);
+
+  if (session.role !== "ADMIN" && data.documents.length > 0) {
+    const documentIds = data.documents.map((doc) => doc.id);
+    const [viewedLogs, bookmarks] = await Promise.all([
+      prisma.documentLog.findMany({
+        where: {
+          userId: session.id,
+          documentId: { in: documentIds },
+          actionType: { in: ["VIEW", "DOWNLOAD"] },
+        },
+        select: { documentId: true },
+        distinct: ["documentId"],
+      }),
+      prisma.personalDocumentBookmark.findMany({
+        where: {
+          userId: session.id,
+          documentId: { in: documentIds },
+        },
+        select: { documentId: true },
+      }),
+    ]);
+    const viewedIds = new Set(viewedLogs.map((log) => log.documentId));
+    const bookmarkedIds = new Set(bookmarks.map((bookmark) => bookmark.documentId));
+
+    data.documents = data.documents.map((doc) => ({
+      ...doc,
+      isViewedByCurrentUser: viewedIds.has(doc.id),
+      isBookmarkedByCurrentUser: bookmarkedIds.has(doc.id),
+    }));
+  }
 
   if (session.role === "REFUND") {
     const info = await prisma.refundInfo.findUnique({

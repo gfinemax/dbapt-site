@@ -56,6 +56,20 @@ describe("PdfViewerModal", () => {
     expect(screen.getByTestId("pdf-preview-frame-area")).toHaveClass("h-[76vh]", "min-h-[560px]");
   });
 
+  it("opens in full viewport mode by default", () => {
+    render(
+      <PdfViewerModal
+        documentId="doc-1"
+        documentTitle="2026년도 1분기 수입 및 지출 자금집행 실적 보고서"
+        fileName="fund-report.pdf"
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("pdf-viewer-panel")).toHaveClass("h-[95vh]", "w-[95vw]", "max-w-none");
+    expect(screen.getByRole("button", { name: "화면 축소" })).toBeInTheDocument();
+  });
+
   it("keeps the viewer header readable on mobile widths", () => {
     render(
       <PdfViewerModal

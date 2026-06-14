@@ -94,6 +94,41 @@ describe("portal shell", () => {
     expect(screen.getByText("연체 미납금 납부 안내")).toBeInTheDocument();
   });
 
+  it("opens member document recommendations in a viewer when the portal is rendered directly", () => {
+    render(
+      <PortalShell
+        role="member"
+        session={{
+          id: "member-1",
+          loginId: "member1",
+          name: "이조합",
+          role: "MEMBER",
+        }}
+        documents={[
+          {
+            id: "doc-1",
+            title: "2026년도 1분기 수입 및 지출 자금집행 실적 보고서",
+            description: "1분기 수입/지출 세부 내역 및 이사회 승인 보고서입니다.",
+            category: "ACCOUNTING",
+            fileName: "2026_1분기_자금집행보고서.pdf",
+            fileSize: 2048,
+            status: "APPROVED",
+            isStarred: true,
+            isViewedByCurrentUser: false,
+            publishedAt: "2026-06-10T00:00:00.000Z",
+            documentDate: "2026-06-10T00:00:00.000Z",
+            createdAt: "2026-06-10T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "열람" }));
+
+    expect(screen.getByTestId("pdf-viewer-panel")).toBeInTheDocument();
+    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute("src", "/api/documents/doc-1/view");
+  });
+
   it("shows supplied contribution payment status in the portal login announcement", async () => {
     vi.useFakeTimers();
 

@@ -1,11 +1,17 @@
-# Spec 선택
+# Spec Selection
 
-- 선택한 승인 spec: 직접 사용자 버그 리포트(`스마트폰에서 공개자료 열람 레이아웃이 최적화되지 않음`)를 긴급 UI 수정 범위로 적용.
-- 구현 경계:
-  - 공개자료 열람 모달의 상단 레이아웃만 모바일 최적화한다.
-  - 문서 제목은 모바일에서 자연스럽게 2줄 이상 흐를 수 있도록 제목 영역 폭을 확보한다.
-  - 액션 버튼은 모바일에서 별도 버튼 행으로 내려 제목 영역을 침범하지 않게 한다.
-  - 본문 문서 카드의 파일명과 `본문 다운로드` 버튼도 모바일에서 세로 배치로 안정화한다.
-  - 데스크톱에서는 기존 가로 헤더와 버튼 구조를 유지한다.
-- 요청/spec 충돌: none
-- 계획 진행 가능 여부: 가능
+## Selected Approved Spec
+
+`docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`
+
+## Implementation Boundary
+
+Keep the contribution dashboard truthful and login-gated. This pass changes only the pending-state presentation and responsive layout density. It does not alter contribution amounts, ERP sync behavior, API scope, or public access.
+
+## Conflicts
+
+none
+
+## May Planning Continue
+
+yes

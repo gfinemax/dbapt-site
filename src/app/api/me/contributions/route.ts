@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { serializeContributionDashboard, serializeContributionSummary, serializePaymentNotices } from "@/lib/contribution-serializer";
 
 type ContributionSession = {
   id: string;
@@ -9,14 +10,14 @@ type ContributionSession = {
   role: string;
 } | null;
 
-export async function GET() {
+export async function GET(request?: Request) {
   const session = (await getSession()) as ContributionSession;
   if (!session) {
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
 
   try {
-    const [summary, notices] = await Promise.all([
+    const [summaryRecord, notices, profile, ledgerEntries] = await Promise.all([
       prisma.contributionSummary.findUnique({
         where: { userId: session.id },
       }),
@@ -27,34 +28,47 @@ export async function GET() {
         },
         orderBy: { createdAt: "desc" },
       }),
+      prisma.memberContributionProfile.findUnique({
+        where: { userId: session.id },
+        include: {
+          paymentPlan: {
+            include: {
+              stages: {
+                orderBy: { sortOrder: "asc" },
+              },
+            },
+          },
+        },
+      }),
+      prisma.contributionLedgerEntry.findMany({
+        where: { userId: session.id },
+        include: {
+          stage: {
+            select: { label: true },
+          },
+        },
+        orderBy: { paidAt: "desc" },
+        take: 20,
+      }),
     ]);
 
+    const forwardedFor = request?.headers.get("x-forwarded-for") || null;
+    await prisma.contributionViewLog.create({
+      data: {
+        userId: session.id,
+        actionType: "VIEW_DASHBOARD",
+        ipAddress: forwardedFor?.split(",")[0]?.trim() || request?.headers.get("x-real-ip") || null,
+        userAgent: request?.headers.get("user-agent") || null,
+      },
+    }).catch(() => undefined);
+
+    const summary = serializeContributionSummary(summaryRecord);
+    const dashboard = serializeContributionDashboard(summary, profile, ledgerEntries);
+
     return NextResponse.json({
-      summary: summary
-        ? {
-            totalDue: summary.totalDue,
-            totalPaid: summary.totalPaid,
-            unpaidAmount: summary.unpaidAmount,
-            overdueAmount: summary.overdueAmount,
-            lateFee: summary.lateFee,
-            nextDueDate: summary.nextDueDate?.toISOString() || null,
-            status: summary.status,
-            noticeMessage: summary.noticeMessage,
-            updatedAt: summary.updatedAt?.toISOString() || null,
-          }
-        : null,
-      notices: notices.map((notice) => ({
-        id: notice.id,
-        type: notice.type,
-        status: notice.status,
-        title: notice.title,
-        message: notice.message,
-        unpaidAmount: notice.unpaidAmount,
-        overdueAmount: notice.overdueAmount,
-        lateFee: notice.lateFee,
-        dueDate: notice.dueDate?.toISOString() || null,
-        createdAt: notice.createdAt.toISOString(),
-      })),
+      summary,
+      dashboard,
+      notices: serializePaymentNotices(notices),
     });
   } catch (error) {
     console.error("GET contribution summary error:", error);
