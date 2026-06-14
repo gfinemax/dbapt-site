@@ -102,6 +102,34 @@ describe("public landing page", () => {
     ).toBeInTheDocument();
   });
 
+  it("uses the logged-in portal preview as an issue participation hub", () => {
+    render(
+      <HomeClient
+        session={{
+          id: "member-1",
+          loginId: "member1",
+          name: "이조합",
+          role: "MEMBER",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("현재 열린 이슈")).toBeInTheDocument();
+    expect(screen.getByText("사업 추진 현안")).toBeInTheDocument();
+    expect(screen.getByText("자료·회계 질의")).toBeInTheDocument();
+    expect(screen.queryByText("조합원 제안")).not.toBeInTheDocument();
+    expect(screen.queryByText("최근 업데이트")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "조합원 자료실 열기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "정보공개 관련 공개자료 보기" })).toHaveAttribute(
+      "href",
+      "/issues?category=disclosure",
+    );
+    expect(screen.getByRole("link", { name: "이슈의 장 이슈 대시보드 보기" })).toHaveAttribute(
+      "href",
+      "/issues?category=participation",
+    );
+  });
+
   it("keeps the hero upper space clear of floating decorations", () => {
     const { container } = render(<HomeClient />);
 

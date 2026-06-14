@@ -41,6 +41,15 @@ function legacyNoticeImageHtml(imagePath: string) {
   return `<p><img src="${src}" alt="본문 이미지" data-width="100" style="width:100%;max-width:100%;height:auto;" /></p>`;
 }
 
+function getNoticeComments(notice: any) {
+  return Array.isArray(notice?.comments) ? notice.comments : [];
+}
+
+function formatNoticeDate(value: unknown) {
+  if (!value) return "";
+  return String(value).slice(0, 10).replace(/-/g, ".");
+}
+
 function NewsSectionLockTab({ label, router }: { label: string; router: any }) {
   return (
     <div className="stone-card bg-[#fbfaf9] rounded-3xl p-10 text-center relative overflow-hidden min-h-[360px] flex flex-col justify-center items-center border border-stone-surface">
@@ -112,6 +121,8 @@ export function NewsClient({
   const [editAttachmentFile, setEditAttachmentFile] = useState<File | null>(null);
   const [editIsStarred, setEditIsStarred] = useState(false);
   const [isSavingNotice, setIsSavingNotice] = useState(false);
+  const [noticeCommentContent, setNoticeCommentContent] = useState("");
+  const [isSubmittingNoticeComment, setIsSubmittingNoticeComment] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -124,6 +135,7 @@ export function NewsClient({
     } else {
       document.body.style.overflow = "";
       setIsEditingNotice(false);
+      setNoticeCommentContent("");
     }
     return () => {
       document.body.style.overflow = "";
@@ -131,6 +143,7 @@ export function NewsClient({
   }, [activeViewNotice]);
 
   const isEditableNotice = !!activeViewNotice?.id && !String(activeViewNotice.id).startsWith("mock-") && isAdmin;
+  const canCommentOnNotice = !!activeViewNotice?.id && !String(activeViewNotice.id).startsWith("mock-");
 
   const refreshNoticeList = async () => {
     const res = await fetch("/api/news?category=NOTICE");
@@ -240,6 +253,53 @@ export function NewsClient({
       alert(err instanceof Error ? err.message : "공지사항 수정 중 오류가 발생했습니다.");
     } finally {
       setIsSavingNotice(false);
+    }
+  };
+
+  const submitNoticeComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeViewNotice || !canCommentOnNotice) return;
+    const content = noticeCommentContent.trim();
+    if (!content) {
+      alert("댓글 내용을 입력해 주세요.");
+      return;
+    }
+
+    setIsSubmittingNoticeComment(true);
+    try {
+      const res = await fetch("/api/news/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newsId: activeViewNotice.id,
+          content,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "댓글 등록에 실패했습니다.");
+        return;
+      }
+
+      const nextComment = data.comment;
+      setNewsList((prev) => prev.map((item) => {
+        if (item.id !== activeViewNotice.id) return item;
+        return {
+          ...item,
+          comments: [...getNoticeComments(item), nextComment],
+        };
+      }));
+      setActiveViewNotice((prev: any) => prev ? {
+        ...prev,
+        comments: [...getNoticeComments(prev), nextComment],
+      } : prev);
+      setNoticeCommentContent("");
+    } catch (err) {
+      console.error(err);
+      alert("댓글 등록 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmittingNoticeComment(false);
     }
   };
 
@@ -469,20 +529,6 @@ export function NewsClient({
         {/* 1. 공지사항 */}
         {activeTab === "notice" && (
           <section id="section-notice" className="space-y-4 animate-in fade-in duration-200">
-            <div className="pb-3 border-b border-[#f2f0ed] flex justify-between items-end">
-              <div>
-                <h3 className="text-base font-black text-charcoal-primary flex items-center gap-2">
-                  <span>📢</span> 공지사항
-                </h3>
-                <p className="text-[10px] text-ash font-medium mt-0.5 font-mono">
-                  Official Announcements & Updates
-                </p>
-              </div>
-              <span className="text-[10px] font-bold text-sky-blue bg-sky-blue/10 border border-sky-blue/20 rounded-full px-2.5 py-0.5 select-none">
-                전체 공개 🔓
-              </span>
-            </div>
-            
             <NoticeBoard
               isLoggedIn={isLoggedIn}
               isAdmin={isAdmin}
@@ -503,25 +549,6 @@ export function NewsClient({
         {/* 2. 자유게시판 */}
         {activeTab === "free" && (
           <section id="section-free" className="space-y-4 animate-in fade-in duration-200">
-            <div className="pb-3 border-b border-[#f2f0ed] flex justify-between items-end">
-              <div>
-                <h3 className="text-base font-black text-charcoal-primary flex items-center gap-2">
-                  <span>💬</span> 자유게시판
-                </h3>
-                <p className="text-[10px] text-ash font-medium mt-0.5 font-mono">
-                  Cooperative Community Board
-                </p>
-              </div>
-              <span className={cn(
-                "text-[10px] font-bold rounded-full px-2.5 py-0.5 select-none",
-                isLoggedIn 
-                  ? "text-meadow-green bg-meadow-green/10 border border-meadow-green/20" 
-                  : "text-ember-orange bg-ember-orange/10 border border-ember-orange/20"
-              )}>
-                {isLoggedIn ? "조합원 인증 완료 🔓" : "조합원 기밀 🔒"}
-              </span>
-            </div>
-
             {isLoggedIn ? (
               <FreeBoard
                 session={session}
@@ -533,7 +560,22 @@ export function NewsClient({
                 }}
               />
             ) : (
-              <NewsSectionLockTab label="자유게시판" router={router} />
+              <>
+                <div className="pb-3 border-b border-[#f2f0ed] flex justify-between items-end">
+                  <div>
+                    <h3 className="text-base font-black text-charcoal-primary flex items-center gap-2">
+                      <span>💬</span> 자유게시판
+                    </h3>
+                    <p className="text-[10px] text-ash font-medium mt-0.5 font-mono">
+                      Cooperative Community Board
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold rounded-full px-2.5 py-0.5 select-none text-ember-orange bg-ember-orange/10 border border-ember-orange/20">
+                    조합원 기밀 🔒
+                  </span>
+                </div>
+                <NewsSectionLockTab label="자유게시판" router={router} />
+              </>
             )}
           </section>
         )}
@@ -612,7 +654,7 @@ export function NewsClient({
 
       </div>
 
-      {/* 우측 사이드 슬라이드 오버 (Drawer) 패널 - 공지사항 상세 열람 */}
+      {/* 좌측 사이드 슬라이드 오버 (Drawer) 패널 - 공지사항 상세 열람 */}
       {mounted && activeViewNotice && createPortal(
         <>
           <div
@@ -621,7 +663,7 @@ export function NewsClient({
           />
 
           <div
-            className="fixed inset-y-0 right-0 z-[130] w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 ease-out"
+            className="fixed inset-y-0 left-0 z-[130] w-full max-w-2xl bg-warm-canvas border-r border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out"
             aria-label="공지사항 상세 드로어"
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
@@ -778,7 +820,7 @@ export function NewsClient({
                       <span>•</span>
                       <span>작성자: {activeViewNotice.author?.name || "조합 사무국"}</span>
                       <span>•</span>
-                      <span>등록일: {activeViewNotice.createdAt}</span>
+                      <span>등록일: {formatNoticeDate(activeViewNotice.createdAt)}</span>
                     </div>
                   </div>
 
@@ -804,6 +846,83 @@ export function NewsClient({
                       <span className="text-[10px] text-sky-blue">열기</span>
                     </a>
                   )}
+
+                  <section className="border-t border-stone-surface pt-5 space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-sm font-black text-charcoal-primary">
+                        댓글 {getNoticeComments(activeViewNotice).length}개
+                      </h4>
+                      <span className="text-[10px] font-bold text-ash">
+                        공식 공지 확인 의견
+                      </span>
+                    </div>
+
+                    {getNoticeComments(activeViewNotice).length === 0 ? (
+                      <div className="rounded-2xl border border-stone-surface bg-white px-4 py-5 text-center">
+                        <p className="text-[11px] font-medium text-ash">
+                          아직 등록된 댓글이 없습니다. 첫 확인 의견을 남겨보세요.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {getNoticeComments(activeViewNotice).map((comment: any) => (
+                          <article key={comment.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="flex size-6 items-center justify-center rounded-full bg-sky-blue/10 text-[10px] font-black text-sky-blue">
+                                  말
+                                </span>
+                                <span className="text-[11px] font-black text-charcoal-primary">
+                                  {comment.author?.name || "조합원"}
+                                </span>
+                              </div>
+                              <span className="text-[9.5px] font-mono font-bold text-ash">
+                                {formatNoticeDate(comment.createdAt)}
+                              </span>
+                            </div>
+                            <p className="mt-2.5 text-[12px] leading-relaxed text-graphite font-normal whitespace-pre-wrap">
+                              {comment.content}
+                            </p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+
+                    {isLoggedIn ? (
+                      canCommentOnNotice ? (
+                        <form onSubmit={submitNoticeComment} className="rounded-2xl border border-stone-surface bg-white p-3.5 space-y-3">
+                          <label htmlFor="notice-comment" className="sr-only">
+                            공지사항 댓글 작성
+                          </label>
+                          <textarea
+                            id="notice-comment"
+                            value={noticeCommentContent}
+                            onChange={(e) => setNoticeCommentContent(e.target.value)}
+                            placeholder="공지에 대한 확인 의견이나 질문을 남겨주세요…"
+                            rows={3}
+                            className="w-full resize-none rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                          />
+                          <div className="flex justify-end">
+                            <Button
+                              type="submit"
+                              disabled={isSubmittingNoticeComment}
+                              className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9 cursor-pointer disabled:opacity-50"
+                            >
+                              {isSubmittingNoticeComment ? "등록 중..." : "댓글 등록"}
+                            </Button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="rounded-2xl border border-stone-surface bg-white px-4 py-3 text-[11px] font-medium text-ash">
+                          예시 공지에는 댓글을 저장하지 않습니다. 실제 등록된 공지에서 의견을 남길 수 있습니다.
+                        </div>
+                      )
+                    ) : (
+                      <div className="rounded-2xl border border-stone-surface bg-white px-4 py-3 text-[11px] font-medium text-ash">
+                        댓글 작성은 조합원 로그인 후 가능합니다.
+                      </div>
+                    )}
+                  </section>
                 </>
               )}
             </div>

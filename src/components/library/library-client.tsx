@@ -9,6 +9,7 @@ import {
   libraryCategories,
   libraryItems,
   type LibraryAccess,
+  type LibrarySourceKind,
 } from "@/content/library";
 import { type Document } from "@/components/portal/document-table";
 import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
@@ -25,6 +26,34 @@ const accessClassName: Record<LibraryAccess, string> = {
   public: "bg-meadow-green/10 text-meadow-green",
   member: "bg-ember-orange/10 text-ember-orange",
   pending: "bg-stone-surface text-graphite",
+};
+
+const sourceKindLabel: Record<LibrarySourceKind, string> = {
+  disclosure: "의무공개 자료",
+  "library-reference": "자료실 참고",
+  "site-reference": "사이트 참고",
+  news: "조합소식",
+};
+
+const sourceKindClassName: Record<LibrarySourceKind, string> = {
+  disclosure: "bg-sky-blue/10 text-sky-blue",
+  "library-reference": "bg-stone-surface/70 text-graphite",
+  "site-reference": "bg-sunburst-yellow/15 text-charcoal-primary",
+  news: "bg-ember-orange/10 text-ember-orange",
+};
+
+const sourceKindActionLabel: Record<LibrarySourceKind, string> = {
+  disclosure: "자료 위치 보기",
+  "library-reference": "자료실에서 보기",
+  "site-reference": "관련 페이지 보기",
+  news: "조합소식 보기",
+};
+
+const sourceKindLocationPrefix: Record<LibrarySourceKind, string> = {
+  disclosure: "원본 위치",
+  "library-reference": "자료 위치",
+  "site-reference": "자료 위치",
+  news: "자료 위치",
 };
 
 type LibraryClientProps = {
@@ -110,6 +139,10 @@ export function LibraryClient({ isLoggedIn = false, isAdmin = false, documents =
               <li className="flex gap-3">
                 <span className="mt-1 size-2 rounded-full bg-ash" />
                 <span><strong className="text-charcoal-primary">준비중</strong> 자료는 확정 후 순차 등재합니다.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="mt-1 size-2 rounded-full bg-sky-blue" />
+                <span><strong className="text-charcoal-primary">의무공개 자료</strong>와 <strong className="text-charcoal-primary">자료실 참고</strong>를 배지로 구분합니다.</span>
               </li>
             </ul>
           </div>
@@ -219,6 +252,9 @@ function LibraryCard({
 }) {
   const isMemberOnly = item.access === "member";
   const isPending = item.access === "pending";
+  const opensInsideLibrary = item.sourceKind === "library-reference" && !isPending;
+  const actionLabel = item.actionLabel ?? sourceKindActionLabel[item.sourceKind];
+  const locationPrefix = sourceKindLocationPrefix[item.sourceKind];
 
   return (
     <article
@@ -237,6 +273,9 @@ function LibraryCard({
             <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-bold", accessClassName[item.access])}>
               {accessLabel[item.access]}
             </span>
+            <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-bold", sourceKindClassName[item.sourceKind])}>
+              {sourceKindLabel[item.sourceKind]}
+            </span>
             <span className="rounded-full bg-stone-surface/70 px-2.5 py-1 text-[10px] font-bold text-graphite">
               {libraryCategories.find((category) => category.id === item.category)?.label}
             </span>
@@ -248,7 +287,7 @@ function LibraryCard({
             {item.description}
           </p>
           <p className="mt-3 text-[11px] font-semibold text-ash">
-            원본 위치: {item.source} · 업데이트: {item.updatedAt}
+            {locationPrefix}: {item.source} · 업데이트: {item.updatedAt}
           </p>
         </div>
       </div>
@@ -259,6 +298,14 @@ function LibraryCard({
             <FolderOpen className="size-3.5" aria-hidden="true" />
             준비중
           </span>
+        ) : opensInsideLibrary ? (
+          <button
+            type="button"
+            onClick={() => onOpenMaterial(item)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-stone-surface px-4 py-2 text-xs font-bold text-charcoal-primary transition hover:bg-white cursor-pointer"
+          >
+            {actionLabel}
+          </button>
         ) : (
           isMemberOnly && isLoggedIn ? (
             <button
@@ -278,7 +325,7 @@ function LibraryCard({
                   : "bg-stone-surface text-charcoal-primary hover:bg-white",
               )}
             >
-              {isMemberOnly ? "로그인 후 확인" : "자료 위치 보기"}
+              {isMemberOnly ? "로그인 후 확인" : actionLabel}
             </Link>
           )
         )}
@@ -293,6 +340,9 @@ type MaterialEntry = {
   meta: string;
   isReal?: boolean;
   document?: Document;
+  actionLabel?: string;
+  actionHref?: string;
+  actionExternal?: boolean;
 };
 
 const fallbackMaterialEntries: Record<string, MaterialEntry[]> = {
@@ -361,6 +411,28 @@ const fallbackMaterialEntries: Record<string, MaterialEntry[]> = {
       meta: "공개자료 · 회계",
     },
   ],
+  "housing-law": [
+    {
+      title: "국가법령정보센터",
+      description: "주택법 현행 법령 원문과 개정 연혁은 법제처 국가법령정보센터에서 확인합니다.",
+      meta: "공식 법령 · 주택법",
+      actionLabel: "주택법 원문 보기",
+      actionHref: "https://www.law.go.kr/LSW/lsInfoP.do?lsId=001809",
+      actionExternal: true,
+    },
+    {
+      title: "법령·제도 참고 방식",
+      description: "법령 자료는 조합이 파일을 다시 올리기보다 공식 원문 위치를 안내해 최신성을 유지합니다.",
+      meta: "자료실 참고 · 외부 공식 출처",
+    },
+  ],
+};
+
+const disclosureUploadHrefByItemId: Record<string, string> = {
+  "cooperative-rules": "/disclosure?tab=rules",
+  "meeting-minutes": "/disclosure?tab=meetings",
+  "service-contracts": "/disclosure?tab=operations",
+  "audit-report": "/disclosure?tab=accounting",
 };
 
 function formatDate(value?: string | null) {
@@ -422,6 +494,12 @@ function LibraryMaterialPanel({
   const [activeViewDocument, setActiveViewDocument] = useState<Document | null>(null);
   const activeViewDocumentRelation = activeViewDocument ? getPdfRelatedDocument(activeViewDocument, documents) : null;
   const realEntries = getRealMaterialEntries(item.id, documents);
+  const disclosureUploadHref = disclosureUploadHrefByItemId[item.id];
+  const isPublicReference = item.access === "public";
+  const materialPanelDescription = isPublicReference
+    ? "자료실 안에서 바로 확인하는 공개 참고 색인입니다."
+    : "자료실 안에서 바로 확인하는 조합원 전용 색인입니다.";
+  const locationPrefix = sourceKindLocationPrefix[item.sourceKind];
   const fallbackEntries = fallbackMaterialEntries[item.id] || [
     {
       title: item.title,
@@ -455,7 +533,7 @@ function LibraryMaterialPanel({
               {item.title} 자료 목록
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-graphite">
-              자료실 안에서 바로 확인하는 조합원 전용 색인입니다.
+              {materialPanelDescription}
             </p>
           </div>
           <button
@@ -478,14 +556,35 @@ function LibraryMaterialPanel({
                 {entries.length}개 자료
               </h3>
             </div>
-            <span className="rounded-full bg-ember-orange/10 px-3 py-1 text-[10px] font-bold text-ember-orange">
-              조합원 전용
+            <span className={cn("rounded-full px-3 py-1 text-[10px] font-bold", accessClassName[item.access])}>
+              {accessLabel[item.access]}
             </span>
           </div>
           <p className="mt-4 text-xs leading-relaxed text-graphite">
-            원본 위치는 {item.source}이지만, 현재 화면은 자료실 페이지 안에서 유지됩니다.
+            {locationPrefix}는 {item.source}이지만, 현재 화면은 자료실 페이지 안에서 유지됩니다.
           </p>
         </div>
+
+        {isAdmin && disclosureUploadHref && (
+          <div className="mt-4 rounded-2xl border border-sky-blue/15 bg-sky-blue/5 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-bold text-charcoal-primary">
+                  자료 등록은 공개자료에서 진행합니다.
+                </p>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-graphite">
+                  해당 문서함에서 + 신규 문서 등록을 누르면 이 자료실 색인에도 함께 반영됩니다.
+                </p>
+              </div>
+              <Link
+                href={disclosureUploadHref}
+                className="inline-flex shrink-0 items-center justify-center rounded-full bg-midnight px-4 py-2 text-xs font-bold text-white transition hover:bg-charcoal-primary"
+              >
+                공개자료에서 신규 등록
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="mt-5 space-y-3">
           {entries.map((entry, index) => (
@@ -630,6 +729,16 @@ function MaterialEntryCard({
         <p className="mt-1.5 text-xs leading-relaxed text-graphite">
           {entry.description}
         </p>
+        {entry.actionHref && entry.actionLabel && (
+          <Link
+            href={entry.actionHref}
+            target={entry.actionExternal ? "_blank" : undefined}
+            rel={entry.actionExternal ? "noopener noreferrer" : undefined}
+            className="mt-3 inline-flex items-center rounded-full bg-midnight px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-charcoal-primary"
+          >
+            {entry.actionLabel}
+          </Link>
+        )}
       </div>
     </div>
   );

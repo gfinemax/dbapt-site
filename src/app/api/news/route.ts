@@ -18,9 +18,24 @@ export async function GET(request: Request) {
       include: {
         author: {
           select: {
+            id: true,
             name: true,
+            loginId: true,
             role: true,
           },
+        },
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                loginId: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -128,9 +143,24 @@ export async function PATCH(request: Request) {
       include: {
         author: {
           select: {
+            id: true,
             name: true,
+            loginId: true,
             role: true,
           },
+        },
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                loginId: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "asc" },
         },
       },
     });

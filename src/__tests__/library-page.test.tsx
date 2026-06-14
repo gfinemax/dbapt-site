@@ -99,7 +99,28 @@ describe("library page", () => {
 
     const lawCard = screen.getByTestId("library-item-housing-law");
     expect(within(lawCard).getByText("공개")).toBeInTheDocument();
-    expect(within(lawCard).getByRole("link", { name: "자료 위치 보기" })).toHaveAttribute("href", "/library#legal");
+    expect(within(lawCard).getByText("자료실 참고")).toBeInTheDocument();
+    expect(within(lawCard).getByText(/자료 위치: 자료실/)).toBeInTheDocument();
+    expect(within(lawCard).queryByText(/원본 위치: 자료실/)).not.toBeInTheDocument();
+    expect(within(lawCard).getByRole("button", { name: "관련 법령 보기" })).toBeInTheDocument();
+    expect(within(lawCard).queryByText("의무공개 자료")).not.toBeInTheDocument();
+  });
+
+  it("opens official law references instead of linking back to the same library section", () => {
+    render(<LibraryClient />);
+
+    const lawCard = screen.getByTestId("library-item-housing-law");
+    fireEvent.click(within(lawCard).getByRole("button", { name: "관련 법령 보기" }));
+
+    const lawDialog = screen.getByRole("dialog", { name: "주택법 개정법령 자료 목록" });
+    expect(lawDialog).toBeInTheDocument();
+    expect(within(lawDialog).getByText("자료실 안에서 바로 확인하는 공개 참고 색인입니다.")).toBeInTheDocument();
+    expect(within(lawDialog).queryByText("조합원 전용")).not.toBeInTheDocument();
+    expect(screen.getByText("국가법령정보센터")).toBeInTheDocument();
+    expect(within(lawDialog).getByRole("link", { name: "주택법 원문 보기" })).toHaveAttribute(
+      "href",
+      "https://www.law.go.kr/LSW/lsInfoP.do?lsId=001809",
+    );
   });
 
   it("opens member-only source links directly for logged-in users", () => {
@@ -229,5 +250,18 @@ describe("library page", () => {
       { method: "DELETE" },
     ));
     expect(screen.queryByText("수정된 정기총회 의사록")).not.toBeInTheDocument();
+  });
+
+  it("shows admins where to register new source documents from a material panel", () => {
+    render(<LibraryClient isLoggedIn isAdmin />);
+
+    const meetingCard = screen.getAllByTestId("library-item-meeting-minutes")[0];
+    fireEvent.click(within(meetingCard).getByRole("button", { name: "자료 확인" }));
+
+    expect(screen.getByText("자료 등록은 공개자료에서 진행합니다.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "공개자료에서 신규 등록" })).toHaveAttribute(
+      "href",
+      "/disclosure?tab=meetings",
+    );
   });
 });

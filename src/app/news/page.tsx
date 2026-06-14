@@ -25,9 +25,24 @@ export default async function NewsPage() {
       include: {
         author: {
           select: {
+            id: true,
             name: true,
+            loginId: true,
             role: true,
           },
+        },
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                loginId: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -38,9 +53,21 @@ export default async function NewsPage() {
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
       author: {
+        id: item.author.id,
         name: item.author.name || "관리자",
+        loginId: item.author.loginId || "admin",
         role: item.author.role,
       },
+      comments: item.comments.map((comment) => ({
+        ...comment,
+        createdAt: comment.createdAt.toISOString(),
+        author: {
+          id: comment.author.id,
+          name: comment.author.name || "조합원",
+          loginId: comment.author.loginId || "social",
+          role: comment.author.role,
+        },
+      })),
       attachmentPath: item.attachmentPath,
       attachmentName: item.attachmentName,
       attachmentSize: item.attachmentSize,

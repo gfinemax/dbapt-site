@@ -463,58 +463,50 @@ export function FreeBoard({
 
   return (
     <div className="space-y-6">
-      {/* 자유게시판 미니 대시보드 */}
-      <div className="stone-card bg-[#fbfaf9] border border-stone-surface p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-in fade-in duration-300">
-        <div>
-          <span className="inline-flex rounded-full bg-meadow-green/10 px-2 py-0.5 text-[9px] font-bold text-meadow-green uppercase tracking-wider select-none mb-1">
-            💬 토론 공간 현황
-          </span>
-          <h4 className="text-[13.5px] font-extrabold text-charcoal-primary leading-snug">
-            조합원 전용 소통 게시판
-          </h4>
-          <p className="text-[11px] text-graphite/95 font-normal mt-1 leading-relaxed">
-            자산 가치를 수호하고 투명한 정보를 나누기 위해 마련된 양방향 토론 구역입니다.
-          </p>
-        </div>
-        <div className="flex items-center gap-4 text-xs font-mono font-bold shrink-0">
-          <div className="text-center bg-white px-4 py-2 border border-stone-surface rounded-xl shadow-2xs">
-            <span className="text-ash block text-[9px] font-bold uppercase mb-0.5">실시간 소통 온도</span>
-            <span className="text-meadow-green text-[13px] font-extrabold">36.5 °C</span>
+      <div className="border-b border-[#f2f0ed] pb-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-base font-black text-charcoal-primary flex items-center gap-2">
+                <span>💬</span> 자유게시판
+              </h3>
+              <p className="text-[10px] text-ash font-medium mt-0.5 font-mono">
+                Cooperative Community Board
+              </p>
+            </div>
+            <span className="shrink-0 text-[10px] font-bold text-meadow-green bg-meadow-green/10 border border-meadow-green/20 rounded-full px-2.5 py-0.5 select-none lg:hidden">
+              조합원 인증 완료 🔓
+            </span>
           </div>
-          <div className="text-center bg-white px-4 py-2 border border-stone-surface rounded-xl shadow-2xs">
-            <span className="text-ash block text-[9px] font-bold uppercase mb-0.5">이달의 소통글</span>
-            <span className="text-sky-blue text-[13px] font-extrabold">+{combinedPosts.length}건</span>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <span className="hidden shrink-0 text-[10px] font-bold text-meadow-green bg-meadow-green/10 border border-meadow-green/20 rounded-full px-2.5 py-0.5 select-none lg:inline-flex">
+              조합원 인증 완료 🔓
+            </span>
+            <div className="relative w-full sm:w-80">
+              <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="자유게시판 제목/내용 검색…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-stone-surface bg-white pl-10 pr-4 py-2.5 text-xs text-charcoal-primary placeholder:text-ash shadow-2xs focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue"
+              />
+            </div>
+            <Button
+              onClick={() => {
+                setEditingPost(null);
+                setWriteTitle("");
+                setWriteContent("");
+                setShowWriteModal(true);
+              }}
+              className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
+            >
+              ✍️ 새 토론 게시글 작성
+            </Button>
           </div>
         </div>
-      </div>
-
-      {/* 검색 바 & 새 글 작성 */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="자유게시판 제목/내용 검색…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-stone-surface bg-white pl-10 pr-4 py-2.5 text-xs text-charcoal-primary placeholder:text-ash shadow-2xs focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue"
-          />
-        </div>
-
-        <Button
-          onClick={() => {
-            setEditingPost(null);
-            setWriteTitle("");
-            setWriteContent("");
-            setShowWriteModal(true);
-          }}
-          className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
-        >
-          ✍️ 새 토론 게시글 작성
-        </Button>
-
       </div>
 
       {/* 자유게시판 글 목록 */}

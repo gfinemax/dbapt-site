@@ -50,6 +50,7 @@ model User {
   freeComments                     FreeComment[]
   notificationGroupMembers         NotificationGroupMember[]
   disclosureNotificationRecipients DisclosureNotificationRecipient[]
+  coopNewsComments                 CoopNewsComment[]
 }
 
 // 2. 정보공개 및 회계 보고 문서
@@ -523,9 +524,23 @@ model CoopNews {
   updatedAt      DateTime @updatedAt
   authorId       String
   author         User     @relation(fields: [authorId], references: [id])
+  comments       CoopNewsComment[]
 }
 
-// 6. 자유게시판 글
+// 6. 공지사항 댓글
+model CoopNewsComment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  newsId    String
+  news      CoopNews @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([newsId, createdAt])
+}
+
+// 7. 자유게시판 글
 model FreePost {
   id        String        @id @default(uuid())
   title     String
@@ -539,7 +554,7 @@ model FreePost {
   comments  FreeComment[]
 }
 
-// 7. 자유게시판 댓글
+// 8. 자유게시판 댓글
 model FreeComment {
   id        String        @id @default(uuid())
   content   String
@@ -555,7 +570,7 @@ model FreeComment {
   @@index([postId, parentId])
 }
 
-// 8. FAQ 자주 묻는 질문
+// 9. FAQ 자주 묻는 질문
 model FAQ {
   id        String   @id @default(uuid())
   question  String

@@ -2,28 +2,30 @@
 
 ## Reviewed Change
 
-- Feature: Contribution dashboard layout refinement
-- Governing spec: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-06-14-contribution-dashboard-mvp.md`
+- Feature: Notice/free-board simplified list headers and left notice drawer
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: current user-approved implementation request
 - Files or pages reviewed:
-  - `src/components/portal/contribution-dashboard.tsx`
-  - `src/__tests__/contribution-dashboard-component.test.tsx`
-  - `/portal/member`
+  - `src/components/news/notice-board.tsx`
+  - `src/components/news/free-board.tsx`
+  - `src/components/news/news-client.tsx`
+  - `/news?tab=notice`
+  - logged-in free-board component coverage
 
 ## Boundary Review
 
 - Finding: PASS
-- Evidence: The dashboard remains inside authenticated member/refund portal surfaces. No public navigation or public page access was changed.
+- Evidence: The change removes decorative intro/status boxes, repositions search controls, and moves the notice detail drawer to the left. Public notice access, free-board login gating, comments, admin actions, and private-data boundaries were not expanded.
 
 ## Truthful Presentation Review
 
 - Finding: PASS
-- Evidence: Pending contribution data still shows only waiting labels and does not introduce fake prices, fake balances, fake paid amounts, or fabricated schedules.
+- Evidence: The removed status boxes no longer show synthetic status copy. Remaining controls are existing search, write, and list actions with unchanged behavior.
 
 ## Design And Accessibility Review
 
 - Finding: PASS
-- Evidence: The pending contribution layout remains within the approved authenticated portal surface. The public-document hub opens the existing PDF viewer when rendered directly in `/portal/member`, successful bookmarks switch to `내 보관함`, and the PDF viewer now opens in full viewport mode by default. Headless Chrome confirmed the viewer panel appears from `/portal/member` at 95vw/95vh; tests cover the direct portal viewer path, bookmark transition, and full-viewport default.
+- Evidence: Search inputs now sit in the same header row as `공지사항` and logged-in `자유게시판`, using existing rounded input styling, visible focus rings, and responsive stacking on narrow viewports. The notice drawer now uses the same left-side interaction direction as the free-board focus panel. The list tables keep accessible labels.
 
 ## Outcome
 

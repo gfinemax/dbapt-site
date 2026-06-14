@@ -14,12 +14,12 @@ export function SiteFooter() {
             </span>
             <span>연락처 02-822-1508</span>
           </address>
-          <p className="mt-3 text-xs text-ash">홈페이지 제작 및 유지보수: 태훈아빠</p>
+          <p className="mt-3 text-xs text-ash">Website created & maintained by 오학동 · 2026</p>
         </div>
         <div className="flex gap-5 font-medium text-graphite">
           <Link href="/terms">이용약관</Link>
           <Link href="/privacy">개인정보처리방침</Link>
-          <Link href="#about">찾아오시는 길</Link>
+          <Link href="/about#section-location">찾아오시는 길</Link>
         </div>
       </div>
     </footer>

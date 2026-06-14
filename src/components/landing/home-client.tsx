@@ -186,7 +186,7 @@ export function HomeClient({
         <HeroSection isLoggedIn={!!session} />
         <FeatureLinks />
         <NoticesSection />
-        <PortalPreview session={session} onOpenPortal={() => setIsDrawerOpen(true)} />
+        <PortalPreview session={session} />
       </main>
 
       {/* 3. 사이트 공통 푸터 */}

@@ -2,11 +2,11 @@
 
 ## Selected Approved Spec
 
-`docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
 
 ## Implementation Boundary
 
-Keep the contribution dashboard truthful and login-gated. This pass changes only the pending-state presentation and responsive layout density. It does not alter contribution amounts, ERP sync behavior, API scope, or public access.
+This pass changes only the notice and logged-in free-board list header layout plus the notice detail drawer side. Notice/public access, free-board login gating, comment behavior, admin write controls, FAQ, newsletter, and other news surfaces remain unchanged.
 
 ## Conflicts
 

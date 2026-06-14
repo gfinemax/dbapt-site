@@ -30,6 +30,7 @@ const MOCK_NOTICES = [
     attachmentPath: null,
     attachmentName: null,
     attachmentSize: null,
+    comments: [],
   },
   {
     id: "mock-notice-2",
@@ -43,6 +44,7 @@ const MOCK_NOTICES = [
     attachmentPath: null,
     attachmentName: null,
     attachmentSize: null,
+    comments: [],
   },
   {
     id: "mock-notice-3",
@@ -56,8 +58,13 @@ const MOCK_NOTICES = [
     attachmentPath: null,
     attachmentName: null,
     attachmentSize: null,
+    comments: [],
   },
 ] as const;
+
+function getNoticeComments(notice: any) {
+  return Array.isArray(notice?.comments) ? notice.comments : [];
+}
 
 export function NoticeBoard({
   isLoggedIn,
@@ -107,6 +114,7 @@ export function NoticeBoard({
       attachmentPath: item.attachmentPath,
       attachmentName: item.attachmentName,
       attachmentSize: item.attachmentSize,
+      comments: getNoticeComments(item),
       isReal: true,
     }));
 
@@ -128,10 +136,6 @@ export function NoticeBoard({
 
     return [...sortedReal, ...filteredMock];
   }, [newsList, searchQuery]);
-
-  const starredNotices = useMemo(() => {
-    return combinedData.filter((n) => n.isStarred);
-  }, [combinedData]);
 
   const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
     const formData = new FormData();
@@ -229,123 +233,68 @@ export function NoticeBoard({
   };
 
   return (
-    <div className="space-y-8">
-      {/* ★ 중요 공지사항 카드 덱 */}
-      {starredNotices.length > 0 && (
-        <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
-          <span className="text-[11px] font-bold text-[#ff3e00] tracking-wider uppercase font-mono flex items-center gap-1.5 select-none">
-            <span className="size-2 rounded-full bg-ember-orange animate-ping"></span>
-            ★ 중요 필독 공지사항
-          </span>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {starredNotices.map((notice) => (
-              <div
-                key={notice.id}
-                onClick={() => {
-                  if (onViewNotice) {
-                    onViewNotice(notice);
-                  } else {
-                    setActiveViewNotice(notice);
-                  }
-                }}
-                className="stone-card bg-white p-5 rounded-2xl border border-stone-surface border-l-4 border-l-ember-orange hover:border-ember-orange hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer flex flex-col justify-between"
+    <div className="space-y-6">
+      <div className="border-b border-[#f2f0ed] pb-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-base font-black text-charcoal-primary flex items-center gap-2">
+                <span>📢</span> 공지사항
+              </h3>
+              <p className="text-[10px] text-ash font-medium mt-0.5 font-mono">
+                Official Announcements & Updates
+              </p>
+            </div>
+            <span className="shrink-0 text-[10px] font-bold text-sky-blue bg-sky-blue/10 border border-sky-blue/20 rounded-full px-2.5 py-0.5 select-none lg:hidden">
+              전체 공개 🔓
+            </span>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <span className="hidden shrink-0 text-[10px] font-bold text-sky-blue bg-sky-blue/10 border border-sky-blue/20 rounded-full px-2.5 py-0.5 select-none lg:inline-flex">
+              전체 공개 🔓
+            </span>
+            <div className="relative w-full sm:w-80">
+              <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="공지사항 제목 검색…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-stone-surface bg-white pl-10 pr-4 py-2.5 text-xs text-charcoal-primary placeholder:text-ash shadow-2xs focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue"
+              />
+            </div>
+            {isLoggedIn && isAdmin && (
+              <Button
+                onClick={() => setShowUploadModal(true)}
+                className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
               >
-                <div>
-                  <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono select-none mb-3">
-                    <span>📢 중요 공지</span>
-                    <span>{notice.createdAt}</span>
-                  </div>
-                  <h4 className="text-[13px] font-extrabold text-charcoal-primary leading-snug line-clamp-2">
-                    {notice.title}
-                  </h4>
-                  {notice.imagePath && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={notice.imagePath}
-                      alt=""
-                      className="mt-3 h-24 w-full rounded-xl object-cover border border-stone-surface"
-                    />
-                  )}
-                  <p className="text-[11px] text-graphite/90 font-normal leading-relaxed line-clamp-3 pt-2">
-                    {getPlainNoticeText(notice.content)}
-                  </p>
-                  {notice.attachmentPath && (
-                    <span className="mt-3 inline-flex rounded-full bg-stone-surface px-2 py-1 text-[9px] font-bold text-graphite">
-                      첨부파일
-                    </span>
-                  )}
-                </div>
-                <div className="mt-5 pt-3 border-t border-stone-surface/60 flex items-center justify-between select-none">
-                  <span className="text-[9.5px] font-bold text-ash flex items-center gap-1">
-                    <span>👤</span> {notice.author?.name || "사무국"}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {isAdmin && notice.isReal && (
-                      <button
-                        type="button"
-                        aria-label="공지 삭제"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void handleDeleteNotice(notice);
-                        }}
-                        className="text-[10px] font-extrabold text-coral-red hover:underline"
-                      >
-                        삭제
-                      </button>
-                    )}
-                    <span className="text-[10px] font-extrabold text-ember-orange hover:underline">
-                      열람하기 →
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+                + 신규 공지사항 등록
+              </Button>
+            )}
           </div>
         </div>
-      )}
-
-      {/* 검색 바 & 신규 등록 (관리자용) */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="공지사항 제목 검색…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-stone-surface bg-white pl-10 pr-4 py-2.5 text-xs text-charcoal-primary placeholder:text-ash shadow-2xs focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue"
-          />
-        </div>
-
-        {isLoggedIn && isAdmin && (
-          <Button
-            onClick={() => setShowUploadModal(true)}
-            className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
-          >
-            + 신규 공지사항 등록
-          </Button>
-        )}
       </div>
 
       {/* 공지사항 목록 테이블 */}
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-sm border-collapse" aria-label="공지사항 목록">
             <thead className="bg-[#f7f6f3] border-b border-stone-surface text-xs font-bold text-ash">
               <tr>
                 <th className="px-5 py-3.5 w-14 text-center">No.</th>
                 <th className="px-5 py-3.5">제목</th>
                 <th className="px-5 py-3.5 w-24 text-center">등록자</th>
                 <th className="px-5 py-3.5 w-28 text-center">작성일</th>
+                <th className="px-5 py-3.5 w-28 text-center">댓글</th>
                 {isAdmin && <th className="px-5 py-3.5 w-20 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedData.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 5 : 4} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={isAdmin ? 6 : 5} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 공지사항이 존재하지 않습니다.
                   </td>
                 </tr>
@@ -391,6 +340,22 @@ export function NoticeBoard({
                     </td>
                     <td className="px-5 py-4 text-center text-xs text-ash font-mono">
                       {notice.createdAt}
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (onViewNotice) {
+                            onViewNotice(notice);
+                          } else {
+                            setActiveViewNotice(notice);
+                          }
+                        }}
+                        className="rounded-full bg-sky-blue/10 px-3 py-1.5 text-[10.5px] font-extrabold text-sky-blue hover:bg-sky-blue/15"
+                      >
+                        댓글 {getNoticeComments(notice).length}개 보기
+                      </button>
                     </td>
                     {isAdmin && (
                       <td className="px-5 py-4 text-center">
@@ -474,6 +439,41 @@ export function NoticeBoard({
                   <span className="text-[10px] text-sky-blue">열기</span>
                 </a>
               )}
+              <div className="border-t border-stone-surface pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black text-charcoal-primary">
+                    댓글 {getNoticeComments(activeViewNotice).length}개
+                  </h4>
+                  {!isLoggedIn && (
+                    <span className="text-[10px] font-bold text-ash">
+                      로그인 후 작성 가능
+                    </span>
+                  )}
+                </div>
+                {getNoticeComments(activeViewNotice).length === 0 ? (
+                  <p className="rounded-2xl border border-stone-surface bg-white px-4 py-4 text-[11px] text-ash font-medium">
+                    아직 등록된 댓글이 없습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {getNoticeComments(activeViewNotice).map((comment: any) => (
+                      <div key={comment.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[10px] font-black text-charcoal-primary">
+                            {comment.author?.name || "조합원"}
+                          </span>
+                          <span className="text-[9px] font-mono font-bold text-ash">
+                            {String(comment.createdAt).slice(0, 10).replace(/-/g, ".")}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[11px] leading-relaxed text-graphite font-normal whitespace-pre-wrap">
+                          {comment.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               {isAdmin && activeViewNotice.isReal && (
                 <div className="pt-4 border-t border-stone-surface">
                   <button

@@ -6,12 +6,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NoticeBoard } from "@/components/news/notice-board";
 import { CoopNewsletter } from "@/components/news/coop-newsletter";
 import { FreeBoard } from "@/components/news/free-board";
+import { NewsClient } from "@/components/news/news-client";
 import { NoticeRichContent } from "@/components/news/notice-rich-editor";
 import * as newsRoute from "@/app/api/news/route";
+import * as noticeCommentsRoute from "@/app/api/news/comments/route";
 import * as freeRoute from "@/app/api/news/free/route";
 import * as uploadRoute from "@/app/api/upload/route";
 
 const mockGetSession = vi.hoisted(() => vi.fn());
+const mockRouterPush = vi.hoisted(() => vi.fn());
 const mockPrisma = vi.hoisted(() => ({
   coopNews: {
     create: vi.fn(),
@@ -31,6 +34,9 @@ const mockPrisma = vi.hoisted(() => ({
     findUnique: vi.fn(),
     delete: vi.fn(),
   },
+  coopNewsComment: {
+    create: vi.fn(),
+  },
 }));
 const mockMkdir = vi.hoisted(() => vi.fn());
 const mockWriteFile = vi.hoisted(() => vi.fn());
@@ -38,6 +44,11 @@ const testUploadNames = ["notice.pdf", "blob"];
 
 vi.mock("@/lib/auth", () => ({
   getSession: mockGetSession,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -78,6 +89,7 @@ const realNotice = {
   attachmentPath: "/uploads/notice.pdf",
   attachmentName: "notice.pdf",
   attachmentSize: 1024,
+  comments: [],
 };
 
 const realNewsletter = {
@@ -103,6 +115,14 @@ const freeComment = {
   postId: "free-1",
   parentId: null,
   createdAt: "2026-06-01T01:00:00.000Z",
+  author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
+};
+
+const noticeComment = {
+  id: "notice-comment-1",
+  content: "확인했습니다.",
+  newsId: "notice-1",
+  createdAt: "2026-06-01T02:00:00.000Z",
   author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
 };
 
@@ -191,6 +211,46 @@ describe("news admin API controls", () => {
         isStarred: true,
       }),
     }));
+  });
+
+  it("rejects notice comments for unauthenticated sessions", async () => {
+    mockGetSession.mockResolvedValue(null);
+
+    const response = await noticeCommentsRoute.POST(
+      new Request("http://localhost/api/news/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newsId: "notice-1", content: "확인했습니다." }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({ error: "로그인이 필요합니다." });
+    expect(mockPrisma.coopNewsComment.create).not.toHaveBeenCalled();
+  });
+
+  it("creates notice comments for logged-in members", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.coopNews.findUnique.mockResolvedValue({ id: "notice-1", category: "NOTICE" });
+    mockPrisma.coopNewsComment.create.mockResolvedValue(noticeComment);
+
+    const response = await noticeCommentsRoute.POST(
+      new Request("http://localhost/api/news/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newsId: "notice-1", content: " 확인했습니다. " }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNewsComment.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: {
+        newsId: "notice-1",
+        content: "확인했습니다.",
+        authorId: "member-1",
+      },
+    }));
+    expect(await response.json()).toMatchObject({ success: true, comment: noticeComment });
   });
 
   it("rejects image upload for unauthenticated sessions", async () => {
@@ -614,6 +674,44 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("button", { name: "공지 삭제" })).toBeInTheDocument();
   });
 
+  it("removes the notice intro panel while keeping the existing search row and comment counts", () => {
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[{ ...realNotice, comments: [noticeComment] }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText("★ 중요 필독 공지사항")).not.toBeInTheDocument();
+    expect(screen.queryByText("공식 안내 현황")).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText("공지사항 제목 검색…")).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "공지사항 목록" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "댓글" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "댓글 1개 보기" })).toBeInTheDocument();
+  });
+
+  it("opens the notice detail drawer from the left side", () => {
+    render(
+      <NewsClient
+        session={null}
+        initialNewsList={[realNotice]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
+
+    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    expect(drawer).toHaveClass("left-0");
+    expect(drawer).toHaveClass("border-r");
+    expect(drawer).toHaveClass("slide-in-from-left");
+    expect(drawer).not.toHaveClass("right-0");
+    expect(drawer).not.toHaveClass("slide-in-from-right");
+  });
+
   it("renders notice rich content with editor-matched body typography", () => {
     const { container } = render(
       <NoticeRichContent content="<p>동작구청 방문 결과 공유드립니다</p>" />,
@@ -791,6 +889,8 @@ describe("news admin visible controls", () => {
     );
 
     expect(screen.getByRole("table", { name: "자유게시판 게시글 목록" })).toBeInTheDocument();
+    expect(screen.queryByText("토론 공간 현황")).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText("자유게시판 제목/내용 검색…")).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "No." })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "제목" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "작성자" })).toBeInTheDocument();
@@ -851,6 +951,9 @@ describe("news admin visible controls", () => {
 
     const panel = screen.getByLabelText("토론 집중 패널");
     expect(panel).toBeInTheDocument();
+    expect(panel).toHaveClass("left-0");
+    expect(panel).toHaveClass("slide-in-from-left");
+    expect(panel).not.toHaveClass("right-0");
     expect(within(panel).getByRole("heading", { name: "실제 자유게시글" })).toBeInTheDocument();
     expect(within(panel).getByText("실제 자유게시글 내용")).toBeInTheDocument();
     expect(window.location.search).toContain("post=free-1");
