@@ -48,4 +48,19 @@ describe("about client", () => {
     expect(screen.getByText("자금관리 신탁사: 신영부동산신탁")).toBeInTheDocument();
     expect(screen.getByText("법무·회계 자문기관")).toBeInTheDocument();
   });
+
+  it("keeps Naver Maps as an external action instead of embedding the redirect-prone search page", () => {
+    const { container } = render(<AboutClient />);
+
+    expect(
+      screen.getByRole("heading", { name: "조합 사무실 찾아오시는 길" }),
+    ).toBeInTheDocument();
+    expect(container.querySelector('iframe[src*="map.naver.com"]')).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "원위치" })).not.toBeInTheDocument();
+
+    const naverMapLink = screen.getByRole("link", { name: "네이버 지도에서 보기" });
+    expect(naverMapLink).toHaveAttribute("href", expect.stringContaining("map.naver.com"));
+    expect(naverMapLink).toHaveAttribute("target", "_blank");
+    expect(screen.getAllByText(/서울시 동작구 여의대방로 36길 102-11/).length).toBeGreaterThan(0);
+  });
 });

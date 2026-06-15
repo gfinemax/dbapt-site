@@ -155,6 +155,8 @@ const governanceLineOrganizationNodes = [
 const auditOrganizationNode = organizationNodes[3];
 const executionOrganizationNode = organizationNodes[4];
 const advisoryOrganizationNode = organizationNodes[5];
+const naverMapUrl =
+  "https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%8F%99%EC%9E%91%EA%B5%AC%20%EC%97%AC%EC%9D%98%EB%8C%80%EB%B0%A9%EB%A1%9C36%EA%B8%B8%20102-11";
 
 function OrganizationNodeCard({
   node,
@@ -188,7 +190,6 @@ function OrganizationNodeCard({
 export function AboutClient({ onOpenPortal }: AboutClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("greetings");
   const [showFullHistory, setShowFullHistory] = useState(false);
-  const [mapKey, setMapKey] = useState(0);
   const isScrollingRef = useRef(false);
 
   // 스크롤 감지 및 현재 보고 있는 섹션 활성화 (Scroll Spy)
@@ -790,36 +791,41 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
           </div>
 
           <div className="stone-card bg-white p-6 sm:p-8 rounded-2xl border border-stone-surface shadow-xs space-y-6">
-            {/* 네이버 지도 임베드 (좌측 검색 패널 완전 숨김 + 홈 버튼) */}
-            <div className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden border border-stone-surface/80 relative">
-              {/* iframe을 왼쪽으로 크게 밀어서 네이버 좌측 검색결과 패널(~450px)을 완전히 잘라냄 */}
-              <iframe
-                key={mapKey}
-                src="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%8F%99%EC%9E%91%EA%B5%AC%20%EC%97%AC%EC%9D%98%EB%8C%80%EB%B0%A9%EB%A1%9C36%EA%B8%B8%20102-11"
-                title="대방동지역주택조합 사무실 네이버 지도"
-                className="absolute top-0 h-full border-0"
-                style={{ left: "-460px", width: "calc(100% + 460px)" }}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-              />
-              {/* 홈 버튼: 지도 원위치 복귀 */}
-              <button
-                onClick={() => setMapKey((k) => k + 1)}
-                className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/95 backdrop-blur border border-stone-surface shadow-md text-xs font-bold text-charcoal-primary hover:bg-white hover:shadow-lg active:scale-95 transition-all duration-200 cursor-pointer"
-                title="지도 원위치로 돌아가기"
-              >
-                <svg className="w-4 h-4 text-ember-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
-                </svg>
-                원위치
-              </button>
+            <div
+              className="relative flex min-h-64 sm:min-h-80 overflow-hidden rounded-2xl border border-stone-surface/80 bg-parchment-card"
+              aria-label="대방동지역주택조합 사무실 위치 안내"
+            >
+              <div className="absolute inset-0 opacity-70" aria-hidden="true">
+                <div className="absolute left-[12%] top-0 h-full w-5 rounded-full bg-white/80" />
+                <div className="absolute left-0 top-[32%] h-5 w-full rounded-full bg-white/80" />
+                <div className="absolute left-[50%] top-0 h-full w-4 -rotate-12 rounded-full bg-stone-surface/80" />
+                <div className="absolute left-0 top-[70%] h-4 w-full -rotate-3 rounded-full bg-stone-surface/80" />
+              </div>
+              <div className="relative z-[1] flex w-full flex-col items-center justify-center gap-4 px-5 py-8 text-center">
+                <span className="inline-flex size-14 items-center justify-center rounded-full bg-ember-orange text-2xl text-white shadow-sm" aria-hidden="true">
+                  📍
+                </span>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-ember-orange">Office Location</p>
+                  <h3 className="text-xl font-extrabold tracking-tight text-charcoal-primary sm:text-2xl">
+                    대방동지역주택조합 사무실
+                  </h3>
+                  <p className="text-sm font-semibold leading-6 text-charcoal-primary">
+                    서울시 동작구 여의대방로 36길 102-11
+                    <br />
+                    1층 대방동지역주택조합사무실
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-graphite">
+                  <span className="rounded-full bg-white px-3 py-1.5 shadow-subtle">대방역 3번 출구 도보 약 7분</span>
+                  <span className="rounded-full bg-white px-3 py-1.5 shadow-subtle">신대방삼거리역 4번 출구 도보 약 10분</span>
+                </div>
+              </div>
             </div>
 
-            {/* 네이버 지도에서 보기 CTA 버튼 */}
             <div className="flex justify-center">
               <a
-                href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%8F%99%EC%9E%91%EA%B5%AC%20%EC%97%AC%EC%9D%98%EB%8C%80%EB%B0%A9%EB%A1%9C36%EA%B8%B8%20102-11"
+                href={naverMapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#03C75A] text-white text-xs font-bold shadow-md hover:bg-[#02b351] active:scale-95 transition-all duration-200"

@@ -2,19 +2,19 @@
 
 ## Requested Feature Slice
 
-Add the recorded pulsing circular marker in front of important notice labels in the `공지사항` list:
+Stabilize the `찾아오시는 길` location panel where embedded `map.naver.com` can show a redirect-loop error in some browsers:
 
-- keep the existing important notice badge and title behavior
-- add a small ember circular pulse before the `★ 중요` label
-- preserve reduced-motion behavior by disabling the pulse animation under `prefers-reduced-motion`
+- remove the redirect-prone Naver Maps search iframe from the public page
+- keep the office address and transit details visible without relying on a third-party iframe
+- keep the `네이버 지도에서 보기` action as an external link
 
 ## Explicitly Excluded Scope
 
 - Changing public navigation structure
-- Changing notice/free-board comment behavior
+- Changing organization/about copy outside the location panel
 - Changing authentication boundaries
-- Changing FAQ or newsletter layout
-- Changing notice sorting, creation, deletion, or detail drawer behavior
+- Adding a new map provider integration or API key
+- Changing contact phone number, consultation time, or transit route facts
 
 ## Candidate Governing Specification
 
