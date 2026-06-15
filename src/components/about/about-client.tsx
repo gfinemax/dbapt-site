@@ -16,24 +16,11 @@ declare global {
   }
 }
 
-type NaverMapInstance = {
-  setCenter: (position: NaverLatLngInstance) => void;
-};
+type NaverMapInstance = unknown;
 
 type NaverLatLngInstance = unknown;
 
-type NaverMarkerInstance = {
-  setPosition: (position: NaverLatLngInstance) => void;
-};
-
-type NaverGeocodeResponse = {
-  v2?: {
-    addresses?: Array<{
-      x: string;
-      y: string;
-    }>;
-  };
-};
+type NaverMarkerInstance = unknown;
 
 type NaverMapsNamespace = {
   maps: {
@@ -63,15 +50,6 @@ type NaverMapsNamespace = {
     Position: {
       TOP_RIGHT: unknown;
     };
-    Service?: {
-      Status: {
-        OK: string;
-      };
-      geocode: (
-        options: { query: string },
-        callback: (status: string, response: NaverGeocodeResponse) => void,
-      ) => void;
-    };
   };
 };
 
@@ -91,7 +69,6 @@ const fullHistoryData = [
   { date: "2012.02.03", content: "국방위원장식 간담회 개최(국방부, 공군, 지역구의원, 관계자 등) - 조건부 기부양여 결론 및 동작구 협조아래 \"군부대 토지 기부대양여\" 처리 촉구", note: "군부대 부지" },
   { date: "2012.02.13", content: "청와대, 감사원 민원 접수(약 1500명 서명)", note: "군부대 부지" },
   { date: "2012.07.13", content: "군부대 토지 기부대양여 관련 검토결과 회신(국방부 → 조합) - 공익사업시행 자격이 있는 자가 건의 할 경우 협의요청 가능", note: "군부대 부지" },
-  { date: "2013.05.01", content: "대방동 지역주택조합 조합장 명의 변경 (안충환 → 안동연)", note: "조합 운영" },
   { date: "2015.09.18", content: "대방동아파트 11-103 일대 주택건설사업을 위한 지구단위계획수립 접수 (조합 → 동작구청)", note: "지구단위계획" },
   { date: "2015.10.16", content: "대방동아파트 11-103 일대 주택건설사업을 위한 지구단위계획수립 \"주민제안 반려\" (동작구청 → 조합)", note: "지구단위계획" },
   { date: "2016.02.22", content: "대방동아파트 11-103 일대 주택건설사업을 위한 지구단위계획수립 접수 (조합 → 동작구청)", note: "지구단위계획" },
@@ -162,7 +139,8 @@ const fullHistoryData = [
   { date: "2025.09.27", content: "2025년 정기총회 소집 및 의결 진행 (절차적 시정 보완 예정)", note: "총회" },
   { date: "2025.11.11", content: "서울특별시 주관 추가 행정실태조사 수검 (~2025.11.14)", note: "실태조사" },
   { date: "2026.01.05", content: "한창훈 세무사사무소와 회계 세무 정밀 정비 및 실태조사 지적사항 시정 작업 의뢰", note: "용역계약" },
-  { date: "2025.10 ~ 2026.02", content: "조합 업무관리 전산 시스템 개발 완료 (토지매입·수지분석·조합원관리·총회 온라인 시스템 안전 가동)", note: "조합 운영" }
+  { date: "2025.10 ~ 2026.02", content: "조합 업무관리 전산 시스템 개발 완료 (토지매입·수지분석·조합원관리·총회 온라인 시스템 안전 가동)", note: "조합 운영" },
+  { date: "2026.04.18", content: "2026년 정기총회 정식 개최 - 창립총회 이후 진행된 정식 정기총회로 주요 안건 보고 및 의결 절차 진행", note: "총회" }
 ];
 
 const tabs = [
@@ -221,11 +199,42 @@ const auditOrganizationNode = organizationNodes[3];
 const executionOrganizationNode = organizationNodes[4];
 const advisoryOrganizationNode = organizationNodes[5];
 const officeAddress = "서울시 동작구 여의대방로 36길 102-11";
-const officeFallbackCoordinates = { lat: 37.5082981, lng: 126.9312106 };
+const officeCoordinates = { lat: 37.5081729325679, lng: 126.931781205943 };
 const naverMapUrl =
   "https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%8F%99%EC%9E%91%EA%B5%AC%20%EC%97%AC%EC%9D%98%EB%8C%80%EB%B0%A9%EB%A1%9C36%EA%B8%B8%20102-11";
 const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
 const naverMapSdkScriptId = "naver-map-sdk";
+const locationGuidePanelId = "dbapt-office-location-guide";
+
+const stationBusGuides = [
+  {
+    station: "대방역(1호선·신림선)에서 오실 때",
+    route: "2번 출구 앞 정류장에서 [동작05번] 마을버스 탑승 → '대방현대아파트' 정류장 하차 (약 5분 소요)",
+  },
+  {
+    station: "노량진역(1호선·9호선)에서 오실 때",
+    route: "4번 출구에서 동작구청 방향으로 직진, '동작구청 정문' 정류장에서 [동작02번] 또는 [동작11번] 마을버스 탑승 → '대방현대아파트' 정류장 하차 (약 5~6분 소요)",
+  },
+  {
+    station: "장승배기역(7호선)에서 오실 때",
+    route: "2번 출구 앞 정류장에서 [동작02번] 또는 [동작11번] 마을버스 탑승 → '대방현대아파트' 정류장 하차 (약 3~4분 소요)",
+  },
+] as const;
+
+const walkingGuideSteps = [
+  {
+    title: "삼거리 및 남부루터교회 확인",
+    description: "정류장 인근에 있는 삼거리로 이동하시면 '남부루터교회' 건물이 보입니다.",
+  },
+  {
+    title: "숭의여중·고 방향으로 이동",
+    description: "삼거리에 있는 남부루터교회 앞 인도에서 숭의여중·고 방향(여의대방로36길)으로 약 50m가량 완만한 길을 따라 올라옵니다.",
+  },
+  {
+    title: "골목 진입 및 도착",
+    description: "약 50m를 올라오면 바로 옆에 '직접구운족발' 가게가 보입니다. 이 '직접구운족발' 가게 바로 옆 골목길로 꺾어 안쪽으로 들어오시면 조합 사무실(여의대방로36길 102-11)이 있습니다.",
+  },
+] as const;
 
 function NaverMapPanel() {
   const mapElementRef = useRef<HTMLDivElement>(null);
@@ -240,9 +249,9 @@ function NaverMapPanel() {
       const naver = window.naver;
       if (cancelled || !naver?.maps || !mapElementRef.current) return;
 
-      const fallbackCenter = new naver.maps.LatLng(officeFallbackCoordinates.lat, officeFallbackCoordinates.lng);
+      const officeCenter = new naver.maps.LatLng(officeCoordinates.lat, officeCoordinates.lng);
       const map = new naver.maps.Map(mapElementRef.current, {
-        center: fallbackCenter,
+        center: officeCenter,
         zoom: 17,
         minZoom: 12,
         scaleControl: false,
@@ -253,7 +262,7 @@ function NaverMapPanel() {
         },
       });
       const marker = new naver.maps.Marker({
-        position: fallbackCenter,
+        position: officeCenter,
         map,
         title: "대방동지역주택조합 사무실",
       });
@@ -262,18 +271,6 @@ function NaverMapPanel() {
       });
 
       infoWindow.open(map, marker);
-
-      const geocodeService = naver.maps.Service;
-      if (geocodeService?.geocode) {
-        geocodeService.geocode({ query: officeAddress }, (status, response) => {
-          const resolvedAddress = response?.v2?.addresses?.[0];
-          if (cancelled || status !== geocodeService.Status.OK || !resolvedAddress) return;
-
-          const resolvedCenter = new naver.maps.LatLng(Number(resolvedAddress.y), Number(resolvedAddress.x));
-          map.setCenter(resolvedCenter);
-          marker.setPosition(resolvedCenter);
-        });
-      }
 
       setMapError("");
     };
@@ -298,7 +295,7 @@ function NaverMapPanel() {
 
     if (!existingScript) {
       script.id = naverMapSdkScriptId;
-      script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(naverMapClientId)}&submodules=geocoder`;
+      script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(naverMapClientId)}`;
       script.async = true;
       document.head.appendChild(script);
     }
@@ -315,6 +312,8 @@ function NaverMapPanel() {
       <div
         ref={mapElementRef}
         data-testid="naver-map-canvas"
+        data-lat={officeCoordinates.lat}
+        data-lng={officeCoordinates.lng}
         aria-label="대방동지역주택조합 사무실 네이버 지도"
         className="h-full w-full"
       />
@@ -369,6 +368,7 @@ function OrganizationNodeCard({
 export function AboutClient({ onOpenPortal }: AboutClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("greetings");
   const [showFullHistory, setShowFullHistory] = useState(false);
+  const [isLocationGuideOpen, setIsLocationGuideOpen] = useState(false);
   const isScrollingRef = useRef(false);
 
   // 스크롤 감지 및 현재 보고 있는 섹션 활성화 (Scroll Spy)
@@ -581,16 +581,33 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
           <div className="text-center max-w-xl mx-auto mb-12 sm:mb-16">
             <p className="text-xs font-bold text-ember-orange tracking-widest uppercase">HISTORY</p>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal-primary tracking-tight leading-tight mt-3">
-              투명하게 내디뎌 온 신뢰의 역사
+              신뢰 회복을 향해 새롭게 거듭나는 조합
             </h2>
             <p className="text-xs sm:text-sm text-graphite mt-3">
-              추진위 출범부터 서울시 심의 통과, 스마트 업무 전산망 안착까지의 중대 마일스톤입니다.
+              조합원 여러분의 우려와 불신을 무겁게 받아들이고, 앞으로의 사업 추진은 조합이 주도적으로 확인하고 투명하게 공유하겠습니다.
             </p>
           </div>
 
           {/* 1) 핵심 이정표 6대 마일스톤 타임라인 렌더링 */}
           <div className="relative border-l border-stone-surface pl-6 sm:pl-8 ml-4 sm:ml-8 space-y-10 mb-12">
             {/* Milestone 1 */}
+            <div className="relative">
+              <span className="absolute -left-[31px] sm:-left-[39px] top-1.5 flex size-4 sm:size-5 items-center justify-center rounded-full bg-white border-2 border-ember-orange">
+                <span className="size-1.5 sm:size-2 rounded-full bg-ember-orange" />
+              </span>
+              <div className="stone-card bg-white p-5 rounded-2xl border border-stone-surface shadow-xs hover:shadow-sm transition duration-200">
+                <div className="flex items-center justify-between text-xs font-bold text-ember-orange font-mono">
+                  <span>2026.04.18</span>
+                  <span className="bg-ember-orange/10 px-2 py-0.5 rounded-full">총회</span>
+                </div>
+                <h3 className="text-base font-bold text-charcoal-primary mt-1.5">2026년 정기총회 정식 개최</h3>
+                <p className="text-xs text-graphite mt-2 leading-5">
+                  창립총회 이후 진행된 정식 정기총회로, 조합의 주요 안건을 조합원에게 보고하고 투명한 의결 절차를 진행했습니다.
+                </p>
+              </div>
+            </div>
+
+            {/* Milestone 2 */}
             <div className="relative">
               <span className="absolute -left-[31px] sm:-left-[39px] top-1.5 flex size-4 sm:size-5 items-center justify-center rounded-full bg-white border-2 border-ember-orange">
                 <span className="size-1.5 sm:size-2 rounded-full bg-ember-orange" />
@@ -607,7 +624,7 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
               </div>
             </div>
 
-            {/* Milestone 2 */}
+            {/* Milestone 3 */}
             <div className="relative">
               <span className="absolute -left-[31px] sm:-left-[39px] top-1.5 flex size-4 sm:size-5 items-center justify-center rounded-full bg-white border-2 border-midnight">
                 <span className="size-1.5 sm:size-2 rounded-full bg-midnight" />
@@ -624,7 +641,7 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
               </div>
             </div>
 
-            {/* Milestone 3 */}
+            {/* Milestone 4 */}
             <div className="relative">
               <span className="absolute -left-[31px] sm:-left-[39px] top-1.5 flex size-4 sm:size-5 items-center justify-center rounded-full bg-white border-2 border-stone-surface">
                 <span className="size-1.5 sm:size-2 rounded-full bg-ash" />
@@ -637,23 +654,6 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                 <h3 className="text-base font-bold text-charcoal-primary mt-1.5">대방동 11-103번지 일대 지구단위계획 결정 및 지형도면 최종 고시</h3>
                 <p className="text-xs text-graphite mt-2 leading-5">
                   서울시 도시건축공동위원회 심의 의결(수정가결)을 반영하여 정식 주민공람을 마치고, **서울특별시 고시 제2022-291호**로 사업 부지의 지구단위계획 결정 및 고시를 전격 완수했습니다.
-                </p>
-              </div>
-            </div>
-
-            {/* Milestone 4 */}
-            <div className="relative">
-              <span className="absolute -left-[31px] sm:-left-[39px] top-1.5 flex size-4 sm:size-5 items-center justify-center rounded-full bg-white border-2 border-stone-surface">
-                <span className="size-1.5 sm:size-2 rounded-full bg-ash" />
-              </span>
-              <div className="stone-card bg-white p-5 rounded-2xl border border-stone-surface shadow-xs hover:shadow-sm transition duration-200">
-                <div className="flex items-center justify-between text-xs font-bold text-graphite font-mono">
-                  <span>2013.05.01</span>
-                  <span className="bg-stone-surface px-2 py-0.5 rounded-full text-graphite">조합 운영</span>
-                </div>
-                <h3 className="text-base font-bold text-charcoal-primary mt-1.5">대방동 지역주택조합 대표자 명의 변경 및 제2대 안동연 조합장 취임</h3>
-                <p className="text-xs text-graphite mt-2 leading-5">
-                  조합 사무국의 행정 정상화 및 투명성 회복을 기틀로 하여 제2대 안동연 조합장이 대표자로 취임하며 투명하고 신뢰감 높은 조합원 중심 운영 기조를 확립했습니다.
                 </p>
               </div>
             </div>
@@ -915,9 +915,9 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
             <div className="stone-card bg-white p-6 rounded-2xl border border-stone-surface flex items-start gap-4">
               <span className="text-2xl select-none bg-sky-blue/10 text-sky-blue p-2.5 rounded-2xl shrink-0">🏛️</span>
               <div>
-                <h3 className="text-base font-bold text-charcoal-primary">자금관리 신탁사: 신영부동산신탁</h3>
+                <h3 className="text-base font-bold text-charcoal-primary">자금관리 신탁사</h3>
                 <p className="text-xs text-graphite mt-2 leading-5">
-                  조합원님들이 납부하시는 일체의 분담금은 조합 통장이 아닌, 신뢰할 수 있는 신영부동산신탁 명의의 에스크로 대리계좌로 안전하게 수납 및 예치되며 행정 통제 절차 없이는 단 1원도 유출될 수 없도록 완벽 장치했습니다.
+                  조합원님들이 납부하시는 일체의 분담금은 조합 통장이 아닌, 신뢰할 수 있는 신탁사 명의의 에스크로 대리계좌로 안전하게 수납 및 예치되며 행정 통제 절차 없이는 단 1원도 유출될 수 없도록 완벽 장치했습니다.
                 </p>
               </div>
             </div>
@@ -998,33 +998,104 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                     <span className="text-ash font-medium shrink-0 w-14">연락처</span>
                     <a href="tel:02-822-1508" className="text-charcoal-primary font-bold font-mono hover:text-ember-orange transition-colors">02-822-1508</a>
                   </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-ash font-medium shrink-0 w-14">상담시간</span>
-                    <span className="text-charcoal-primary">평일 09:00 ~ 18:00 (토·일·공휴일 휴무)</span>
-                  </p>
                 </div>
               </div>
               <div className="space-y-3">
                 <h4 className="text-sm font-bold text-charcoal-primary flex items-center gap-1.5">🚇 대중교통 안내</h4>
                 <div className="space-y-1.5">
                   <p className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center rounded-full bg-sky-blue/15 text-sky-blue text-[9px] font-black px-1.5 py-0.5 shrink-0">1호선</span>
-                    <span><strong className="text-charcoal-primary">대방역</strong> 3번 출구 도보 약 7분</span>
+                    <span className="inline-flex items-center justify-center rounded-full bg-sky-blue/15 text-sky-blue text-[9px] font-black px-1.5 py-0.5 shrink-0">대방</span>
+                    <span><strong className="text-charcoal-primary">대방역</strong> 2번 출구 앞 동작05번 마을버스 이용</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center rounded-full bg-[#54640d]/15 text-[#54640d] text-[9px] font-black px-1.5 py-0.5 shrink-0">7호선</span>
-                    <span><strong className="text-charcoal-primary">신대방삼거리역</strong> 4번 출구 도보 약 10분</span>
+                    <span className="inline-flex items-center justify-center rounded-full bg-[#54640d]/15 text-[#54640d] text-[9px] font-black px-1.5 py-0.5 shrink-0">노량진</span>
+                    <span><strong className="text-charcoal-primary">노량진역</strong> 동작구청 정문 정류장에서 동작02번·동작11번 이용</span>
                   </p>
                   <p className="flex items-start gap-2">
                     <span className="inline-flex items-center justify-center rounded-full bg-ember-orange/10 text-ember-orange text-[9px] font-black px-1.5 py-0.5 shrink-0">버스</span>
-                    <span>마을버스 12번 · 대방동주민센터 · 대방현대아파트 정류장 하차</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center rounded-full bg-stone-surface text-graphite text-[9px] font-black px-1.5 py-0.5 shrink-0">주차</span>
-                    <span>사무실 건물 내 주차 가능 (방문 시 안내)</span>
+                    <span><strong className="text-charcoal-primary">장승배기역</strong> 2번 출구 앞 동작02번·동작11번 이용</span>
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div className="border-t border-stone-surface pt-4">
+              <button
+                type="button"
+                aria-expanded={isLocationGuideOpen}
+                aria-controls={locationGuidePanelId}
+                onClick={() => setIsLocationGuideOpen((current) => !current)}
+                className="flex w-full items-center justify-between gap-3 rounded-2xl bg-parchment-card px-4 py-3 text-left text-sm font-bold text-charcoal-primary ring-1 ring-inset ring-stone-surface transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-orange"
+              >
+                <span className="min-w-0 flex-1">대방동 지역주택조합 사무실 찾아오시는 길안내</span>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-ember-orange ring-1 ring-inset ring-ember-orange/20",
+                    !isLocationGuideOpen && "animate-pulse motion-reduce:animate-none",
+                  )}
+                  aria-hidden="true"
+                >
+                  {isLocationGuideOpen ? "− 접기" : "+ 자세히보기"}
+                </span>
+              </button>
+
+              {isLocationGuideOpen && (
+                <div
+                  id={locationGuidePanelId}
+                  className="mt-4 rounded-2xl border border-stone-surface bg-parchment-card p-4 sm:p-5"
+                >
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-ember-orange">Route Guide</p>
+                    <h4 className="text-base font-extrabold text-charcoal-primary">대방동 지역주택조합 사무실 찾아오시는 길</h4>
+                    <p className="text-xs leading-6 text-graphite">
+                      본 조합 사무실은 대방역, 노량진역, 장승배기역에서 마을버스를 이용하시면 가장 편리하게 오실 수 있습니다.
+                    </p>
+                  </div>
+
+                  <div className="mt-5 space-y-4">
+                    <div>
+                      <h5 className="text-sm font-bold text-charcoal-primary">🚌 지하철역별 마을버스 연계 경로</h5>
+                      <div className="mt-3 divide-y divide-stone-surface rounded-xl bg-white/80 ring-1 ring-inset ring-stone-surface">
+                        {stationBusGuides.map((guide) => (
+                          <div key={guide.station} className="px-4 py-3">
+                            <h6 className="text-xs font-bold text-charcoal-primary">{guide.station}</h6>
+                            <p className="mt-1 text-xs leading-5 text-graphite">{guide.route}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-bold text-charcoal-primary">🚶 &apos;대방현대아파트&apos; 정류장 하차 후 도보 안내</h5>
+                      <p className="mt-2 text-xs leading-5 text-graphite">
+                        버스에서 내리신 후 아래 지표를 따라 골목으로 들어오시면 됩니다.
+                      </p>
+                      <ol className="mt-3 space-y-2">
+                        {walkingGuideSteps.map((step, index) => (
+                          <li key={step.title} className="flex gap-3 rounded-xl bg-white/80 px-4 py-3 ring-1 ring-inset ring-stone-surface">
+                            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ember-orange/10 text-[11px] font-black text-ember-orange">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <p className="text-xs font-bold text-charcoal-primary">{step.title}</p>
+                              <p className="mt-1 text-xs leading-5 text-graphite">{step.description}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+
+                    <div className="space-y-2 rounded-xl bg-white/80 px-4 py-3 text-xs leading-5 text-graphite ring-1 ring-inset ring-stone-surface">
+                      <p>
+                        <strong className="text-charcoal-primary">주소:</strong> 서울시 동작구 여의대방로36길 102-11 (대방동)
+                      </p>
+                      <p>
+                        <strong className="text-charcoal-primary">안내 팁:</strong> &quot;남부루터교회 삼거리에서 숭의여고 방향으로 50m 위, 직접구운족발 옆 골목 안쪽&quot;으로 기억하시면 쉽게 찾으실 수 있습니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
