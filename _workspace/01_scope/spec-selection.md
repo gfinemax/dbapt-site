@@ -6,7 +6,7 @@
 
 ## Implementation Boundary
 
-This pass changes only the notice and logged-in free-board list header layout plus the notice detail drawer side. Notice/public access, free-board login gating, comment behavior, admin write controls, FAQ, newsletter, and other news surfaces remain unchanged.
+This pass changes only the important notice badge presentation inside the public `공지사항` list. Notice/public access, sorting, comments, admin write controls, free-board surfaces, FAQ, newsletter, and drawer behavior remain unchanged.
 
 ## Conflicts
 

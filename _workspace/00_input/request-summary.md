@@ -2,13 +2,11 @@
 
 ## Requested Feature Slice
 
-Simplify `조합소식` notice and free-board list surfaces:
+Add the recorded pulsing circular marker in front of important notice labels in the `공지사항` list:
 
-- remove the intro/status box above the notice list
-- remove the intro/status box above the free-board list
-- place each search field on the same top line as its section title
-- open the notice detail drawer from the left side
-- keep existing notice and free-board list behavior, comments, and write controls
+- keep the existing important notice badge and title behavior
+- add a small ember circular pulse before the `★ 중요` label
+- preserve reduced-motion behavior by disabling the pulse animation under `prefers-reduced-motion`
 
 ## Explicitly Excluded Scope
 
@@ -16,6 +14,7 @@ Simplify `조합소식` notice and free-board list surfaces:
 - Changing notice/free-board comment behavior
 - Changing authentication boundaries
 - Changing FAQ or newsletter layout
+- Changing notice sorting, creation, deletion, or detail drawer behavior
 
 ## Candidate Governing Specification
 

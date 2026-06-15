@@ -692,6 +692,27 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("button", { name: "댓글 1개 보기" })).toBeInTheDocument();
   });
 
+  it("shows a pulsing circular marker before the important notice badge", () => {
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[{ ...realNotice, isStarred: true }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const titleCell = screen.getByText("실제 공지").closest("td");
+    expect(titleCell).not.toBeNull();
+
+    const pulse = within(titleCell as HTMLElement).getByTestId("notice-important-pulse");
+    const badge = within(titleCell as HTMLElement).getByText("★ 중요");
+
+    expect(pulse).toHaveClass("animate-ping");
+    expect(pulse).toHaveClass("rounded-full");
+    expect(pulse.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("opens the notice detail drawer from the left side", () => {
     render(
       <NewsClient

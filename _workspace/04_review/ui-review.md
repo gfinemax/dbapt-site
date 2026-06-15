@@ -2,30 +2,28 @@
 
 ## Reviewed Change
 
-- Feature: Notice/free-board simplified list headers and left notice drawer
+- Feature: Add a pulsing circular marker before important notice badges in the `공지사항` list
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
-- Implementation plan: current user-approved implementation request
+- Implementation plan: small approved visual follow-up; no separate plan file
 - Files or pages reviewed:
   - `src/components/news/notice-board.tsx`
-  - `src/components/news/free-board.tsx`
-  - `src/components/news/news-client.tsx`
+  - `src/__tests__/news-admin-controls.test.tsx`
   - `/news?tab=notice`
-  - logged-in free-board component coverage
 
 ## Boundary Review
 
 - Finding: PASS
-- Evidence: The change removes decorative intro/status boxes, repositions search controls, and moves the notice detail drawer to the left. Public notice access, free-board login gating, comments, admin actions, and private-data boundaries were not expanded.
+- Evidence: The change only affects the visual marker for already-starred notice rows. Public navigation, login gating, comments, creation, deletion, and detail behavior are unchanged.
 
 ## Truthful Presentation Review
 
 - Finding: PASS
-- Evidence: The removed status boxes no longer show synthetic status copy. Remaining controls are existing search, write, and list actions with unchanged behavior.
+- Evidence: The marker does not introduce new live-data claims or new controls. It only reinforces the existing `★ 중요` state already present in the notice data.
 
 ## Design And Accessibility Review
 
 - Finding: PASS
-- Evidence: Search inputs now sit in the same header row as `공지사항` and logged-in `자유게시판`, using existing rounded input styling, visible focus rings, and responsive stacking on narrow viewports. The notice drawer now uses the same left-side interaction direction as the free-board focus panel. The list tables keep accessible labels.
+- Evidence: The marker uses the existing ember accent, remains decorative with `aria-hidden`, and disables the ping animation through `motion-reduce:animate-none`.
 
 ## Outcome
 

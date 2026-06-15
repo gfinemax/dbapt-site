@@ -66,6 +66,18 @@ function getNoticeComments(notice: any) {
   return Array.isArray(notice?.comments) ? notice.comments : [];
 }
 
+function ImportantNoticePulse() {
+  return (
+    <span className="relative inline-flex size-2.5 shrink-0" aria-hidden="true">
+      <span
+        data-testid="notice-important-pulse"
+        className="absolute inline-flex size-full rounded-full bg-ember-orange/75 opacity-75 animate-ping motion-reduce:animate-none"
+      />
+      <span className="relative inline-flex size-2.5 rounded-full bg-ember-orange" />
+    </span>
+  );
+}
+
 export function NoticeBoard({
   isLoggedIn,
   isAdmin,
@@ -320,8 +332,9 @@ export function NoticeBoard({
                     <td className="px-5 py-4">
                       <span className="text-[13px] leading-snug flex items-center gap-1.5 flex-wrap">
                         {notice.isStarred && (
-                          <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
-                            ★ 중요
+                          <span className="inline-flex items-center gap-1.5 rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                            <ImportantNoticePulse />
+                            <span>★ 중요</span>
                           </span>
                         )}
                         <span className={cn(notice.isStarred ? "font-bold text-charcoal-primary" : "text-charcoal-primary/90")}>
