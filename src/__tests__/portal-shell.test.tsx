@@ -94,6 +94,46 @@ describe("portal shell", () => {
     expect(screen.getByText("연체 미납금 납부 안내")).toBeInTheDocument();
   });
 
+  it("uses a full-width refund status card with ERP-sync guidance", () => {
+    render(
+      <PortalShell
+        role="refund"
+        session={{
+          id: "refund-1",
+          loginId: "refund1",
+          name: "박정산",
+          role: "REFUND",
+        }}
+        refundInfo={{
+          totalPaid: 45000000,
+          refundAmount: 38000000,
+          processedState: "정산 서류 검토 완료 (지급 대기)",
+          targetDate: "2026-06-30T00:00:00.000Z",
+        }}
+        contributionSummary={{
+          totalDue: 45000000,
+          totalPaid: 45000000,
+          unpaidAmount: 0,
+          overdueAmount: 0,
+          lateFee: 0,
+          nextDueDate: null,
+          status: "PAID",
+          noticeMessage: "납부 정상",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        }}
+      />,
+    );
+
+    const statusCard = screen.getByRole("heading", { name: "내 환불/정산 및 납부 현황" }).closest("article");
+
+    expect(statusCard).toHaveClass("md:col-span-2");
+    expect(
+      screen.getByText("환불조합원 환불/정산 및 납부 현황은 ERP 프로그램과 연동되면 본인 화면에 순차적으로 반영하겠습니다."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("45,000,000 원")).toBeInTheDocument();
+    expect(screen.getByText("38,000,000 원")).toBeInTheDocument();
+  });
+
   it("opens member document recommendations in a viewer when the portal is rendered directly", () => {
     render(
       <PortalShell

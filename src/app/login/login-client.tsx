@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useActionState, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StatusPage } from "@/components/landing/status-page";
-import { loginAction } from "@/lib/auth";
+import { loginAction, signupWithPhonePasswordAction } from "@/lib/auth";
 
 type LoginClientProps = {
   googleError?: string | null;
@@ -53,21 +53,6 @@ function buildGoogleAuthHref(path: string, userAgent: string, origin: string) {
   return `${targetUrl.pathname}${targetUrl.search}`;
 }
 
-function getSignupGoogleAuthPath(form: HTMLFormElement) {
-  const params = new URLSearchParams();
-  const formData = new FormData(form);
-
-  for (const field of ["signupName", "signupPhone", "signupMemo"]) {
-    const value = formData.get(field);
-    if (typeof value === "string" && value.trim()) {
-      params.set(field, value.trim());
-    }
-  }
-
-  const query = params.toString();
-  return query ? `${GOOGLE_AUTH_PATH}?${query}` : GOOGLE_AUTH_PATH;
-}
-
 function subscribeUserAgent() {
   return () => undefined;
 }
@@ -82,7 +67,7 @@ function getServerUserAgent() {
 
 export function LoginClient({ googleError = null }: LoginClientProps) {
   const router = useRouter();
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const userAgent = useSyncExternalStore(subscribeUserAgent, getClientUserAgent, getServerUserAgent);
   const browserOAuth = useMemo<BrowserOAuthState>(() => {
     if (!userAgent || typeof window === "undefined") {
@@ -99,7 +84,8 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
     };
   }, [userAgent]);
   const [state, formAction, isPending] = useActionState(loginAction, null);
-  const showDemoCredentials = process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === "true" || process.env.NODE_ENV === "development";
+  const [signupState, signupFormAction, isSignupPending] = useActionState(signupWithPhonePasswordAction, null);
+  const isSignupMode = authMode === "signup";
   const googleErrorMessage =
     googleError === "google_not_configured"
       ? "Google OAuth 설정이 필요합니다. GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET을 등록해 주세요."
@@ -118,26 +104,137 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
     }
   }, [state, router]);
 
-  const handleSignupSubmit = (event: FormEvent<HTMLFormElement>) => {
-    if (!browserOAuth.isEmbedded || !browserOAuth.isAndroid) return;
-
-    event.preventDefault();
-    const path = getSignupGoogleAuthPath(event.currentTarget);
-    window.location.href = buildGoogleAuthHref(path, window.navigator.userAgent, window.location.origin);
-  };
-
   return (
     <StatusPage
       eyebrow="조합원 전용 서비스"
-      title="조합원 로그인"
+      title={isSignupMode ? "신규 가입 신청" : "조합원 로그인"}
       description={
-        showDemoCredentials
-          ? "조합원 전용 포털에 오신 것을 환영합니다. 테스트 계정으로 역할별 포털에 접속할 수 있습니다. 실제 운영 계정 발급 전까지는 데모 데이터만 제공합니다."
+        isSignupMode
+          ? "휴대폰 번호와 본인이 사용할 비밀번호를 입력하면 사무국이 조합원 명부와 대조한 뒤 승인합니다."
           : "조합원 전용 포털에 오신 것을 환영합니다. 발급받은 계정으로 로그인하면 권한에 맞는 전용 화면으로 이동합니다."
       }
       wide
     >
-      <div className="mt-8 grid gap-8 md:grid-cols-2">
+      {isSignupMode ? (
+        <div className="mx-auto mt-8 max-w-2xl">
+          <section className="soft-panel p-5 text-left sm:p-6" aria-label="신규 가입 신청 폼">
+            <div className="rounded-xl bg-[#f8f7f4] p-4 text-xs leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+              <h2 className="text-sm font-semibold text-charcoal-primary">가입 신청 절차</h2>
+              <p className="mt-2">
+                신청 후 계정은 승인 대기 상태로 접수됩니다. 승인 전에는 자료실과
+                개인 분담금 정보 열람이 제한됩니다.
+              </p>
+              <ol className="mt-3 space-y-1">
+                <li>1. 휴대폰 번호와 본인이 사용할 비밀번호를 입력합니다.</li>
+                <li>2. 사무국이 조합원 명부와 신청 정보를 대조합니다.</li>
+                <li>3. 승인 후 정식 조합원 또는 환불 조합원 권한이 부여됩니다.</li>
+              </ol>
+            </div>
+
+            <form action={signupFormAction} className="mt-5 space-y-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupName">
+                  신청자 이름
+                </label>
+                <input
+                  id="signupName"
+                  name="signupName"
+                  type="text"
+                  required
+                  placeholder="조합원 명부의 성명을 입력하세요"
+                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupPhone">
+                  휴대폰 번호
+                </label>
+                <input
+                  id="signupPhone"
+                  name="signupPhone"
+                  type="tel"
+                  required
+                  placeholder="010-1234-5678"
+                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupPassword">
+                  비밀번호
+                </label>
+                <input
+                  id="signupPassword"
+                  name="signupPassword"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  placeholder="8자 이상, 영문과 숫자 포함"
+                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupPasswordConfirm">
+                  비밀번호 확인
+                </label>
+                <input
+                  id="signupPasswordConfirm"
+                  name="signupPasswordConfirm"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  placeholder="비밀번호를 한 번 더 입력하세요"
+                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                />
+              </div>
+              <div className="rounded-xl bg-white px-3 py-3 text-[11px] leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                <p>비밀번호는 8자 이상으로 입력해 주세요.</p>
+                <p>영문과 숫자를 함께 사용해 주세요.</p>
+                <p>특수문자는 선택사항입니다.</p>
+                <p>휴대폰 번호, 생년월일, 연속된 숫자 등은 사용할 수 없습니다.</p>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupMemo">
+                  전달 메모
+                </label>
+                <textarea
+                  id="signupMemo"
+                  name="signupMemo"
+                  rows={4}
+                  placeholder="동·호수, 조합원 번호 등 확인에 필요한 내용을 입력하세요"
+                  className="w-full resize-none rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                />
+              </div>
+              {signupState?.error && (
+                <div className="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600">
+                  {signupState.error}
+                </div>
+              )}
+              {signupState?.success && (
+                <div className="rounded-lg bg-meadow-green/10 p-3 text-xs font-semibold text-charcoal-primary">
+                  {signupState.message}
+                </div>
+              )}
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center">
+                <button
+                  type="submit"
+                  disabled={isSignupPending}
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-midnight px-5 text-xs font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                >
+                  {isSignupPending ? "신청 접수 중..." : "가입 신청하기"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMode("login")}
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-xs font-semibold text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                >
+                  로그인으로 돌아가기
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : (
+      <div className="mx-auto mt-8 grid max-w-5xl gap-8 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.85fr)]">
         <section className="soft-panel p-6 text-left" aria-label="로그인 폼">
           <h2 className="text-lg font-semibold text-charcoal-primary">로그인</h2>
           <p className="mt-1 text-xs text-graphite">인증 정보를 입력하여 조합원 포털에 접속합니다.</p>
@@ -145,13 +242,13 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
           <form action={formAction} className="mt-5 flex flex-col gap-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="loginId">
-                조합원 아이디
+                휴대폰 번호 또는 조합원 아이디
               </label>
               <input
                 id="loginId"
                 type="text"
                 name="loginId"
-                placeholder="아이디를 입력하세요"
+                placeholder="휴대폰 번호 또는 아이디를 입력하세요"
                 required
                 className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
               />
@@ -224,51 +321,27 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
 
         <section
           className="flex flex-col gap-5 text-left"
-          aria-label={showDemoCredentials ? "안내 및 테스트 계정" : "로그인 안내"}
+          aria-label="로그인 안내"
         >
-          {showDemoCredentials && (
-            <div className="soft-panel border border-dashed border-[#f2f0ed] bg-[#f8f7f4] p-5">
-              <h3 className="text-sm font-semibold text-ember-orange">데모 테스트 계정 정보</h3>
-              <p className="mt-1 text-xs text-graphite">아래의 사전 발급된 테스트 계정으로 즉시 로그인 해보실 수 있습니다.</p>
-              <ul className="mt-3 space-y-2 text-xs leading-6 text-graphite">
-                <li className="flex items-center justify-between border-b border-[#f2f0ed] pb-1.5">
-                  <span>정식 조합원:</span>
-                  <span className="rounded border border-[#f2f0ed] bg-white px-1.5 py-0.5 font-mono">
-                    member1 / member123
-                  </span>
-                </li>
-                <li className="flex items-center justify-between border-b border-[#f2f0ed] pb-1.5">
-                  <span>환불 조합원:</span>
-                  <span className="rounded border border-[#f2f0ed] bg-white px-1.5 py-0.5 font-mono">
-                    refund1 / refund123
-                  </span>
-                </li>
-                <li className="flex items-center justify-between pb-1">
-                  <span>최고 관리자:</span>
-                  <span className="rounded border border-[#f2f0ed] bg-white px-1.5 py-0.5 font-mono">
-                    admin / admin123
-                  </span>
-                </li>
-              </ul>
-            </div>
-          )}
-
           <div className="soft-panel p-5">
-            <h3 className="text-sm font-semibold text-charcoal-primary">로그인 후 이동 경로</h3>
-            <p className="mt-1 text-xs text-graphite">
-              보호된 포털 화면은 로그인 후 권한에 맞춰 자동으로 연결됩니다.
+            <h3 className="text-sm font-semibold text-charcoal-primary">계정 권한 안내</h3>
+            <p className="mt-1 text-xs leading-5 text-graphite">
+              승인된 계정 권한에 따라 보호된 포털 화면이 다르게 표시됩니다.
             </p>
-            <ul className="mt-4 space-y-2 text-xs leading-6 text-graphite">
-              <li className="rounded-xl bg-white px-3 py-2 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                정식 조합원 계정은 정보공개 자료실로 이동합니다.
-              </li>
-              <li className="rounded-xl bg-white px-3 py-2 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                환불 조합원 계정은 환불/정산 현황으로 이동합니다.
-              </li>
-              <li className="rounded-xl bg-white px-3 py-2 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                관리자 계정은 문서 등록과 감사 로그 화면으로 이동합니다.
-              </li>
-            </ul>
+            <div className="mt-4 space-y-3 text-xs leading-5 text-graphite">
+              <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                <p className="font-semibold text-charcoal-primary">정식 조합원 계정</p>
+                <p className="mt-1">정보공개 자료실과 조합원 전용 자료를 확인할 수 있습니다.</p>
+              </div>
+              <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                <p className="font-semibold text-charcoal-primary">환불 조합원 계정</p>
+                <p className="mt-1">환불/정산 및 납부 현황을 확인할 수 있습니다.</p>
+              </div>
+              <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                <p className="font-semibold text-charcoal-primary">관계자 및 기타 승인 계정</p>
+                <p className="mt-1">사무국이 승인한 범위 안에서만 자료 열람이 가능합니다.</p>
+              </div>
+            </div>
           </div>
 
           <div className="soft-panel p-5">
@@ -276,82 +349,21 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
               <div>
                 <h3 className="text-sm font-semibold text-charcoal-primary">처음 이용하는 조합원인가요?</h3>
                 <p className="mt-1 text-xs leading-5 text-graphite">
-                  본인 Google 계정으로 신청하면 사무국이 명부와 대조한 뒤 승인합니다.
+                  휴대폰 번호와 비밀번호로 가입을 신청하면 사무국이 명부와 대조한 뒤 승인합니다.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setIsSignupOpen((current) => !current)}
-                aria-expanded={isSignupOpen}
+                onClick={() => setAuthMode("signup")}
                 className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-midnight px-4 text-xs font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
               >
                 신규 가입 신청
               </button>
             </div>
-
-            {isSignupOpen && (
-              <div className="mt-4 rounded-xl bg-[#f8f7f4] p-4 text-xs leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                <h4 className="font-semibold text-charcoal-primary">가입 신청 절차</h4>
-                <p className="mt-2">
-                  Google 인증 후 계정은 승인 대기 상태로 접수됩니다. 승인 전에는 자료실과
-                  개인 분담금 정보 열람이 제한됩니다.
-                </p>
-                <ol className="mt-3 space-y-1">
-                  <li>1. Google 계정으로 본인 이메일과 이름을 확인합니다.</li>
-                  <li>2. 사무국이 조합원 명부와 신청 정보를 대조합니다.</li>
-                  <li>3. 승인 후 정식 조합원 또는 환불 조합원 권한이 부여됩니다.</li>
-                </ol>
-                <form action={GOOGLE_AUTH_PATH} method="get" onSubmit={handleSignupSubmit} className="mt-4 space-y-3">
-                  <div>
-                    <label className="mb-1.5 block font-semibold text-charcoal-primary" htmlFor="signupName">
-                      신청자 이름
-                    </label>
-                    <input
-                      id="signupName"
-                      name="signupName"
-                      type="text"
-                      required
-                      placeholder="조합원 명부의 성명을 입력하세요"
-                      className="w-full rounded-xl border border-[#f2f0ed] bg-white px-3 py-2.5 text-[13px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block font-semibold text-charcoal-primary" htmlFor="signupPhone">
-                      연락처
-                    </label>
-                    <input
-                      id="signupPhone"
-                      name="signupPhone"
-                      type="tel"
-                      required
-                      placeholder="사무국 확인 연락처를 입력하세요"
-                      className="w-full rounded-xl border border-[#f2f0ed] bg-white px-3 py-2.5 text-[13px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block font-semibold text-charcoal-primary" htmlFor="signupMemo">
-                      전달 메모
-                    </label>
-                    <textarea
-                      id="signupMemo"
-                      name="signupMemo"
-                      rows={3}
-                      placeholder="동·호수, 조합원 번호 등 확인에 필요한 내용을 입력하세요"
-                      className="w-full resize-none rounded-xl border border-[#f2f0ed] bg-white px-3 py-2.5 text-[13px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="inline-flex h-10 w-full items-center justify-center rounded-full bg-white px-4 text-xs font-semibold text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 sm:w-auto"
-                  >
-                    Google 계정으로 신청하기
-                  </button>
-                </form>
-              </div>
-            )}
           </div>
         </section>
       </div>
+      )}
     </StatusPage>
   );
 }

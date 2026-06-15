@@ -457,13 +457,16 @@ export function PortalShell({
               )}
 
               {role === "refund" && (refundInfo || contributionSummary) && (
-                <article className="stone-card p-6 bg-white">
+                <article className="stone-card p-6 bg-white md:col-span-2">
                   <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-semibold", getContributionStatusClass(contributionSummary?.status))}>
                     {getContributionStatusLabel(contributionSummary?.status)}
                   </span>
                   <h2 className="mt-4 text-xl font-semibold">내 환불/정산 및 납부 현황</h2>
                   <p className="mt-2 text-sm text-graphite">환불조합원 탈퇴 의결, 납부 실적, 미납 및 연체 반영 내역입니다.</p>
-                  <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#f2f0ed] pt-4 text-sm">
+                  <div className="mt-4 rounded-2xl bg-parchment-card p-4 text-xs leading-5 text-graphite ring-1 ring-inset ring-stone-surface">
+                    환불조합원 환불/정산 및 납부 현황은 ERP 프로그램과 연동되면 본인 화면에 순차적으로 반영하겠습니다.
+                  </div>
+                  <div className="mt-4 grid gap-4 border-t border-[#f2f0ed] pt-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                       <div className="text-xs text-graphite/70">납부 실적액</div>
                       <div className="text-base font-bold text-graphite mt-1">{formatNumber(contributionSummary?.totalPaid ?? refundInfo?.totalPaid ?? 0)} 원</div>
@@ -485,7 +488,7 @@ export function PortalShell({
                       </div>
                     </div>
                     {refundInfo && (
-                      <div className="col-span-2 mt-1 border-t border-[#f2f0ed] pt-3 flex justify-between items-center text-xs">
+                      <div className="mt-1 flex items-center justify-between border-t border-[#f2f0ed] pt-3 text-xs sm:col-span-2 lg:col-span-4">
                         <div>
                           <span className="text-graphite/70">지급 진행 단계:</span>
                           <strong className="ml-1 text-charcoal-primary">{refundInfo.processedState}</strong>
@@ -497,7 +500,7 @@ export function PortalShell({
                       </div>
                     )}
                     {paymentNotices.length > 0 && (
-                      <div className="col-span-2 rounded-2xl border border-dashed border-stone-surface bg-parchment-card p-4 text-xs text-graphite">
+                      <div className="rounded-2xl border border-dashed border-stone-surface bg-parchment-card p-4 text-xs text-graphite sm:col-span-2 lg:col-span-4">
                         <div className="font-bold text-charcoal-primary">{paymentNotices[0].title}</div>
                         <p className="mt-1 leading-relaxed">{paymentNotices[0].message}</p>
                         <p className="mt-2 text-[10px] text-ash">상태: {paymentNotices[0].status} · 관리자 승인 전 발송되지 않습니다.</p>
@@ -508,12 +511,15 @@ export function PortalShell({
               )}
 
               {role === "refund" && !refundInfo && !contributionSummary && (
-                <article className="stone-card p-6 bg-white">
+                <article className="stone-card p-6 bg-white md:col-span-2">
                   <span className="inline-flex rounded-full bg-sunburst-yellow/20 text-charcoal-primary px-3 py-1 text-xs font-semibold">
                     정산 자료 대기
                   </span>
                   <h2 className="mt-4 text-xl font-semibold">내 환불/정산 현황</h2>
                   <p className="mt-2 text-sm text-graphite">승인된 환불 또는 납부자료가 반영되면 본인 화면에만 표시됩니다.</p>
+                  <div className="mt-4 rounded-2xl bg-parchment-card p-4 text-xs leading-5 text-graphite ring-1 ring-inset ring-stone-surface">
+                    환불조합원 환불/정산 및 납부 현황은 ERP 프로그램과 연동되면 본인 화면에 순차적으로 반영하겠습니다.
+                  </div>
                 </article>
               )}
 

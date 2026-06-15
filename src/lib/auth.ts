@@ -4,12 +4,18 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
+import {
+  normalizeLoginIdentifier,
+  normalizePhoneLoginId,
+  validateSignupPassword,
+} from "./signup-password";
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "default-secret-key-at-least-32-characters-long-dbapt"
 );
 
 const SESSION_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+const PHONE_PASSWORD_SIGNUP_SUCCESS_MESSAGE = "가입 신청이 접수되었습니다. 사무국 확인 후 승인됩니다.";
 
 type SessionUser = {
   id: string;
@@ -20,6 +26,11 @@ type SessionUser = {
   email?: string | null;
   image?: string | null;
 };
+
+function stringField(formData: FormData, field: string) {
+  const value = formData.get(field);
+  return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim() : "";
+}
 
 export async function encrypt(payload: Record<string, unknown>) {
   return await new SignJWT(payload)
@@ -61,8 +72,8 @@ export async function getSession() {
 }
 
 export async function loginAction(prevState: unknown, formData: FormData) {
-  const loginId = formData.get("loginId") as string;
-  const password = formData.get("password") as string;
+  const loginId = normalizeLoginIdentifier(stringField(formData, "loginId"));
+  const password = stringField(formData, "password");
 
   if (!loginId || !password) {
     return { error: "아이디와 비밀번호를 입력해주세요." };
@@ -103,6 +114,73 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   }
 }
 
+export async function signupWithPhonePasswordAction(prevState: unknown, formData: FormData) {
+  const signupName = stringField(formData, "signupName").slice(0, 80);
+  const signupPhoneInput = stringField(formData, "signupPhone");
+  const signupMemo = stringField(formData, "signupMemo").slice(0, 300);
+  const password = stringField(formData, "signupPassword");
+  const passwordConfirm = stringField(formData, "signupPasswordConfirm");
+  const phoneLoginId = normalizePhoneLoginId(signupPhoneInput);
+
+  if (!signupName) {
+    return { error: "신청자 이름을 입력해주세요." };
+  }
+
+  if (!phoneLoginId) {
+    return { error: "휴대폰 번호는 010으로 시작하는 11자리 번호로 입력해주세요." };
+  }
+
+  if (!password || !passwordConfirm) {
+    return { error: "비밀번호와 비밀번호 확인을 입력해주세요." };
+  }
+
+  if (password !== passwordConfirm) {
+    return { error: "비밀번호 확인이 일치하지 않습니다." };
+  }
+
+  const passwordValidation = validateSignupPassword(password, phoneLoginId);
+  if (!passwordValidation.valid) {
+    return { error: passwordValidation.error };
+  }
+
+  try {
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { loginId: phoneLoginId },
+          { phone: phoneLoginId },
+          { signupPhone: phoneLoginId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (existingUser) {
+      return { error: "이미 가입 신청 또는 계정 발급이 진행된 휴대폰 번호입니다." };
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await prisma.user.create({
+      data: {
+        loginId: phoneLoginId,
+        passwordHash,
+        name: signupName,
+        signupName,
+        signupPhone: phoneLoginId,
+        phone: phoneLoginId,
+        signupMemo: signupMemo || null,
+        role: "PENDING",
+        isActive: true,
+      },
+    });
+
+    return { success: true, message: PHONE_PASSWORD_SIGNUP_SUCCESS_MESSAGE };
+  } catch (e) {
+    console.error("Phone password signup action error:", e);
+    return { error: "가입 신청 처리 중 문제가 발생했습니다." };
+  }
+}
+
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.set("session", "", {
@@ -119,12 +197,16 @@ export async function approveUserAction(userId: string, targetRole: "MEMBER" | "
     // 임시 조합원/환불 번호 자동 매핑
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const loginId = targetRole === "MEMBER" ? `g_member_${randomSuffix}` : `g_refund_${randomSuffix}`;
+    const pendingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { loginId: true },
+    });
 
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
         role: targetRole,
-        loginId: loginId,
+        ...(pendingUser?.loginId ? {} : { loginId }),
       }
     });
 

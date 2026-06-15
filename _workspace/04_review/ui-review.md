@@ -2,28 +2,34 @@
 
 ## Reviewed Change
 
-- Feature: Replace the redirect-prone Naver Maps iframe in `찾아오시는 길` with a Naver Maps SDK map surface, correct its fixed marker coordinate, add selectable detailed route guidance with a blinking `+ 자세히보기` affordance, remove consultation-hours/parking rows, remove the specific trust-company name from the partner card, revise the history-section copy toward renewed transparent cooperative-led execution, add the `2026.04.18` regular general meeting milestone, and remove the `2013.05.01` leader-change milestone
-- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
-- Implementation plan: small approved production bugfix; no separate plan file
+- Feature: Add ERP-sync guidance to the logged-in refund-member refund/settlement/payment card, expand that card to the full portal grid width, remove demo test account information from the login page, replace new-member signup with a dedicated phone-number/password approval request screen, remove login destination route guidance, and add account permission guidance to the login page
+- Governing spec: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`, `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: small approved logged-in portal presentation fix; no separate plan file
 - Files or pages reviewed:
-  - `src/components/about/about-client.tsx`
-  - `src/__tests__/about-client.test.tsx`
-  - `/about#section-location`
+  - `src/components/portal/portal-shell.tsx`
+  - `src/app/login/login-client.tsx`
+  - `src/lib/auth.ts`
+  - `src/lib/signup-password.ts`
+  - `src/__tests__/portal-shell.test.tsx`
+  - `src/__tests__/portal-preview-pages.test.tsx`
+  - `src/__tests__/phone-signup-auth.test.ts`
+  - `/login`
+  - `/portal/refund`
 
 ## Boundary Review
 
 - Finding: PASS
-- Evidence: The change only affects public `조합소개` presentation copy and the public location panel. Public navigation, login gating, document access, and private data boundaries are unchanged.
+- Evidence: The change stays inside the authenticated refund-member portal, the login/signup page, and pending-user auth creation. Public navigation, member/admin surfaces, document access, and authorization gates are unchanged. The new login-page permission guide explains existing role-based access categories without exposing admin destination details or changing routing.
 
 ## Truthful Presentation Review
 
 - Finding: PASS
-- Evidence: The page continues to show a Naver map surface plus static office address, route facts, the user-requested station-by-station guidance, and a generic `자금관리 신탁사` partner card. The history copy acknowledges member concern without claiming completed trust restoration, the `2026.04.18` milestone presents the user-provided regular general meeting fact as a public timeline item, the removed `2013.05.01` leader-change milestone no longer appears in the highlighted or full history views, the marker uses the verified office coordinate rather than client-side address geocoding, the external `네이버 지도에서 보기` link remains available, and removing the consultation-hours/parking rows or specific trust-company name does not imply a live reservation, route-search, or private-service action.
+- Evidence: The new copy states that refund-member refund/settlement/payment status will be reflected after ERP program integration. It does not claim a live ERP connection, does not add browser-side ERP calls, and preserves existing approved values when they are supplied by the server. The login/signup page no longer displays demo credential strings, test-account access, or login destination route guidance. The permission guide states that 관계자/기타 승인 계정 can only view materials within the office-approved range. Signup requests are created as `PENDING` users and do not grant protected access until office approval.
 
 ## Design And Accessibility Review
 
 - Finding: PASS
-- Evidence: The replacement map stays inside the existing rounded card frame with stone outlines, preserves visible focusable external link behavior with `target="_blank"`/`rel="noopener noreferrer"`, avoids the browser-specific `map.naver.com` search iframe redirect-loop error text, avoids geocoder-driven marker drift, and exposes the long directions through an `aria-expanded` button with a small `+ 자세히보기` pulse that stops under reduced-motion settings.
+- Evidence: The card keeps the existing stone-card and parchment-card visual language, uses the full `md:grid-cols-2` portal width via `md:col-span-2`, and introduces no new motion. Removing the demo credential and route-guidance panels reduces login-page clutter. The account permission guide reuses the existing soft-panel and inset white-card treatment. The dedicated signup screen uses ordinary labeled inputs for name, phone, password, password confirmation, and memo, with a clear return-to-login button. The password rules are visible in the signup screen and enforced server-side, including phone-number, date-like birthdate, repeated-character, and sequential-number rejection.
 
 ## Outcome
 

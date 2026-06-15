@@ -2,33 +2,36 @@
 
 ## Requested Feature Slice
 
-Stabilize the `찾아오시는 길` location panel while keeping an actual Naver map visible:
+Update the logged-in refund-member portal status card:
 
-- replace the redirect-prone `map.naver.com` search iframe with the Naver Maps JavaScript SDK
-- keep the office marker pinned to the verified office coordinate instead of moving it with client-side geocoding
-- add a selectable `대방동 지역주택조합 사무실 찾아오시는 길안내` section with station-by-station village bus guidance and walking directions
-- remove `상담시간` from the `조합 사무실 정보` block
-- remove the `주차` row from the public location panel
-- show a simple blinking `+ 자세히보기` affordance on the route-guide selector
-- remove the specific trust-company name from the `자금관리 신탁사` partner card
-- revise the history-section headline and support copy to acknowledge member distrust and emphasize renewed, transparent, cooperative-led execution
-- add a `2026.04.18` regular general meeting milestone that states the 2026 regular meeting was formally held after the founding general meeting
-- remove the `2013.05.01` leader-change milestone from both the highlighted timeline and the full history list
-- keep the office address and transit details visible
-- keep the `네이버 지도에서 보기` action as an external link
+- add truthful guidance that refund-member refund/settlement and payment status will be reflected after ERP program integration
+- keep the message scoped to the logged-in refund-member personal screen
+- make the refund/settlement/payment status card use the full available horizontal width
+- preserve existing approved refund/payment values when data is already supplied
+- remove demo test account information from the login page entirely, even when demo-related environment flags are present
+- replace the new-member signup request flow with a phone-number and password application form
+- enforce the approved password rules: at least 8 characters, letters plus numbers, optional special characters, and no phone-number, date-like birthdate, repeated-character, or sequential-number patterns
+- create phone-password signup requests as `PENDING` users for office approval
+- preserve a phone login ID when office staff later approve the pending user
+- remove the admin-account destination helper text from the login page route guidance
+- make `신규 가입 신청` switch to a dedicated signup screen instead of expanding a form inside the member login screen
+- remove the login destination route guidance card from the login/signup page composition
+- add a login-page account permission guide explaining 정식 조합원, 환불 조합원, and 관계자/기타 승인 계정 access differences without reintroducing admin destination guidance
 
 ## Explicitly Excluded Scope
 
-- Changing public navigation structure
-- Changing authentication boundaries
-- Adding a non-Naver map provider
-- Changing map account credentials directly in source code
-- Changing contact phone number, consultation time, or transit route facts
-- Adding reservation, inquiry submission, or live route-search functionality
+- Calling a live ERP endpoint
+- Adding browser-side ERP integration
+- Changing authentication, authorization, or routing boundaries
+- Changing member/admin portal surfaces
+- Changing refund calculation logic or stored values
+- Adding new public navigation
+- Implementing SMS phone verification, general email signup, arbitrary login ID signup, password reset, email verification, or Kakao OAuth in this pass
 
 ## Candidate Governing Specification
 
-`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+`docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`
+`docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
 
 ## Unanswered Decision
 
