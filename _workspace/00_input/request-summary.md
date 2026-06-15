@@ -2,10 +2,10 @@
 
 ## Requested Feature Slice
 
-Stabilize the `찾아오시는 길` location panel where embedded `map.naver.com` can show a redirect-loop error in some browsers:
+Stabilize the `찾아오시는 길` location panel while keeping an actual Naver map visible:
 
-- remove the redirect-prone Naver Maps search iframe from the public page
-- keep the office address and transit details visible without relying on a third-party iframe
+- replace the redirect-prone `map.naver.com` search iframe with the Naver Maps JavaScript SDK
+- keep the office address and transit details visible
 - keep the `네이버 지도에서 보기` action as an external link
 
 ## Explicitly Excluded Scope
@@ -13,7 +13,8 @@ Stabilize the `찾아오시는 길` location panel where embedded `map.naver.com
 - Changing public navigation structure
 - Changing organization/about copy outside the location panel
 - Changing authentication boundaries
-- Adding a new map provider integration or API key
+- Adding a non-Naver map provider
+- Changing map account credentials directly in source code
 - Changing contact phone number, consultation time, or transit route facts
 
 ## Candidate Governing Specification

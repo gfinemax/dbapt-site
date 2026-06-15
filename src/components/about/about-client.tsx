@@ -10,6 +10,71 @@ type AboutClientProps = {
 
 type TabId = "greetings" | "commitment" | "history" | "organization" | "location";
 
+declare global {
+  interface Window {
+    naver?: NaverMapsNamespace;
+  }
+}
+
+type NaverMapInstance = {
+  setCenter: (position: NaverLatLngInstance) => void;
+};
+
+type NaverLatLngInstance = unknown;
+
+type NaverMarkerInstance = {
+  setPosition: (position: NaverLatLngInstance) => void;
+};
+
+type NaverGeocodeResponse = {
+  v2?: {
+    addresses?: Array<{
+      x: string;
+      y: string;
+    }>;
+  };
+};
+
+type NaverMapsNamespace = {
+  maps: {
+    LatLng: new (lat: number, lng: number) => NaverLatLngInstance;
+    Map: new (
+      element: HTMLElement,
+      options: {
+        center: NaverLatLngInstance;
+        zoom: number;
+        minZoom: number;
+        scaleControl: boolean;
+        mapDataControl: boolean;
+        zoomControl: boolean;
+        zoomControlOptions: {
+          position: unknown;
+        };
+      },
+    ) => NaverMapInstance;
+    Marker: new (options: {
+      position: NaverLatLngInstance;
+      map: NaverMapInstance;
+      title: string;
+    }) => NaverMarkerInstance;
+    InfoWindow: new (options: { content: string }) => {
+      open: (map: NaverMapInstance, marker: NaverMarkerInstance) => void;
+    };
+    Position: {
+      TOP_RIGHT: unknown;
+    };
+    Service?: {
+      Status: {
+        OK: string;
+      };
+      geocode: (
+        options: { query: string },
+        callback: (status: string, response: NaverGeocodeResponse) => void,
+      ) => void;
+    };
+  };
+};
+
 // [사업추진 전체 경과보고 일람 데이터 전문]
 const fullHistoryData = [
   { date: "2001.02.04", content: "군부대의 법면보강, 우수관로 설치로 빗물(토사)피해 발생(3차례)", note: "군부대 부지" },
@@ -155,8 +220,122 @@ const governanceLineOrganizationNodes = [
 const auditOrganizationNode = organizationNodes[3];
 const executionOrganizationNode = organizationNodes[4];
 const advisoryOrganizationNode = organizationNodes[5];
+const officeAddress = "서울시 동작구 여의대방로 36길 102-11";
+const officeFallbackCoordinates = { lat: 37.5082981, lng: 126.9312106 };
 const naverMapUrl =
   "https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%8F%99%EC%9E%91%EA%B5%AC%20%EC%97%AC%EC%9D%98%EB%8C%80%EB%B0%A9%EB%A1%9C36%EA%B8%B8%20102-11";
+const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
+const naverMapSdkScriptId = "naver-map-sdk";
+
+function NaverMapPanel() {
+  const mapElementRef = useRef<HTMLDivElement>(null);
+  const [mapError, setMapError] = useState(naverMapClientId ? "" : "네이버 지도 API 키 설정이 필요합니다.");
+
+  useEffect(() => {
+    if (!naverMapClientId || !mapElementRef.current) return;
+
+    let cancelled = false;
+
+    const renderMap = () => {
+      const naver = window.naver;
+      if (cancelled || !naver?.maps || !mapElementRef.current) return;
+
+      const fallbackCenter = new naver.maps.LatLng(officeFallbackCoordinates.lat, officeFallbackCoordinates.lng);
+      const map = new naver.maps.Map(mapElementRef.current, {
+        center: fallbackCenter,
+        zoom: 17,
+        minZoom: 12,
+        scaleControl: false,
+        mapDataControl: false,
+        zoomControl: true,
+        zoomControlOptions: {
+          position: naver.maps.Position.TOP_RIGHT,
+        },
+      });
+      const marker = new naver.maps.Marker({
+        position: fallbackCenter,
+        map,
+        title: "대방동지역주택조합 사무실",
+      });
+      const infoWindow = new naver.maps.InfoWindow({
+        content: `<div style="padding:10px 12px;font-size:12px;font-weight:700;line-height:1.5;color:#343433;">대방동지역주택조합 사무실<br><span style="font-weight:500;color:#474645;">${officeAddress}</span></div>`,
+      });
+
+      infoWindow.open(map, marker);
+
+      const geocodeService = naver.maps.Service;
+      if (geocodeService?.geocode) {
+        geocodeService.geocode({ query: officeAddress }, (status, response) => {
+          const resolvedAddress = response?.v2?.addresses?.[0];
+          if (cancelled || status !== geocodeService.Status.OK || !resolvedAddress) return;
+
+          const resolvedCenter = new naver.maps.LatLng(Number(resolvedAddress.y), Number(resolvedAddress.x));
+          map.setCenter(resolvedCenter);
+          marker.setPosition(resolvedCenter);
+        });
+      }
+
+      setMapError("");
+    };
+
+    if (window.naver?.maps) {
+      renderMap();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const existingScript = document.getElementById(naverMapSdkScriptId) as HTMLScriptElement | null;
+    const script = existingScript ?? document.createElement("script");
+
+    const handleLoad = () => renderMap();
+    const handleError = () => {
+      if (!cancelled) setMapError("네이버 지도를 불러오지 못했습니다.");
+    };
+
+    script.addEventListener("load", handleLoad);
+    script.addEventListener("error", handleError);
+
+    if (!existingScript) {
+      script.id = naverMapSdkScriptId;
+      script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(naverMapClientId)}&submodules=geocoder`;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      cancelled = true;
+      script.removeEventListener("load", handleLoad);
+      script.removeEventListener("error", handleError);
+    };
+  }, []);
+
+  return (
+    <div className="relative h-64 sm:h-80 overflow-hidden rounded-2xl border border-stone-surface/80 bg-parchment-card">
+      <div
+        ref={mapElementRef}
+        data-testid="naver-map-canvas"
+        aria-label="대방동지역주택조합 사무실 네이버 지도"
+        className="h-full w-full"
+      />
+      {mapError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-parchment-card/95 px-5 text-center">
+          <span className="inline-flex size-12 items-center justify-center rounded-full bg-ember-orange text-xl text-white" aria-hidden="true">
+            📍
+          </span>
+          <div className="space-y-1">
+            <p className="text-sm font-extrabold text-charcoal-primary">네이버 지도 설정이 필요합니다</p>
+            <p className="text-xs leading-5 text-graphite">
+              {mapError}
+              <br />
+              환경변수 `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`를 설정하면 이 영역에 네이버 지도가 표시됩니다.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function OrganizationNodeCard({
   node,
@@ -791,37 +970,7 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
           </div>
 
           <div className="stone-card bg-white p-6 sm:p-8 rounded-2xl border border-stone-surface shadow-xs space-y-6">
-            <div
-              className="relative flex min-h-64 sm:min-h-80 overflow-hidden rounded-2xl border border-stone-surface/80 bg-parchment-card"
-              aria-label="대방동지역주택조합 사무실 위치 안내"
-            >
-              <div className="absolute inset-0 opacity-70" aria-hidden="true">
-                <div className="absolute left-[12%] top-0 h-full w-5 rounded-full bg-white/80" />
-                <div className="absolute left-0 top-[32%] h-5 w-full rounded-full bg-white/80" />
-                <div className="absolute left-[50%] top-0 h-full w-4 -rotate-12 rounded-full bg-stone-surface/80" />
-                <div className="absolute left-0 top-[70%] h-4 w-full -rotate-3 rounded-full bg-stone-surface/80" />
-              </div>
-              <div className="relative z-[1] flex w-full flex-col items-center justify-center gap-4 px-5 py-8 text-center">
-                <span className="inline-flex size-14 items-center justify-center rounded-full bg-ember-orange text-2xl text-white shadow-sm" aria-hidden="true">
-                  📍
-                </span>
-                <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-ember-orange">Office Location</p>
-                  <h3 className="text-xl font-extrabold tracking-tight text-charcoal-primary sm:text-2xl">
-                    대방동지역주택조합 사무실
-                  </h3>
-                  <p className="text-sm font-semibold leading-6 text-charcoal-primary">
-                    서울시 동작구 여의대방로 36길 102-11
-                    <br />
-                    1층 대방동지역주택조합사무실
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-graphite">
-                  <span className="rounded-full bg-white px-3 py-1.5 shadow-subtle">대방역 3번 출구 도보 약 7분</span>
-                  <span className="rounded-full bg-white px-3 py-1.5 shadow-subtle">신대방삼거리역 4번 출구 도보 약 10분</span>
-                </div>
-              </div>
-            </div>
+            <NaverMapPanel />
 
             <div className="flex justify-center">
               <a

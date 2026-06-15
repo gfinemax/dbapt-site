@@ -2,7 +2,7 @@
 
 ## Reviewed Change
 
-- Feature: Replace the redirect-prone Naver Maps iframe in `찾아오시는 길` with a stable location guide
+- Feature: Replace the redirect-prone Naver Maps iframe in `찾아오시는 길` with a Naver Maps SDK map surface
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
 - Implementation plan: small approved production bugfix; no separate plan file
 - Files or pages reviewed:
@@ -18,12 +18,12 @@
 ## Truthful Presentation Review
 
 - Finding: PASS
-- Evidence: The panel presents static office address and transit facts already shown on the page. The only map action remains an external `네이버 지도에서 보기` link, so no embedded live map is implied.
+- Evidence: The panel continues to show a Naver map surface plus static office address and transit facts already shown on the page. The external `네이버 지도에서 보기` link remains available.
 
 ## Design And Accessibility Review
 
 - Finding: PASS
-- Evidence: The replacement panel uses the existing white card, parchment surface, stone outlines, ember accent, rounded controls, visible address text, and an external link with `target="_blank"`/`rel="noopener noreferrer"`. Removing the iframe avoids browser-specific redirect-loop error text in the visible UI.
+- Evidence: The replacement map stays inside the existing rounded card frame with stone outlines, preserves visible focusable external link behavior with `target="_blank"`/`rel="noopener noreferrer"`, and avoids the browser-specific `map.naver.com` search iframe redirect-loop error text.
 
 ## Outcome
 

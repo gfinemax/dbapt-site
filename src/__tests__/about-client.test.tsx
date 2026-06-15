@@ -49,14 +49,20 @@ describe("about client", () => {
     expect(screen.getByText("법무·회계 자문기관")).toBeInTheDocument();
   });
 
-  it("keeps Naver Maps as an external action instead of embedding the redirect-prone search page", () => {
+  it("shows a Naver map surface without using the redirect-prone Naver search iframe", () => {
+    process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID = "test-naver-client-id";
     const { container } = render(<AboutClient />);
 
     expect(
       screen.getByRole("heading", { name: "조합 사무실 찾아오시는 길" }),
     ).toBeInTheDocument();
     expect(container.querySelector('iframe[src*="map.naver.com"]')).not.toBeInTheDocument();
+    expect(container.querySelector('iframe[src*="google.com/maps"]')).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "원위치" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("naver-map-canvas")).toHaveAttribute(
+      "aria-label",
+      "대방동지역주택조합 사무실 네이버 지도",
+    );
 
     const naverMapLink = screen.getByRole("link", { name: "네이버 지도에서 보기" });
     expect(naverMapLink).toHaveAttribute("href", expect.stringContaining("map.naver.com"));
