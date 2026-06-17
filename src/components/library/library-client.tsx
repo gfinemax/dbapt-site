@@ -954,16 +954,17 @@ function MaterialEntryCard({
           </form>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={() => onOpenDocument(document)}
-              className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/35 cursor-pointer"
-              aria-label={`${entry.title} 상세 열람`}
-            >
-              {content}
-            </button>
-            {isAdmin && (
-              <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-stone-surface pt-3">
+            {content}
+            <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-stone-surface pt-3">
+              <button
+                type="button"
+                onClick={() => onOpenDocument(document)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-midnight px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/35"
+              >
+                자료 열람
+              </button>
+              {isAdmin && (
+                <>
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
@@ -981,8 +982,9 @@ function MaterialEntryCard({
                   <Trash2 className="size-3" aria-hidden="true" />
                   {isDeleting ? "삭제 중" : "삭제"}
                 </button>
-              </div>
-            )}
+                </>
+              )}
+            </div>
             {isDeleteModalOpen && (
               <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4 backdrop-blur-xs animate-in fade-in duration-200">
                 <button

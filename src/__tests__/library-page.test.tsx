@@ -203,7 +203,8 @@ describe("library page", () => {
 
     const meetingCard = screen.getAllByTestId("library-item-meeting-minutes")[0];
     fireEvent.click(within(meetingCard).getByRole("button", { name: "자료 확인" }));
-    fireEvent.click(screen.getByText("2026년 정기총회 의사록(직인)"));
+    const uploadedEntry = screen.getByLabelText("2026년 정기총회 의사록(직인) 관리");
+    fireEvent.click(within(uploadedEntry).getByRole("button", { name: "자료 열람" }));
 
     expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute(
       "src",
@@ -232,7 +233,8 @@ describe("library page", () => {
 
     const auditCard = screen.getAllByTestId("library-item-audit-report")[0];
     fireEvent.click(within(auditCard).getByRole("button", { name: "자료 확인" }));
-    fireEvent.click(screen.getByRole("button", { name: "23년 1사분기_실적보고서 상세 열람" }));
+    const uploadedEntry = screen.getByLabelText("23년 1사분기_실적보고서 관리");
+    fireEvent.click(within(uploadedEntry).getByRole("button", { name: "자료 열람" }));
 
     expect(screen.queryByTitle("문서 온라인 열람 뷰어")).not.toBeInTheDocument();
     expect(screen.getByText("이 문서는 PDF 미리보기를 지원하지 않습니다.")).toBeInTheDocument();
@@ -249,6 +251,16 @@ describe("library page", () => {
     expect(screen.getByText("조합규약(260418 1차개정)")).toBeInTheDocument();
     expect(screen.queryByText("조합규약 및 정관")).not.toBeInTheDocument();
     expect(screen.queryByText("정식 조합원 연명부")).not.toBeInTheDocument();
+  });
+
+  it("shows a visible read action for uploaded rule materials", () => {
+    render(<LibraryClient isLoggedIn documents={uploadedRuleDocuments} />);
+
+    const ruleCard = screen.getAllByTestId("library-item-cooperative-rules")[0];
+    fireEvent.click(within(ruleCard).getByRole("button", { name: "자료 확인" }));
+
+    const uploadedEntry = screen.getByLabelText("조합규약(260418 1차개정) 관리");
+    expect(within(uploadedEntry).getByRole("button", { name: "자료 열람" })).toBeInTheDocument();
   });
 
   it("lets admins edit and delete uploaded material entries from the library panel", async () => {
