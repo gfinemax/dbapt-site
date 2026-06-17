@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StatusPage } from "@/components/landing/status-page";
@@ -68,6 +69,7 @@ function getServerUserAgent() {
 export function LoginClient({ googleError = null }: LoginClientProps) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const userAgent = useSyncExternalStore(subscribeUserAgent, getClientUserAgent, getServerUserAgent);
   const browserOAuth = useMemo<BrowserOAuthState>(() => {
     if (!userAgent || typeof window === "undefined") {
@@ -257,14 +259,27 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
               <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="password">
                 비밀번호
               </label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="비밀번호를 입력하세요"
-                required
-                className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showLoginPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="비밀번호를 입력하세요"
+                  required
+                  autoComplete="current-password"
+                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                />
+                <button
+                  type="button"
+                  aria-label={showLoginPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                  aria-pressed={showLoginPassword}
+                  title={showLoginPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                  onClick={() => setShowLoginPassword((current) => !current)}
+                  className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-graphite transition hover:bg-[#f8f7f4] hover:text-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                >
+                  {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             {state?.error && (

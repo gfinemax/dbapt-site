@@ -123,6 +123,59 @@ describe("library page", () => {
     );
   });
 
+  it("indexes the 2022 district plan notice under public permit notice materials", () => {
+    render(<LibraryClient />);
+
+    const permitTab = screen.getByRole("button", { name: "인허가·고시" });
+    fireEvent.click(permitTab);
+
+    const noticeCard = screen.getByTestId("library-item-district-plan-notice-2022");
+    expect(within(noticeCard).getByText("공개")).toBeInTheDocument();
+    expect(within(noticeCard).getByText("자료실 참고")).toBeInTheDocument();
+    expect(within(noticeCard).getByText("인허가·고시")).toBeInTheDocument();
+    expect(within(noticeCard).getByRole("heading", { name: "서울특별시 고시 제2022-291호 지구단위계획 결정고시" })).toBeInTheDocument();
+    expect(within(noticeCard).getByText(/자료 위치: 공개자료 > 인허가·고시자료/)).toBeInTheDocument();
+
+    fireEvent.click(within(noticeCard).getByRole("button", { name: "고시자료 보기" }));
+
+    const noticeDialog = screen.getByRole("dialog", { name: "서울특별시 고시 제2022-291호 지구단위계획 결정고시 자료 목록" });
+    expect(noticeDialog).toBeInTheDocument();
+    expect(within(noticeDialog).getByText("인허가·고시자료 리스트")).toBeInTheDocument();
+    expect(within(noticeDialog).getByText("서울특별시 고시 제2022-291호")).toBeInTheDocument();
+    expect(within(noticeDialog).getByText("공개자료 · 인허가·고시자료 · 2022.06.30")).toBeInTheDocument();
+  });
+
+  it("uses category and query parameters to show the permit notice search result", () => {
+    render(<LibraryClient initialCategory="permits" initialSearch="서울특별시 고시 제2022-291호" />);
+
+    expect(screen.getByRole("searchbox", { name: "자료 찾기" })).toHaveValue("서울특별시 고시 제2022-291호");
+    expect(screen.getByRole("button", { name: "찾기" })).toBeInTheDocument();
+    expect(screen.getByText(/검색어/)).toHaveTextContent("서울특별시 고시 제2022-291호");
+    expect(screen.getByText(/1건/)).toBeInTheDocument();
+    expect(screen.getByTestId("library-item-district-plan-notice-2022")).toBeInTheDocument();
+    expect(screen.queryByTestId("library-item-housing-law")).not.toBeInTheDocument();
+  });
+
+  it("matches library materials when spacing is omitted from the search query", () => {
+    render(<LibraryClient initialSearch="총회책자" />);
+
+    expect(screen.getByRole("searchbox", { name: "자료 찾기" })).toHaveValue("총회책자");
+    expect(screen.getByText(/검색어/)).toHaveTextContent("총회책자");
+    expect(screen.getByText(/1건/)).toBeInTheDocument();
+    expect(screen.getAllByTestId("library-item-assembly-book").length).toBeGreaterThan(0);
+    expect(screen.queryByTestId("library-item-housing-law")).not.toBeInTheDocument();
+  });
+
+  it("does not expand stenographic searches to meeting minutes", () => {
+    render(<LibraryClient initialSearch="속기" />);
+
+    expect(screen.getByRole("searchbox", { name: "자료 찾기" })).toHaveValue("속기");
+    expect(
+      screen.getByText((_, element) => element?.textContent === "검색어 속기 기준으로 0건의 자료를 찾았습니다."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("검색 조건에 맞는 자료가 없습니다. 다른 검색어를 입력하거나 분류를 전체로 변경해 주세요.")).toBeInTheDocument();
+  });
+
   it("opens member-only source links directly for logged-in users", () => {
     render(<LibraryClient isLoggedIn />);
 

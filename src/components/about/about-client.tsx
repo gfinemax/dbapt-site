@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type AboutClientProps = {
-  onOpenPortal?: () => void;
+  onOpenPortal?: (category?: string, search?: string) => void;
 };
 
 type TabId = "greetings" | "commitment" | "history" | "organization" | "location";
@@ -205,6 +206,8 @@ const naverMapUrl =
 const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
 const naverMapSdkScriptId = "naver-map-sdk";
 const locationGuidePanelId = "dbapt-office-location-guide";
+const districtPlanNoticeSearch = "서울특별시 고시 제2022-291호";
+const districtPlanNoticeLibraryHref = `/library?category=permits&q=${encodeURIComponent(districtPlanNoticeSearch)}`;
 
 const stationBusGuides = [
   {
@@ -370,6 +373,21 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [isLocationGuideOpen, setIsLocationGuideOpen] = useState(false);
   const isScrollingRef = useRef(false);
+
+  const openPortal = (category?: string, search?: string) => {
+    if (onOpenPortal) {
+      onOpenPortal(category, search);
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("open-portal", {
+          detail: { category, search },
+        }),
+      );
+    }
+  };
 
   // 스크롤 감지 및 현재 보고 있는 섹션 활성화 (Scroll Spy)
   useEffect(() => {
@@ -541,7 +559,7 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
               </p>
               {onOpenPortal && (
                 <Button 
-                  onClick={onOpenPortal} 
+                  onClick={() => openPortal()}
                   variant="outline" 
                   size="sm" 
                   className="mt-3 mx-auto rounded-full text-[10px] font-bold border-ember-orange text-ember-orange hover:bg-ember-orange/5 cursor-pointer h-7 px-3 shrink-0"
@@ -653,8 +671,18 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                 </div>
                 <h3 className="text-base font-bold text-charcoal-primary mt-1.5">대방동 11-103번지 일대 지구단위계획 결정 및 지형도면 최종 고시</h3>
                 <p className="text-xs text-graphite mt-2 leading-5">
-                  서울시 도시건축공동위원회 심의 의결(수정가결)을 반영하여 정식 주민공람을 마치고, **서울특별시 고시 제2022-291호**로 사업 부지의 지구단위계획 결정 및 고시를 전격 완수했습니다.
+                  서울시 도시건축공동위원회 심의 의결(수정가결)을 반영하여 정식 주민공람을 마치고, <strong className="font-bold text-charcoal-primary">{districtPlanNoticeSearch}</strong>로 사업 부지의 지구단위계획 결정 및 고시를 전격 완수했습니다.
                 </p>
+                <Link
+                  href={districtPlanNoticeLibraryHref}
+                  aria-label="결정고시 자료 찾기"
+                  className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-full border border-ember-orange/25 bg-ember-orange/5 px-3 py-2 text-[11px] font-bold text-ember-orange transition hover:border-ember-orange/45 hover:bg-ember-orange/10 cursor-pointer"
+                >
+                  <span>결정고시 자료 찾기</span>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-graphite">
+                    인허가·고시자료
+                  </span>
+                </Link>
               </div>
             </div>
 

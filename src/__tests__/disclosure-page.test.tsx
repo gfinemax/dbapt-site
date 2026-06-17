@@ -1,8 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
 import { DisclosureClient } from "@/components/disclosure/disclosure-client";
 import { MeetingsTable } from "@/components/disclosure/meetings-table";
 import { type Document } from "@/components/portal/document-table";
+
+let mockedSearchParams = new URLSearchParams("tab=operations");
 
 vi.mock("next/navigation", () => ({
   useRouter() {
@@ -12,18 +15,53 @@ vi.mock("next/navigation", () => ({
     };
   },
   useSearchParams() {
-    return {
-      get: vi.fn().mockReturnValue("operations"),
-    };
+    return mockedSearchParams;
   },
 }));
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  mockedSearchParams = new URLSearchParams("tab=operations");
 });
 
 describe("disclosure page", () => {
+  it("opens the secured PDF viewer when a document id is provided in the URL", async () => {
+    mockedSearchParams = new URLSearchParams("document=doc-operation-rules");
+
+    render(
+      <DisclosurePageClientShell
+        session={{
+          id: "member-1",
+          loginId: "member1",
+          name: "정식 조합원",
+          role: "MEMBER",
+        }}
+        documents={[
+          {
+            id: "doc-operation-rules",
+            title: "운영관리규정(260418 제정)",
+            description: "2026년 4월18일 정기총회에서 제정",
+            category: "DISCLOSURE",
+            subCategory: "운영관리규정",
+            fileName: "operation-rules.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-04-18T00:00:00.000Z",
+            documentDate: "2026-04-18T00:00:00.000Z",
+            createdAt: "2026-04-18T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(await screen.findByTestId("pdf-viewer-title")).toHaveTextContent("운영관리규정(260418 제정)");
+    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute(
+      "src",
+      "/api/documents/doc-operation-rules/view",
+    );
+  });
+
   it("keeps correspondence direction in the category label without prefixing the document title", () => {
     render(
       <MeetingsTable

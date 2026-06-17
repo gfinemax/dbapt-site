@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
-const VALID_ROLES = ["MEMBER", "REFUND", "ADMIN"] as const;
+const VALID_ROLES = ["MEMBER", "REFUND", "ASSOCIATE", "ADMIN"] as const;
 type Role = (typeof VALID_ROLES)[number];
 
 type CreateUserInput = {
@@ -136,7 +136,7 @@ function parseInput(argv: string[]): CreateUserInput {
 
 function printUsage() {
   console.log(`Usage:
-pnpm user:create -- --login-id <id> --password <password> --name <name> --role MEMBER|REFUND|ADMIN
+pnpm user:create -- --login-id <id> --password <password> --name <name> --role MEMBER|REFUND|ASSOCIATE|ADMIN
 
 Options:
   --update-existing       Update an existing account instead of failing
@@ -190,6 +190,7 @@ async function main() {
           data: {
             name: input.name,
             role: input.role,
+            memberType: input.role === "REFUND" ? "REFUND" : input.role === "ASSOCIATE" ? "ASSOCIATE" : "REGULAR",
             isActive: input.isActive,
             passwordHash,
           },
@@ -199,6 +200,7 @@ async function main() {
             loginId: input.loginId,
             name: input.name,
             role: input.role,
+            memberType: input.role === "REFUND" ? "REFUND" : input.role === "ASSOCIATE" ? "ASSOCIATE" : "REGULAR",
             isActive: input.isActive,
             passwordHash,
           },

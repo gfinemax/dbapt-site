@@ -45,6 +45,7 @@ type PersonalLibraryDrawerHostProps = {
     name: string;
     email: string;
     role: string;
+    memberType?: string | null;
     createdAt: string;
   }[];
 };

@@ -25,6 +25,7 @@ export const libraryCategories = [
   { id: "contracts", label: "계약·협약" },
   { id: "accounting", label: "회계·감사" },
   { id: "business", label: "사업·설계" },
+  { id: "permits", label: "인허가·고시" },
   { id: "legal", label: "법령·제도" },
   { id: "forms", label: "서식·양식" },
 ] as const;
@@ -108,6 +109,18 @@ export const libraryItems: LibraryItem[] = [
     actionLabel: "관련 법령 보기",
     access: "public",
     updatedAt: "법령 개정 시",
+  },
+  {
+    id: "district-plan-notice-2022",
+    title: "서울특별시 고시 제2022-291호 지구단위계획 결정고시",
+    description: "2022.06.30 대방동 11-103번지 일대 도시관리계획 결정 및 지형도면 고시 자료를 찾기 위한 공개 참고 자료입니다.",
+    category: "permits",
+    source: "공개자료 > 인허가·고시자료",
+    sourceKind: "library-reference",
+    sourceHref: "/library#permits",
+    actionLabel: "고시자료 보기",
+    access: "public",
+    updatedAt: "2022.06.30",
   },
   {
     id: "forms",

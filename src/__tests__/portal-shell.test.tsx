@@ -50,6 +50,25 @@ describe("portal shell", () => {
     expect(screen.getByText("조합원 개인 자료실 등록 알림")).toBeInTheDocument();
   });
 
+  it("links administrators to the PeopleOn member management page", () => {
+    render(
+      <PortalShell
+        role="admin"
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /PeopleOn 조합원 관리/ })).toHaveAttribute(
+      "href",
+      "/portal/admin/members",
+    );
+  });
+
   it("renders supplied contribution payment status for member sessions", () => {
     render(
       <PortalShell
@@ -257,5 +276,69 @@ describe("portal shell", () => {
     await waitFor(() => {
       expect(updateSignupNameAction).toHaveBeenCalledWith("pending-1", "오하동");
     });
+  });
+
+  it("summarizes approved account conversion on the admin home without rendering the full list", () => {
+    render(
+      <PortalShell
+        role="admin"
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+        approvedSocialUsers={[
+          {
+            id: "phone-refund",
+            name: "전화환불",
+            email: "010-1234-5678",
+            role: "REFUND",
+            memberType: "REFUND",
+            createdAt: "2026-06-01T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("총 1명")).toBeInTheDocument();
+    expect(screen.getByText("환불조합원 1명")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "회원 자격 관리로 이동" })).toHaveAttribute(
+      "href",
+      "/portal/admin/members#approved-member-conversion",
+    );
+    expect(screen.queryByText("이메일/휴대폰")).not.toBeInTheDocument();
+    expect(screen.queryByText("010-1234-5678")).not.toBeInTheDocument();
+  });
+
+  it("shows approved-account membership type counts on the admin home", () => {
+    render(
+      <PortalShell
+        role="admin"
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+        approvedSocialUsers={[
+          {
+            id: "pre-member",
+            name: "예비회원",
+            email: "010-2222-3333",
+            role: "MEMBER",
+            memberType: "PRELIMINARY",
+            createdAt: "2026-06-01T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("예비조합원 1명")).toBeInTheDocument();
+    expect(screen.queryByText("자격 구분")).not.toBeInTheDocument();
+    expect(screen.queryByText("정식 조합원 (MEMBER)")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("자격별 현황만 요약하고, 실제 변경 작업은 전용 관리 페이지에서 처리합니다."),
+    ).toBeInTheDocument();
   });
 });

@@ -446,6 +446,47 @@ describe("news admin API controls", () => {
     }));
   });
 
+  it("persists an allowed display author name when administrators create news", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNews.create.mockResolvedValue({ ...realNotice, displayAuthorName: "사무국" });
+
+    const response = await newsRoute.POST(
+      jsonRequest({
+        title: "작성자 선택 공지",
+        content: "본문",
+        category: "NOTICE",
+        displayAuthorName: "사무국",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNews.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        displayAuthorName: "사무국",
+        authorId: "admin-1",
+      }),
+    }));
+  });
+
+  it("rejects unsupported display author names when administrators create news", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+
+    const response = await newsRoute.POST(
+      jsonRequest({
+        title: "작성자 선택 공지",
+        content: "본문",
+        category: "NOTICE",
+        displayAuthorName: "감사단",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: "작성자는 사무국 또는 운영자 중에서 선택해 주세요.",
+    });
+    expect(mockPrisma.coopNews.create).not.toHaveBeenCalled();
+  });
+
   it("creates free-board replies under the top-level parent comment", async () => {
     mockGetSession.mockResolvedValue({ id: "member-2", role: "MEMBER" });
     mockPrisma.freeComment.findUnique.mockResolvedValue({
@@ -692,7 +733,51 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("button", { name: "댓글 1개 보기" })).toBeInTheDocument();
   });
 
-  it("shows a pulsing circular marker before the important notice badge", () => {
+  it("shows the selected display author name instead of the admin account name", () => {
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[{ ...realNotice, displayAuthorName: "사무국" }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("cell", { name: "사무국" })).toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "관리자" })).not.toBeInTheDocument();
+  });
+
+  it("does not append hardcoded mock notices to the notice board", () => {
+    const { rerender } = render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText("대방동 지역주택조합 공식 홈페이지 론칭 안내")).not.toBeInTheDocument();
+    expect(screen.queryByText("조합원 전용 정보공개 및 에스크로 자금보고 운영 규정")).not.toBeInTheDocument();
+    expect(screen.queryByText("사업시행인가 대비 설계·용역 실무 보고서 공람 안내")).not.toBeInTheDocument();
+    expect(screen.getByText("검색 조건에 맞는 공지사항이 존재하지 않습니다.")).toBeInTheDocument();
+
+    rerender(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[realNotice]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("실제 공지")).toBeInTheDocument();
+    expect(screen.queryByText("대방동 지역주택조합 공식 홈페이지 론칭 안내")).not.toBeInTheDocument();
+    expect(screen.queryByText("조합원 전용 정보공개 및 에스크로 자금보고 운영 규정")).not.toBeInTheDocument();
+    expect(screen.queryByText("사업시행인가 대비 설계·용역 실무 보고서 공람 안내")).not.toBeInTheDocument();
+  });
+
+  it("animates the important notice star without rendering the circular marker", () => {
     render(
       <NoticeBoard
         isLoggedIn
@@ -705,12 +790,16 @@ describe("news admin visible controls", () => {
     const titleCell = screen.getByText("실제 공지").closest("td");
     expect(titleCell).not.toBeNull();
 
-    const pulse = within(titleCell as HTMLElement).getByTestId("notice-important-pulse");
-    const badge = within(titleCell as HTMLElement).getByText("★ 중요");
+    const titleScope = within(titleCell as HTMLElement);
+    const star = titleScope.getByTestId("notice-important-star");
+    const badgeText = titleScope.getByText("중요");
 
-    expect(pulse).toHaveClass("animate-ping");
-    expect(pulse).toHaveClass("rounded-full");
-    expect(pulse.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(titleScope.queryByTestId("notice-important-pulse")).not.toBeInTheDocument();
+    expect(star).toHaveTextContent("★");
+    expect(star).toHaveClass("animate-ping");
+    expect(star).toHaveClass("motion-reduce:animate-none");
+    expect(star).not.toHaveClass("rounded-full");
+    expect(star.compareDocumentPosition(badgeText) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("opens the notice detail drawer from the left side", () => {
@@ -731,6 +820,52 @@ describe("news admin visible controls", () => {
     expect(drawer).toHaveClass("slide-in-from-left");
     expect(drawer).not.toHaveClass("right-0");
     expect(drawer).not.toHaveClass("slide-in-from-right");
+  });
+
+  it("submits the selected notice display author from the edit drawer", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          news: {
+            ...realNotice,
+            displayAuthorName: "사무국",
+            author: { name: "관리자", role: "ADMIN" },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ newsList: [{ ...realNotice, displayAuthorName: "사무국" }] }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <NewsClient
+        session={{ id: "admin-1", loginId: "admin", name: "관리자", role: "ADMIN" }}
+        initialNewsList={[{ ...realNotice, displayAuthorName: "운영자" }]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
+    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    fireEvent.click(within(drawer).getByRole("button", { name: "수정" }));
+
+    const authorSelect = within(drawer).getByLabelText("공지 작성자");
+    expect(authorSelect).toHaveValue("운영자");
+    fireEvent.change(authorSelect, { target: { value: "사무국" } });
+    fireEvent.click(within(drawer).getByRole("button", { name: "수정사항 저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"displayAuthorName\":\"사무국\""),
+      }),
+    ));
   });
 
   it("renders notice rich content with editor-matched body typography", () => {
@@ -883,6 +1018,46 @@ describe("news admin visible controls", () => {
       "/api/news",
       expect.objectContaining({
         body: expect.stringContaining("\"attachmentPath\":\"/uploads/agenda.pdf\""),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("submits the selected notice display author from the admin drawer", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, news: { ...realNotice, displayAuthorName: "사무국" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ 신규 공지사항 등록" }));
+    fireEvent.change(screen.getByLabelText("공지 작성자"), {
+      target: { value: "사무국" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("공지사항의 제목을 입력하십시오."), {
+      target: { value: "작성자 선택 공지" },
+    });
+    const editor = screen.getByRole("textbox", { name: "공지 내용 편집창" });
+    editor.innerHTML = "<p>작성자 선택 본문</p>";
+    fireEvent.input(editor);
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 즉시 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"displayAuthorName\":\"사무국\""),
       }),
     );
     expect(onRefresh).toHaveBeenCalled();

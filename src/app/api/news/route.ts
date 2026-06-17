@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 
 // 1. GET: 공지사항 및 조합뉴스 조회 (Public)
 export async function GET(request: Request) {
@@ -69,10 +70,16 @@ export async function POST(request: Request) {
       attachmentPath,
       attachmentName,
       attachmentSize,
+      displayAuthorName,
     } = body;
 
     if (!title || !content || !category) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 내용, 카테고리)이 누락되었습니다." }, { status: 400 });
+    }
+
+    const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);
+    if (!parsedDisplayAuthorName.ok) {
+      return NextResponse.json({ error: parsedDisplayAuthorName.error }, { status: 400 });
     }
 
     const news = await prisma.coopNews.create({
@@ -85,7 +92,18 @@ export async function POST(request: Request) {
         attachmentName: attachmentName || null,
         attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : null,
         isStarred: !!isStarred,
+        displayAuthorName: parsedDisplayAuthorName.value,
         authorId: session.id,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            loginId: true,
+            role: true,
+          },
+        },
       },
     });
 
@@ -118,6 +136,7 @@ export async function PATCH(request: Request) {
       attachmentPath,
       attachmentName,
       attachmentSize,
+      displayAuthorName,
     } = body;
 
     if (!id) {
@@ -126,6 +145,11 @@ export async function PATCH(request: Request) {
 
     if (!title || !content || !category) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 내용, 카테고리)이 누락되었습니다." }, { status: 400 });
+    }
+
+    const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);
+    if (!parsedDisplayAuthorName.ok) {
+      return NextResponse.json({ error: parsedDisplayAuthorName.error }, { status: 400 });
     }
 
     const news = await prisma.coopNews.update({
@@ -139,6 +163,9 @@ export async function PATCH(request: Request) {
         attachmentName: attachmentName || null,
         attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : null,
         isStarred: !!isStarred,
+        ...(displayAuthorName !== undefined
+          ? { displayAuthorName: parsedDisplayAuthorName.value }
+          : {}),
       },
       include: {
         author: {

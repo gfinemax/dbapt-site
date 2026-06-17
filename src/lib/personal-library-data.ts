@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/db";
 import { serializeContributionSummary, serializePaymentNotices } from "@/lib/contribution-serializer";
 import { loadContributionDashboardData } from "@/lib/contribution-dashboard-data";
+import { isDemoApprovedAccount } from "@/lib/demo-account-filter";
 import { serializeDocuments } from "@/lib/document-serializer";
+import { normalizeMemberType } from "@/lib/member-type";
+import { getUserContactDisplay } from "@/lib/user-contact-display";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
 import { type Document } from "@/components/portal/document-table";
 import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
@@ -40,6 +43,7 @@ export type PersonalLibraryData = {
     name: string;
     email: string;
     role: string;
+    memberType: string;
     createdAt: string;
   }[];
 };
@@ -155,15 +159,17 @@ export async function loadPersonalLibraryData(
       orderBy: { createdAt: "desc" },
     });
 
-    data.logs = docLogs.map((log) => ({
-      ...log,
-      createdAt: log.createdAt.toISOString(),
-      user: {
-        name: log.user.name || "이름 없음",
-        loginId: log.user.loginId || "소셜회원",
-        role: log.user.role,
-      },
-    }));
+    data.logs = docLogs
+      .filter((log) => !isDemoApprovedAccount(log.user))
+      .map((log) => ({
+        ...log,
+        createdAt: log.createdAt.toISOString(),
+        user: {
+          name: log.user.name || "이름 없음",
+          loginId: log.user.loginId || "소셜회원",
+          role: log.user.role,
+        },
+      }));
 
     const pendingUsers = await prisma.user.findMany({
       where: { role: "PENDING" },
@@ -181,18 +187,20 @@ export async function loadPersonalLibraryData(
 
     const approvedUsers = await prisma.user.findMany({
       where: {
-        email: { not: null },
-        role: { in: ["MEMBER", "REFUND"] },
+        role: { in: ["MEMBER", "REFUND", "ASSOCIATE"] },
       },
       orderBy: { updatedAt: "desc" },
     });
-    data.approvedSocialUsers = approvedUsers.map((user) => ({
-      id: user.id,
-      name: user.name || "이름 없음",
-      email: user.email || "이메일 없음",
-      role: user.role,
-      createdAt: user.createdAt.toISOString(),
-    }));
+    data.approvedSocialUsers = approvedUsers
+      .filter((user) => !isDemoApprovedAccount(user))
+      .map((user) => ({
+        id: user.id,
+        name: user.name || "이름 없음",
+        email: getUserContactDisplay(user),
+        role: user.role,
+        memberType: normalizeMemberType(user.memberType, user.role),
+        createdAt: user.createdAt.toISOString(),
+      }));
   }
 
   return data;

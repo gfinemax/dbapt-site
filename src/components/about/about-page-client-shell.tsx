@@ -40,6 +40,7 @@ type AboutPageClientShellProps = {
     name: string;
     email: string;
     role: string;
+    memberType?: string | null;
     createdAt: string;
   }[];
 };
@@ -58,6 +59,14 @@ export function AboutPageClientShell({
   const [portalCategory, setPortalCategory] = useState<string>("all");
   const [portalSearch, setPortalSearch] = useState<string>("");
   const personalLibraryLabel = getPersonalLibraryLabel(session);
+
+  const openPortalDrawer = (category = "all", search = "") => {
+    setIsAboutDrawerOpen(false);
+    setIsDisclosureDrawerOpen(false);
+    setPortalCategory(category);
+    setPortalSearch(search);
+    setIsDrawerOpen(true);
+  };
 
   // 드로어 활성화 시 본문 스크롤 차단 처리 (디테일한 UX 보장)
   useEffect(() => {
@@ -78,8 +87,8 @@ export function AboutPageClientShell({
       setIsDisclosureDrawerOpen(false);
       setIsDrawerOpen(true);
       if (e instanceof CustomEvent && e.detail) {
-        if (e.detail.category) setPortalCategory(e.detail.category);
-        if (e.detail.search) setPortalSearch(e.detail.search);
+        setPortalCategory(e.detail.category || "all");
+        setPortalSearch(e.detail.search || "");
       } else {
         setPortalCategory("all");
         setPortalSearch("");
@@ -132,7 +141,7 @@ export function AboutPageClientShell({
 
       {/* 2. 조합소개 페이지 콘텐츠 */}
       <main className="flex-1 animate-page-in">
-        <AboutClient onOpenPortal={() => setIsDrawerOpen(true)} />
+        <AboutClient onOpenPortal={openPortalDrawer} />
       </main>
 
       {/* 3. 사이트 공통 푸터 */}
@@ -243,7 +252,7 @@ export function AboutPageClientShell({
         </div>
 
         <div className="flex-1 mt-6">
-          <AboutClient onOpenPortal={() => { setIsAboutDrawerOpen(false); setIsDrawerOpen(true); }} />
+          <AboutClient onOpenPortal={openPortalDrawer} />
         </div>
       </div>
 

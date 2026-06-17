@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { AboutClient } from "@/components/about/about-client";
 import { PdfViewerModal } from "../portal/pdf-viewer-modal";
 import { SiteFooter } from "@/components/landing/site-footer";
@@ -44,6 +45,7 @@ type DisclosurePageClientShellProps = {
     name: string;
     email: string;
     role: string;
+    memberType?: string | null;
     createdAt: string;
   }[];
 };
@@ -58,6 +60,7 @@ export function DisclosurePageClientShell({
   pendingUsers = [],
   approvedSocialUsers = [],
 }: DisclosurePageClientShellProps) {
+  const searchParams = useSearchParams();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAboutDrawerOpen, setIsAboutDrawerOpen] = useState(false);
   const [isDisclosureDrawerOpen, setIsDisclosureDrawerOpen] = useState(false);
@@ -69,6 +72,17 @@ export function DisclosurePageClientShell({
     () => activeViewDoc ? getPdfRelatedDocument(activeViewDoc, documents) : null,
     [activeViewDoc, documents],
   );
+  const requestedDocumentId = searchParams.get("document");
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!requestedDocumentId) return;
+    const requestedDocument = documents.find((document) => document.id === requestedDocumentId);
+    if (requestedDocument) {
+      setActiveViewDoc(requestedDocument);
+    }
+  }, [documents, requestedDocumentId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // 드로어 활성화 시 본문 스크롤 차단 처리 (디테일한 UX 보장)
   useEffect(() => {

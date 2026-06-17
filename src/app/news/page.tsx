@@ -54,7 +54,7 @@ export default async function NewsPage() {
       updatedAt: item.updatedAt.toISOString(),
       author: {
         id: item.author.id,
-        name: item.author.name || "관리자",
+        name: item.displayAuthorName || item.author.name || "관리자",
         loginId: item.author.loginId || "admin",
         role: item.author.role,
       },

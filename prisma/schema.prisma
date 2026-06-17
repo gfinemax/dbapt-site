@@ -24,7 +24,8 @@ model User {
   phone                    String? // 운영 알림 발송용 검증 연락처
   kakaoNotificationOptIn   Boolean   @default(false) // 알림톡 발송 가능 동의/운영 확인 상태
   kakaoNotificationEnabled Boolean   @default(false) // 알림톡 발송 활성 상태
-  role                     String    @default("PENDING") // PENDING(대기), MEMBER(정식), REFUND(환불), ADMIN(관리자)
+  role                     String    @default("PENDING") // PENDING(대기), MEMBER(정식), REFUND(환불), ASSOCIATE(관계자/기타), ADMIN(관리자)
+  memberType               String    @default("REGULAR") // REGULAR(정식), PRELIMINARY(예비), REFUND(환불), ASSOCIATE(관계자/기타)
   isActive                 Boolean   @default(true) // 계정 활성 상태
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
@@ -520,6 +521,7 @@ model CoopNews {
   attachmentPath String? // 공지/조합뉴스 공개 첨부파일 경로
   attachmentName String? // 공지/조합뉴스 공개 첨부파일 원본명
   attachmentSize Int? // 공지/조합뉴스 공개 첨부파일 크기(bytes)
+  displayAuthorName String? // 공개 화면에 표시할 조직 작성자명
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   authorId       String

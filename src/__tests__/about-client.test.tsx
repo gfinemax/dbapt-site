@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AboutClient } from "@/components/about/about-client";
 
 describe("about client", () => {
@@ -76,6 +76,23 @@ describe("about client", () => {
     expect(screen.getAllByText("2026.04.18").length).toBeGreaterThan(1);
     expect(screen.queryByText("2013.05.01")).not.toBeInTheDocument();
     expect(screen.queryByText(/대표자 명의 변경|제2대 안동연 조합장/)).not.toBeInTheDocument();
+  });
+
+  it("links the 2022 district plan notice milestone to the library search", () => {
+    const openPortal = vi.fn();
+    render(<AboutClient onOpenPortal={openPortal} />);
+
+    const noticeLink = screen.getByRole("link", { name: "결정고시 자료 찾기" });
+
+    expect(screen.getByText("2022.06.30")).toBeInTheDocument();
+    expect(screen.getByText("서울특별시 고시 제2022-291호")).toBeInTheDocument();
+    expect(noticeLink).toHaveTextContent("인허가·고시자료");
+    expect(noticeLink).toHaveAttribute(
+      "href",
+      "/library?category=permits&q=%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EA%B3%A0%EC%8B%9C%20%EC%A0%9C2022-291%ED%98%B8",
+    );
+
+    expect(openPortal).not.toHaveBeenCalled();
   });
 
   it("shows a Naver map surface without using the redirect-prone Naver search iframe", () => {

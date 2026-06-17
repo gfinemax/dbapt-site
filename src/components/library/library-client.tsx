@@ -15,6 +15,7 @@ import { type Document } from "@/components/portal/document-table";
 import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 import { cn } from "@/lib/utils";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
+import { getSearchQueryTerms, searchTextMatchesQuery } from "@/lib/search-normalization";
 
 const accessLabel: Record<LibraryAccess, string> = {
   public: "공개",
@@ -60,19 +61,54 @@ type LibraryClientProps = {
   isLoggedIn?: boolean;
   isAdmin?: boolean;
   documents?: Document[];
+  initialCategory?: string;
+  initialSearch?: string;
 };
 
 const EMPTY_DOCUMENTS: Document[] = [];
 
-export function LibraryClient({ isLoggedIn = false, isAdmin = false, documents = EMPTY_DOCUMENTS }: LibraryClientProps) {
-  const [activeCategory, setActiveCategory] = useState("all");
+function getValidLibraryCategory(category?: string) {
+  if (!category) return "all";
+  return libraryCategories.some((item) => item.id === category) ? category : "all";
+}
+
+function getLibrarySearchText(item: (typeof libraryItems)[number]) {
+  const categoryLabel = libraryCategories.find((category) => category.id === item.category)?.label || "";
+  return [
+    item.title,
+    item.description,
+    item.source,
+    item.updatedAt,
+    categoryLabel,
+    sourceKindLabel[item.sourceKind],
+  ].join(" ");
+}
+
+export function LibraryClient({
+  isLoggedIn = false,
+  isAdmin = false,
+  documents = EMPTY_DOCUMENTS,
+  initialCategory,
+  initialSearch = "",
+}: LibraryClientProps) {
+  const [activeCategory, setActiveCategory] = useState(getValidLibraryCategory(initialCategory));
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [searchQuery, setSearchQuery] = useState(initialSearch.trim());
   const [activeMaterial, setActiveMaterial] = useState<(typeof libraryItems)[number] | null>(null);
   const [managedDocuments, setManagedDocuments] = useState<Document[]>(documents);
 
   const filteredItems = useMemo(() => {
-    if (activeCategory === "all") return libraryItems;
-    return libraryItems.filter((item) => item.category === activeCategory);
-  }, [activeCategory]);
+    const categoryItems =
+      activeCategory === "all"
+        ? libraryItems
+        : libraryItems.filter((item) => item.category === activeCategory);
+    const queryTerms = getSearchQueryTerms(searchQuery);
+
+    if (queryTerms.length === 0) return categoryItems;
+    return categoryItems.filter((item) =>
+      searchTextMatchesQuery(getLibrarySearchText(item), searchQuery),
+    );
+  }, [activeCategory, searchQuery]);
 
   const featuredItems = libraryItems.filter((item) =>
     featuredLibraryItemIds.includes(item.id as (typeof featuredLibraryItemIds)[number]),
@@ -84,6 +120,16 @@ export function LibraryClient({ isLoggedIn = false, isAdmin = false, documents =
       document.body.style.overflow = "";
     };
   }, [activeMaterial]);
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSearchQuery(searchInput.trim());
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+  };
 
   return (
     <div className="min-h-screen bg-warm-canvas">
@@ -186,6 +232,51 @@ export function LibraryClient({ isLoggedIn = false, isAdmin = false, documents =
             </h2>
           </div>
 
+          <form
+            aria-label="자료 검색"
+            onSubmit={handleSearchSubmit}
+            className="mb-5 rounded-2xl border border-stone-surface bg-white p-4 shadow-[inset_0_0_0_1px_var(--stone-surface)] sm:p-5"
+          >
+            <label htmlFor="library-search" className="text-sm font-bold text-charcoal-primary">
+              자료 찾기
+            </label>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ash" aria-hidden="true" />
+                <input
+                  id="library-search"
+                  type="search"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="예: 2022-291, 결정고시, 지구단위계획"
+                  className="h-12 w-full rounded-full border border-stone-surface bg-parchment-card pl-11 pr-4 text-sm text-charcoal-primary outline-none transition placeholder:text-ash focus:border-ember-orange focus:bg-white focus:ring-2 focus:ring-ember-orange/15"
+                />
+              </div>
+              <button
+                type="submit"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-midnight px-5 text-sm font-bold text-white transition hover:bg-charcoal-primary cursor-pointer"
+              >
+                <Search className="size-4" aria-hidden="true" />
+                찾기
+              </button>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-stone-surface px-4 text-xs font-bold text-graphite transition hover:bg-white cursor-pointer"
+                >
+                  초기화
+                </button>
+              )}
+            </div>
+          </form>
+
+          {searchQuery && (
+            <p className="mb-5 rounded-2xl bg-parchment-card px-4 py-3 text-sm text-graphite">
+              검색어 <strong className="text-charcoal-primary">{searchQuery}</strong> 기준으로 <strong className="text-charcoal-primary">{filteredItems.length}건</strong>의 자료를 찾았습니다.
+            </p>
+          )}
+
           <nav aria-label="자료실 분류" className="mb-6 overflow-x-auto">
             <div className="flex min-w-max gap-2 pb-1">
               {libraryCategories.map((category) => (
@@ -207,14 +298,20 @@ export function LibraryClient({ isLoggedIn = false, isAdmin = false, documents =
           </nav>
 
           <div className="space-y-3">
-            {filteredItems.map((item) => (
-              <LibraryCard
-                key={item.id}
-                item={item}
-                isLoggedIn={isLoggedIn}
-                onOpenMaterial={setActiveMaterial}
-              />
-            ))}
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => (
+                <LibraryCard
+                  key={item.id}
+                  item={item}
+                  isLoggedIn={isLoggedIn}
+                  onOpenMaterial={setActiveMaterial}
+                />
+              ))
+            ) : (
+              <div className="rounded-2xl border border-stone-surface bg-white p-6 text-sm text-graphite">
+                검색 조건에 맞는 자료가 없습니다. 다른 검색어를 입력하거나 분류를 전체로 변경해 주세요.
+              </div>
+            )}
           </div>
         </section>
       </main>
@@ -426,6 +523,13 @@ const fallbackMaterialEntries: Record<string, MaterialEntry[]> = {
       meta: "자료실 참고 · 외부 공식 출처",
     },
   ],
+  "district-plan-notice-2022": [
+    {
+      title: "서울특별시 고시 제2022-291호",
+      description: "대방동 11-103번지 일대 도시관리계획(지구단위계획) 결정 및 지형도면 고시 원문을 보관할 공개자료 위치입니다.",
+      meta: "공개자료 · 인허가·고시자료 · 2022.06.30",
+    },
+  ],
 };
 
 const disclosureUploadHrefByItemId: Record<string, string> = {
@@ -460,6 +564,8 @@ function getRealMaterialEntries(itemId: string, documents: Document[]): Material
         return /계약|협약|용역/.test(text);
       case "audit-report":
         return doc.category === "ACCOUNTING" || /회계|감사|자금|분담금/.test(text);
+      case "district-plan-notice-2022":
+        return /서울특별시 고시 제2022-291호|2022-291|지구단위계획|지형도면|결정고시|인허가|고시/.test(text);
       default:
         return false;
     }
@@ -508,7 +614,12 @@ function LibraryMaterialPanel({
     },
   ];
   const entries = realEntries.length > 0 ? realEntries : fallbackEntries;
-  const listLabel = item.id === "meeting-minutes" ? "의사록 리스트" : `${item.title} 리스트`;
+  const listLabel =
+    item.id === "meeting-minutes"
+      ? "의사록 리스트"
+      : item.id === "district-plan-notice-2022"
+        ? "인허가·고시자료 리스트"
+        : `${item.title} 리스트`;
 
   return (
     <div className="fixed inset-0 z-[90]">

@@ -7,7 +7,15 @@ import {
 } from "@/lib/personal-library-data";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 
-export default async function LibraryPage() {
+type LibraryPageProps = {
+  searchParams?: Promise<{
+    category?: string;
+    q?: string;
+  }>;
+};
+
+export default async function LibraryPage({ searchParams }: LibraryPageProps = {}) {
+  const resolvedSearchParams = await searchParams;
   const session = (await getSession()) as PersonalLibrarySession | null;
   let personalLibraryData = emptyPersonalLibraryData();
 
@@ -25,6 +33,8 @@ export default async function LibraryPage() {
         isLoggedIn={!!session}
         isAdmin={session?.role === "ADMIN"}
         documents={personalLibraryData.documents}
+        initialCategory={resolvedSearchParams?.category}
+        initialSearch={resolvedSearchParams?.q}
       />
     </PersonalLibraryDrawerHost>
   );

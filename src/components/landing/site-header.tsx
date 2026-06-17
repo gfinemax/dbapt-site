@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { megaMenuNavigation } from "@/content/landing";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,8 @@ const getRoleLabel = (r: string) => {
       return "정식 조합원";
     case "REFUND":
       return "환불 조합원";
+    case "ASSOCIATE":
+      return "관계자 및 기타 승인 계정";
     default:
       return r;
   }
@@ -40,6 +42,8 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
   const isLoggedIn = !!session;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<string | null>(null);
   const personalLibraryLabel = getPersonalLibraryLabel(session);
@@ -86,6 +90,16 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
     window.dispatchEvent(new CustomEvent('close-portal'));
     setIsMobileMenuOpen(false);
     router.push("/library");
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const normalizedQuery = searchQuery.trim();
+    if (!normalizedQuery) return;
+
+    setIsSearchOpen(false);
+    setIsMobileMenuOpen(false);
+    router.push(`/search?q=${encodeURIComponent(normalizedQuery)}`);
   };
 
   const handleMyRoomClick = () => {
@@ -165,6 +179,22 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         
         {/* 우측 인증 액션 셸 */}
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen((value) => !value)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition active:scale-95 cursor-pointer",
+              isSearchOpen
+                ? "border-midnight bg-midnight text-white"
+                : "border-stone-surface bg-white text-graphite shadow-sm hover:bg-stone-surface hover:text-charcoal-primary",
+            )}
+            aria-label="전체 찾기"
+            aria-expanded={isSearchOpen}
+            aria-controls="site-global-search-panel"
+          >
+            <Search className="size-3.5" aria-hidden="true" />
+            <span className="hidden sm:inline">전체 찾기</span>
+          </button>
           {isLoggedIn && session ? (
             <>
               {/* 미니 프로필 드롭다운 위젯 (데스크톱 md 해상도 이상에서만 노출) */}
@@ -213,6 +243,15 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-stone-surface flex items-center justify-between">
+                      {session.role === "ADMIN" && (
+                        <Link
+                          href="/portal/admin/members"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="text-[11px] font-bold text-charcoal-primary hover:text-ember-orange"
+                        >
+                          조합원 관리
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           if (onOpenPortal) onOpenPortal();
@@ -255,6 +294,57 @@ export function SiteHeader({ session, onOpenPortal }: SiteHeaderProps) {
         </div>
       </div>
       </header>
+      )}
+
+      {isSearchOpen && !isPortalRoute && (
+        <div
+          id="site-global-search-panel"
+          role="dialog"
+          aria-label="전체 찾기"
+          className="fixed inset-x-0 top-18 z-45 border-b border-stone-surface bg-warm-canvas/95 px-4 py-4 shadow-sm backdrop-blur"
+        >
+          <form
+            onSubmit={handleSearchSubmit}
+            className="site-container flex max-w-3xl flex-col gap-3 rounded-2xl border border-stone-surface bg-white p-4 shadow-[inset_0_0_0_1px_var(--stone-surface)] sm:flex-row sm:items-end"
+          >
+            <div className="min-w-0 flex-1">
+              <label htmlFor="site-global-search-input" className="text-sm font-bold text-charcoal-primary">
+                전체 검색어
+              </label>
+              <p className="mt-1 text-xs text-graphite">
+                조합 홈페이지 전체에서 찾습니다.
+              </p>
+              <div className="relative mt-3">
+                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ash" aria-hidden="true" />
+                <input
+                  id="site-global-search-input"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="예: 결정고시, 총회, 위치, 환불"
+                  className="h-12 w-full rounded-full border border-stone-surface bg-parchment-card pl-11 pr-4 text-sm text-charcoal-primary outline-none transition placeholder:text-ash focus:border-ember-orange focus:bg-white focus:ring-2 focus:ring-ember-orange/15"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-midnight px-5 text-sm font-bold text-white transition hover:bg-charcoal-primary cursor-pointer sm:flex-none"
+              >
+                <Search className="size-4" aria-hidden="true" />
+                찾기
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(false)}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-stone-surface px-4 text-xs font-bold text-graphite transition hover:bg-white cursor-pointer"
+                aria-label="전체 찾기 닫기"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       {isLoggedIn && session && !isPortalRoute && (

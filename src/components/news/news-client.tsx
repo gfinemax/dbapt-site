@@ -7,6 +7,11 @@ import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  NEWS_DISPLAY_AUTHOR_NAMES,
+  type NewsDisplayAuthorName,
+  getNewsDisplayAuthorName,
+} from "@/lib/news-display-author";
 import { cn } from "@/lib/utils";
 import { NoticeBoard } from "./notice-board";
 import { FreeBoard } from "./free-board";
@@ -120,6 +125,8 @@ export function NewsClient({
   const [editAttachmentSize, setEditAttachmentSize] = useState<number | null>(null);
   const [editAttachmentFile, setEditAttachmentFile] = useState<File | null>(null);
   const [editIsStarred, setEditIsStarred] = useState(false);
+  const [editDisplayAuthorName, setEditDisplayAuthorName] =
+    useState<NewsDisplayAuthorName>("운영자");
   const [isSavingNotice, setIsSavingNotice] = useState(false);
   const [noticeCommentContent, setNoticeCommentContent] = useState("");
   const [isSubmittingNoticeComment, setIsSubmittingNoticeComment] = useState(false);
@@ -186,6 +193,11 @@ export function NewsClient({
     setEditAttachmentSize(activeViewNotice.attachmentSize || null);
     setEditAttachmentFile(null);
     setEditIsStarred(!!activeViewNotice.isStarred);
+    setEditDisplayAuthorName(
+      NEWS_DISPLAY_AUTHOR_NAMES.includes(activeViewNotice.displayAuthorName)
+        ? activeViewNotice.displayAuthorName
+        : "운영자",
+    );
     setIsEditingNotice(true);
   };
 
@@ -222,6 +234,7 @@ export function NewsClient({
           attachmentName,
           attachmentSize,
           isStarred: editIsStarred,
+          displayAuthorName: editDisplayAuthorName,
         }),
       });
 
@@ -236,7 +249,10 @@ export function NewsClient({
         createdAt: data.news.createdAt,
         updatedAt: data.news.updatedAt,
         author: {
-          name: data.news.author?.name || activeViewNotice.author?.name || "관리자",
+          name: getNewsDisplayAuthorName({
+            displayAuthorName: data.news.displayAuthorName ?? activeViewNotice.displayAuthorName,
+            author: data.news.author || activeViewNotice.author,
+          }),
           role: data.news.author?.role || activeViewNotice.author?.role || "ADMIN",
         },
       };
@@ -244,6 +260,7 @@ export function NewsClient({
       setActiveViewNotice({
         ...updatedNotice,
         createdAt: String(updatedNotice.createdAt).slice(0, 10).replace(/-/g, "."),
+        displayAuthorName: editDisplayAuthorName,
         isReal: true,
       });
       setIsEditingNotice(false);
@@ -704,6 +721,24 @@ export function NewsClient({
                     >
                       수정 취소
                     </button>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="edit-notice-display-author" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      공지 작성자
+                    </label>
+                    <select
+                      id="edit-notice-display-author"
+                      value={editDisplayAuthorName}
+                      onChange={(e) => setEditDisplayAuthorName(e.target.value as NewsDisplayAuthorName)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                    >
+                      {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="space-y-1.5">

@@ -86,6 +86,7 @@ async function main() {
       passwordHash: adminPasswordHash,
       name: "운영자",
       role: "ADMIN",
+      memberType: "REGULAR",
     },
   });
 
@@ -95,6 +96,7 @@ async function main() {
       passwordHash: memberPasswordHash,
       name: "이조합 (정식조합원)",
       role: "MEMBER",
+      memberType: "REGULAR",
     },
   });
 
@@ -104,6 +106,7 @@ async function main() {
       passwordHash: refundPasswordHash,
       name: "박정산 (환불조합원)",
       role: "REFUND",
+      memberType: "REFUND",
     },
   });
 

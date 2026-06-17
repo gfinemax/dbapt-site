@@ -6,6 +6,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import {
+  NEWS_DISPLAY_AUTHOR_NAMES,
+  type NewsDisplayAuthorName,
+  getNewsDisplayAuthorName,
+} from "@/lib/news-display-author";
 import { cn } from "@/lib/utils";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
@@ -17,63 +22,17 @@ type NoticeBoardProps = {
   onRefresh: () => Promise<void>;
 };
 
-const MOCK_NOTICES = [
-  {
-    id: "mock-notice-1",
-    title: "대방동 지역주택조합 공식 홈페이지 론칭 안내",
-    content: "당 조합은 주택법령의 의무 정보공개 대상 자료 일체를 투명하게 개방하고, 조합원 간의 신속한 양방향 소통을 보장하기 위해 본 정식 홈페이지를 론칭하였습니다. 앞으로 모든 공지사항과 사업 진행 과정이 본 창구를 통해 공정하게 공개됩니다. 조합원 동지 여러분의 적극적인 참여와 성원을 부탁드립니다.",
-    viewCount: 142,
-    isStarred: true,
-    author: { name: "사무국" },
-    createdAt: "2026.05.26",
-    imagePath: null,
-    attachmentPath: null,
-    attachmentName: null,
-    attachmentSize: null,
-    comments: [],
-  },
-  {
-    id: "mock-notice-2",
-    title: "조합원 전용 정보공개 및 에스크로 자금보고 운영 규정",
-    content: "조합원님의 자산 가치 보호와 분담금 임의 유출 방지를 수호하기 위한 에스크로 계좌 실시간 입출금 명세서 및 외부감사 법인 감사보고서 열람이 조합원 전용 로그인 세션 내에서 안전하게 가동 중입니다. 승인된 조합원 락 권한 내에서 안심하고 투명하게 조회하십시오.",
-    viewCount: 95,
-    isStarred: false,
-    author: { name: "감사단" },
-    createdAt: "2026.05.25",
-    imagePath: null,
-    attachmentPath: null,
-    attachmentName: null,
-    attachmentSize: null,
-    comments: [],
-  },
-  {
-    id: "mock-notice-3",
-    title: "사업시행인가 대비 설계·용역 실무 보고서 공람 안내",
-    content: "서울시 지구단위계획 결정 고시 완수 이후, 2026년 상반기 사업시행인가 본신청 및 건축심의 통과를 위해 협력사(하우드엔지니어링, 솔롱고스대행사 등)와 공조하여 작성한 설계 도면 부속서 및 월별 상황판을 공개자료실에 정밀 등재하였습니다.",
-    viewCount: 78,
-    isStarred: false,
-    author: { name: "사무국" },
-    createdAt: "2026.04.15",
-    imagePath: null,
-    attachmentPath: null,
-    attachmentName: null,
-    attachmentSize: null,
-    comments: [],
-  },
-] as const;
-
 function getNoticeComments(notice: any) {
   return Array.isArray(notice?.comments) ? notice.comments : [];
 }
 
-function ImportantNoticePulse() {
+function ImportantNoticeStar() {
   return (
-    <span className="relative inline-flex size-2.5 shrink-0" aria-hidden="true">
-      <span
-        data-testid="notice-important-pulse"
-        className="absolute inline-flex size-full rounded-full bg-ember-orange/75 opacity-75 animate-ping motion-reduce:animate-none"
-      />
-      <span className="relative inline-flex size-2.5 rounded-full bg-ember-orange" />
+    <span
+      data-testid="notice-important-star"
+      className="inline-block text-ember-orange animate-ping motion-reduce:animate-none"
+    >
+      ★
     </span>
   );
 }
@@ -110,9 +69,11 @@ export function NoticeBoard({
   const [uploadContent, setUploadContent] = useState("");
   const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
+  const [uploadDisplayAuthorName, setUploadDisplayAuthorName] =
+    useState<NewsDisplayAuthorName>("운영자");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Combine real database data with simulated demonstration mocks
+  // Show only database-backed notices. Demo copy must not appear in operations.
   const combinedData = useMemo(() => {
     const realNotices = newsList.map((item) => ({
       id: item.id,
@@ -120,7 +81,11 @@ export function NoticeBoard({
       content: item.content,
       viewCount: item.viewCount,
       isStarred: item.isStarred,
-      author: item.author,
+      author: {
+        ...item.author,
+        name: getNewsDisplayAuthorName(item),
+      },
+      displayAuthorName: item.displayAuthorName,
       createdAt: item.createdAt.slice(0, 10).replace(/-/g, "."),
       imagePath: item.imagePath,
       attachmentPath: item.attachmentPath,
@@ -130,23 +95,18 @@ export function NoticeBoard({
       isReal: true,
     }));
 
-    let filteredReal = realNotices;
-    let filteredMock = [...MOCK_NOTICES].map((n) => ({ ...n, isReal: false }));
-
+    let filteredNotices = realNotices;
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
-      filteredReal = filteredReal.filter((n) => n.title.toLowerCase().includes(q));
-      filteredMock = filteredMock.filter((n) => n.title.toLowerCase().includes(q));
+      filteredNotices = filteredNotices.filter((n) => n.title.toLowerCase().includes(q));
     }
 
     // Starred notices go on top
-    const sortedReal = filteredReal.sort((a, b) => {
+    return filteredNotices.sort((a, b) => {
       if (a.isStarred && !b.isStarred) return -1;
       if (!a.isStarred && b.isStarred) return 1;
       return b.createdAt.localeCompare(a.createdAt);
     });
-
-    return [...sortedReal, ...filteredMock];
   }, [newsList, searchQuery]);
 
   const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
@@ -196,6 +156,7 @@ export function NoticeBoard({
           attachmentName,
           attachmentSize,
           isStarred: uploadIsStarred,
+          displayAuthorName: uploadDisplayAuthorName,
         }),
       });
 
@@ -209,6 +170,7 @@ export function NoticeBoard({
       setUploadContent("");
       setUploadAttachmentFile(null);
       setUploadIsStarred(false);
+      setUploadDisplayAuthorName("운영자");
       setShowUploadModal(false);
       await onRefresh();
     } catch (err) {
@@ -333,8 +295,8 @@ export function NoticeBoard({
                       <span className="text-[13px] leading-snug flex items-center gap-1.5 flex-wrap">
                         {notice.isStarred && (
                           <span className="inline-flex items-center gap-1.5 rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
-                            <ImportantNoticePulse />
-                            <span>★ 중요</span>
+                            <ImportantNoticeStar />
+                            <span>중요</span>
                           </span>
                         )}
                         <span className={cn(notice.isStarred ? "font-bold text-charcoal-primary" : "text-charcoal-primary/90")}>
@@ -528,6 +490,24 @@ export function NoticeBoard({
             </div>
 
             <form onSubmit={handleUploadSubmit} className="space-y-5 flex-1">
+              <div className="space-y-1.5">
+                <label htmlFor="notice-display-author" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  공지 작성자
+                </label>
+                <select
+                  id="notice-display-author"
+                  value={uploadDisplayAuthorName}
+                  onChange={(e) => setUploadDisplayAuthorName(e.target.value as NewsDisplayAuthorName)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                >
+                  {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
                   공지 제목 *

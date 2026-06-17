@@ -1,0 +1,5 @@
+ALTER TABLE "User" ADD COLUMN "memberType" TEXT NOT NULL DEFAULT 'REGULAR';
+
+UPDATE "User"
+SET "memberType" = 'REFUND'
+WHERE "role" = 'REFUND';

@@ -168,6 +168,24 @@ describe("role-specific portal preview pages", () => {
     ).toBeInTheDocument();
   });
 
+  it("lets members show and hide the login password", async () => {
+    const Page = findPage("../app/login/page.tsx");
+    if (!Page) return;
+
+    render(await Page({ searchParams: Promise.resolve({}) }));
+
+    const passwordInput = screen.getByLabelText("비밀번호", { selector: 'input[name="password"]' });
+
+    expect(passwordInput).toHaveAttribute("type", "password");
+    expect(passwordInput).toHaveAttribute("autoComplete", "current-password");
+
+    fireEvent.click(screen.getByRole("button", { name: "비밀번호 보기" }));
+    expect(passwordInput).toHaveAttribute("type", "text");
+
+    fireEvent.click(screen.getByRole("button", { name: "비밀번호 숨기기" }));
+    expect(passwordInput).toHaveAttribute("type", "password");
+  });
+
   it("warns mobile embedded browser users before Google OAuth", async () => {
     vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
       "Mozilla/5.0 (Linux; Android 14; SM-S928N Build/UP1A) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/125.0.0.0 Mobile Safari/537.36 wv",

@@ -17,6 +17,7 @@ import { ContributionSummaryMini } from "./contribution-summary-mini";
 import { PortalHamburger } from "./portal-hamburger";
 import { buildContributionDashboardView } from "@/lib/contribution-dashboard";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
+import { normalizeMemberType } from "@/lib/member-type";
 import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 
 // 헬퍼 함수 파일 레벨 최상단 배치 (ESLint 선언 순서 및 렌더링 낭비 방지)
@@ -28,6 +29,8 @@ const getRoleLabel = (r: string) => {
       return "정식 조합원";
     case "REFUND":
       return "환불 조합원";
+    case "ASSOCIATE":
+      return "관계자/기타 승인 계정";
     default:
       return r;
   }
@@ -100,6 +103,7 @@ type PortalShellProps = {
     name: string;
     email: string;
     role: string;
+    memberType?: string | null;
     createdAt: string;
   }[];
   isDrawerMode?: boolean;
@@ -159,6 +163,19 @@ export function PortalShell({
   const [welcomeModalConfig, setWelcomeModalConfig] = useState({ title: "", description: "", isUpgrade: true });
   const [showToast, setShowToast] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const approvedMemberTypeCounts = approvedSocialUsers.reduce(
+    (counts, user) => {
+      const memberType = normalizeMemberType(user.memberType, user.role);
+      counts[memberType] += 1;
+      return counts;
+    },
+    {
+      REGULAR: 0,
+      PRELIMINARY: 0,
+      REFUND: 0,
+      ASSOCIATE: 0,
+    },
+  );
 
   // 토스트 트리거 함수 (선언 순서 준수를 위해 이펙트 위 배치)
   const triggerLoginToast = () => {
@@ -538,6 +555,12 @@ export function PortalShell({
                           <li>• 총 보안 다운로드 수: <strong className="text-charcoal-primary font-semibold">{logs.length}회</strong></li>
                           <li>• 승인 대기 중 소셜 회원: <strong className="text-ember-orange font-semibold">{pendingUsers.length}명</strong></li>
                         </ul>
+                        <Link
+                          href="/portal/admin/members"
+                          className="mt-5 inline-flex items-center rounded-full bg-midnight px-4 py-2 text-xs font-semibold text-white transition hover:bg-charcoal-primary"
+                        >
+                          PeopleOn 조합원 관리
+                        </Link>
                       </div>
                       <div>
                         <DocumentUploadForm onSuccess={() => {
@@ -565,7 +588,7 @@ export function PortalShell({
                             <thead>
                               <tr className="border-b border-[#f2f0ed] text-graphite/80 font-medium">
                                 <th className="pb-3 pr-4">신청인 명의</th>
-                                <th className="pb-3 pr-4">이메일</th>
+                                <th className="pb-3 pr-4">이메일/휴대폰</th>
                                 <th className="pb-3 pr-4">가입 신청일</th>
                                 <th className="pb-3 text-right">권한 부여 액션</th>
                               </tr>
@@ -664,83 +687,44 @@ export function PortalShell({
                     </div>
                   </article>
 
-                  {/* 소셜 가입 완료 회원 권한 관리 섹션 */}
+                  {/* 가입 승인 완료 회원 권한 관리 요약 */}
                   <article className="stone-card p-6 bg-white md:col-span-2">
-                    <h2 className="text-xl font-semibold text-charcoal-primary">소셜 가입 회원 자격 변경 관리</h2>
-                    <p className="mt-2 text-xs text-graphite">
-                      이미 가입이 승인된 구글 로그인 회원의 권한을 정식 조합원(MEMBER)과 환불 조합원(REFUND) 간에 자유롭게 전환할 수 있습니다.
-                    </p>
-
-                    <div className="mt-6 border-t border-[#f2f0ed] pt-4">
-                      {approvedSocialUsers.length === 0 ? (
-                        <p className="py-6 text-center text-xs text-graphite/70">
-                          권한 변경이 가능한 소셜 회원이 존재하지 않습니다. (최초 구글 로그인 가입 승인 후 표시됩니다.)
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 className="text-xl font-semibold text-charcoal-primary">가입 승인 회원 자격 변경 관리</h2>
+                        <p className="mt-2 text-xs leading-5 text-graphite">
+                          자격별 현황만 요약하고, 실제 변경 작업은 전용 관리 페이지에서 처리합니다.
                         </p>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="border-b border-[#f2f0ed] text-graphite/80 font-medium">
-                                <th className="pb-3 pr-4">소셜 회원 명의</th>
-                                <th className="pb-3 pr-4">이메일</th>
-                                <th className="pb-3 pr-4">현재 권한 상태</th>
-                                <th className="pb-3 text-right">자격 강제 전환 액션</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#f8f7f4]">
-                              {approvedSocialUsers.map((user) => (
-                                <tr key={user.id} className="text-charcoal-primary">
-                                  <td className="py-3.5 pr-4 font-semibold">{user.name}</td>
-                                  <td className="py-3.5 pr-4 font-mono">{user.email}</td>
-                                  <td className="py-3.5 pr-4">
-                                    <span className={cn(
-                                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold",
-                                      user.role === "MEMBER"
-                                        ? "bg-meadow-green/10 text-meadow-green"
-                                        : "bg-ember-orange/10 text-ember-orange"
-                                    )}>
-                                      {user.role === "MEMBER" ? "정식 조합원 (MEMBER)" : "환불 조합원 (REFUND)"}
-                                    </span>
-                                  </td>
-                                  <td className="py-3.5 text-right flex justify-end gap-2">
-                                    {user.role === "MEMBER" ? (
-                                      <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        className="rounded-full h-8 px-3 text-[11px] font-semibold text-ember-orange hover:bg-ember-orange/5 cursor-pointer"
-                                        onClick={async () => {
-                                          const res = await approveUserAction(user.id, "REFUND");
-                                          if (res.success) {
-                                            alert(`${user.name}님의 자격을 환불 조합원(REFUND)으로 강제 전환했습니다.`);
-                                            router.refresh();
-                                          }
-                                        }}
-                                      >
-                                        환불 조합원(REFUND) 자격으로 강제 변경
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        size="sm"
-                                        variant="default"
-                                        className="rounded-full h-8 px-3 text-[11px] font-semibold cursor-pointer"
-                                        onClick={async () => {
-                                          const res = await approveUserAction(user.id, "MEMBER");
-                                          if (res.success) {
-                                            alert(`${user.name}님의 자격을 정식 조합원(MEMBER)으로 강제 전환했습니다.`);
-                                            router.refresh();
-                                          }
-                                        }}
-                                      >
-                                        정식 조합원(MEMBER) 자격으로 강제 변경
-                                      </Button>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+                      </div>
+                      <Link
+                        href="/portal/admin/members#approved-member-conversion"
+                        className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-midnight px-4 text-xs font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                      >
+                        회원 자격 관리로 이동
+                      </Link>
+                    </div>
+
+                    <div className="mt-5 grid gap-2 sm:grid-cols-5">
+                      <div className="rounded-xl bg-[#f8f7f4] px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                        <p className="text-[11px] font-medium text-ash">전체 승인 계정</p>
+                        <p className="mt-1 text-sm font-semibold text-charcoal-primary">총 {approvedSocialUsers.length}명</p>
+                      </div>
+                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                        <p className="text-[11px] font-medium text-ash">정식</p>
+                        <p className="mt-1 text-sm font-semibold text-meadow-green">정식조합원 {approvedMemberTypeCounts.REGULAR}명</p>
+                      </div>
+                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                        <p className="text-[11px] font-medium text-ash">예비</p>
+                        <p className="mt-1 text-sm font-semibold text-charcoal-primary">예비조합원 {approvedMemberTypeCounts.PRELIMINARY}명</p>
+                      </div>
+                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                        <p className="text-[11px] font-medium text-ash">환불</p>
+                        <p className="mt-1 text-sm font-semibold text-ember-orange">환불조합원 {approvedMemberTypeCounts.REFUND}명</p>
+                      </div>
+                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                        <p className="text-[11px] font-medium text-ash">관계자/기타</p>
+                        <p className="mt-1 text-sm font-semibold text-sky-blue">기타 승인계정 {approvedMemberTypeCounts.ASSOCIATE}명</p>
+                      </div>
                     </div>
                   </article>
                 </>

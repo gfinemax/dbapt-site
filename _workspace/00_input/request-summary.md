@@ -2,36 +2,43 @@
 
 ## Requested Feature Slice
 
-Update the logged-in refund-member portal status card:
-
-- add truthful guidance that refund-member refund/settlement and payment status will be reflected after ERP program integration
-- keep the message scoped to the logged-in refund-member personal screen
-- make the refund/settlement/payment status card use the full available horizontal width
-- preserve existing approved refund/payment values when data is already supplied
-- remove demo test account information from the login page entirely, even when demo-related environment flags are present
-- replace the new-member signup request flow with a phone-number and password application form
-- enforce the approved password rules: at least 8 characters, letters plus numbers, optional special characters, and no phone-number, date-like birthdate, repeated-character, or sequential-number patterns
-- create phone-password signup requests as `PENDING` users for office approval
-- preserve a phone login ID when office staff later approve the pending user
-- remove the admin-account destination helper text from the login page route guidance
-- make `신규 가입 신청` switch to a dedicated signup screen instead of expanding a form inside the member login screen
-- remove the login destination route guidance card from the login/signup page composition
-- add a login-page account permission guide explaining 정식 조합원, 환불 조합원, and 관계자/기타 승인 계정 access differences without reintroducing admin destination guidance
+- Add a first-pass 관리자 전용 조합원 관리 page.
+- Integrate the PeopleOn members table API as a read-only server-side source.
+- Show counts for 등기조합원, 환불 조합원, 홈페이지 가입 완료, 가입 승인 대기, 홈페이지 미가입, and 자격 불일치.
+- List PeopleOn target members who are missing from the homepage, pending approval, or mismatched against homepage role state.
+- Add an admin portal entry point to the new page.
+- Follow-up: Treat preliminary cooperative members as `MEMBER` access accounts while keeping a separate membership classification.
+- Follow-up: Show a `자격 구분` column in the approved-member conversion list and PeopleOn member action list.
+- Follow-up: Add preliminary-member conversion actions and make refund-to-regular conversion update both access role and membership type.
+- Follow-up: Replace multiple force-conversion buttons with a dropdown plus a single apply button.
+- Follow-up: Add `관계자/기타 승인 계정` as a distinct approved account type.
+- Follow-up: Add a show/hide toggle for the member login password field and assess security impact.
+- Follow-up: Prevent the administrator home/personal library from growing vertically as approved accounts increase by replacing the full approved-member conversion list with summary badges and a link to the dedicated management page.
+- Follow-up: Exclude demo/mock approved accounts from approved-member management lists and security audit/download history.
+- Follow-up: Remove hardcoded mock notice posts from the public notice board so only database-backed notices appear.
+- Follow-up: Let administrators choose the public notice author label as `운영자` or `사무국` when creating a notice.
+- Follow-up: Remove the circular red pulsing marker from important notice badges and apply the pulsing animation to the `★` mark itself.
 
 ## Explicitly Excluded Scope
 
-- Calling a live ERP endpoint
-- Adding browser-side ERP integration
-- Changing authentication, authorization, or routing boundaries
-- Changing member/admin portal surfaces
-- Changing refund calculation logic or stored values
-- Adding new public navigation
-- Implementing SMS phone verification, general email signup, arbitrary login ID signup, password reset, email verification, or Kakao OAuth in this pass
+- Writing to PeopleOn.
+- Scheduled sync.
+- Persisting PeopleOn snapshots.
+- Manual matching save flow.
+- Bulk account creation.
+- New public navigation.
+- New member-role mutation actions beyond the existing admin approval/conversion workflow.
+- A dedicated UI for manually assigning `PRELIMINARY` membership type.
+- Persisting password visibility preference.
+- Changing password submission, hashing, or authentication policy.
+- Removing the approved-member conversion workflow.
+- Deleting real member accounts or audit records from the database.
+- Deleting real notice posts from the database.
+- Hiding or changing the underlying admin account that created a notice.
 
 ## Candidate Governing Specification
 
-`docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`
-`docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+`docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
 
 ## Unanswered Decision
 

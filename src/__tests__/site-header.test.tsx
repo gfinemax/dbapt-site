@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 
 const navigationState = vi.hoisted(() => ({
   pathname: "/",
+  push: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -12,7 +13,7 @@ vi.mock("next/navigation", () => ({
   },
   useRouter() {
     return {
-      push: vi.fn(),
+      push: navigationState.push,
       refresh: vi.fn(),
     };
   },
@@ -25,6 +26,7 @@ vi.mock("@/lib/auth", () => ({
 describe("site header", () => {
   afterEach(() => {
     navigationState.pathname = "/";
+    navigationState.push.mockClear();
   });
 
   it("keeps auth badges out of the public header for logged-out users", () => {
@@ -103,6 +105,42 @@ describe("site header", () => {
       "-translate-x-1/2",
       "rounded-full",
       "bg-ember-orange",
+    );
+  });
+
+  it("opens the global search panel and submits to the full search page", () => {
+    render(<SiteHeader />);
+
+    fireEvent.click(screen.getByRole("button", { name: "전체 찾기" }));
+
+    expect(screen.getByRole("dialog", { name: "전체 찾기" })).toBeInTheDocument();
+    expect(screen.getByText("조합 홈페이지 전체에서 찾습니다.")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "전체 검색어" }), {
+      target: { value: "결정고시" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "찾기" }));
+
+    expect(navigationState.push).toHaveBeenCalledWith("/search?q=%EA%B2%B0%EC%A0%95%EA%B3%A0%EC%8B%9C");
+  });
+
+  it("shows an admin member-management shortcut in the profile dropdown", () => {
+    render(
+      <SiteHeader
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /운영자님관리자/ }));
+
+    expect(screen.getByRole("link", { name: "조합원 관리" })).toHaveAttribute(
+      "href",
+      "/portal/admin/members",
     );
   });
 });

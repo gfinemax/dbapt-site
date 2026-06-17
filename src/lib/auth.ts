@@ -9,6 +9,7 @@ import {
   normalizePhoneLoginId,
   validateSignupPassword,
 } from "./signup-password";
+import { normalizeMemberType, type MemberType } from "./member-type";
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "default-secret-key-at-least-32-characters-long-dbapt"
@@ -192,11 +193,26 @@ export async function logoutAction() {
   });
 }
 
-export async function approveUserAction(userId: string, targetRole: "MEMBER" | "REFUND") {
+export async function approveUserAction(
+  userId: string,
+  targetRole: "MEMBER" | "REFUND" | "ASSOCIATE",
+  targetMemberType?: MemberType,
+) {
   try {
     // 임시 조합원/환불 번호 자동 매핑
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const loginId = targetRole === "MEMBER" ? `g_member_${randomSuffix}` : `g_refund_${randomSuffix}`;
+    const loginId =
+      targetRole === "MEMBER"
+        ? `g_member_${randomSuffix}`
+        : targetRole === "REFUND"
+          ? `g_refund_${randomSuffix}`
+          : `g_associate_${randomSuffix}`;
+    const memberType =
+      targetRole === "REFUND"
+        ? "REFUND"
+        : targetRole === "ASSOCIATE"
+          ? "ASSOCIATE"
+          : normalizeMemberType(targetMemberType, targetRole);
     const pendingUser = await prisma.user.findUnique({
       where: { id: userId },
       select: { loginId: true },
@@ -206,6 +222,7 @@ export async function approveUserAction(userId: string, targetRole: "MEMBER" | "
       where: { id: userId },
       data: {
         role: targetRole,
+        memberType,
         ...(pendingUser?.loginId ? {} : { loginId }),
       }
     });

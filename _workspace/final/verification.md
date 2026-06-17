@@ -2,42 +2,188 @@
 
 ## Implemented Feature
 
-- Updated `src/components/portal/portal-shell.tsx` so the logged-in refund-member status card spans the full portal grid width.
-- Added a truthful ERP-sync guidance panel: refund-member refund/settlement and payment status will be reflected in the member's own screen after ERP program integration.
-- Kept existing approved refund/payment values visible when supplied by the server.
-- Added `src/__tests__/portal-shell.test.tsx` coverage for the full-width refund card and ERP guidance copy.
-- Updated `src/app/login/login-client.tsx` so demo test account information is no longer rendered on the login page.
-- Added `src/__tests__/portal-preview-pages.test.tsx` coverage to ensure demo credential strings remain hidden even if `NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS=true`.
-- Replaced the Google-based signup request UI with a phone-number and password application form.
-- Added `signupWithPhonePasswordAction` in `src/lib/auth.ts` to create `PENDING` users with normalized phone login IDs and hashed passwords.
-- Added password validation for 8+ characters, letters plus numbers, optional special characters, and blocked phone-number, date-like birthdate, repeated-character, and sequential-number patterns.
-- Updated office approval logic so existing phone login IDs are preserved when pending users are approved.
-- Added `src/__tests__/phone-signup-auth.test.ts` coverage for password rules, pending phone signup creation, password hashing, and approval preserving phone login IDs.
-- Removed the admin-account destination helper text from the login page route guidance.
-- Changed `신규 가입 신청` so it opens a dedicated signup screen instead of expanding inside the member login screen.
-- Removed the login destination route guidance card from the login/signup page.
-- Added a login-page account permission guide for 정식 조합원, 환불 조합원, and 관계자/기타 승인 계정 access differences.
+- Added `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`.
+- Added `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`.
+- Added `src/lib/admin/member-management.ts` for PeopleOn member row fetching, homepage account matching, and action/stat snapshot generation.
+- Added `src/components/portal/member-management-dashboard.tsx` for the admin-only 조합원 관리 dashboard.
+- Added `src/app/portal/admin/members/page.tsx` as an admin-only server-rendered management page.
+- Added a `PeopleOn 조합원 관리` link from the existing administrator portal summary card.
+- Added a `조합원 관리` shortcut inside the logged-in administrator profile dropdown on the public header.
+- Updated the administrator role-conversion list to include every approved MEMBER/REFUND account, including phone/password accounts without email.
+- Updated the role-conversion section copy from social-only wording to approved-member wording.
+- Updated the role-conversion contact column to show email when present, otherwise formatted phone/signupPhone/loginId.
+- Added `User.memberType` with migration `20260617000000_add_user_member_type` to distinguish `REGULAR`, `PRELIMINARY`, and `REFUND` separately from access `role`.
+- Updated approved-member role conversion rows to show `자격 구분`.
+- Updated PeopleOn snapshot logic to treat 원장 예비조합원 rows as `expectedRole=MEMBER` and `expectedMemberType=PRELIMINARY`.
+- Updated the PeopleOn member management dashboard to show `예비 조합원` stats and a `자격 구분` action-list column.
+- Updated `approveUserAction` to accept an optional target membership type, allowing `MEMBER + PRELIMINARY`.
+- Updated the approved-member conversion action cell to show conversion buttons for every other local membership type: 정식조합원, 예비조합원, 환불조합원.
+- Replaced multiple conversion buttons with a dropdown plus one `자격 변경` button per row.
+- Added `ASSOCIATE` role/member type for 관계자/기타 승인 계정 and included it in approved-account conversion queries.
+- Added a show/hide toggle to the member login password input.
+- Added `autoComplete="current-password"` to the member login password input.
+- Added `src/components/portal/approved-member-conversion-panel.tsx` for the full approved-member conversion table.
+- Replaced the administrator home approved-member conversion table with compact total/member-type summary badges and a `회원 자격 관리로 이동` link.
+- Moved the full approved-member conversion workflow to `/portal/admin/members#approved-member-conversion`.
+- Added `src/lib/demo-account-filter.ts` to exclude known demo/mock approved accounts from management lists and audit-log presentation.
+- Applied the demo/mock approved-account filter to `/portal/admin`, `/portal/admin/members`, `loadPersonalLibraryData`, `/about`, and `/disclosure` authenticated administrator data paths.
+- Removed hardcoded mock notice posts from `NoticeBoard`; `/news?tab=notice` now renders only database-backed notice rows or the existing empty state.
+- Added `CoopNews.displayAuthorName` with migration `20260618000000_add_coop_news_display_author` so public notice author labels can be selected separately from the underlying admin `authorId`.
+- Added `src/lib/news-display-author.ts` for allowed notice author labels and display-name fallback handling.
+- Added a `작성자` selector to the administrator notice creation drawer with `운영자` and `사무국` options.
+- Added the same `공지 작성자` selector to the existing notice edit form so 수정 mode can change `운영자` / `사무국`.
+- Removed the separate circular red pulse marker from the public notice-board important badge.
+- Applied the existing reduced-motion-safe pulse animation directly to the important badge `★` mark.
+- Added tests:
+  - `src/__tests__/member-management-sync.test.ts`
+  - `src/__tests__/member-management-dashboard.test.tsx`
+  - updated `src/__tests__/portal-shell.test.tsx`
+  - updated `src/__tests__/site-header.test.tsx`
+  - `src/__tests__/admin-member-role-management.test.tsx`
+  - updated `src/__tests__/portal-shell.test.tsx` for `이메일/휴대폰`
+  - updated `src/__tests__/portal-preview-pages.test.tsx` for login password visibility
+  - updated `src/__tests__/portal-shell.test.tsx` for the compact admin-home conversion summary
+  - updated `src/__tests__/member-management-dashboard.test.tsx` for the dedicated conversion table
+  - updated `src/__tests__/admin-member-role-management.test.tsx` for demo/mock account and audit-log exclusion
+  - `src/__tests__/personal-library-data.test.ts`
+  - updated `src/__tests__/news-admin-controls.test.tsx` for hardcoded notice mock exclusion
+  - updated `src/__tests__/news-admin-controls.test.tsx` for notice display-author API validation, selected-label submission, and selected-label rendering
+  - updated `src/__tests__/news-admin-controls.test.tsx` for selected-label PATCH submission from the notice edit drawer
+  - updated `src/__tests__/news-admin-controls.test.tsx` for the important badge star animation and circular marker removal
 
 ## Checks Run
 
-- `pnpm test -- src/__tests__/portal-shell.test.tsx`: PASS, 1 file / 6 tests
-- `pnpm test -- src/__tests__/portal-preview-pages.test.tsx`: PASS, 1 file / 6 tests
-- `pnpm test -- src/__tests__/phone-signup-auth.test.ts`: PASS, 1 file / 3 tests
-- `pnpm test -- src/__tests__/phone-signup-auth.test.ts src/__tests__/portal-preview-pages.test.tsx src/__tests__/portal-shell.test.tsx`: PASS, 3 files / 15 tests
-- `pnpm test -- src/__tests__/portal-preview-pages.test.tsx`: PASS, 1 file / 6 tests
-- `pnpm test -- src/__tests__/about-client.test.tsx src/__tests__/landing-page.test.tsx src/__tests__/library-page.test.tsx src/__tests__/portal-shell.test.tsx`: PASS, 4 files / 34 tests
-- `pnpm test -- src/__tests__/disclosure-page.test.tsx src/__tests__/news-admin-controls.test.tsx`: PASS, 2 files / 65 tests
-- `pnpm lint`: PASS
-- `pnpm test`: PASS, 35 files / 209 tests
-- `pnpm build`: PASS
-- `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/login`: PASS, 200 OK; phone-or-member-ID login copy present; signup entry point present; demo credential heading absent
+- `pnpm test -- src/__tests__/member-management-sync.test.ts`: RED first, failed because `@/lib/admin/member-management` did not exist.
+- `pnpm test -- src/__tests__/member-management-sync.test.ts`: PASS, 1 file / 1 test after snapshot utility implementation.
+- `pnpm test -- src/__tests__/member-management-sync.test.ts`: RED for API adapter, failed because `fetchPeopleOnMemberRows` did not exist.
+- `pnpm test -- src/__tests__/member-management-sync.test.ts`: PASS, 1 file / 2 tests after API adapter implementation.
+- `pnpm test -- src/__tests__/member-management-dashboard.test.tsx`: RED first, failed because dashboard component did not exist.
+- `pnpm test -- src/__tests__/member-management-dashboard.test.tsx`: PASS, 1 file / 2 tests after dashboard implementation.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx`: RED for admin entry link, failed because `PeopleOn 조합원 관리` link did not exist.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx`: PASS, 1 file / 7 tests after link implementation.
+- `pnpm test -- src/__tests__/site-header.test.tsx`: RED for homepage administrator dropdown shortcut, failed because `조합원 관리` link did not exist.
+- `pnpm test -- src/__tests__/site-header.test.tsx`: PASS, 1 file / 7 tests after dropdown shortcut implementation.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx`: RED for email-less role-conversion accounts, failed because the admin page still filtered approved users with `email: { not: null }`.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx`: PASS, 1 file / 1 test after removing the email filter.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx src/__tests__/portal-shell.test.tsx`: RED for phone contact display, failed because email-less approved users still rendered `이메일 없음` and the table header still said `이메일`.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx src/__tests__/portal-shell.test.tsx`: PASS, 2 files / 9 tests after contact display implementation.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx src/__tests__/admin-member-role-management.test.tsx src/__tests__/portal-personal-library-loader.test.tsx`: PASS, 3 files / 10 tests.
+- `pnpm test -- src/__tests__/member-management-sync.test.ts src/__tests__/member-management-dashboard.test.tsx src/__tests__/portal-shell.test.tsx`: PASS, 3 files / 11 tests.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx src/__tests__/portal-shell.test.tsx src/__tests__/member-management-sync.test.ts src/__tests__/member-management-dashboard.test.tsx`: RED for `memberType` follow-up before implementation.
+- `pnpm exec prisma generate`: PASS after adding `User.memberType`.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx src/__tests__/portal-shell.test.tsx src/__tests__/member-management-sync.test.ts src/__tests__/member-management-dashboard.test.tsx`: PASS, 4 files / 14 tests.
+- `pnpm test -- src/__tests__/phone-signup-auth.test.ts src/__tests__/portal-shell.test.tsx`: RED for missing preliminary approval handling and missing preliminary conversion button.
+- `pnpm test -- src/__tests__/phone-signup-auth.test.ts src/__tests__/portal-shell.test.tsx`: PASS, 2 files / 14 tests after action/API fix.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx src/__tests__/member-management-sync.test.ts src/__tests__/member-management-dashboard.test.tsx src/__tests__/phone-signup-auth.test.ts src/__tests__/portal-shell.test.tsx`: PASS, 5 files / 19 tests.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx`: RED for old role-conversion explanatory copy that mentioned only MEMBER/REFUND.
+- `pnpm test -- src/__tests__/portal-shell.test.tsx`: PASS after updating the copy to 정식/예비/환불.
+- `pnpm test -- src/__tests__/phone-signup-auth.test.ts src/__tests__/portal-shell.test.tsx`: RED for missing `ASSOCIATE` handling and missing dropdown conversion UI.
+- `pnpm test -- src/__tests__/phone-signup-auth.test.ts src/__tests__/portal-shell.test.tsx src/__tests__/admin-member-role-management.test.tsx`: PASS after adding `ASSOCIATE` and dropdown action UI.
+- `pnpm test -- src/__tests__/admin-member-role-management.test.tsx src/__tests__/member-management-sync.test.ts src/__tests__/member-management-dashboard.test.tsx src/__tests__/phone-signup-auth.test.ts src/__tests__/portal-shell.test.tsx src/__tests__/site-header.test.tsx`: PASS, 6 files / 27 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: initially failed after Prisma Client regeneration because the local DB had not applied `User.memberType`, and `phone-signup-auth.test.ts` expected the old update payload.
+- `pnpm exec prisma migrate deploy`: PASS, applied `20260617000000_add_user_member_type`.
+- `pnpm test`: PASS, 40 files / 232 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm lint`: PASS after conversion-action fix.
+- `pnpm test`: PASS, 40 files / 234 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm lint`: PASS after dropdown/ASSOCIATE change.
+- `pnpm test`: PASS, 40 files / 235 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS. Build output includes `/portal/admin/members`.
+- `pnpm vitest run src/__tests__/portal-preview-pages.test.tsx`: RED first for missing `current-password` and password visibility toggle.
+- `pnpm vitest run src/__tests__/portal-preview-pages.test.tsx`: PASS, 1 file / 7 tests after adding the login password toggle.
+- `pnpm lint`: PASS after login password toggle.
+- `pnpm test`: PASS, 40 files / 236 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after login password toggle. Build output includes `/login`.
+- `pnpm vitest run src/__tests__/portal-shell.test.tsx src/__tests__/member-management-dashboard.test.tsx`: RED first for expected compact summary and missing dedicated conversion table.
+- `pnpm vitest run src/__tests__/portal-shell.test.tsx src/__tests__/member-management-dashboard.test.tsx`: PASS, 2 files / 12 tests after moving the conversion workflow.
+- `pnpm lint`: PASS after admin-home summary/dedicated conversion table change.
+- `pnpm test`: PASS, 40 files / 236 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after admin-home summary/dedicated conversion table change. Build output includes `/portal/admin` and `/portal/admin/members`.
+- `pnpm vitest run src/__tests__/admin-member-role-management.test.tsx src/__tests__/personal-library-data.test.ts`: RED first because demo/mock approved accounts and audit logs were still included.
+- `pnpm vitest run src/__tests__/admin-member-role-management.test.tsx src/__tests__/personal-library-data.test.ts`: PASS, 2 files / 2 tests after adding the demo account filter.
+- `pnpm lint`: PASS after demo/mock account filtering.
+- `pnpm test`: PASS, 41 files / 237 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after demo/mock account filtering. Build output includes `/portal/admin` and `/portal/admin/members`.
+- `pnpm vitest run src/__tests__/admin-member-role-management.test.tsx src/__tests__/personal-library-data.test.ts`: RED after tightening the requirement because `OH Hakdong` / `gfinemax@gmail.com` was still filtered out by a broad demo-name rule.
+- `pnpm vitest run src/__tests__/admin-member-role-management.test.tsx src/__tests__/personal-library-data.test.ts`: PASS after narrowing demo filtering to seed login IDs only.
+- `pnpm lint`: PASS after narrowing demo filtering.
+- `pnpm test`: PASS, 41 files / 237 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after narrowing demo filtering.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "does not append hardcoded mock notices"`: RED first because `NoticeBoard` still appended hardcoded mock notices to an empty real notice list.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "does not append hardcoded mock notices"`: PASS after removing hardcoded notice mocks.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 1 file / 34 tests.
+- `pnpm lint`: PASS after hardcoded notice mock removal.
+- `pnpm test`: PASS, 41 files / 238 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after hardcoded notice mock removal. Build output includes `/news`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "display author|selected notice display author"`: RED first because `displayAuthorName` was not persisted, unsupported labels were accepted, the notice table showed the admin account name, and the drawer had no `작성자` select.
+- `pnpm exec prisma generate`: PASS after adding `CoopNews.displayAuthorName`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "display author|selected notice display author"`: PASS, 1 file / 4 tests after API, schema, and drawer implementation.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 1 file / 38 tests.
+- `pnpm exec prisma migrate deploy`: PASS, applied `20260618000000_add_coop_news_display_author`.
+- `pnpm lint`: PASS after notice author-label selector implementation.
+- `pnpm test`: PASS, 41 files / 242 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after notice author-label selector implementation. Build output includes `/news` and `/api/news`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "selected notice display author"`: RED first for edit mode because the existing notice edit form did not expose `공지 작성자`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "selected notice display author"`: PASS, 1 file / 2 tests after adding the edit-form selector and PATCH payload.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 1 file / 39 tests.
+- `pnpm lint`: PASS after adding the edit-form notice author selector.
+- `pnpm test`: PASS, 41 files / 243 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after adding the edit-form notice author selector. Build output includes `/news` and `/api/news`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "animates the important notice star"`: RED first because `notice-important-star` did not exist and the old circular pulse marker was still rendered.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "animates the important notice star"`: PASS after replacing the circular marker with the animated `★`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 1 file / 39 tests.
+- `pnpm lint`: PASS after important badge microinteraction update.
+- `pnpm test`: PASS, 41 files / 243 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after important badge microinteraction update. Build output includes `/news`.
 
 ## Browser Checks
 
-- Codex in-app Browser capability was not exposed in this session. Tool discovery exposed Node REPL instead.
-- Playwright import was available, but browser launch was blocked because the local Chromium executable was not installed under the Playwright cache.
-- Fallback component-test, production build, and HTTP verification completed for the rendered refund-member portal card and login page, including the `md:col-span-2` full-width layout class, ERP guidance copy, phone-password signup UI coverage, account permission guidance, demo credential removal, and route-guidance removal.
+- Codex in-app Browser connection was attempted after reading the Browser skill, but this session reported `Browser is not available: iab`.
+- Playwright browser automation used the local Chrome executable because the bundled Playwright browser was not installed.
+- Restarted the stale local `next dev` process on `127.0.0.1:3000` after Prisma Client regeneration; the old process did not know the new `memberType` field.
+- Browser check with admin login:
+  - `http://127.0.0.1:3000/portal/admin`: `가입 승인 회원 자격 변경 관리`, `이메일/휴대폰`, `자격 구분`, `정식조합원`, and `환불조합원` present.
+  - `http://127.0.0.1:3000/portal/admin`: earlier browser check confirmed the previous button-based 정식/예비/환불 conversion action before it was replaced by the dropdown.
+  - `http://127.0.0.1:3000/portal/admin`: dropdown browser check confirmed 5 conversion selects, options `정식조합원`, `예비조합원`, `환불조합원`, `관계자/기타 승인 계정`, and a single `자격 변경` button per row.
+  - `http://127.0.0.1:3000/portal/admin/members`: 200 OK; `조합원 관리`, `예비 조합원`, and `확인 필요 조합원` present. The table header is not visible in this local run because `PEOPLEON_MEMBERS_API_KEY` is not configured and there are no action rows.
+- Fallback HTTP verification against the running local dev server completed with a local admin session cookie:
+  - `GET http://127.0.0.1:3000/portal/admin/members`: 200 OK; `조합원 관리`, `PeopleOn 원장`, and `홈페이지 미가입` present.
+  - `GET http://127.0.0.1:3000/portal/admin`: 200 OK; `PeopleOn 조합원 관리` and `/portal/admin/members` present.
+  - `GET http://127.0.0.1:3000/portal/admin`: 200 OK with admin cookie; `가입 승인 회원 자격 변경 관리` present and old `소셜 가입 회원 자격 변경 관리` absent.
+  - `GET http://127.0.0.1:3000/portal/admin`: 200 OK with admin cookie; `이메일/휴대폰` contact header present.
+- Playwright browser check against `http://127.0.0.1:3000/login`:
+  - Desktop `1440x900`: password input starts as `password`, toggles to `text`, then back to `password`; `autocomplete=current-password` present.
+  - Mobile `390x844`: password input starts as `password`, toggles to `text`, then back to `password`; the icon button remains inside the input bounds.
+- Playwright browser check with an admin session cookie:
+  - `http://127.0.0.1:3000/portal/admin`: summary title/copy and `회원 자격 관리로 이동` link present; full conversion table contact header and `자격 변경` buttons absent.
+  - `http://127.0.0.1:3000/portal/admin/members#approved-member-conversion`: `조합원 관리`, `가입 승인 회원 자격 변경 관리`, `이메일/휴대폰`, five conversion selects, and five `자격 변경` buttons present in the local fixture.
+  - Mobile `390x844`: `/portal/admin` and `/portal/admin/members#approved-member-conversion` both had `hasHorizontalOverflow=false`.
+- Playwright browser check with an admin session cookie after demo/mock filtering:
+  - `http://127.0.0.1:3000/portal/admin`: `OH Hakdong` and `g_member_7642` absent; `보안 감사 및 다운로드 이력` still present.
+  - `http://127.0.0.1:3000/portal/admin/members#approved-member-conversion`: `OH Hakdong` and `g_member_7642` absent; `가입 승인 회원 자격 변경 관리` still present.
+- HTTP check with an admin session cookie after narrowing demo filtering:
+  - `GET http://127.0.0.1:3000/portal/admin/members#approved-member-conversion`: 200 OK; `gfinemax@gmail.com`, `OH Hakdong`, and `가입 승인 회원 자격 변경 관리` present; seed login IDs `member1` and `refund1` absent.
+- Browser plugin check after hardcoded notice mock removal:
+  - Codex in-app Browser connection was retried after reading the Browser skill, but this session reported `Browser is not available: iab`.
+  - Local Chrome is installed, but this project does not have Playwright packages installed, so no standalone browser automation was run.
+- Fallback HTTP verification against the running local dev server after hardcoded notice mock removal:
+  - `GET http://127.0.0.1:3000/news?tab=notice`: 200 OK; `공지사항` present.
+  - The hardcoded mock titles `대방동 지역주택조합 공식 홈페이지 론칭 안내`, `조합원 전용 정보공개 및 에스크로 자금보고 운영 규정`, and `사업시행인가 대비 설계·용역 실무 보고서 공람 안내` were absent.
+- Browser plugin check after notice author-label selector implementation:
+  - Codex in-app Browser connection was retried after reading the Browser skill, but this session reported `Browser is not available: iab`.
+- Fallback HTTP verification against the running local dev server after notice author-label selector implementation:
+  - `GET http://127.0.0.1:3000/news?tab=notice`: 200 OK; `공지사항` present.
+  - The drawer-level `작성자` selector and selected-label submission are covered by `src/__tests__/news-admin-controls.test.tsx`.
+- Fallback bundle verification after adding the edit-form notice author selector:
+  - `.next/dev` contains `edit-notice-display-author` and `공지 작성자`.
+  - `GET http://127.0.0.1:3000/news?tab=notice`: 200 OK; `공지사항` present.
+- Fallback HTTP/bundle verification after important badge microinteraction update:
+  - Browser-specific tool was not exposed in this session and Playwright packages are not installed in local `node_modules`.
+  - `GET http://127.0.0.1:3000/news?tab=notice`: 200 OK.
+  - The page response no longer contains `notice-important-pulse` and contains `notice-important-star`.
+  - `.next` bundle contains `notice-important-star` and no source reference renders `notice-important-pulse`.
 
 ## Unresolved Risks Or Follow-Up Specs
 
-- none
+- `PEOPLEON_MEMBERS_API_KEY` or `PEOPLEON_MEMBERS_API_KEYS` must be set in the deployment environment for live PeopleOn 원장 comparison.
+- Manual matching save flow, scheduled sync, and bulk account creation remain intentionally excluded.

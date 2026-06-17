@@ -88,6 +88,57 @@ describe("phone password signup auth", () => {
       where: { id: "pending-1" },
       data: {
         role: "MEMBER",
+        memberType: "REGULAR",
+      },
+    });
+  });
+
+  it("can approve a member account as preliminary while keeping MEMBER access", async () => {
+    const { approveUserAction } = await import("@/lib/auth");
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "pending-1",
+      loginId: "01012345678",
+    });
+    prismaMock.user.update.mockResolvedValue({
+      id: "pending-1",
+      loginId: "01012345678",
+      role: "MEMBER",
+      memberType: "PRELIMINARY",
+    });
+
+    const result = await approveUserAction("pending-1", "MEMBER", "PRELIMINARY");
+
+    expect(result).toEqual({ success: true, role: "MEMBER" });
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "pending-1" },
+      data: {
+        role: "MEMBER",
+        memberType: "PRELIMINARY",
+      },
+    });
+  });
+
+  it("can approve an account as an associate or other approved account", async () => {
+    const { approveUserAction } = await import("@/lib/auth");
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "pending-1",
+      loginId: "01012345678",
+    });
+    prismaMock.user.update.mockResolvedValue({
+      id: "pending-1",
+      loginId: "01012345678",
+      role: "ASSOCIATE",
+      memberType: "ASSOCIATE",
+    });
+
+    const result = await approveUserAction("pending-1", "ASSOCIATE", "ASSOCIATE");
+
+    expect(result).toEqual({ success: true, role: "ASSOCIATE" });
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "pending-1" },
+      data: {
+        role: "ASSOCIATE",
+        memberType: "ASSOCIATE",
       },
     });
   });

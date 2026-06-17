@@ -1,6 +1,9 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isDemoApprovedAccount } from "@/lib/demo-account-filter";
 import { serializeDocuments } from "@/lib/document-serializer";
+import { normalizeMemberType } from "@/lib/member-type";
+import { getUserContactDisplay } from "@/lib/user-contact-display";
 import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
 import { type DisclosureCardContent, type DisclosureEmptyMessage } from "@/components/disclosure/disclosure-client";
 import { type Document } from "@/components/portal/document-table";
@@ -36,7 +39,7 @@ export default async function DisclosurePage() {
     targetDate: string | null;
   } | null = null;
   let pendingUsers: { id: string; name: string; email: string; signupName?: string | null; signupPhone?: string | null; signupMemo?: string | null; createdAt: string }[] = [];
-  let approvedSocialUsers: { id: string; name: string; email: string; role: string; createdAt: string }[] = [];
+  let approvedSocialUsers: { id: string; name: string; email: string; role: string; memberType: string; createdAt: string }[] = [];
 
   try {
     const disclosureCardContent = getDisclosureCardContentDelegate();
@@ -116,15 +119,17 @@ export default async function DisclosurePage() {
           orderBy: { createdAt: "desc" },
         });
 
-        logs = docLogs.map(log => ({
-          ...log,
-          createdAt: log.createdAt.toISOString(),
-          user: {
-            name: log.user.name || "이름 없음",
-            loginId: log.user.loginId || "소셜회원",
-            role: log.user.role,
-          }
-        }));
+        logs = docLogs
+          .filter((log) => !isDemoApprovedAccount(log.user))
+          .map(log => ({
+            ...log,
+            createdAt: log.createdAt.toISOString(),
+            user: {
+              name: log.user.name || "이름 없음",
+              loginId: log.user.loginId || "소셜회원",
+              role: log.user.role,
+            }
+          }));
 
         const pUsers = await prisma.user.findMany({
           where: { role: "PENDING" },
@@ -142,18 +147,20 @@ export default async function DisclosurePage() {
 
         const approvedUsersRaw = await prisma.user.findMany({
           where: {
-            email: { not: null },
-            role: { in: ["MEMBER", "REFUND"] },
+            role: { in: ["MEMBER", "REFUND", "ASSOCIATE"] },
           },
           orderBy: { updatedAt: "desc" },
         });
-        approvedSocialUsers = approvedUsersRaw.map(u => ({
-          id: u.id,
-          name: u.name || "이름 없음",
-          email: u.email || "이메일 없음",
-          role: u.role,
-          createdAt: u.createdAt.toISOString(),
-        }));
+        approvedSocialUsers = approvedUsersRaw
+          .filter((u) => !isDemoApprovedAccount(u))
+          .map(u => ({
+            id: u.id,
+            name: u.name || "이름 없음",
+            email: getUserContactDisplay(u),
+            role: u.role,
+            memberType: normalizeMemberType(u.memberType, u.role),
+            createdAt: u.createdAt.toISOString(),
+          }));
       }
     } catch (e) {
       console.error("Error loading disclosure page session data:", e);
