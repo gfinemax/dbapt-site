@@ -113,12 +113,14 @@ export default async function NewsPage() {
         ...post,
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
+        postType: post.postType || "FREE",
         author: {
           id: post.author.id,
           name: post.author.name || "조합원",
           signupName: post.author.signupName,
           loginId: post.author.loginId || "social",
           role: post.author.role,
+          displayAuthorName: post.displayAuthorName,
         },
         comments: post.comments.map((c) => ({
           ...c,
@@ -129,6 +131,7 @@ export default async function NewsPage() {
             signupName: c.author.signupName,
             loginId: c.author.loginId || "social",
             role: c.author.role,
+            displayAuthorName: c.displayAuthorName,
           },
         })),
       }));

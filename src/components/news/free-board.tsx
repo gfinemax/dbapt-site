@@ -6,7 +6,20 @@
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { copyTextToClipboard } from "@/lib/copy-to-clipboard";
+import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-response";
 import { cn } from "@/lib/utils";
+import {
+  FREE_POST_TYPES,
+  type FreePostType,
+  getFreePostTypeMeta,
+  getFreePostTypeOptions,
+  normalizeFreePostType,
+} from "@/lib/free-post-type";
+import {
+  NEWS_DISPLAY_AUTHOR_NAMES,
+  type NewsDisplayAuthorName,
+} from "@/lib/news-display-author";
 import { getUserDisplayName } from "@/lib/user-display-name";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
@@ -27,7 +40,20 @@ type FreeBoardCommentView = {
 };
 
 function formatFreeBoardDate(value: string) {
-  return value.includes("T") ? value.slice(0, 16).replace("T", " ") : value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value.includes("T") ? value.slice(0, 16).replace("T", " ") : value;
+  }
+
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
 }
 
 function buildCommentTree(comments: any[]): FreeBoardCommentView[] {
@@ -35,7 +61,7 @@ function buildCommentTree(comments: any[]): FreeBoardCommentView[] {
     id: comment.id,
     content: comment.content,
     createdAt: formatFreeBoardDate(comment.createdAt),
-    author: comment.author,
+    author: { ...comment.author, displayAuthorName: comment.displayAuthorName },
     parentId: comment.parentId || null,
     replies: [] as FreeBoardCommentView[],
     isReal: comment.isReal ?? true,
@@ -59,16 +85,24 @@ function FreeBoardPostRows({
   index,
   authorLabel,
   showDeletePost,
+  showOpenChatCopy,
+  openChatCopyStatus,
   onOpen,
   onDelete,
+  onOpenChatCopy,
 }: {
   post: any;
   index: number;
   authorLabel: string;
   showDeletePost: boolean;
+  showOpenChatCopy: boolean;
+  openChatCopyStatus?: "copying" | "copied" | "error";
   onOpen: () => void;
   onDelete: (params: { postId?: string; commentId?: string }) => void;
+  onOpenChatCopy: (post: any) => void;
 }) {
+  const typeMeta = getFreePostTypeMeta(post.postType);
+
   return (
     <tr
       onClick={onOpen}
@@ -88,8 +122,8 @@ function FreeBoardPostRows({
                 ★ 중요
               </span>
             )}
-            <span className="rounded bg-stone-surface px-1.5 py-0.5 text-[9px] font-extrabold text-charcoal-primary">
-              정식 토론
+            <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-extrabold", typeMeta.badgeClassName)}>
+              {typeMeta.label}
             </span>
             <span className="text-[13px] font-bold text-charcoal-primary leading-snug">
               {post.title}
@@ -119,18 +153,42 @@ function FreeBoardPostRows({
         </button>
       </td>
       <td className="px-5 py-4 text-center">
-        {showDeletePost && (
-          <button
-            type="button"
-            aria-label="게시글 삭제"
-            onClick={(event) => {
-              event.stopPropagation();
-              onDelete({ postId: post.id });
-            }}
-            className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
-          >
-            삭제
-          </button>
+        {(showOpenChatCopy || showDeletePost) && (
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {showOpenChatCopy && (
+              <button
+                type="button"
+                aria-label={`${post.title} 오픈채팅 공지문 복사`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenChatCopy(post);
+                }}
+                disabled={openChatCopyStatus === "copying"}
+                className="rounded-full border border-meadow-green/25 bg-meadow-green/10 px-2.5 py-1 text-[10px] font-bold text-meadow-green hover:bg-meadow-green/15 disabled:opacity-60"
+              >
+                {openChatCopyStatus === "copying" ? "복사 중" : "공지문 복사"}
+              </button>
+            )}
+            {showOpenChatCopy && openChatCopyStatus === "copied" && (
+              <span className="text-[9px] font-bold text-meadow-green">복사됨</span>
+            )}
+            {showOpenChatCopy && openChatCopyStatus === "error" && (
+              <span className="text-[9px] font-bold text-ember-orange">실패</span>
+            )}
+            {showDeletePost && (
+              <button
+                type="button"
+                aria-label="게시글 삭제"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete({ postId: post.id });
+                }}
+                className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
+              >
+                삭제
+              </button>
+            )}
+          </div>
         )}
       </td>
     </tr>
@@ -146,9 +204,11 @@ export function FreeBoard({
   const isAdmin = session?.role === "ADMIN";
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<FreePostType | "ALL">("ALL");
   const [showWriteModal, setShowWriteModal] = useState(false);
   const [focusedPostId, setFocusedPostId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, "copying" | "copied" | "error">>({});
 
   useEffect(() => {
     setMounted(true);
@@ -171,6 +231,8 @@ export function FreeBoard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPost, setEditingPost] = useState<any | null>(null);
   const [writeIsStarred, setWriteIsStarred] = useState(false);
+  const [writePostType, setWritePostType] = useState<FreePostType>("FREE");
+  const [writeDisplayAuthorName, setWriteDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
 
   const handleCloseWriteModal = () => {
     setShowWriteModal(false);
@@ -178,6 +240,8 @@ export function FreeBoard({
     setWriteTitle("");
     setWriteContent("");
     setWriteIsStarred(false);
+    setWritePostType("FREE");
+    setWriteDisplayAuthorName("운영자");
   };
 
 
@@ -187,6 +251,7 @@ export function FreeBoard({
   const [replyingCommentId, setReplyingCommentId] = useState<string | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
   const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
+  const [commentDisplayAuthorName, setCommentDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
 
   const uploadPublicFile = async (file: File) => {
     const formData = new FormData();
@@ -205,13 +270,22 @@ export function FreeBoard({
   };
 
   // Anonymize/Mask user details for privacy protection
-  const getMaskedAuthorName = (author: { signupName?: string | null; name?: string | null; loginId: string | null; role: string; id?: string }) => {
-    const displayName = getUserDisplayName(author);
+  const getMaskedAuthorName = (author: {
+    signupName?: string | null;
+    name?: string | null;
+    loginId: string | null;
+    role: string;
+    id?: string;
+    displayAuthorName?: string | null;
+  }) => {
+    const displayName = author.role === "ADMIN"
+      ? author.displayAuthorName || "사무국"
+      : getUserDisplayName(author);
     if (author.id === currentUserId) {
       return `${displayName} (나)`;
     }
     if (author.role === "ADMIN") {
-      return "사무국";
+      return displayName;
     }
     const cleanName = displayName;
     const maskedId = author.loginId 
@@ -226,9 +300,10 @@ export function FreeBoard({
       id: p.id,
       title: p.title,
       content: p.content,
+      postType: normalizeFreePostType(p.postType, true),
       isStarred: p.isStarred,
       createdAt: formatFreeBoardDate(p.createdAt),
-      author: p.author,
+      author: { ...p.author, displayAuthorName: p.displayAuthorName },
       comments: buildCommentTree(p.comments || []),
       commentCount: (p.comments || []).length,
       isReal: true,
@@ -236,18 +311,23 @@ export function FreeBoard({
 
     let filteredPosts = realPosts;
 
+    if (typeFilter !== "ALL") {
+      filteredPosts = filteredPosts.filter((p) => p.postType === typeFilter);
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       filteredPosts = filteredPosts.filter((p) => p.title.toLowerCase().includes(q) || getPlainNoticeText(p.content).toLowerCase().includes(q));
     }
 
     return filteredPosts;
-  }, [posts, searchQuery]);
+  }, [posts, searchQuery, typeFilter]);
 
   const focusedPost = useMemo(
     () => combinedPosts.find((post) => post.id === focusedPostId) || null,
     [combinedPosts, focusedPostId],
   );
+  const focusedPostTypeMeta = focusedPost ? getFreePostTypeMeta(focusedPost.postType) : null;
 
   const updateFocusedPostUrl = (postId: string | null) => {
     if (typeof window === "undefined") return;
@@ -299,7 +379,9 @@ export function FreeBoard({
             postId: editingPost.id,
             title: writeTitle,
             content: writeContent,
+            postType: writePostType,
             isStarred: writeIsStarred,
+            ...(isAdmin ? { displayAuthorName: writeDisplayAuthorName } : {}),
           }),
         });
 
@@ -313,6 +395,8 @@ export function FreeBoard({
         setWriteTitle("");
         setWriteContent("");
         setWriteIsStarred(false);
+        setWritePostType("FREE");
+        setWriteDisplayAuthorName("운영자");
         setShowWriteModal(false);
         await onRefresh();
       } else {
@@ -322,7 +406,9 @@ export function FreeBoard({
           body: JSON.stringify({
             title: writeTitle,
             content: writeContent,
+            postType: writePostType,
             isStarred: writeIsStarred,
+            ...(isAdmin ? { displayAuthorName: writeDisplayAuthorName } : {}),
           }),
         });
 
@@ -334,6 +420,8 @@ export function FreeBoard({
 
         setWriteTitle("");
         setWriteContent("");
+        setWritePostType("FREE");
+        setWriteDisplayAuthorName("운영자");
         setShowWriteModal(false);
         await onRefresh();
       }
@@ -363,6 +451,7 @@ export function FreeBoard({
           postId,
           content: text,
           ...(parentCommentId ? { parentCommentId } : {}),
+          ...(isAdmin ? { displayAuthorName: commentDisplayAuthorName } : {}),
         }),
       });
 
@@ -424,6 +513,28 @@ export function FreeBoard({
     }
   };
 
+  const handleOpenChatCopy = async (post: any) => {
+    if (!post.isReal) return;
+
+    setOpenChatCopyStatus((prev) => ({ ...prev, [post.id]: "copying" }));
+    try {
+      const res = await fetch(`/api/openchat/announcements?freePostId=${encodeURIComponent(post.id)}`);
+      const data = await readOpenChatAnnouncementResponse(res);
+
+      await copyTextToClipboard(data.announcement.message);
+      await fetch("/api/openchat/announcements", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ announcementId: data.announcement.id }),
+      });
+
+      setOpenChatCopyStatus((prev) => ({ ...prev, [post.id]: "copied" }));
+    } catch (e) {
+      console.error(e);
+      setOpenChatCopyStatus((prev) => ({ ...prev, [post.id]: "error" }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-b border-[#f2f0ed] pb-3">
@@ -457,16 +568,36 @@ export function FreeBoard({
                 className="w-full rounded-xl border border-stone-surface bg-white pl-10 pr-4 py-2.5 text-xs text-charcoal-primary placeholder:text-ash shadow-2xs focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue"
               />
             </div>
+            <label htmlFor="free-post-type-filter" className="sr-only">
+              글 유형 필터
+            </label>
+            <select
+              id="free-post-type-filter"
+              aria-label="글 유형 필터"
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value as FreePostType | "ALL")}
+              className="h-9.5 w-full rounded-xl border border-stone-surface bg-white px-3 text-xs font-bold text-charcoal-primary shadow-2xs outline-none transition focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/30 sm:w-32"
+            >
+              <option value="ALL">전체 유형</option>
+              {FREE_POST_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {getFreePostTypeMeta(type).label}
+                </option>
+              ))}
+            </select>
             <Button
               onClick={() => {
                 setEditingPost(null);
                 setWriteTitle("");
                 setWriteContent("");
+                setWritePostType("FREE");
+                setWriteIsStarred(false);
+                setWriteDisplayAuthorName("운영자");
                 setShowWriteModal(true);
               }}
               className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
             >
-              ✍️ 새 토론 게시글 작성
+              ✍️ 새 게시글 작성
             </Button>
           </div>
         </div>
@@ -483,7 +614,7 @@ export function FreeBoard({
                 <th className="px-5 py-3.5 w-36 text-center">작성자</th>
                 <th className="px-5 py-3.5 w-32 text-center">작성일</th>
                 <th className="px-5 py-3.5 w-24 text-center">댓글</th>
-                <th className="px-5 py-3.5 w-20 text-center">관리</th>
+                <th className="px-5 py-3.5 w-36 text-center">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
@@ -497,6 +628,7 @@ export function FreeBoard({
                 combinedPosts.map((post, index) => {
                   const authorLabel = getMaskedAuthorName(post.author);
                   const showDeletePost = post.isReal && (post.author.id === currentUserId || isAdmin);
+                  const showOpenChatCopy = post.isReal && isAdmin;
 
                   return (
                     <FreeBoardPostRows
@@ -505,8 +637,11 @@ export function FreeBoard({
                       index={index}
                       authorLabel={authorLabel}
                       showDeletePost={showDeletePost}
+                      showOpenChatCopy={showOpenChatCopy}
+                      openChatCopyStatus={openChatCopyStatus[post.id]}
                       onOpen={() => openFocusedPost(post.id)}
                       onDelete={handleDeletePostOrComment}
+                      onOpenChatCopy={handleOpenChatCopy}
                     />
                   );
                 })
@@ -525,74 +660,100 @@ export function FreeBoard({
           />
           <aside
             aria-label="토론 집중 패널"
-            className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-3xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8"
+            className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-2xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-stone-surface pb-3">
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={closeFocusedPost}
-                  className="inline-flex items-center rounded-full border border-stone-surface bg-[#f8f7f4] px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
-                >
-                  목록으로
-                </button>
-                <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-ash font-mono">
-                  <span className="rounded bg-stone-surface px-1.5 py-0.5 text-[9px] font-extrabold text-charcoal-primary">
-                    정식 토론
-                  </span>
-                  <span>작성자: {getMaskedAuthorName(focusedPost.author)}</span>
-                  <span>•</span>
-                  <span>{focusedPost.createdAt}</span>
-                  <span>•</span>
-                  <span>댓글 {focusedPost.commentCount}개</span>
+            <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-6">
+              <div className="flex items-center gap-2">
+                <span className="flex size-7 items-center justify-center rounded-full bg-midnight text-xs font-semibold text-white">
+                  💬
+                </span>
+                <div>
+                  <h2 className="text-base font-bold text-charcoal-primary">
+                    자유게시판 글 열람
+                  </h2>
+                  <p className="mt-0.5 text-[11px] font-medium text-ash">
+                    대방동 지역주택조합 조합원 소통
+                  </p>
                 </div>
-                <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
+              </div>
+              <button
+                type="button"
+                onClick={closeFocusedPost}
+                className="flex items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] px-3 py-1.5 text-xs font-medium text-graphite transition duration-200 hover:bg-stone-surface active:bg-[#e8e6e1]"
+              >
+                <svg className="size-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                목록으로
+              </button>
+            </div>
+
+            <div className="mt-6 flex-1 space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
                   {focusedPost.isStarred && (
                     <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-extrabold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
                       ★ 중요
                     </span>
                   )}
                   {focusedPost.title}
-                </h3>
+                  </h3>
+                  {focusedPost.isReal && (focusedPost.author.id === currentUserId || isAdmin) && (
+                    <button
+                      type="button"
+                      aria-label="게시글 수정"
+                      onClick={() => {
+                        setEditingPost(focusedPost);
+                        setWriteTitle(focusedPost.title);
+                        setWriteContent(focusedPost.content);
+                        setWritePostType(normalizeFreePostType(focusedPost.postType, isAdmin));
+                        setWriteIsStarred(!!focusedPost.isStarred);
+                        setWriteDisplayAuthorName(
+                          NEWS_DISPLAY_AUTHOR_NAMES.includes(focusedPost.author.displayAuthorName as NewsDisplayAuthorName)
+                            ? focusedPost.author.displayAuthorName
+                            : "운영자",
+                        );
+                        setShowWriteModal(true);
+                      }}
+                      className="shrink-0 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                    >
+                      수정
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-3 border-y border-stone-surface/65 py-2.5 text-[11px] font-bold text-ash font-mono">
+                  {focusedPostTypeMeta && (
+                    <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-extrabold", focusedPostTypeMeta.badgeClassName)}>
+                      {focusedPostTypeMeta.label}
+                    </span>
+                  )}
+                  <span>작성자: {getMaskedAuthorName(focusedPost.author)}</span>
+                  <span>•</span>
+                  <span>{focusedPost.createdAt}</span>
+                  <span>•</span>
+                  <span>댓글 {focusedPost.commentCount}개</span>
+                </div>
               </div>
-              {focusedPost.isReal && (focusedPost.author.id === currentUserId || isAdmin) && (
-                <button
-                  type="button"
-                  aria-label="게시글 수정"
-                  onClick={() => {
-                    setEditingPost(focusedPost);
-                    setWriteTitle(focusedPost.title);
-                    setWriteContent(focusedPost.content);
-                    setWriteIsStarred(!!focusedPost.isStarred);
-                    setShowWriteModal(true);
-                  }}
-                  className="shrink-0 rounded-full border border-sky-blue/20 bg-sky-blue/10 px-3 py-1.5 text-[11px] font-bold text-sky-blue hover:bg-sky-blue/15"
-                >
-                  수정
-                </button>
-              )}
-            </div>
 
-            <div className="flex-1 space-y-2.5 pt-1.5 pb-3">
-              <article className="rounded-2xl border border-stone-surface bg-white px-5 pt-4 pb-2.5">
-                <NoticeRichContent
-                  content={focusedPost.content}
-                  className="text-sm text-graphite/95 leading-8 [&_p]:mb-1.5 [&_p:last-child]:mb-0"
-                />
-              </article>
+              <div className="pt-2">
+                <NoticeRichContent content={focusedPost.content} />
+              </div>
 
-              <section className="rounded-2xl border border-stone-surface bg-[#f8f7f4] p-4 space-y-4">
+              <section className="space-y-4 border-t border-stone-surface pt-5">
                 <div className="flex items-center justify-between gap-3">
                   <h4 className="text-sm font-black text-charcoal-primary">
                     댓글 {focusedPost.commentCount}개
                   </h4>
-                  <span className="text-[10px] font-bold text-ash">토론 의견</span>
+                  <span className="text-[10px] font-bold text-ash">댓글 의견</span>
                 </div>
 
                 {focusedPost.comments.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-stone-surface bg-white px-4 py-6 text-center text-[11px] font-medium text-graphite/60">
-                    첫 번째 의견 댓글을 남겨보세요.
-                  </p>
+                  <div className="rounded-2xl border border-stone-surface bg-white px-4 py-5 text-center">
+                    <p className="text-[11px] font-medium text-ash">
+                      아직 등록된 댓글이 없습니다. 첫 의견을 남겨보세요.
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {focusedPost.comments.map((comm: FreeBoardCommentView) => {
@@ -600,12 +761,19 @@ export function FreeBoard({
                       const showDeleteComm = comm.isReal && (comm.author.id === currentUserId || isAdmin);
                       const repliesExpanded = expandedReplies[comm.id] || false;
                       return (
-                        <div key={comm.id} className="rounded-xl border border-stone-surface bg-white px-4 py-3">
+                        <article key={comm.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3.5">
                           <div>
-                            <div className="mb-2 flex items-center justify-between gap-2 text-[10px] font-bold text-ash font-mono">
-                              <span>작성자: {commAuthor}</span>
+                            <div className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-2">
-                                <span>{comm.createdAt}</span>
+                                <span className="flex size-6 items-center justify-center rounded-full bg-meadow-green/10 text-[10px] font-black text-meadow-green">
+                                  말
+                                </span>
+                                <span className="text-[11px] font-black text-charcoal-primary">
+                                  {commAuthor}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[9.5px] font-mono font-bold text-ash">{comm.createdAt}</span>
                                 {showDeleteComm && (
                                   <button
                                     type="button"
@@ -617,7 +785,7 @@ export function FreeBoard({
                                 )}
                               </div>
                             </div>
-                            <p className="text-[12px] text-graphite/90 font-normal leading-relaxed">
+                            <p className="mt-2.5 text-[12px] text-graphite font-normal leading-relaxed whitespace-pre-wrap">
                               {comm.content}
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -685,64 +853,110 @@ export function FreeBoard({
                           )}
 
                           {replyingCommentId === comm.id && focusedPost.isReal && (
-                            <div className="mt-3 flex gap-2 border-l-2 border-sky-blue/30 pl-3">
-                              <input
-                                type="text"
-                                placeholder="원댓글에 답글을 작성해 주세요…"
-                                value={replyContents[comm.id] || ""}
-                                onChange={(event) => setReplyContents((prev) => ({ ...prev, [comm.id]: event.target.value }))}
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter") {
-                                    handleCreateComment(focusedPost.id, comm.id);
-                                  }
-                                }}
-                                className="flex-1 rounded-xl border border-stone-surface bg-white px-3 py-2 text-[12px] text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue"
-                              />
-                              <Button
-                                type="button"
-                                onClick={() => handleCreateComment(focusedPost.id, comm.id)}
-                                disabled={commentSubmitting[comm.id]}
-                                className="rounded-xl bg-midnight px-3 text-[11px] font-bold text-white disabled:opacity-50"
-                              >
-                                답글 등록
-                              </Button>
+                            <div className="mt-3 space-y-2 border-l-2 border-sky-blue/30 pl-3">
+                              {isAdmin && (
+                                <div className="space-y-1">
+                                  <label htmlFor={`free-reply-author-${comm.id}`} className="text-[10px] font-bold text-charcoal-primary font-mono">
+                                    답글 작성자
+                                  </label>
+                                  <select
+                                    id={`free-reply-author-${comm.id}`}
+                                    aria-label="답글 작성자"
+                                    value={commentDisplayAuthorName}
+                                    onChange={(event) => setCommentDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+                                    className="h-8 rounded-xl border border-stone-surface bg-white px-3 text-[11px] font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                                  >
+                                    {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                                      <option key={name} value={name}>
+                                        {name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="원댓글에 답글을 작성해 주세요…"
+                                  value={replyContents[comm.id] || ""}
+                                  onChange={(event) => setReplyContents((prev) => ({ ...prev, [comm.id]: event.target.value }))}
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter") {
+                                      handleCreateComment(focusedPost.id, comm.id);
+                                    }
+                                  }}
+                                  className="flex-1 rounded-xl border border-stone-surface bg-white px-3 py-2 text-[12px] text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue"
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={() => handleCreateComment(focusedPost.id, comm.id)}
+                                  disabled={commentSubmitting[comm.id]}
+                                  className="rounded-xl bg-midnight px-3 text-[11px] font-bold text-white disabled:opacity-50"
+                                >
+                                  답글 등록
+                                </Button>
+                              </div>
                             </div>
                           )}
-                        </div>
+                        </article>
                       );
                     })}
                   </div>
                 )}
 
-                <div className="sticky bottom-0 flex gap-2 border-t border-stone-surface/50 bg-[#f8f7f4] pt-4">
-                  <input
-                    type="text"
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (!focusedPost.isReal) {
+                      alert("시연용 아카이브 포스트에는 댓글 전송이 차단되어 있습니다.\n실제 게시판 연동을 확인하시려면, 새 게시글을 직접 작성한 후 댓글을 작성하십시오!");
+                      return;
+                    }
+                    handleCreateComment(focusedPost.id);
+                  }}
+                  className="space-y-3 rounded-2xl border border-stone-surface bg-white p-3.5"
+                >
+                  {isAdmin && (
+                    <div className="space-y-1.5">
+                      <label htmlFor={`free-comment-author-${focusedPost.id}`} className="text-[10px] font-bold text-charcoal-primary font-mono">
+                        댓글 작성자
+                      </label>
+                      <select
+                        id={`free-comment-author-${focusedPost.id}`}
+                        aria-label="댓글 작성자"
+                        value={commentDisplayAuthorName}
+                        onChange={(event) => setCommentDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+                        className="h-9 rounded-xl border border-stone-surface bg-white px-3 text-[11px] font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                      >
+                        {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <label htmlFor={`free-comment-${focusedPost.id}`} className="sr-only">
+                    자유게시판 댓글 작성
+                  </label>
+                  <textarea
+                    id={`free-comment-${focusedPost.id}`}
                     placeholder={focusedPost.isReal ? "안전하고 고운 의견 댓글을 작성해 주세요…" : "가상 데모 보존 게시글에는 댓글을 추가하실 수 없습니다."}
                     value={commentContents[focusedPost.id] || ""}
                     disabled={!focusedPost.isReal}
+                    rows={3}
                     onChange={(event) => setCommentContents((prev) => ({ ...prev, [focusedPost.id]: event.target.value }))}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" && focusedPost.isReal) {
-                        handleCreateComment(focusedPost.id);
-                      }
-                    }}
-                    className="flex-1 rounded-xl border border-stone-surface bg-white px-3.5 py-2 text-[12px] text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue"
+                    className="w-full resize-none rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
                   />
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      if (!focusedPost.isReal) {
-                        alert("시연용 아카이브 포스트에는 댓글 전송이 차단되어 있습니다.\n실제 토론 게시판 연동을 확인하시려면, 새 토론 게시글을 직접 작성한 후 댓글을 작성하십시오!");
-                        return;
-                      }
-                      handleCreateComment(focusedPost.id);
-                    }}
-                    disabled={commentSubmitting[focusedPost.id] || !focusedPost.isReal}
-                    className="rounded-xl bg-midnight px-4 text-[11px] font-bold text-white disabled:opacity-50"
-                  >
-                    의견 등록
-                  </Button>
-                </div>
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      disabled={commentSubmitting[focusedPost.id] || !focusedPost.isReal}
+                      className="rounded-full bg-midnight px-5 h-9 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      의견 등록
+                    </Button>
+                  </div>
+                </form>
               </section>
             </div>
           </aside>
@@ -759,11 +973,11 @@ export function FreeBoard({
           />
           <div
             className="fixed inset-y-0 right-0 z-[130] w-full max-w-lg bg-warm-canvas border-l border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 ease-out"
-            aria-label={editingPost ? "토론글 수정 드로어" : "새 토론글 게시 드로어"}
+            aria-label={editingPost ? "게시글 수정 드로어" : "새 게시글 작성 드로어"}
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface mb-6">
               <h3 className="text-base font-black text-charcoal-primary flex items-center gap-1.5">
-                <span>✍️</span> {editingPost ? "토론 게시글 수정" : "새 토론 게시물 등록"}
+                <span>✍️</span> {editingPost ? "게시글 수정" : "새 게시글 작성"}
               </h3>
               <button
                 onClick={handleCloseWriteModal}
@@ -774,6 +988,46 @@ export function FreeBoard({
             </div>
 
             <form onSubmit={handleCreatePost} className="space-y-5 flex-1">
+              {isAdmin && (
+                <div className="space-y-1.5">
+                  <label htmlFor="free-post-display-author" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                    게시글 작성자
+                  </label>
+                  <select
+                    id="free-post-display-author"
+                    aria-label="게시글 작성자"
+                    value={writeDisplayAuthorName}
+                    onChange={(event) => setWriteDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+                    className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                  >
+                    {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label htmlFor="free-post-type" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  글 유형
+                </label>
+                <select
+                  id="free-post-type"
+                  aria-label="글 유형"
+                  value={writePostType}
+                  onChange={(event) => setWritePostType(normalizeFreePostType(event.target.value, isAdmin))}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                >
+                  {getFreePostTypeOptions(isAdmin).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
                   게시글 제목 *
@@ -798,7 +1052,7 @@ export function FreeBoard({
                     className="size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
                   />
                   <label htmlFor="write-star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
-                    중요 토론글로 상단 고정 표시 (★)
+                    중요 게시글로 상단 고정 표시 (★)
                   </label>
                 </div>
               )}

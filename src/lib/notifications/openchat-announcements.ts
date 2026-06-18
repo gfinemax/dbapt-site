@@ -8,6 +8,21 @@ type OpenChatAnnouncementDocument = {
   createdAt?: Date | null;
 };
 
+type OpenChatAnnouncementNews = {
+  id: string;
+  title: string;
+  category: string;
+  createdAt?: Date | null;
+};
+
+type OpenChatAnnouncementFreePost = {
+  id: string;
+  title: string;
+  content?: string | null;
+  postType?: string | null;
+  createdAt?: Date | null;
+};
+
 type OpenChatAnnouncementRecord = {
   id: string;
   status: string;
@@ -28,6 +43,20 @@ export type OpenChatAnnouncementPrisma = {
 type UpsertOpenChatAnnouncementInput = {
   prisma?: OpenChatAnnouncementPrisma;
   document: OpenChatAnnouncementDocument;
+  siteUrl?: string;
+  force?: boolean;
+};
+
+type UpsertOpenChatAnnouncementForNewsInput = {
+  prisma?: OpenChatAnnouncementPrisma;
+  news: OpenChatAnnouncementNews;
+  siteUrl?: string;
+  force?: boolean;
+};
+
+type UpsertOpenChatAnnouncementForFreePostInput = {
+  prisma?: OpenChatAnnouncementPrisma;
+  post: OpenChatAnnouncementFreePost;
   siteUrl?: string;
   force?: boolean;
 };
@@ -77,6 +106,32 @@ function isApprovedDisclosure(document: OpenChatAnnouncementDocument) {
   return document.category === "DISCLOSURE" && document.status === "APPROVED" && Boolean(normalizeSubCategory(document.subCategory));
 }
 
+function isCooperativeNews(news: OpenChatAnnouncementNews) {
+  return news.category === "WEEKLY_MONTHLY" || news.category === "NOTICE";
+}
+
+function getCooperativeNewsAnnouncementMeta(news: OpenChatAnnouncementNews) {
+  if (news.category === "NOTICE") {
+    return {
+      label: "조합 공지사항",
+      tab: "notice",
+    };
+  }
+
+  return {
+    label: "주/월간 조합소식",
+    tab: "newsletter",
+  };
+}
+
+function getFreePostAnnouncementLabel(postType?: string | null) {
+  if (postType === "DISCUSSION") return "토론글";
+  if (postType === "QUESTION") return "질문";
+  if (postType === "PROPOSAL") return "제안";
+  if (postType === "NOTICE") return "운영안내";
+  return "자유글";
+}
+
 function normalizeOneLine(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -116,6 +171,53 @@ export function buildOpenChatAnnouncementMessage(params: {
     "",
     "홈페이지 로그인 후 공개자료 메뉴에서 확인해 주세요.",
     disclosureUrl,
+  ].join("\n");
+}
+
+export function buildOpenChatNewsAnnouncementMessage(params: {
+  news: OpenChatAnnouncementNews;
+  siteUrl?: string;
+  now?: Date;
+}) {
+  const { news } = params;
+  const title = normalizeOneLine(news.title);
+  const createdAt = news.createdAt ?? params.now ?? new Date();
+  const meta = getCooperativeNewsAnnouncementMeta(news);
+  const newsUrl = `${normalizeSiteUrl(params.siteUrl)}/news?tab=${meta.tab}`;
+
+  return [
+    "[대방동 지역주택조합 조합소식 안내]",
+    "",
+    "새 조합소식이 등록되었습니다.",
+    `- 분류: ${meta.label}`,
+    `- 제목: ${title}`,
+    `- 등록일: ${formatDate(createdAt)}`,
+    "",
+    "홈페이지 조합소식 메뉴에서 확인해 주세요.",
+    newsUrl,
+  ].join("\n");
+}
+
+export function buildOpenChatFreePostAnnouncementMessage(params: {
+  post: OpenChatAnnouncementFreePost;
+  siteUrl?: string;
+  now?: Date;
+}) {
+  const { post } = params;
+  const title = normalizeOneLine(post.title);
+  const createdAt = post.createdAt ?? params.now ?? new Date();
+  const freeBoardUrl = `${normalizeSiteUrl(params.siteUrl)}/news?tab=free&post=${encodeURIComponent(post.id)}`;
+
+  return [
+    "[대방동 지역주택조합 자유게시판 안내]",
+    "",
+    "새 자유게시판 글이 등록되었습니다.",
+    `- 유형: ${getFreePostAnnouncementLabel(post.postType)}`,
+    `- 제목: ${title}`,
+    `- 등록일: ${formatDate(createdAt)}`,
+    "",
+    "홈페이지 로그인 후 자유게시판에서 확인해 주세요.",
+    freeBoardUrl,
   ].join("\n");
 }
 
@@ -168,6 +270,124 @@ export async function upsertOpenChatAnnouncementForDocument(input: UpsertOpenCha
   const created = await prisma.openChatAnnouncement.create({
     data: {
       documentId: document.id,
+      status: "DRAFT",
+      message,
+    },
+  });
+
+  return {
+    status: "CREATED",
+    announcementId: created.id,
+    message: created.message,
+  };
+}
+
+export async function upsertOpenChatAnnouncementForNews(input: UpsertOpenChatAnnouncementForNewsInput): Promise<OpenChatAnnouncementResult> {
+  const { news, force = false } = input;
+  if (!isCooperativeNews(news)) {
+    return { status: "SKIPPED", skippedReason: "NOT_COOPERATIVE_NEWS" };
+  }
+
+  const prisma = input.prisma ?? await getDefaultPrisma();
+  const existing = await prisma.openChatAnnouncement.findFirst({
+    where: {
+      coopNewsId: news.id,
+      status: {
+        in: ["DRAFT", "COPIED"],
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  const message = buildOpenChatNewsAnnouncementMessage({
+    news,
+    siteUrl: input.siteUrl,
+  });
+
+  if (existing?.status === "DRAFT" && !force) {
+    const updated = await prisma.openChatAnnouncement.update({
+      where: { id: existing.id },
+      data: {
+        message,
+        status: "DRAFT",
+        copiedAt: null,
+      },
+    });
+    return {
+      status: "UPDATED",
+      announcementId: updated.id,
+      message: updated.message,
+    };
+  }
+
+  if (existing?.status === "COPIED" && !force) {
+    return {
+      status: "SKIPPED",
+      announcementId: existing.id,
+      skippedReason: "ALREADY_COPIED",
+      message: existing.message,
+    };
+  }
+
+  const created = await prisma.openChatAnnouncement.create({
+    data: {
+      coopNewsId: news.id,
+      status: "DRAFT",
+      message,
+    },
+  });
+
+  return {
+    status: "CREATED",
+    announcementId: created.id,
+    message: created.message,
+  };
+}
+
+export async function upsertOpenChatAnnouncementForFreePost(input: UpsertOpenChatAnnouncementForFreePostInput): Promise<OpenChatAnnouncementResult> {
+  const { post, force = false } = input;
+  const prisma = input.prisma ?? await getDefaultPrisma();
+  const existing = await prisma.openChatAnnouncement.findFirst({
+    where: {
+      freePostId: post.id,
+      status: {
+        in: ["DRAFT", "COPIED"],
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  const message = buildOpenChatFreePostAnnouncementMessage({
+    post,
+    siteUrl: input.siteUrl,
+  });
+
+  if (existing?.status === "DRAFT" && !force) {
+    const updated = await prisma.openChatAnnouncement.update({
+      where: { id: existing.id },
+      data: {
+        message,
+        status: "DRAFT",
+        copiedAt: null,
+      },
+    });
+    return {
+      status: "UPDATED",
+      announcementId: updated.id,
+      message: updated.message,
+    };
+  }
+
+  if (existing?.status === "COPIED" && !force) {
+    return {
+      status: "SKIPPED",
+      announcementId: existing.id,
+      skippedReason: "ALREADY_COPIED",
+      message: existing.message,
+    };
+  }
+
+  const created = await prisma.openChatAnnouncement.create({
+    data: {
+      freePostId: post.id,
       status: "DRAFT",
       message,
     },

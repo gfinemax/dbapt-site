@@ -202,16 +202,22 @@ model DisclosureNotificationRecipient {
 // 2.4.4. 오픈채팅방 복사용 공개자료 공지문
 model OpenChatAnnouncement {
   id         String    @id @default(uuid())
-  documentId String
+  documentId String?
+  coopNewsId String?
+  freePostId String?
   status     String    @default("DRAFT") // DRAFT, COPIED, ARCHIVED
   message    String
   copiedAt   DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  coopNews CoopNews? @relation(fields: [coopNewsId], references: [id], onDelete: Cascade)
+  freePost FreePost? @relation(fields: [freePostId], references: [id], onDelete: Cascade)
 
   @@index([documentId, status])
+  @@index([coopNewsId, status])
+  @@index([freePostId, status])
   @@index([status, createdAt])
 }
 
@@ -527,6 +533,7 @@ model CoopNews {
   authorId       String
   author         User     @relation(fields: [authorId], references: [id])
   comments       CoopNewsComment[]
+  openChatAnnouncements OpenChatAnnouncement[]
 }
 
 // 6. 공지사항 댓글
@@ -544,30 +551,34 @@ model CoopNewsComment {
 
 // 7. 자유게시판 글
 model FreePost {
-  id        String        @id @default(uuid())
-  title     String
-  content   String
-  imagePath String? // 첨부 이미지 경로
-  isStarred Boolean       @default(false)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  authorId  String
-  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments  FreeComment[]
+  id                String        @id @default(uuid())
+  title             String
+  content           String
+  imagePath         String? // 첨부 이미지 경로
+  postType          String        @default("FREE") // FREE, DISCUSSION, QUESTION, PROPOSAL, NOTICE
+  displayAuthorName String? // 관리자 작성글 공개 작성자명: 운영자, 사무국
+  isStarred         Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  authorId          String
+  author            User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments          FreeComment[]
+  openChatAnnouncements OpenChatAnnouncement[]
 }
 
 // 8. 자유게시판 댓글
 model FreeComment {
-  id        String        @id @default(uuid())
-  content   String
-  createdAt DateTime      @default(now())
-  postId    String
-  post      FreePost      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parentId  String?
-  parent    FreeComment?  @relation("FreeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   FreeComment[] @relation("FreeCommentReplies")
-  authorId  String
-  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id                String        @id @default(uuid())
+  content           String
+  displayAuthorName String? // 관리자 댓글 공개 작성자명: 운영자, 사무국
+  createdAt         DateTime      @default(now())
+  postId            String
+  post              FreePost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId          String?
+  parent            FreeComment?  @relation("FreeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies           FreeComment[] @relation("FreeCommentReplies")
+  authorId          String
+  author            User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([postId, parentId])
 }

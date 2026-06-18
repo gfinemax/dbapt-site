@@ -146,7 +146,10 @@ export function NoticeRichEditor({
       const imageHtml = `<p><img src="${escapeAttr(uploaded.url)}" alt="본문 이미지" data-width="100" style="width:100%;max-width:100%;height:auto;" /></p>`;
       if (typeof document.execCommand === "function") {
         document.execCommand("insertHTML", false, imageHtml);
-      } else {
+      }
+      const imageWasInserted = Array.from(editorRef.current?.querySelectorAll("img") || [])
+        .some((image) => image.getAttribute("src") === uploaded.url);
+      if (!imageWasInserted) {
         editorRef.current?.insertAdjacentHTML("beforeend", imageHtml);
       }
       commitContent();

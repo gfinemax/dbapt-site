@@ -11,6 +11,32 @@ const approvedDisclosure = {
   filePath: "documents/2026/private.pdf",
 };
 
+const newsletter = {
+  id: "newsletter-1",
+  title: "  대방동   2026년 7월 조합 월간 소식지  ",
+  category: "WEEKLY_MONTHLY",
+  content: "월간 소식지 본문",
+  createdAt: new Date("2026-07-01T00:00:00.000Z"),
+  attachmentPath: "/uploads/newsletter.pdf",
+};
+
+const noticeNews = {
+  id: "notice-1",
+  title: "  대방동 지역주택조합 공식 홈페이지 오픈 안내  ",
+  category: "NOTICE",
+  content: "공지 본문",
+  createdAt: new Date("2026-06-17T00:00:00.000Z"),
+  attachmentPath: "/uploads/notice.pdf",
+};
+
+const freePostAnnouncementSource = {
+  id: "free-1",
+  title: "  자유게시판 운영 방침 안내  ",
+  content: "자유게시판 운영 방침입니다.",
+  postType: "NOTICE",
+  createdAt: new Date("2026-06-18T09:00:00.000Z"),
+};
+
 function createMockPrisma(params?: {
   existingAnnouncement?: {
     id: string;
@@ -75,6 +101,82 @@ describe("openchat announcements", () => {
     expect(message).toContain("홈페이지 로그인 후 공개자료 메뉴에서 확인해 주세요.");
     expect(message).toContain("https://dbapt.example/disclosure");
     expect(message).not.toContain("documents/2026/private.pdf");
+  });
+
+  it("creates an announcement message for cooperative newsletter posts without attachment paths", async () => {
+    const { upsertOpenChatAnnouncementForNews } = await import("@/lib/notifications/openchat-announcements");
+    const prisma = createMockPrisma();
+
+    const result = await upsertOpenChatAnnouncementForNews({
+      prisma,
+      news: newsletter,
+      siteUrl: "https://dbapt.example",
+    });
+
+    expect(result.status).toBe("CREATED");
+    expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        coopNewsId: "newsletter-1",
+        status: "DRAFT",
+        message: expect.stringContaining("대방동 2026년 7월 조합 월간 소식지"),
+      }),
+    });
+    const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
+    expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
+    expect(message).toContain("새 조합소식이 등록되었습니다.");
+    expect(message).toContain("- 분류: 주/월간 조합소식");
+    expect(message).toContain("https://dbapt.example/news?tab=newsletter");
+    expect(message).not.toContain("/uploads/newsletter.pdf");
+  });
+
+  it("creates an announcement message for cooperative notice posts without attachment paths", async () => {
+    const { upsertOpenChatAnnouncementForNews } = await import("@/lib/notifications/openchat-announcements");
+    const prisma = createMockPrisma();
+
+    const result = await upsertOpenChatAnnouncementForNews({
+      prisma,
+      news: noticeNews,
+      siteUrl: "https://dbapt.example",
+    });
+
+    expect(result.status).toBe("CREATED");
+    expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        coopNewsId: "notice-1",
+        status: "DRAFT",
+        message: expect.stringContaining("대방동 지역주택조합 공식 홈페이지 오픈 안내"),
+      }),
+    });
+    const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
+    expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
+    expect(message).toContain("- 분류: 조합 공지사항");
+    expect(message).toContain("https://dbapt.example/news?tab=notice");
+    expect(message).not.toContain("/uploads/notice.pdf");
+  });
+
+  it("creates an announcement message for free-board posts without body content", async () => {
+    const { upsertOpenChatAnnouncementForFreePost } = await import("@/lib/notifications/openchat-announcements");
+    const prisma = createMockPrisma();
+
+    const result = await upsertOpenChatAnnouncementForFreePost({
+      prisma,
+      post: freePostAnnouncementSource,
+      siteUrl: "https://dbapt.example",
+    });
+
+    expect(result.status).toBe("CREATED");
+    expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        freePostId: "free-1",
+        status: "DRAFT",
+        message: expect.stringContaining("자유게시판 운영 방침 안내"),
+      }),
+    });
+    const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
+    expect(message).toContain("[대방동 지역주택조합 자유게시판 안내]");
+    expect(message).toContain("- 유형: 운영안내");
+    expect(message).toContain("https://dbapt.example/news?tab=free&post=free-1");
+    expect(message).not.toContain("자유게시판 운영 방침입니다.");
   });
 
   it("uses the Vercel disclosure URL when no site URL is configured", async () => {

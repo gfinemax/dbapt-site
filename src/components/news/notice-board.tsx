@@ -6,6 +6,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { copyTextToClipboard } from "@/lib/copy-to-clipboard";
+import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-response";
 import {
   NEWS_DISPLAY_AUTHOR_NAMES,
   type NewsDisplayAuthorName,
@@ -47,6 +49,7 @@ export function NoticeBoard({
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [activeViewNotice, setActiveViewNotice] = useState<any | null>(null);
+  const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, "copying" | "copied" | "error">>({});
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -206,6 +209,28 @@ export function NoticeBoard({
     }
   };
 
+  const handleOpenChatCopy = async (notice: any) => {
+    if (!notice.isReal) return;
+
+    setOpenChatCopyStatus((prev) => ({ ...prev, [notice.id]: "copying" }));
+    try {
+      const res = await fetch(`/api/openchat/announcements?newsId=${encodeURIComponent(notice.id)}`);
+      const data = await readOpenChatAnnouncementResponse(res);
+
+      await copyTextToClipboard(data.announcement.message);
+      await fetch("/api/openchat/announcements", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ announcementId: data.announcement.id }),
+      });
+
+      setOpenChatCopyStatus((prev) => ({ ...prev, [notice.id]: "copied" }));
+    } catch (e) {
+      console.error(e);
+      setOpenChatCopyStatus((prev) => ({ ...prev, [notice.id]: "error" }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-b border-[#f2f0ed] pb-3">
@@ -262,7 +287,7 @@ export function NoticeBoard({
                 <th className="px-5 py-3.5 w-24 text-center">등록자</th>
                 <th className="px-5 py-3.5 w-28 text-center">작성일</th>
                 <th className="px-5 py-3.5 w-28 text-center">댓글</th>
-                {isAdmin && <th className="px-5 py-3.5 w-20 text-center">관리</th>}
+                {isAdmin && <th className="px-5 py-3.5 w-36 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
@@ -335,17 +360,41 @@ export function NoticeBoard({
                     {isAdmin && (
                       <td className="px-5 py-4 text-center">
                         {notice.isReal && (
-                          <button
-                            type="button"
-                            aria-label="공지 삭제"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleDeleteNotice(notice);
-                            }}
-                            className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
-                          >
-                            삭제
-                          </button>
+                          <div className="flex flex-wrap items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              aria-label={`${notice.title} 오픈채팅 공지문 복사`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleOpenChatCopy(notice);
+                              }}
+                              disabled={openChatCopyStatus[notice.id] === "copying"}
+                              className="rounded-full border border-meadow-green/25 bg-meadow-green/10 px-2.5 py-1 text-[10px] font-bold text-meadow-green hover:bg-meadow-green/15 disabled:opacity-60"
+                            >
+                              {openChatCopyStatus[notice.id] === "copying" ? "복사 중" : "공지문 복사"}
+                            </button>
+                            {openChatCopyStatus[notice.id] === "copied" && (
+                              <span className="text-[9px] font-bold text-meadow-green">
+                                복사됨
+                              </span>
+                            )}
+                            {openChatCopyStatus[notice.id] === "error" && (
+                              <span className="text-[9px] font-bold text-ember-orange">
+                                실패
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              aria-label="공지 삭제"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleDeleteNotice(notice);
+                              }}
+                              className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
+                            >
+                              삭제
+                            </button>
+                          </div>
                         )}
                       </td>
                     )}

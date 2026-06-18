@@ -3,8 +3,16 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const mockGetSession = vi.hoisted(() => vi.fn());
 const mockMarkOpenChatAnnouncementCopied = vi.hoisted(() => vi.fn());
 const mockUpsertOpenChatAnnouncementForDocument = vi.hoisted(() => vi.fn());
+const mockUpsertOpenChatAnnouncementForNews = vi.hoisted(() => vi.fn());
+const mockUpsertOpenChatAnnouncementForFreePost = vi.hoisted(() => vi.fn());
 const mockPrisma = vi.hoisted(() => ({
   document: {
+    findUnique: vi.fn(),
+  },
+  coopNews: {
+    findUnique: vi.fn(),
+  },
+  freePost: {
     findUnique: vi.fn(),
   },
   openChatAnnouncement: {
@@ -23,6 +31,8 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/notifications/openchat-announcements", () => ({
   markOpenChatAnnouncementCopied: mockMarkOpenChatAnnouncementCopied,
   upsertOpenChatAnnouncementForDocument: mockUpsertOpenChatAnnouncementForDocument,
+  upsertOpenChatAnnouncementForNews: mockUpsertOpenChatAnnouncementForNews,
+  upsertOpenChatAnnouncementForFreePost: mockUpsertOpenChatAnnouncementForFreePost,
 }));
 
 describe("openchat announcements API", () => {
@@ -107,6 +117,126 @@ describe("openchat announcements API", () => {
       status: "DRAFT",
       message: "생성된 공지문 본문",
     });
+  });
+
+  it("generates and returns an announcement when a cooperative newsletter has no draft yet", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.openChatAnnouncement.findFirst.mockResolvedValue(null);
+    mockPrisma.coopNews.findUnique.mockResolvedValue({
+      id: "newsletter-old",
+      title: "대방동 2026년 7월 조합 월간 소식지",
+      category: "WEEKLY_MONTHLY",
+      content: "조합소식 본문",
+      createdAt: new Date("2026-07-01T00:00:00.000Z"),
+    });
+    mockUpsertOpenChatAnnouncementForNews.mockResolvedValue({
+      status: "CREATED",
+      announcementId: "announcement-news-generated",
+      message: "생성된 조합소식 공지문 본문",
+    });
+
+    const { GET } = await import("@/app/api/openchat/announcements/route");
+    const response = await GET(new Request("http://localhost/api/openchat/announcements?newsId=newsletter-old"));
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.openChatAnnouncement.findFirst).toHaveBeenCalledWith({
+      where: {
+        coopNewsId: "newsletter-old",
+        status: {
+          in: ["DRAFT", "COPIED"],
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        coopNews: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+    expect(mockPrisma.coopNews.findUnique).toHaveBeenCalledWith({ where: { id: "newsletter-old" } });
+    expect(mockUpsertOpenChatAnnouncementForNews).toHaveBeenCalledWith({
+      prisma: mockPrisma,
+      news: expect.objectContaining({
+        id: "newsletter-old",
+        title: "대방동 2026년 7월 조합 월간 소식지",
+      }),
+    });
+    expect(data.announcement).toEqual({
+      id: "announcement-news-generated",
+      newsId: "newsletter-old",
+      status: "DRAFT",
+      message: "생성된 조합소식 공지문 본문",
+    });
+  });
+
+  it("generates and returns an announcement when a free-board post has no draft yet", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.openChatAnnouncement.findFirst.mockResolvedValue(null);
+    mockPrisma.freePost.findUnique.mockResolvedValue({
+      id: "free-old",
+      title: "자유게시판 운영 안내",
+      content: "본문",
+      postType: "NOTICE",
+      createdAt: new Date("2026-06-18T09:00:00.000Z"),
+    });
+    mockUpsertOpenChatAnnouncementForFreePost.mockResolvedValue({
+      status: "CREATED",
+      announcementId: "announcement-free-generated",
+      message: "생성된 자유게시판 공지문 본문",
+    });
+
+    const { GET } = await import("@/app/api/openchat/announcements/route");
+    const response = await GET(new Request("http://localhost/api/openchat/announcements?freePostId=free-old"));
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.openChatAnnouncement.findFirst).toHaveBeenCalledWith({
+      where: {
+        freePostId: "free-old",
+        status: {
+          in: ["DRAFT", "COPIED"],
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+      include: {
+        freePost: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+    expect(mockPrisma.freePost.findUnique).toHaveBeenCalledWith({ where: { id: "free-old" } });
+    expect(mockUpsertOpenChatAnnouncementForFreePost).toHaveBeenCalledWith({
+      prisma: mockPrisma,
+      post: expect.objectContaining({
+        id: "free-old",
+        title: "자유게시판 운영 안내",
+      }),
+    });
+    expect(data.announcement).toEqual({
+      id: "announcement-free-generated",
+      freePostId: "free-old",
+      status: "DRAFT",
+      message: "생성된 자유게시판 공지문 본문",
+    });
+  });
+
+  it("returns a JSON error when free-board announcement lookup fails", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.openChatAnnouncement.findFirst.mockRejectedValue(new Error("database unavailable"));
+
+    const { GET } = await import("@/app/api/openchat/announcements/route");
+    const response = await GET(new Request("http://localhost/api/openchat/announcements?freePostId=free-old"));
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.error).toBe("오픈채팅 공지문 조회 중 문제가 발생했습니다.");
   });
 
   it("marks an announcement copied for admins", async () => {

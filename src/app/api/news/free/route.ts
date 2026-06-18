@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { normalizeFreePostType } from "@/lib/free-post-type";
+import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 
 // 1. GET: 자유게시판 글 및 댓글 목록 조회 (MEMBER, ADMIN, REFUND 전용)
 export async function GET() {
@@ -58,7 +60,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { title, content, postId, parentCommentId, isStarred } = body; // 만약 postId가 존재하면 댓글 추가로 판별
+    const { title, content, postId, parentCommentId, isStarred, postType, displayAuthorName } = body; // 만약 postId가 존재하면 댓글 추가로 판별
+    const parsedDisplayAuthorName = session.role === "ADMIN"
+      ? parseNewsDisplayAuthorName(displayAuthorName)
+      : { ok: true as const, value: null };
+
+    if (!parsedDisplayAuthorName.ok) {
+      return NextResponse.json({ error: parsedDisplayAuthorName.error }, { status: 400 });
+    }
 
     if (postId) {
       // 댓글 등록
@@ -91,6 +100,7 @@ export async function POST(request: Request) {
           postId,
           parentId,
           authorId: session.id,
+          displayAuthorName: session.role === "ADMIN" ? parsedDisplayAuthorName.value : null,
         },
         include: {
           author: {
@@ -116,8 +126,10 @@ export async function POST(request: Request) {
         data: {
           title,
           content,
+          postType: normalizeFreePostType(postType, session.role === "ADMIN"),
           authorId: session.id,
           isStarred: session.role === "ADMIN" ? !!isStarred : false,
+          displayAuthorName: session.role === "ADMIN" ? parsedDisplayAuthorName.value : null,
         },
       });
 
@@ -184,7 +196,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { postId, title, content, isStarred } = body;
+    const { postId, title, content, isStarred, postType, displayAuthorName } = body;
 
     if (!postId) {
       return NextResponse.json({ error: "수정할 대상 ID가 누락되었습니다." }, { status: 400 });
@@ -203,12 +215,24 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "수정 권한이 없습니다." }, { status: 403 });
     }
 
-    const updateData: { title: string; content: string; isStarred?: boolean } = {
+    const updateData: {
+      title: string;
+      content: string;
+      postType: string;
+      isStarred?: boolean;
+      displayAuthorName?: string | null;
+    } = {
       title,
       content,
+      postType: normalizeFreePostType(postType, session.role === "ADMIN"),
     };
     if (session.role === "ADMIN") {
+      const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);
+      if (!parsedDisplayAuthorName.ok) {
+        return NextResponse.json({ error: parsedDisplayAuthorName.error }, { status: 400 });
+      }
       updateData.isStarred = !!isStarred;
+      updateData.displayAuthorName = parsedDisplayAuthorName.value;
     }
 
     const updated = await prisma.freePost.update({

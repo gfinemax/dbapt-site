@@ -4,6 +4,8 @@
 
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { copyTextToClipboard } from "@/lib/copy-to-clipboard";
+import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-response";
 import { cn } from "@/lib/utils";
 
 type CoopNewsletterProps = {
@@ -49,6 +51,7 @@ export function CoopNewsletter({
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [activeViewNews, setActiveViewNews] = useState<any | null>(null);
+  const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, "copying" | "copied" | "error">>({});
 
   // Upload Form State
   const [uploadTitle, setUploadTitle] = useState("");
@@ -198,6 +201,28 @@ export function CoopNewsletter({
     }
   };
 
+  const handleOpenChatCopy = async (news: any) => {
+    if (!news.isReal) return;
+
+    setOpenChatCopyStatus((prev) => ({ ...prev, [news.id]: "copying" }));
+    try {
+      const res = await fetch(`/api/openchat/announcements?newsId=${encodeURIComponent(news.id)}`);
+      const data = await readOpenChatAnnouncementResponse(res);
+
+      await copyTextToClipboard(data.announcement.message);
+      await fetch("/api/openchat/announcements", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ announcementId: data.announcement.id }),
+      });
+
+      setOpenChatCopyStatus((prev) => ({ ...prev, [news.id]: "copied" }));
+    } catch (e) {
+      console.error(e);
+      setOpenChatCopyStatus((prev) => ({ ...prev, [news.id]: "error" }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* 검색 바 및 등록 버튼 */}
@@ -286,8 +311,32 @@ export function CoopNewsletter({
                   {/* 하단 메타 영역 */}
                   <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono border-t border-stone-surface/40 pt-3">
                     <span>작성자: {news.author.name}</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                       <span>{news.createdAt}</span>
+                      {isAdmin && news.isReal && (
+                        <button
+                          type="button"
+                          aria-label={`${news.title} 목록 오픈채팅 공지문 복사`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleOpenChatCopy(news);
+                          }}
+                          disabled={openChatCopyStatus[news.id] === "copying"}
+                          className="rounded-full border border-meadow-green/25 bg-meadow-green/10 px-2 py-0.5 text-[9px] font-bold text-meadow-green hover:bg-meadow-green/15 disabled:opacity-60"
+                        >
+                          {openChatCopyStatus[news.id] === "copying" ? "복사 중" : "공지문 복사"}
+                        </button>
+                      )}
+                      {isAdmin && news.isReal && openChatCopyStatus[news.id] === "copied" && (
+                        <span className="text-[9px] font-bold text-meadow-green">
+                          복사됨
+                        </span>
+                      )}
+                      {isAdmin && news.isReal && openChatCopyStatus[news.id] === "error" && (
+                        <span className="text-[9px] font-bold text-ember-orange">
+                          실패
+                        </span>
+                      )}
                       {isAdmin && news.isReal && (
                         <button
                           type="button"
@@ -363,7 +412,28 @@ export function CoopNewsletter({
                 </a>
               )}
               {isAdmin && activeViewNews.isReal && (
-                <div className="pt-4 border-t border-stone-surface">
+                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-stone-surface">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-label={`${activeViewNews.title} 오픈채팅 공지문 복사`}
+                    onClick={() => void handleOpenChatCopy(activeViewNews)}
+                    disabled={openChatCopyStatus[activeViewNews.id] === "copying"}
+                    className="h-8 rounded-full border-meadow-green/30 px-3 text-[11px] font-bold text-meadow-green hover:bg-meadow-green/5 disabled:opacity-60"
+                  >
+                    {openChatCopyStatus[activeViewNews.id] === "copying" ? "복사 중" : "공지문 복사"}
+                  </Button>
+                  {openChatCopyStatus[activeViewNews.id] === "copied" && (
+                    <span className="text-[10px] font-bold text-meadow-green">
+                      공지문 복사됨
+                    </span>
+                  )}
+                  {openChatCopyStatus[activeViewNews.id] === "error" && (
+                    <span className="text-[10px] font-bold text-ember-orange">
+                      복사 실패
+                    </span>
+                  )}
                   <button
                     type="button"
                     aria-label="조합뉴스 삭제"

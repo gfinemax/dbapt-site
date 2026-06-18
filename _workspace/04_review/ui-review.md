@@ -1,6 +1,173 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: 공지사항 복사 실패 보강 및 자유게시판 오픈채팅 공지문 자동 생성/복사
+- Governing spec: `docs/superpowers/specs/2026-06-13-openchat-disclosure-announcement-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed:
+  - `prisma/schema.prisma`
+  - `src/lib/copy-to-clipboard.ts`
+  - `src/lib/openchat-announcement-response.ts`
+  - `src/lib/notifications/openchat-announcements.ts`
+  - `src/app/api/openchat/announcements/route.ts`
+  - `src/components/news/notice-board.tsx`
+  - `src/components/news/coop-newsletter.tsx`
+  - `src/components/news/free-board.tsx`
+  - `src/components/news/notice-rich-editor.tsx`
+  - `src/__tests__/openchat-announcements.test.ts`
+  - `src/__tests__/openchat-announcements-api.test.ts`
+  - `src/__tests__/news-admin-controls.test.tsx`
+  - `/news?tab=notice`
+  - `/news?tab=free`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change keeps OpenChat announcement copying administrator-only and clipboard-only. It adds free-board announcement draft generation for database-backed posts without sending messages externally, changing public access, or exposing member-only board content to non-members.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The generated free-board message says `새 자유게시판 글이 등록되었습니다`, includes only type, title, registration date, and the login-gated free-board link, and does not copy post body content into the external notice text. The button label remains `공지문 복사`, matching the clipboard action.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The new free-board copy control appears in the existing admin management column and reuses the existing rounded green outline treatment, item-specific `aria-label`, disabled copying state, and copied/error text states. Notice/news copy now uses a shared clipboard fallback so browsers that reject `navigator.clipboard.writeText` can still copy through a textarea path. OpenChat copy responses are parsed through a shared safe reader so empty/non-JSON 500 responses no longer surface a browser `SyntaxError`, and the API returns JSON for GET failures. Rich editor image insertion was hardened so mocked or unsupported `execCommand("insertHTML")` does not prevent image insertion. `pnpm prisma generate`, `pnpm prisma migrate deploy`, `pnpm prisma migrate status`, `pnpm lint`, `pnpm test`, and `pnpm build` passed. Local HTTP verification for `/news?tab=notice` and `/news?tab=free` returned 200. Codex in-app Browser was unavailable.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: 조합소식 공지사항 및 주/월간소식 오픈채팅 공지문 자동 생성 및 복사
+- Governing spec: `docs/superpowers/specs/2026-06-13-openchat-disclosure-announcement-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed:
+  - `prisma/schema.prisma`
+  - `src/lib/notifications/openchat-announcements.ts`
+  - `src/app/api/openchat/announcements/route.ts`
+  - `src/components/news/coop-newsletter.tsx`
+  - `src/components/news/notice-board.tsx`
+  - `src/__tests__/openchat-announcements.test.ts`
+  - `src/__tests__/openchat-announcements-api.test.ts`
+  - `src/__tests__/news-admin-controls.test.tsx`
+  - `/news?tab=newsletter`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change extends the existing administrator-only OpenChat copy workflow to database-backed `NOTICE` and `WEEKLY_MONTHLY` cooperative news posts. It does not post to KakaoTalk automatically, does not expose the control to non-admin users, and does not add public document/accounting/voting/messaging access.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The generated message says `새 조합소식이 등록되었습니다`, labels notices as `조합 공지사항`, labels newsletters as `주/월간 조합소식`, links only to the relevant `/news` tab, and does not include attachment or direct file paths. The UI button is labeled `공지문 복사`, matching the actual clipboard action rather than implying external delivery.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The new control appears in the existing admin-only notice list management cell, newsletter card action row, and newsletter detail action row. It reuses the rounded outline/pill treatment from disclosure copy controls, has item-specific `aria-label` text, and exposes copied/error text states. `pnpm prisma generate`, `pnpm prisma migrate deploy`, `pnpm prisma migrate status`, `pnpm lint`, `pnpm test`, and `pnpm build` passed. Follow-up validation added notice-list and newsletter-card regression coverage, reran `pnpm lint`, the related OpenChat/news tests, `pnpm build`, and local HTTP verification for `/news?tab=notice` and `/news?tab=newsletter` returned 200. Codex in-app Browser was unavailable and Playwright CLI was not installed.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: 자유게시판 작성일 KST 표시 및 관리자 작성자 표시명 선택
+- Governing spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`
+- Files or pages reviewed:
+  - `prisma/schema.prisma`
+  - `src/app/api/news/free/route.ts`
+  - `src/app/news/page.tsx`
+  - `src/components/news/free-board.tsx`
+  - `src/lib/news-display-author.ts`
+  - `src/__tests__/news-admin-controls.test.tsx`
+  - `/news?tab=free`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change stays inside the existing login-gated free-board and `/api/news/free` mutation path. It adds administrator-only public display labels for free-board posts and comments while preserving the real `authorId` for accountability. Member posts/comments continue to use the existing member display and masking rules.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Administrators can choose only `운영자` or `사무국` for free-board post/comment display names. Existing administrator rows without a stored display label fall back to `사무국`; selected labels are stored separately from the authenticated admin account. Free-board dates now render in `Asia/Seoul` as `YYYY-MM-DD HH:mm`, avoiding UTC-offset display drift.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The new post/comment/reply author controls are native labeled selects using the existing rounded stone-border form styling. Regression tests cover API storage/rejection, KST date formatting, list/detail author labels, and comment payload submission. `pnpm prisma generate`, `pnpm prisma migrate deploy`, `pnpm lint`, `pnpm test`, and `pnpm build` passed. Codex in-app Browser was unavailable and Playwright CLI was not installed; local HTTP verification for `/news?tab=free` returned 200 and confirmed the free-board page rendered.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: 자유게시판 상세 열람 화면을 공지사항 상세 열람 화면 기준으로 정렬
+- Governing spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`
+- Files or pages reviewed:
+  - `src/components/news/free-board.tsx`
+  - `src/components/news/news-client.tsx`
+  - `src/components/news/notice-rich-editor.tsx`
+  - `src/__tests__/news-admin-controls.test.tsx`
+  - `/news?tab=free`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to the existing login-gated free-board detail presentation. It does not alter free-board visibility, post/comment permissions, API mutation rules, document/accounting access, voting, messaging, or member data exposure.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The visible content remains the same database-backed post title, type badge, author label, date, comment count, body, and comments. The change only aligns the free-board detail drawer with the notice detail drawer so posts are not visually presented with a different reading density or oversized body card.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The free-board detail drawer now uses the notice drawer's `max-w-2xl` width, header icon/title/subtitle structure, bordered metadata row, shared `NoticeRichContent` typography, border-top comment section, rounded comment cards, and textarea comment form. Regression coverage verifies the drawer width and shared rich-content typography. `pnpm lint`, `pnpm test`, and `pnpm build` passed. Codex in-app Browser was unavailable and Playwright CLI was not installed; local HTTP verification for `/news?tab=free` returned 200.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: 자유게시판 게시글 유형 구분 및 작성/수정/필터 인터페이스 추가
+- Governing spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`
+- Files or pages reviewed:
+  - `prisma/schema.prisma`
+  - `src/lib/free-post-type.ts`
+  - `src/app/api/news/free/route.ts`
+  - `src/app/news/page.tsx`
+  - `src/components/news/free-board.tsx`
+  - `src/__tests__/news-admin-controls.test.tsx`
+  - `/news?tab=free`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change stays inside the existing login-gated free-board surface and its existing `/api/news/free` mutation path. It adds a local `postType` classification to database-backed free-board posts without exposing the free board publicly, changing comment permissions, or adding new document/accounting/voting/messaging capabilities. `NOTICE` operation notices are accepted only for `ADMIN`; non-admin create/update requests are coerced to `FREE`.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The UI no longer labels every post as `정식 토론`. Database-backed posts are shown as `자유글`, `토론글`, `질문`, `제안`, or `운영안내`, with legacy rows defaulting to `자유글`. The author can choose a normal communication type at write/edit time, while the administrator-only `운영안내` label prevents member posts from appearing as official operation notices.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The type filter and writer type control use native labeled selects with the existing rounded stone-border input treatment. The list badge keeps the compact table layout and uses existing accent colors without introducing a new visual system. Regression coverage verifies API storage rules, admin-only notice selection, payload submission, type badges, and filtering. `pnpm lint`, `pnpm test`, and `pnpm build` passed.
+
+## Outcome
+- Result: PASS
+- Required action: none
+- Note: Codex in-app Browser was attempted but unavailable in this session. Local HTTP verification for `/news?tab=free` returned 200; regression tests cover the new visible labels, type select, filter, and admin-only operation notice option.
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: 조합뉴스 목업 삭제 및 2026년 7월 월간 소식지 제1호 예고편 게시
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
 - Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
