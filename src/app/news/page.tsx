@@ -10,6 +10,7 @@ import {
 } from "@/lib/personal-library-data";
 import { NewsClient } from "@/components/news/news-client";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
+import { getUserDisplayName } from "@/lib/user-display-name";
 
 export default async function NewsPage() {
   const session = (await getSession()) as PersonalLibrarySession | null;
@@ -27,6 +28,7 @@ export default async function NewsPage() {
           select: {
             id: true,
             name: true,
+            signupName: true,
             loginId: true,
             role: true,
           },
@@ -37,6 +39,7 @@ export default async function NewsPage() {
               select: {
                 id: true,
                 name: true,
+                signupName: true,
                 loginId: true,
                 role: true,
               },
@@ -55,6 +58,7 @@ export default async function NewsPage() {
       author: {
         id: item.author.id,
         name: item.displayAuthorName || item.author.name || "관리자",
+        signupName: item.author.signupName,
         loginId: item.author.loginId || "admin",
         role: item.author.role,
       },
@@ -63,7 +67,8 @@ export default async function NewsPage() {
         createdAt: comment.createdAt.toISOString(),
         author: {
           id: comment.author.id,
-          name: comment.author.name || "조합원",
+          name: getUserDisplayName(comment.author),
+          signupName: comment.author.signupName,
           loginId: comment.author.loginId || "social",
           role: comment.author.role,
         },
@@ -79,7 +84,9 @@ export default async function NewsPage() {
         include: {
           author: {
             select: {
+              id: true,
               name: true,
+              signupName: true,
               loginId: true,
               role: true,
             },
@@ -88,7 +95,9 @@ export default async function NewsPage() {
             include: {
               author: {
                 select: {
+                  id: true,
                   name: true,
+                  signupName: true,
                   loginId: true,
                   role: true,
                 },
@@ -105,7 +114,9 @@ export default async function NewsPage() {
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
         author: {
+          id: post.author.id,
           name: post.author.name || "조합원",
+          signupName: post.author.signupName,
           loginId: post.author.loginId || "social",
           role: post.author.role,
         },
@@ -113,7 +124,9 @@ export default async function NewsPage() {
           ...c,
           createdAt: c.createdAt.toISOString(),
           author: {
+            id: c.author.id,
             name: c.author.name || "조합원",
+            signupName: c.author.signupName,
             loginId: c.author.loginId || "social",
             role: c.author.role,
           },

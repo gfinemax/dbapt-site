@@ -10,6 +10,7 @@ import {
   validateSignupPassword,
 } from "./signup-password";
 import { normalizeMemberType, type MemberType } from "./member-type";
+import { getUserDisplayName } from "./user-display-name";
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "default-secret-key-at-least-32-characters-long-dbapt"
@@ -53,7 +54,7 @@ export async function decrypt(token: string) {
 }
 
 export async function createSessionToken(user: SessionUser) {
-  const displayName = user.signupName?.trim() || user.name;
+  const displayName = getUserDisplayName(user, user.name || "조합원");
 
   return encrypt({
     id: user.id,
@@ -238,19 +239,19 @@ export async function updateSignupNameAction(userId: string, signupName: string)
   const normalizedName = signupName.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 80);
 
   if (!normalizedName) {
-    return { error: "신청 이름을 입력해주세요." };
+    return { error: "표시 명의를 입력해주세요." };
   }
 
   try {
     const session = await getSession() as { id?: string; role?: string } | null;
     if (!session?.id || session.role !== "ADMIN") {
-      return { error: "관리자만 신청 이름을 수정할 수 있습니다." };
+      return { error: "관리자만 표시 명의를 수정할 수 있습니다." };
     }
 
     const updated = await prisma.user.updateMany({
       where: {
         id: userId,
-        role: "PENDING",
+        role: { in: ["PENDING", "MEMBER", "REFUND", "ASSOCIATE"] },
       },
       data: {
         signupName: normalizedName,
@@ -258,12 +259,12 @@ export async function updateSignupNameAction(userId: string, signupName: string)
     });
 
     if (updated.count === 0) {
-      return { error: "승인 대기 사용자를 찾을 수 없습니다." };
+      return { error: "표시 명의를 수정할 사용자를 찾을 수 없습니다." };
     }
 
     return { success: true, signupName: normalizedName };
   } catch (e) {
     console.error("Update signup name action error:", e);
-    return { error: "신청 이름 수정 중 문제가 발생했습니다." };
+    return { error: "표시 명의 수정 중 문제가 발생했습니다." };
   }
 }

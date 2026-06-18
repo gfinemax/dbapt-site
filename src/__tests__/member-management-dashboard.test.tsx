@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemberManagementDashboard } from "@/components/portal/member-management-dashboard";
-import { approveUserAction } from "@/lib/auth";
+import { approveUserAction, updateSignupNameAction } from "@/lib/auth";
 
 vi.mock("next/navigation", () => ({
   useRouter() {
@@ -13,6 +13,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/auth", () => ({
   approveUserAction: vi.fn(),
+  updateSignupNameAction: vi.fn(),
 }));
 
 afterEach(() => {
@@ -115,6 +116,7 @@ describe("member management dashboard", () => {
   it("uses a dedicated conversion table to change approved users among member, refund, and associate account types", async () => {
     vi.stubGlobal("alert", vi.fn());
     vi.mocked(approveUserAction).mockResolvedValue({ success: true, role: "MEMBER" });
+    vi.mocked(updateSignupNameAction).mockResolvedValue({ success: true, signupName: "최마리" });
 
     render(
       <MemberManagementDashboard
@@ -137,7 +139,8 @@ describe("member management dashboard", () => {
         approvedSocialUsers={[
           {
             id: "refund-member",
-            name: "환불회원",
+            name: "marie Choi",
+            signupName: "환불회원",
             email: "010-1111-2222",
             role: "REFUND",
             memberType: "REFUND",
@@ -159,6 +162,15 @@ describe("member management dashboard", () => {
     expect(screen.getByText("이메일/휴대폰")).toBeInTheDocument();
     expect(screen.getAllByText("관계자/기타 승인 계정").length).toBeGreaterThan(0);
     expect(screen.getByText("관계자/기타 승인 계정 (ASSOCIATE)")).toBeInTheDocument();
+    expect(screen.getByLabelText("marie Choi 표시 명의")).toHaveValue("환불회원");
+    expect(screen.getByText("Google 이름: marie Choi")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("marie Choi 표시 명의"), { target: { value: "최마리" } });
+    fireEvent.click(screen.getAllByRole("button", { name: "표시 명의 저장" })[0]);
+
+    await waitFor(() => {
+      expect(updateSignupNameAction).toHaveBeenCalledWith("refund-member", "최마리");
+    });
 
     const refundSelect = screen.getByLabelText("환불회원 전환할 자격");
     expect(refundSelect).toHaveValue("REFUND");

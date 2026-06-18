@@ -36,6 +36,7 @@ async function getHomepageMemberAccounts(): Promise<HomepageMemberAccount[]> {
     select: {
       id: true,
       name: true,
+      signupName: true,
       email: true,
       loginId: true,
       phone: true,
@@ -69,6 +70,7 @@ async function getApprovedMemberConversionUsers(): Promise<ApprovedMemberConvers
     .map((user) => ({
       id: user.id,
       name: user.name || "이름 없음",
+      signupName: user.signupName,
       email: getUserContactDisplay(user),
       role: user.role,
       memberType: normalizeMemberType(user.memberType, user.role),

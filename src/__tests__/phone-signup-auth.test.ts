@@ -8,16 +8,30 @@ const prismaMock = vi.hoisted(() => ({
     findUnique: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
+}));
+
+const mockSessionCookie = vi.hoisted(() => ({
+  value: "",
 }));
 
 vi.mock("@/lib/db", () => ({
   prisma: prismaMock,
 }));
 
+vi.mock("next/headers", () => ({
+  cookies: vi.fn(async () => ({
+    get: vi.fn(() => (mockSessionCookie.value ? { value: mockSessionCookie.value } : undefined)),
+    set: vi.fn(),
+    delete: vi.fn(),
+  })),
+}));
+
 describe("phone password signup auth", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSessionCookie.value = "";
   });
 
   it("validates the approved password rules", async () => {
@@ -139,6 +153,30 @@ describe("phone password signup auth", () => {
       data: {
         role: "ASSOCIATE",
         memberType: "ASSOCIATE",
+      },
+    });
+  });
+
+  it("lets administrators update the display name for approved Google accounts", async () => {
+    const { createSessionToken, updateSignupNameAction } = await import("@/lib/auth");
+    mockSessionCookie.value = await createSessionToken({
+      id: "admin-1",
+      loginId: "admin",
+      name: "운영자",
+      role: "ADMIN",
+    });
+    prismaMock.user.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await updateSignupNameAction("approved-google-1", "최마리");
+
+    expect(result).toEqual({ success: true, signupName: "최마리" });
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "approved-google-1",
+        role: { in: ["PENDING", "MEMBER", "REFUND", "ASSOCIATE"] },
+      },
+      data: {
+        signupName: "최마리",
       },
     });
   });

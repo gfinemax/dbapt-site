@@ -16,6 +16,7 @@ export async function GET() {
           select: {
             id: true,
             name: true,
+            signupName: true,
             loginId: true,
             role: true,
           },
@@ -26,6 +27,7 @@ export async function GET() {
               select: {
                 id: true,
                 name: true,
+                signupName: true,
                 loginId: true,
                 role: true,
               },
@@ -95,6 +97,7 @@ export async function POST(request: Request) {
             select: {
               id: true,
               name: true,
+              signupName: true,
               loginId: true,
               role: true,
             },

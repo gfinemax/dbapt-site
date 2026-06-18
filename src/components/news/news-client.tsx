@@ -335,7 +335,7 @@ export function NewsClient({
 
   // 3. 주/월간 뉴스레터 최신 호 타이틀 및 개수
   const newsletterCount = useMemo(() => {
-    return newsList.filter((n) => n.category === "WEEKLY_MONTHLY").length + 3; // + mock newsletters
+    return newsList.filter((n) => n.category === "WEEKLY_MONTHLY").length;
   }, [newsList]);
 
 
@@ -473,23 +473,23 @@ export function NewsClient({
                 </span>
                 <div className="mt-3.5 space-y-3">
                   <h4 className="text-[12.5px] font-extrabold text-charcoal-primary leading-snug">
-                    인허가 시행율: <span className="text-sky-blue font-mono">85%</span>
+                    인허가 시행율: <span className="text-sky-blue font-mono">지구단위 완료 기준</span>
                   </h4>
                   {/* 미니 게이지 바 */}
                   <div className="space-y-1">
                     <div className="w-full bg-stone-surface rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-sky-blue h-1.5 rounded-full transition-all duration-500" style={{ width: "85%" }}></div>
+                      <div className="bg-sky-blue h-1.5 rounded-full transition-all duration-500" style={{ width: "33%" }}></div>
                     </div>
-                    <div className="flex justify-between text-[8.5px] font-bold text-ash tracking-tight font-mono select-none">
+                    <div className="text-[8.5px] font-bold text-ash tracking-tight font-mono select-none">
                       <span>지구단위(완료)</span>
-                      <span>심의(완료)</span>
-                      <span className="text-sky-blue font-extrabold">사업시행(준비)</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="mt-5 pt-3 border-t border-stone-surface/60 flex items-center justify-between">
-                <span className="text-[10px] text-ash font-mono font-medium">뉴스레터 {newsletterCount}집 발행</span>
+                <span className="text-[10px] text-ash font-mono font-medium">
+                  {newsletterCount > 0 ? `뉴스레터 ${newsletterCount}집 발행` : "뉴스레터 제1호 오픈 예정"}
+                </span>
                 <button
                   onClick={() => handleTabClick("newsletter")}
                   className="text-[10.5px] font-bold text-sky-blue hover:underline cursor-pointer select-none"

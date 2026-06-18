@@ -605,7 +605,7 @@ export function PortalShell({
                                         const nextSignupName = String(formData.get("signupName") || "");
                                         const res = await updateSignupNameAction(user.id, nextSignupName);
                                         if (res.success) {
-                                          alert(`${user.name}님의 신청 이름이 수정되었습니다.`);
+                                          alert(`${user.name}님의 표시 명의가 수정되었습니다.`);
                                           router.refresh();
                                         } else if (res.error) {
                                           alert(res.error);
@@ -613,7 +613,7 @@ export function PortalShell({
                                       }}
                                     >
                                       <label className="sr-only" htmlFor={`signup-name-${user.id}`}>
-                                        {user.name} 신청 이름
+                                        {user.name} 표시 명의
                                       </label>
                                       <input
                                         id={`signup-name-${user.id}`}
@@ -625,7 +625,7 @@ export function PortalShell({
                                         type="submit"
                                         className="self-start rounded-full bg-[#f8f7f4] px-3 py-1 text-[10px] font-semibold text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
                                       >
-                                        신청 이름 저장
+                                        표시 명의 저장
                                       </button>
                                     </form>
                                     {user.signupName && user.signupName !== user.name && (

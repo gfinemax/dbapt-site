@@ -18,6 +18,7 @@ export type PeopleOnMemberRow = {
 export type HomepageMemberAccount = {
   id: string;
   name: string | null;
+  signupName?: string | null;
   email: string | null;
   loginId: string | null;
   phone: string | null;
@@ -114,6 +115,14 @@ function getPhoneLast4(value: string | null | undefined) {
   return phone.length >= 4 ? phone.slice(-4) : "";
 }
 
+function getHomepageComparableName(user: HomepageMemberAccount) {
+  return normalizeComparableText(user.signupName || user.name);
+}
+
+function getHomepageDisplayName(user: HomepageMemberAccount) {
+  return user.signupName?.trim() || user.name || null;
+}
+
 function isPreliminaryPeopleOnRow(row: PeopleOnMemberRow) {
   const statusText = getPeopleOnStatusText(row);
   return statusText.includes("예비조합원") || statusText.includes("예비");
@@ -157,7 +166,7 @@ function findMatchedHomepageUser(row: PeopleOnMemberRow, homepageUsers: Homepage
   const rowLast4 = getPhoneLast4(row.phone);
   if (rowName && rowLast4) {
     return homepageUsers.find((user) => {
-      if (normalizeComparableText(user.name) !== rowName) return false;
+      if (getHomepageComparableName(user) !== rowName) return false;
       return [user.phone, user.signupPhone, user.loginId].map(getPhoneLast4).includes(rowLast4);
     }) || null;
   }
@@ -204,7 +213,7 @@ export function buildMemberManagementSnapshot({
       expectedMemberType,
       matchStatus,
       matchedUserId: matchedUser?.id || null,
-      matchedUserName: matchedUser?.name || null,
+      matchedUserName: matchedUser ? getHomepageDisplayName(matchedUser) : null,
       matchedUserEmail: matchedUser?.email || null,
       matchedUserRole: matchedUser?.role || null,
       matchedUserActive: typeof matchedUser?.isActive === "boolean" ? matchedUser.isActive : null,

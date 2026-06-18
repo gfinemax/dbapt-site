@@ -868,6 +868,42 @@ describe("news admin visible controls", () => {
     ));
   });
 
+  it("shows the permit milestone only through the completed district plan stage", () => {
+    render(
+      <NewsClient
+        session={null}
+        initialNewsList={[realNewsletter]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    expect(screen.getByText("인허가 시행율:")).toBeInTheDocument();
+    expect(screen.getByText("지구단위(완료)")).toBeInTheDocument();
+    expect(screen.queryByText("85%")).not.toBeInTheDocument();
+    expect(screen.queryByText("심의(완료)")).not.toBeInTheDocument();
+    expect(screen.queryByText("사업시행(준비)")).not.toBeInTheDocument();
+  });
+
+  it("replaces newsletter mock issues with the upcoming July first issue preview", () => {
+    render(
+      <CoopNewsletter
+        isLoggedIn={false}
+        isAdmin={false}
+        newsList={[]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("대방동 지주택 2026년 7월 조합 월간 소식지 (제1호) 오픈 예정")).toBeInTheDocument();
+    expect(screen.getByText(/제1호에서는 조합 운영 일정/)).toBeInTheDocument();
+    expect(screen.getByText(/인허가 진행 기준/)).toBeInTheDocument();
+    expect(screen.getByText(/확정되지 않은 사안은 확정 표현 없이/)).toBeInTheDocument();
+    expect(screen.queryByText("대방동 2026년 5월 조합 월간 소식지 (제24호)")).not.toBeInTheDocument();
+    expect(screen.queryByText("대방동 5월 3주차 주간 실무 브리핑 (제98호)")).not.toBeInTheDocument();
+    expect(screen.queryByText("대방동 2026년 4월 조합 월간 소식지 (제23호)")).not.toBeInTheDocument();
+  });
+
   it("renders notice rich content with editor-matched body typography", () => {
     const { container } = render(
       <NoticeRichContent content="<p>동작구청 방문 결과 공유드립니다</p>" />,
@@ -1159,6 +1195,35 @@ describe("news admin visible controls", () => {
     expect(screen.queryByText("최근 임시총회 의결서 공증 완료본 확인했습니다.")).not.toBeInTheDocument();
     expect(screen.queryByText("신규로 등재된 주간 실무 보고서 유익하네요.")).not.toBeInTheDocument();
     expect(screen.queryByText("데모 피드")).not.toBeInTheDocument();
+  });
+
+  it("uses the corrected signup display name for free board authors and comments", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "최마리", loginId: "member1", role: "MEMBER" }}
+        posts={[{
+          ...realFreePost,
+          author: { id: "member-1", name: "marie Choi", signupName: "최마리", loginId: "member1", role: "MEMBER" },
+          comments: [
+            {
+              ...freeComment,
+              author: { id: "member-2", name: "Google Name", signupName: "김참여", loginId: "member2", role: "MEMBER" },
+            },
+          ],
+        }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("최마리 (나)")).toBeInTheDocument();
+    expect(screen.queryByText(/marie Choi/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+
+    expect(within(panel).getByText("작성자: 최마리 (나)")).toBeInTheDocument();
+    expect(within(panel).getByText(/김\*조합원/)).toBeInTheDocument();
+    expect(within(panel).queryByText(/Google Name/)).not.toBeInTheDocument();
   });
 
   it("opens a left focus panel from the free board list and keeps the post URL addressable", () => {

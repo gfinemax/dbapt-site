@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getUserDisplayName } from "@/lib/user-display-name";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
 type FreeBoardProps = {
@@ -204,14 +205,15 @@ export function FreeBoard({
   };
 
   // Anonymize/Mask user details for privacy protection
-  const getMaskedAuthorName = (author: { name: string; loginId: string | null; role: string; id?: string }) => {
+  const getMaskedAuthorName = (author: { signupName?: string | null; name?: string | null; loginId: string | null; role: string; id?: string }) => {
+    const displayName = getUserDisplayName(author);
     if (author.id === currentUserId) {
-      return `${author.name || "조합원"} (나)`;
+      return `${displayName} (나)`;
     }
     if (author.role === "ADMIN") {
       return "사무국";
     }
-    const cleanName = author.name || "조합원";
+    const cleanName = displayName;
     const maskedId = author.loginId 
       ? `${author.loginId.slice(0, 2)}***`
       : "social";

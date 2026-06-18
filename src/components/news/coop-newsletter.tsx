@@ -13,43 +13,23 @@ type CoopNewsletterProps = {
   onRefresh: () => Promise<void>;
 };
 
-const MOCK_NEWSLETTERS = [
-  {
-    id: "mock-nl-1",
-    title: "대방동 2026년 5월 조합 월간 소식지 (제24호)",
-    content: "존경하는 대방동 지역주택조합원 동지 여러분, 5월 한 달간의 주요 사업 추진 실적 보고를 전해드립니다.\n\n당 조합은 지구단위계획 결정 고시 완수 이후 가장 핵심 이정표인 [사업시행계획 승인 본신청 서류]를 구청 유관과에 정식 접수하였으며, 현재 실무 유관 부서 회신 및 조율 프로세스가 매끄럽게 가동 중입니다.\n\n또한, 신영부동산신탁과의 정기 공조 하에 월별 에스크로 분담금 수납 현황 및 금융 차입 예산 조율 안을 투명하게 수립하였습니다. 조합원님의 든든한 신뢰에 힘입어 하반기 사업시행인가 골인을 목표로 전 사력을 다하겠습니다.",
-    author: { name: "사무국" },
-    createdAt: "2026.05.30",
-    imagePath: null,
-    attachmentPath: null,
-    attachmentName: null,
-    attachmentSize: null,
-    isStarred: true,
-  },
-  {
-    id: "mock-nl-2",
-    title: "대방동 5월 3주차 주간 실무 브리핑 (제98호)",
-    content: "이번 5월 3주차 주간 주요 진척 사항을 신속하게 안내해 드립니다.\n\n1. [시공예정사 설계 공조]: 메이저 시공예정사 브랜드 설계 전담팀과 3차 도면 최적화 회의를 완수하였습니다. 지하 주차 공간 구획을 추가 확보하고 주민 공동 커뮤니티 면적의 미학적 동선을 세련되게 업그레이드했습니다.\n\n2. [현장 실무 핫라인]: 현장 부지 토지 매입 소송 및 매입 소유권 신속 등기를 위한 법률 전담법인(월드)과의 주간 전략 실무 협의를 완수하고 향후 스케줄러를 확정하였습니다.",
-    author: { name: "사무국" },
-    createdAt: "2026.05.21",
-    imagePath: null,
-    attachmentPath: null,
-    attachmentName: null,
-    attachmentSize: null,
-    isStarred: false,
-  },
-  {
-    id: "mock-nl-3",
-    title: "대방동 2026년 4월 조합 월간 소식지 (제23호)",
-    content: "4월 한 달간의 월간 주요 진행 내역을 보고드립니다.\n\n당 조합은 동작구청이 실시한 [2026년 정기 행정실태점검] 결과에 대하여, 단 한 건의 크리티컬한 적발이나 시정명령 없이 개선 권고 조치 사항들에 대해 완벽하게 이행을 보고하고 동작구청으로부터 수신 완료 통보를 수령하였습니다. 이는 밀실 의사결정 없는 투명한 조합 행정력이 검증된 쾌거입니다.\n\n아울러, 다가오는 소방·설비 건축 설계 2차 계약 발주를 앞두고 예산 심의를 마쳤습니다. 앞으로도 한 푼의 조합비도 헛되이 낭비하지 않는 투명한 조합을 이어가겠습니다.",
-    author: { name: "사무국" },
-    createdAt: "2026.04.30",
-    imagePath: null,
-    attachmentPath: null,
-    attachmentName: null,
-    attachmentSize: null,
-    isStarred: false,
-  },
+const UPCOMING_NEWSLETTER_PREVIEW = {
+  id: "upcoming-newsletter-2026-07-issue-1",
+  title: "대방동 지주택 2026년 7월 조합 월간 소식지 (제1호) 오픈 예정",
+  content:
+    "대방동 지역주택조합은 2026년 7월부터 조합 월간 소식지 제1호를 준비해 조합원께 정기적으로 안내드릴 예정입니다.\n\n제1호에서는 조합 운영 일정, 공개자료 등록 현황, 인허가 진행 기준, 조합비와 계약 관리 원칙, 조합원 주요 질의응답, 다음 달 확인 예정 사항을 한눈에 볼 수 있도록 구성하겠습니다.\n\n확정되지 않은 사안은 확정 표현 없이 현재 확인 가능한 기준과 향후 확인 절차로 구분해 전달하고, 조합원께 필요한 자료 위치와 열람 방법도 함께 안내하겠습니다.",
+  author: { name: "사무국" },
+  createdAt: "2026.07 예정",
+  imagePath: null,
+  attachmentPath: null,
+  attachmentName: null,
+  attachmentSize: null,
+  isStarred: false,
+  isPreview: true,
+} as const;
+
+const UPCOMING_NEWSLETTER_PREVIEWS = [
+  UPCOMING_NEWSLETTER_PREVIEW,
 ] as const;
 
 // Dynamic harmony premium HSL gradients for cards if thumbnail image is empty
@@ -78,7 +58,7 @@ export function CoopNewsletter({
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Combine real database data with simulated demonstration mocks
+  // Combine real database data with the single upcoming issue preview.
   const combinedData = useMemo(() => {
     const realNews = newsList.map((item) => ({
       id: item.id,
@@ -93,18 +73,19 @@ export function CoopNewsletter({
       attachmentName: item.attachmentName,
       attachmentSize: item.attachmentSize,
       isReal: true,
+      isPreview: false,
     }));
 
     let filteredReal = realNews;
-    let filteredMock = [...MOCK_NEWSLETTERS].map((n) => ({ ...n, isReal: false }));
+    let filteredPreview = [...UPCOMING_NEWSLETTER_PREVIEWS].map((n) => ({ ...n, isReal: false }));
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       filteredReal = filteredReal.filter((n) => n.title.toLowerCase().includes(q));
-      filteredMock = filteredMock.filter((n) => n.title.toLowerCase().includes(q));
+      filteredPreview = filteredPreview.filter((n) => n.title.toLowerCase().includes(q));
     }
 
-    return [...filteredReal, ...filteredMock];
+    return [...filteredReal, ...filteredPreview];
   }, [newsList, searchQuery]);
 
   const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
@@ -272,6 +253,11 @@ export function CoopNewsletter({
                   {news.isReal && (
                     <span className="absolute top-3 left-3 bg-sky-blue/15 border border-sky-blue/20 text-sky-blue text-[8px] font-black scale-90 rounded px-1.5 py-0.5 select-none shadow-3xs z-2">
                       실제자료
+                    </span>
+                  )}
+                  {news.isPreview && (
+                    <span className="absolute top-3 left-3 bg-sky-blue/15 border border-sky-blue/20 text-sky-blue text-[8px] font-black scale-90 rounded px-1.5 py-0.5 select-none shadow-3xs z-2">
+                      오픈 예정
                     </span>
                   )}
                   {news.isStarred && (

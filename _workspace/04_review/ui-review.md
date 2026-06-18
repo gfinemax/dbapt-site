@@ -1,6 +1,102 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: 조합뉴스 목업 삭제 및 2026년 7월 월간 소식지 제1호 예고편 게시
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed:
+  - `src/components/news/coop-newsletter.tsx`
+  - `src/components/news/news-client.tsx`
+  - `src/__tests__/news-admin-controls.test.tsx`
+  - `/news?tab=newsletter`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to the public 조합뉴스 tab presentation. It removes hardcoded fabricated past newsletter issues and adds one non-mutating `오픈 예정` preview card. No login-gated service, document disclosure, accounting data, voting, messaging, or new mutation control is exposed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The old mock issue titles for 2026년 4월/5월 and 5월 3주차 are no longer rendered. The remaining static entry is explicitly titled `오픈 예정`, dated `2026.07 예정`, and describes planned content categories rather than presenting unverified completed progress. The dashboard count no longer adds mock newsletters and shows `뉴스레터 제1호 오픈 예정` when there are no real newsletter rows.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The existing newsletter card grid, search input, modal behavior, rounded card treatment, and typography are preserved. The preview uses the existing badge style with `오픈 예정`. Regression coverage verifies the July first-issue preview copy and the absence of prior mock issue titles.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: 뉴스 상단 인허가 마일스톤을 지구단위 완료 단계까지만 표시
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed:
+  - `src/components/news/news-client.tsx`
+  - `src/__tests__/news-admin-controls.test.tsx`
+  - `/news?tab=free`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to the public news page milestone card copy and progress indicator. It does not expose login-gated services, document access, accounting data, voting, messaging, or new mutation controls.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The milestone no longer shows `85%`, `심의(완료)`, or `사업시행(준비)`. It states `인허가 시행율: 지구단위 완료 기준` and shows only `지구단위(완료)`, matching the requested state that review has not been completed.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The existing card, badge, bar, spacing, typography, and link treatment are preserved. Only the progress width and milestone text changed. Targeted test coverage verifies the old completed-review labels and 85% copy are absent. Local HTTP verification for `/news?tab=free` returned 200 and confirmed the same text presence/absence in rendered HTML.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: 운영자 표시 명의 수정 및 조합운영 참여글 표시명 통일
+- Governing spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`
+- Files or pages reviewed:
+  - `src/lib/auth.ts`
+  - `src/lib/user-display-name.ts`
+  - `src/app/portal/admin/members/page.tsx`
+  - `src/components/portal/approved-member-conversion-panel.tsx`
+  - `src/components/portal/portal-shell.tsx`
+  - `src/app/news/page.tsx`
+  - `src/app/api/news/free/route.ts`
+  - `src/components/news/free-board.tsx`
+  - `/portal/admin`
+  - `/portal/admin/members`
+  - `/news?tab=free`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: `updateSignupNameAction` remains server-side and requires an `ADMIN` session before mutating any account. The editable roles are limited to local homepage `User` records in `PENDING`, `MEMBER`, `REFUND`, and `ASSOCIATE`; no PeopleOn write, bulk account creation, public navigation, or non-admin mutation path is added. The approved-member 표시 명의 form is rendered only inside the admin-only member management page, while the pending-user form remains inside the existing admin portal approval table.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The UI labels the editable field as `표시 명의`, keeps the original OAuth name visible separately as `Google 이름`, and does not imply that both names will be shown to general users. Free-board post and comment author labels now derive from `signupName || name`, so corrected 표시 명의 is the single display source while the masking rule for other members remains intact.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The new admin form reuses the existing compact rounded input, stone-surface save pill, native form submission, and screen-reader label pattern already used in the pending approval table. The approved-member table remains horizontally scrollable with a widened stable minimum table width. Regression tests cover admin editing for pending and approved users plus corrected free-board author/comment labels. `pnpm lint`, `pnpm test`, and `pnpm build` passed.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 
 - Feature: PeopleOn 조합원 원장과 홈페이지 계정을 비교하는 관리자 전용 조합원 관리 MVP
 - Follow-up: Include email-less phone/password MEMBER and REFUND accounts in the administrator role-conversion list

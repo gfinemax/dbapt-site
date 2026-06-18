@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { approveUserAction } from "@/lib/auth";
+import { approveUserAction, updateSignupNameAction } from "@/lib/auth";
 import { getMemberTypeLabel, normalizeMemberType, type MemberType } from "@/lib/member-type";
+import { getUserDisplayName } from "@/lib/user-display-name";
 import { cn } from "@/lib/utils";
 
 export type ApprovedMemberConversionUser = {
   id: string;
   name: string;
+  signupName?: string | null;
   email: string;
   role: string;
   memberType?: string | null;
@@ -102,10 +104,10 @@ export function ApprovedMemberConversionPanel({
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[980px] border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-[#f2f0ed] font-medium text-graphite/80">
-                  <th className="pb-3 pr-4">회원 명의</th>
+                  <th className="pb-3 pr-4">표시 명의</th>
                   <th className="pb-3 pr-4">이메일/휴대폰</th>
                   <th className="pb-3 pr-4">자격 구분</th>
                   <th className="pb-3 pr-4">현재 권한 상태</th>
@@ -119,10 +121,48 @@ export function ApprovedMemberConversionPanel({
                   const selectedAction =
                     memberConversionActions.find((action) => action.memberType === selectedMemberType) ??
                     memberConversionActions[0];
+                  const displayName = getUserDisplayName(user, "이름 없음");
 
                   return (
                     <tr key={user.id} className="text-charcoal-primary">
-                      <td className="py-3.5 pr-4 font-semibold">{user.name}</td>
+                      <td className="py-3.5 pr-4">
+                        <form
+                          className="flex min-w-[180px] flex-col gap-2"
+                          onSubmit={async (event) => {
+                            event.preventDefault();
+                            const formData = new FormData(event.currentTarget);
+                            const nextSignupName = String(formData.get("signupName") || "");
+                            const res = await updateSignupNameAction(user.id, nextSignupName);
+                            if (res.success) {
+                              alert(`${displayName}님의 표시 명의가 수정되었습니다.`);
+                              router.refresh();
+                            } else if (res.error) {
+                              alert(res.error);
+                            }
+                          }}
+                        >
+                          <label className="sr-only" htmlFor={`approved-signup-name-${user.id}`}>
+                            {user.name} 표시 명의
+                          </label>
+                          <input
+                            id={`approved-signup-name-${user.id}`}
+                            name="signupName"
+                            defaultValue={displayName}
+                            className="w-full rounded-lg border border-[#f2f0ed] bg-white px-2.5 py-2 text-xs font-semibold text-charcoal-primary outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                          />
+                          <button
+                            type="submit"
+                            className="self-start rounded-full bg-[#f8f7f4] px-3 py-1 text-[10px] font-semibold text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
+                          >
+                            표시 명의 저장
+                          </button>
+                        </form>
+                        {user.signupName && user.signupName !== user.name && (
+                          <div className="mt-2 text-[10px] font-medium text-ash">
+                            Google 이름: {user.name}
+                          </div>
+                        )}
+                      </td>
                       <td className="py-3.5 pr-4 font-mono">{user.email}</td>
                       <td className="py-3.5 pr-4">
                         <span
@@ -147,7 +187,7 @@ export function ApprovedMemberConversionPanel({
                       <td className="py-3.5 text-right">
                         <div className="flex flex-wrap justify-end gap-2">
                           <select
-                            aria-label={`${user.name} 전환할 자격`}
+                            aria-label={`${displayName} 전환할 자격`}
                             value={selectedMemberType}
                             onChange={(event) => {
                               setMemberConversionSelections((prev) => ({
@@ -171,7 +211,7 @@ export function ApprovedMemberConversionPanel({
                             onClick={async () => {
                               const res = await approveUserAction(user.id, selectedAction.role, selectedAction.memberType);
                               if (res.success) {
-                                alert(`${user.name}님의 자격을 ${selectedAction.label}으로 강제 전환했습니다.`);
+                                alert(`${displayName}님의 자격을 ${selectedAction.label}으로 강제 전환했습니다.`);
                                 router.refresh();
                               }
                             }}

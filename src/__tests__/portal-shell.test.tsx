@@ -266,12 +266,12 @@ describe("portal shell", () => {
       />,
     );
 
-    const signupNameInput = screen.getByLabelText("OH Hakdong 신청 이름");
+    const signupNameInput = screen.getByLabelText("OH Hakdong 표시 명의");
     expect(signupNameInput).toHaveValue("오학동");
     expect(screen.getByText("Google 이름: OH Hakdong")).toBeInTheDocument();
 
     fireEvent.change(signupNameInput, { target: { value: "오하동" } });
-    fireEvent.click(screen.getByRole("button", { name: "신청 이름 저장" }));
+    fireEvent.click(screen.getByRole("button", { name: "표시 명의 저장" }));
 
     await waitFor(() => {
       expect(updateSignupNameAction).toHaveBeenCalledWith("pending-1", "오하동");
