@@ -111,15 +111,24 @@ export function ApprovedMemberConversionPanel({
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1160px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[980px] table-fixed border-collapse text-left text-xs">
+              <colgroup>
+                <col className="w-[11%]" />
+                <col className="w-[21%]" />
+                <col className="w-[17%]" />
+                <col className="w-[9%]" />
+                <col className="w-[9%]" />
+                <col className="w-[15%]" />
+                <col className="w-[18%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-[#f2f0ed] font-medium text-graphite/80">
-                  <th className="pb-3 pr-4">가입명</th>
-                  <th className="pb-3 pr-4">표시명</th>
-                  <th className="pb-3 pr-4">이메일/휴대폰</th>
-                  <th className="pb-3 pr-4">가입날짜</th>
-                  <th className="pb-3 pr-4">자격 구분</th>
-                  <th className="pb-3 pr-4">현재 권한 상태</th>
+                  <th className="pb-3 pr-3">가입명</th>
+                  <th className="pb-3 pr-3">표시명</th>
+                  <th className="pb-3 pr-3">이메일/휴대폰</th>
+                  <th className="pb-3 pr-3">가입날짜</th>
+                  <th className="pb-3 pr-3">자격 구분</th>
+                  <th className="pb-3 pr-3">현재 권한 상태</th>
                   <th className="pb-3 text-right">자격 강제 전환 액션</th>
                 </tr>
               </thead>
@@ -137,12 +146,12 @@ export function ApprovedMemberConversionPanel({
 
                   return (
                     <tr key={user.id} className="text-charcoal-primary">
-                      <td className="py-3.5 pr-4 font-semibold">
-                        <span className="block max-w-[180px] break-words">{originalSignupName}</span>
+                      <td className="py-3.5 pr-3 font-semibold">
+                        <span className="block break-words">{originalSignupName}</span>
                       </td>
-                      <td className="py-3.5 pr-4">
+                      <td className="py-3.5 pr-3">
                         <form
-                          className="flex min-w-[180px] flex-col gap-2"
+                          className="flex max-w-[240px] flex-col gap-2"
                           onSubmit={async (event) => {
                             event.preventDefault();
                             const formData = new FormData(event.currentTarget);
@@ -179,9 +188,9 @@ export function ApprovedMemberConversionPanel({
                           </button>
                         </form>
                       </td>
-                      <td className="py-3.5 pr-4 font-mono">{user.email}</td>
-                      <td className="py-3.5 pr-4 font-mono">{formatJoinDate(user.createdAt)}</td>
-                      <td className="py-3.5 pr-4">
+                      <td className="py-3.5 pr-3 font-mono break-all">{user.email}</td>
+                      <td className="py-3.5 pr-3 font-mono">{formatJoinDate(user.createdAt)}</td>
+                      <td className="py-3.5 pr-3">
                         <span
                           className={cn(
                             "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold",
@@ -191,7 +200,7 @@ export function ApprovedMemberConversionPanel({
                           {getMemberTypeLabel(user.memberType, user.role)}
                         </span>
                       </td>
-                      <td className="py-3.5 pr-4">
+                      <td className="py-3.5 pr-3">
                         <span
                           className={cn(
                             "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold",
@@ -202,7 +211,7 @@ export function ApprovedMemberConversionPanel({
                         </span>
                       </td>
                       <td className="py-3.5 text-right">
-                        <div className="flex flex-wrap justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-1.5">
                           <select
                             aria-label={`${initialDisplayName} 전환할 자격`}
                             value={selectedMemberType}
@@ -212,7 +221,7 @@ export function ApprovedMemberConversionPanel({
                                 [user.id]: event.target.value as MemberType,
                               }));
                             }}
-                            className="h-9 rounded-full border border-stone-surface bg-[#f8f7f4] px-3 text-[11px] font-semibold text-charcoal-primary outline-none transition focus:border-charcoal-primary focus:bg-white"
+                            className="h-9 max-w-[140px] rounded-full border border-stone-surface bg-[#f8f7f4] px-3 text-[11px] font-semibold text-charcoal-primary outline-none transition focus:border-charcoal-primary focus:bg-white"
                           >
                             {memberConversionActions.map((action) => (
                               <option key={action.memberType} value={action.memberType}>

@@ -544,10 +544,14 @@ model CoopNewsComment {
   createdAt         DateTime @default(now())
   newsId            String
   news              CoopNews @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  parentId          String?
+  parent            CoopNewsComment?  @relation("CoopNewsCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies           CoopNewsComment[] @relation("CoopNewsCommentReplies")
   authorId          String
   author            User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([newsId, createdAt])
+  @@index([newsId, parentId])
 }
 
 // 7. 자유게시판 글

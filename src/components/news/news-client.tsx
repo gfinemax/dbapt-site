@@ -50,6 +50,26 @@ function getNoticeComments(notice: any) {
   return Array.isArray(notice?.comments) ? notice.comments : [];
 }
 
+function buildNoticeCommentTree(comments: any[]) {
+  const commentViews = comments.map((comment) => ({
+    ...comment,
+    parentId: comment.parentId || null,
+    replies: [] as any[],
+  }));
+  const byId = new Map(commentViews.map((comment) => [comment.id, comment]));
+  const topLevelComments: any[] = [];
+
+  for (const comment of commentViews) {
+    if (comment.parentId && byId.has(comment.parentId)) {
+      byId.get(comment.parentId)?.replies.push(comment);
+    } else {
+      topLevelComments.push(comment);
+    }
+  }
+
+  return topLevelComments;
+}
+
 function formatNoticeDate(value: unknown) {
   if (!value) return "";
   return String(value).slice(0, 10).replace(/-/g, ".");
@@ -129,6 +149,9 @@ export function NewsClient({
     useState<NewsDisplayAuthorName>("운영자");
   const [isSavingNotice, setIsSavingNotice] = useState(false);
   const [noticeCommentContent, setNoticeCommentContent] = useState("");
+  const [noticeReplyContents, setNoticeReplyContents] = useState<Record<string, string>>({});
+  const [replyingNoticeCommentId, setReplyingNoticeCommentId] = useState<string | null>(null);
+  const [expandedNoticeReplies, setExpandedNoticeReplies] = useState<Record<string, boolean>>({});
   const [noticeCommentDisplayAuthorName, setNoticeCommentDisplayAuthorName] =
     useState<NewsDisplayAuthorName>("운영자");
   const [editingNoticeCommentId, setEditingNoticeCommentId] = useState<string | null>(null);
@@ -150,6 +173,9 @@ export function NewsClient({
       document.body.style.overflow = "";
       setIsEditingNotice(false);
       setNoticeCommentContent("");
+      setNoticeReplyContents({});
+      setReplyingNoticeCommentId(null);
+      setExpandedNoticeReplies({});
       setNoticeCommentDisplayAuthorName("운영자");
       setEditingNoticeCommentId(null);
       setEditNoticeCommentContent("");
@@ -198,11 +224,11 @@ export function NewsClient({
   const removeNoticeComment = (commentId: string) => {
     setNewsList((prev) => prev.map((item) => ({
       ...item,
-      comments: getNoticeComments(item).filter((comment: any) => comment.id !== commentId),
+      comments: getNoticeComments(item).filter((comment: any) => comment.id !== commentId && comment.parentId !== commentId),
     })));
     setActiveViewNotice((prev: any) => prev ? {
       ...prev,
-      comments: getNoticeComments(prev).filter((comment: any) => comment.id !== commentId),
+      comments: getNoticeComments(prev).filter((comment: any) => comment.id !== commentId && comment.parentId !== commentId),
     } : prev);
   };
 
@@ -327,10 +353,10 @@ export function NewsClient({
     }
   };
 
-  const submitNoticeComment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitNoticeComment = async (e: React.FormEvent | null, parentCommentId?: string) => {
+    e?.preventDefault();
     if (!activeViewNotice || !canCommentOnNotice) return;
-    const content = noticeCommentContent.trim();
+    const content = (parentCommentId ? noticeReplyContents[parentCommentId] || "" : noticeCommentContent).trim();
     if (!content) {
       alert("댓글 내용을 입력해 주세요.");
       return;
@@ -344,6 +370,7 @@ export function NewsClient({
         body: JSON.stringify({
           newsId: activeViewNotice.id,
           content,
+          ...(parentCommentId ? { parentCommentId } : {}),
           ...(isAdmin ? { displayAuthorName: noticeCommentDisplayAuthorName } : {}),
         }),
       });
@@ -366,8 +393,14 @@ export function NewsClient({
         ...prev,
         comments: [...getNoticeComments(prev), nextComment],
       } : prev);
-      setNoticeCommentContent("");
-      setNoticeCommentDisplayAuthorName("운영자");
+      if (parentCommentId) {
+        setNoticeReplyContents((prev) => ({ ...prev, [parentCommentId]: "" }));
+        setReplyingNoticeCommentId(null);
+        setExpandedNoticeReplies((prev) => ({ ...prev, [parentCommentId]: true }));
+      } else {
+        setNoticeCommentContent("");
+        setNoticeCommentDisplayAuthorName("운영자");
+      }
     } catch (err) {
       console.error(err);
       alert("댓글 등록 중 오류가 발생했습니다.");
@@ -1030,7 +1063,9 @@ export function NewsClient({
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {getNoticeComments(activeViewNotice).map((comment: any) => (
+                        {buildNoticeCommentTree(getNoticeComments(activeViewNotice)).map((comment: any) => {
+                          const repliesExpanded = expandedNoticeReplies[comment.id] || false;
+                          return (
                           <article key={comment.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3.5">
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-2">
@@ -1124,14 +1159,155 @@ export function NewsClient({
                                 {comment.content}
                               </p>
                             )}
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              {canCommentOnNotice && isLoggedIn && (
+                                <button
+                                  type="button"
+                                  aria-label="답글 작성"
+                                  onClick={() => setReplyingNoticeCommentId((prev) => prev === comment.id ? null : comment.id)}
+                                  className="rounded-full px-2 py-0.5 text-[10px] font-extrabold text-graphite hover:bg-stone-surface"
+                                >
+                                  답글
+                                </button>
+                              )}
+                              {comment.replies.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedNoticeReplies((prev) => ({ ...prev, [comment.id]: !repliesExpanded }))}
+                                  className="rounded-full bg-sky-blue/10 px-2.5 py-1 text-[10px] font-extrabold text-sky-blue hover:bg-sky-blue/15"
+                                >
+                                  답글 {comment.replies.length}개 {repliesExpanded ? "숨기기" : "보기"}
+                                </button>
+                              )}
+                            </div>
+
+                            {repliesExpanded && comment.replies.length > 0 && (
+                              <div className="mt-3 space-y-2 border-l-2 border-stone-surface pl-3">
+                                {comment.replies.map((reply: any) => (
+                                  <div key={reply.id} className="rounded-xl bg-[#f8f7f4] px-3 py-2.5">
+                                    <div className="mb-1.5 flex items-center justify-between gap-2 text-[9px] font-bold text-ash font-mono">
+                                      <span>작성자: {getNoticeCommentAuthorName(reply)}</span>
+                                      <div className="flex items-center gap-2">
+                                        <span>{formatNoticeDate(reply.createdAt)}</span>
+                                        {canMutateNoticeComment(reply) && (
+                                          <>
+                                            <button
+                                              type="button"
+                                              aria-label="댓글 수정"
+                                              onClick={() => beginNoticeCommentEdit(reply)}
+                                              className="rounded-full border border-stone-surface bg-white px-2 py-0.5 text-[9px] font-bold text-graphite hover:bg-stone-surface"
+                                            >
+                                              수정
+                                            </button>
+                                            <button
+                                              type="button"
+                                              aria-label="댓글 삭제"
+                                              onClick={() => void deleteNoticeComment(reply)}
+                                              disabled={noticeCommentMutatingId === reply.id}
+                                              className="rounded-full bg-coral-red/10 px-2 py-0.5 text-[9px] font-bold text-coral-red disabled:opacity-60"
+                                            >
+                                              삭제
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {editingNoticeCommentId === reply.id ? (
+                                      <div className="space-y-2">
+                                        <label htmlFor={`notice-comment-edit-${reply.id}`} className="sr-only">
+                                          댓글 수정 내용
+                                        </label>
+                                        <textarea
+                                          id={`notice-comment-edit-${reply.id}`}
+                                          aria-label="댓글 수정 내용"
+                                          value={editNoticeCommentContent}
+                                          onChange={(event) => setEditNoticeCommentContent(event.target.value)}
+                                          rows={3}
+                                          className="w-full resize-none rounded-xl border border-stone-surface bg-white px-3 py-2.5 text-xs text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => setEditingNoticeCommentId(null)}
+                                            className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                                          >
+                                            취소
+                                          </button>
+                                          <Button
+                                            type="button"
+                                            onClick={() => void saveNoticeCommentEdit(reply)}
+                                            disabled={noticeCommentMutatingId === reply.id}
+                                            className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-4 h-8 cursor-pointer disabled:opacity-50"
+                                          >
+                                            수정 완료
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-[12px] text-graphite/90 font-normal leading-relaxed whitespace-pre-wrap">
+                                        {reply.content}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {replyingNoticeCommentId === comment.id && canCommentOnNotice && (
+                              <div className="mt-3 space-y-2 border-l-2 border-sky-blue/30 pl-3">
+                                {isAdmin && (
+                                  <div className="space-y-1">
+                                    <label htmlFor={`notice-reply-author-${comment.id}`} className="text-[10px] font-bold text-charcoal-primary font-mono">
+                                      답글 작성자
+                                    </label>
+                                    <select
+                                      id={`notice-reply-author-${comment.id}`}
+                                      aria-label="답글 작성자"
+                                      value={noticeCommentDisplayAuthorName}
+                                      onChange={(event) => setNoticeCommentDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+                                      className="h-8 rounded-xl border border-stone-surface bg-white px-3 text-[11px] font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                                    >
+                                      {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                                        <option key={name} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="공지 댓글에 답글을 작성해 주세요…"
+                                    value={noticeReplyContents[comment.id] || ""}
+                                    onChange={(event) => setNoticeReplyContents((prev) => ({ ...prev, [comment.id]: event.target.value }))}
+                                    onKeyDown={(event) => {
+                                      if (event.key === "Enter") {
+                                        void submitNoticeComment(null, comment.id);
+                                      }
+                                    }}
+                                    className="flex-1 rounded-xl border border-stone-surface bg-white px-3 py-2 text-[12px] text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue"
+                                  />
+                                  <Button
+                                    type="button"
+                                    onClick={() => void submitNoticeComment(null, comment.id)}
+                                    disabled={isSubmittingNoticeComment}
+                                    className="rounded-xl bg-midnight px-3 text-[11px] font-bold text-white disabled:opacity-50"
+                                  >
+                                    답글 등록
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </article>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
 
                     {isLoggedIn ? (
                       canCommentOnNotice ? (
-                        <form onSubmit={submitNoticeComment} className="rounded-2xl border border-stone-surface bg-white p-3.5 space-y-3">
+                        <form onSubmit={(event) => void submitNoticeComment(event)} className="rounded-2xl border border-stone-surface bg-white p-3.5 space-y-3">
                           {isAdmin && (
                             <div className="space-y-1.5">
                               <label htmlFor="notice-comment-author" className="text-[10px] font-bold text-charcoal-primary font-mono">

@@ -125,6 +125,7 @@ const noticeComment = {
   id: "notice-comment-1",
   content: "확인했습니다.",
   newsId: "notice-1",
+  parentId: null,
   createdAt: "2026-06-01T02:00:00.000Z",
   author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
 };
@@ -285,6 +286,75 @@ describe("news admin API controls", () => {
         displayAuthorName: "사무국",
       },
     }));
+  });
+
+  it("creates notice comment replies under the top-level parent comment", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-2", role: "MEMBER" });
+    mockPrisma.coopNews.findUnique.mockResolvedValue({ id: "notice-1", category: "NOTICE" });
+    mockPrisma.coopNewsComment.findUnique.mockResolvedValue({
+      ...noticeComment,
+      id: "notice-reply-1",
+      parentId: "notice-comment-1",
+    });
+    mockPrisma.coopNewsComment.create.mockResolvedValue({
+      ...noticeComment,
+      id: "notice-reply-new",
+      content: "@조합원 확인 답글",
+      parentId: "notice-comment-1",
+    });
+
+    const response = await noticeCommentsRoute.POST(
+      new Request("http://localhost/api/news/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newsId: "notice-1",
+          parentCommentId: "notice-reply-1",
+          content: "@조합원 확인 답글",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNewsComment.findUnique).toHaveBeenCalledWith({
+      where: { id: "notice-reply-1" },
+      select: { id: true, newsId: true, parentId: true },
+    });
+    expect(mockPrisma.coopNewsComment.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: {
+        newsId: "notice-1",
+        content: "@조합원 확인 답글",
+        authorId: "member-2",
+        parentId: "notice-comment-1",
+      },
+    }));
+  });
+
+  it("rejects notice comment replies for a different notice", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-2", role: "MEMBER" });
+    mockPrisma.coopNews.findUnique.mockResolvedValue({ id: "notice-1", category: "NOTICE" });
+    mockPrisma.coopNewsComment.findUnique.mockResolvedValue({
+      ...noticeComment,
+      id: "notice-comment-other",
+      newsId: "notice-other",
+      parentId: null,
+    });
+
+    const response = await noticeCommentsRoute.POST(
+      new Request("http://localhost/api/news/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newsId: "notice-1",
+          parentCommentId: "notice-comment-other",
+          content: "다른 공지 댓글에는 답글 불가",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "답글 대상 댓글이 공지사항과 일치하지 않습니다." });
+    expect(mockPrisma.coopNewsComment.create).not.toHaveBeenCalled();
   });
 
   it("updates notice comments for the author or administrators", async () => {
@@ -1288,6 +1358,58 @@ describe("news admin visible controls", () => {
       3,
       "/api/news/comments?commentId=notice-comment-1",
       expect.objectContaining({ method: "DELETE" }),
+    ));
+  });
+
+  it("shows one-level replies in the notice drawer and sends parent comment ids for new replies", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, comment: { ...noticeComment, id: "notice-reply-new" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <NewsClient
+        session={{ id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" }}
+        initialNewsList={[{
+          ...realNotice,
+          comments: [
+            noticeComment,
+            {
+              ...noticeComment,
+              id: "notice-reply-1",
+              content: "확인 답글입니다.",
+              parentId: "notice-comment-1",
+              author: { id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" },
+            },
+          ],
+        }]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
+    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+
+    expect(within(drawer).getByText("확인했습니다.")).toBeInTheDocument();
+    expect(within(drawer).queryByText("확인 답글입니다.")).not.toBeInTheDocument();
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "답글 1개 보기" }));
+    expect(within(drawer).getByText("확인 답글입니다.")).toBeInTheDocument();
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "답글 작성" }));
+    fireEvent.change(within(drawer).getByPlaceholderText("공지 댓글에 답글을 작성해 주세요…"), {
+      target: { value: "새 공지 답글입니다." },
+    });
+    fireEvent.click(within(drawer).getByRole("button", { name: "답글 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news/comments",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"parentCommentId\":\"notice-comment-1\""),
+      }),
     ));
   });
 

@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const newsId = typeof body.newsId === "string" ? body.newsId : "";
     const content = typeof body.content === "string" ? body.content.trim() : "";
+    const parentCommentId = typeof body.parentCommentId === "string" ? body.parentCommentId : "";
     const parsedDisplayAuthorName = isAdminSession(session)
       ? parseNewsDisplayAuthorName(body.displayAuthorName)
       : { ok: true as const, value: null };
@@ -46,11 +47,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "댓글을 등록할 공지사항을 찾을 수 없습니다." }, { status: 404 });
     }
 
+    let parentId: string | undefined;
+    if (parentCommentId) {
+      const parentComment = await prisma.coopNewsComment.findUnique({
+        where: { id: parentCommentId },
+        select: { id: true, newsId: true, parentId: true },
+      });
+
+      if (!parentComment) {
+        return NextResponse.json({ error: "답글 대상 댓글을 찾을 수 없습니다." }, { status: 404 });
+      }
+
+      if (parentComment.newsId !== newsId) {
+        return NextResponse.json({ error: "답글 대상 댓글이 공지사항과 일치하지 않습니다." }, { status: 400 });
+      }
+
+      parentId = parentComment.parentId || parentComment.id;
+    }
+
     const comment = await prisma.coopNewsComment.create({
       data: {
         newsId,
         content,
         authorId: session.id,
+        ...(parentId ? { parentId } : {}),
         ...(session.role === "ADMIN" ? { displayAuthorName: parsedDisplayAuthorName.value } : {}),
       },
       include: {
