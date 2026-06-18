@@ -538,13 +538,14 @@ model CoopNews {
 
 // 6. 공지사항 댓글
 model CoopNewsComment {
-  id        String   @id @default(uuid())
-  content   String
-  createdAt DateTime @default(now())
-  newsId    String
-  news      CoopNews @relation(fields: [newsId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id                String   @id @default(uuid())
+  content           String
+  displayAuthorName String? // 관리자 공지 댓글 공개 작성자명: 운영자, 사무국
+  createdAt         DateTime @default(now())
+  newsId            String
+  news              CoopNews @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  authorId          String
+  author            User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([newsId, createdAt])
 }

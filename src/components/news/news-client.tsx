@@ -129,7 +129,14 @@ export function NewsClient({
     useState<NewsDisplayAuthorName>("운영자");
   const [isSavingNotice, setIsSavingNotice] = useState(false);
   const [noticeCommentContent, setNoticeCommentContent] = useState("");
+  const [noticeCommentDisplayAuthorName, setNoticeCommentDisplayAuthorName] =
+    useState<NewsDisplayAuthorName>("운영자");
+  const [editingNoticeCommentId, setEditingNoticeCommentId] = useState<string | null>(null);
+  const [editNoticeCommentContent, setEditNoticeCommentContent] = useState("");
+  const [editNoticeCommentDisplayAuthorName, setEditNoticeCommentDisplayAuthorName] =
+    useState<NewsDisplayAuthorName>("운영자");
   const [isSubmittingNoticeComment, setIsSubmittingNoticeComment] = useState(false);
+  const [noticeCommentMutatingId, setNoticeCommentMutatingId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -143,6 +150,10 @@ export function NewsClient({
       document.body.style.overflow = "";
       setIsEditingNotice(false);
       setNoticeCommentContent("");
+      setNoticeCommentDisplayAuthorName("운영자");
+      setEditingNoticeCommentId(null);
+      setEditNoticeCommentContent("");
+      setEditNoticeCommentDisplayAuthorName("운영자");
     }
     return () => {
       document.body.style.overflow = "";
@@ -151,6 +162,49 @@ export function NewsClient({
 
   const isEditableNotice = !!activeViewNotice?.id && !String(activeViewNotice.id).startsWith("mock-") && isAdmin;
   const canCommentOnNotice = !!activeViewNotice?.id && !String(activeViewNotice.id).startsWith("mock-");
+
+  const getNoticeCommentAuthorName = (comment: any) => {
+    if (comment.author?.role === "ADMIN") {
+      return comment.displayAuthorName || "운영자";
+    }
+    return comment.author?.name || "조합원";
+  };
+
+  const canMutateNoticeComment = (comment: any) => {
+    return isAdmin || comment.author?.id === session?.id;
+  };
+
+  const syncNoticeComment = (comment: any) => {
+    setNewsList((prev) => prev.map((item) => {
+      if (item.id !== comment.newsId) return item;
+      return {
+        ...item,
+        comments: getNoticeComments(item).map((existing: any) => (
+          existing.id === comment.id ? comment : existing
+        )),
+      };
+    }));
+    setActiveViewNotice((prev: any) => {
+      if (!prev || prev.id !== comment.newsId) return prev;
+      return {
+        ...prev,
+        comments: getNoticeComments(prev).map((existing: any) => (
+          existing.id === comment.id ? comment : existing
+        )),
+      };
+    });
+  };
+
+  const removeNoticeComment = (commentId: string) => {
+    setNewsList((prev) => prev.map((item) => ({
+      ...item,
+      comments: getNoticeComments(item).filter((comment: any) => comment.id !== commentId),
+    })));
+    setActiveViewNotice((prev: any) => prev ? {
+      ...prev,
+      comments: getNoticeComments(prev).filter((comment: any) => comment.id !== commentId),
+    } : prev);
+  };
 
   const refreshNoticeList = async () => {
     const res = await fetch("/api/news?category=NOTICE");
@@ -290,6 +344,7 @@ export function NewsClient({
         body: JSON.stringify({
           newsId: activeViewNotice.id,
           content,
+          ...(isAdmin ? { displayAuthorName: noticeCommentDisplayAuthorName } : {}),
         }),
       });
       const data = await res.json();
@@ -312,11 +367,86 @@ export function NewsClient({
         comments: [...getNoticeComments(prev), nextComment],
       } : prev);
       setNoticeCommentContent("");
+      setNoticeCommentDisplayAuthorName("운영자");
     } catch (err) {
       console.error(err);
       alert("댓글 등록 중 오류가 발생했습니다.");
     } finally {
       setIsSubmittingNoticeComment(false);
+    }
+  };
+
+  const beginNoticeCommentEdit = (comment: any) => {
+    setEditingNoticeCommentId(comment.id);
+    setEditNoticeCommentContent(comment.content || "");
+    setEditNoticeCommentDisplayAuthorName(
+      NEWS_DISPLAY_AUTHOR_NAMES.includes(comment.displayAuthorName)
+        ? comment.displayAuthorName
+        : "운영자",
+    );
+  };
+
+  const saveNoticeCommentEdit = async (comment: any) => {
+    const content = editNoticeCommentContent.trim();
+    if (!content) {
+      alert("댓글 내용을 입력해 주세요.");
+      return;
+    }
+
+    setNoticeCommentMutatingId(comment.id);
+    try {
+      const res = await fetch("/api/news/comments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          commentId: comment.id,
+          content,
+          ...(isAdmin ? { displayAuthorName: editNoticeCommentDisplayAuthorName } : {}),
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "댓글 수정에 실패했습니다.");
+        return;
+      }
+
+      syncNoticeComment(data.comment);
+      setEditingNoticeCommentId(null);
+      setEditNoticeCommentContent("");
+    } catch (err) {
+      console.error(err);
+      alert("댓글 수정 중 오류가 발생했습니다.");
+    } finally {
+      setNoticeCommentMutatingId(null);
+    }
+  };
+
+  const deleteNoticeComment = async (comment: any) => {
+    if (!confirm("댓글을 삭제하시겠습니까?")) return;
+
+    setNoticeCommentMutatingId(comment.id);
+    try {
+      const res = await fetch(`/api/news/comments?commentId=${encodeURIComponent(comment.id)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "댓글 삭제에 실패했습니다.");
+        return;
+      }
+
+      removeNoticeComment(comment.id);
+      if (editingNoticeCommentId === comment.id) {
+        setEditingNoticeCommentId(null);
+        setEditNoticeCommentContent("");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("댓글 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setNoticeCommentMutatingId(null);
     }
   };
 
@@ -908,16 +1038,92 @@ export function NewsClient({
                                   말
                                 </span>
                                 <span className="text-[11px] font-black text-charcoal-primary">
-                                  {comment.author?.name || "조합원"}
+                                  {getNoticeCommentAuthorName(comment)}
                                 </span>
                               </div>
-                              <span className="text-[9.5px] font-mono font-bold text-ash">
-                                {formatNoticeDate(comment.createdAt)}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[9.5px] font-mono font-bold text-ash">
+                                  {formatNoticeDate(comment.createdAt)}
+                                </span>
+                                {canMutateNoticeComment(comment) && (
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      aria-label="댓글 수정"
+                                      onClick={() => beginNoticeCommentEdit(comment)}
+                                      className="rounded-full border border-stone-surface bg-[#f8f7f4] px-2 py-0.5 text-[9.5px] font-bold text-graphite hover:bg-stone-surface"
+                                    >
+                                      수정
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label="댓글 삭제"
+                                      onClick={() => void deleteNoticeComment(comment)}
+                                      disabled={noticeCommentMutatingId === comment.id}
+                                      className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2 py-0.5 text-[9.5px] font-bold text-coral-red hover:bg-coral-red/15 disabled:opacity-60"
+                                    >
+                                      삭제
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <p className="mt-2.5 text-[12px] leading-relaxed text-graphite font-normal whitespace-pre-wrap">
-                              {comment.content}
-                            </p>
+                            {editingNoticeCommentId === comment.id ? (
+                              <div className="mt-3 space-y-2">
+                                {isAdmin && (
+                                  <div className="space-y-1">
+                                    <label htmlFor={`notice-comment-edit-author-${comment.id}`} className="text-[10px] font-bold text-charcoal-primary font-mono">
+                                      댓글 수정 작성자
+                                    </label>
+                                    <select
+                                      id={`notice-comment-edit-author-${comment.id}`}
+                                      aria-label="댓글 수정 작성자"
+                                      value={editNoticeCommentDisplayAuthorName}
+                                      onChange={(event) => setEditNoticeCommentDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+                                      className="h-8 rounded-xl border border-stone-surface bg-white px-3 text-[11px] font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                                    >
+                                      {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                                        <option key={name} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                                <label htmlFor={`notice-comment-edit-${comment.id}`} className="sr-only">
+                                  댓글 수정 내용
+                                </label>
+                                <textarea
+                                  id={`notice-comment-edit-${comment.id}`}
+                                  aria-label="댓글 수정 내용"
+                                  value={editNoticeCommentContent}
+                                  onChange={(event) => setEditNoticeCommentContent(event.target.value)}
+                                  rows={3}
+                                  className="w-full resize-none rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                                />
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingNoticeCommentId(null)}
+                                    className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                                  >
+                                    취소
+                                  </button>
+                                  <Button
+                                    type="button"
+                                    onClick={() => void saveNoticeCommentEdit(comment)}
+                                    disabled={noticeCommentMutatingId === comment.id}
+                                    className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-4 h-8 cursor-pointer disabled:opacity-50"
+                                  >
+                                    수정 완료
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="mt-2.5 text-[12px] leading-relaxed text-graphite font-normal whitespace-pre-wrap">
+                                {comment.content}
+                              </p>
+                            )}
                           </article>
                         ))}
                       </div>
@@ -926,6 +1132,26 @@ export function NewsClient({
                     {isLoggedIn ? (
                       canCommentOnNotice ? (
                         <form onSubmit={submitNoticeComment} className="rounded-2xl border border-stone-surface bg-white p-3.5 space-y-3">
+                          {isAdmin && (
+                            <div className="space-y-1.5">
+                              <label htmlFor="notice-comment-author" className="text-[10px] font-bold text-charcoal-primary font-mono">
+                                댓글 작성자
+                              </label>
+                              <select
+                                id="notice-comment-author"
+                                aria-label="댓글 작성자"
+                                value={noticeCommentDisplayAuthorName}
+                                onChange={(event) => setNoticeCommentDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+                                className="h-9 rounded-xl border border-stone-surface bg-white px-3 text-[11px] font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                              >
+                                {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                                  <option key={name} value={name}>
+                                    {name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
                           <label htmlFor="notice-comment" className="sr-only">
                             공지사항 댓글 작성
                           </label>

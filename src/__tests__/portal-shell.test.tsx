@@ -266,9 +266,11 @@ describe("portal shell", () => {
       />,
     );
 
+    expect(screen.getByText("가입명")).toBeInTheDocument();
+    expect(screen.getByText("표시명")).toBeInTheDocument();
     const signupNameInput = screen.getByLabelText("OH Hakdong 표시 명의");
     expect(signupNameInput).toHaveValue("오학동");
-    expect(screen.getByText("Google 이름: OH Hakdong")).toBeInTheDocument();
+    expect(screen.getByText("OH Hakdong")).toBeInTheDocument();
 
     fireEvent.change(signupNameInput, { target: { value: "오하동" } });
     fireEvent.click(screen.getByRole("button", { name: "표시 명의 저장" }));
@@ -276,6 +278,45 @@ describe("portal shell", () => {
     await waitFor(() => {
       expect(updateSignupNameAction).toHaveBeenCalledWith("pending-1", "오하동");
     });
+    expect(signupNameInput).toHaveValue("오하동");
+    expect(screen.getByText("OH Hakdong")).toBeInTheDocument();
+  });
+
+  it("updates a pending user's display name locally after save when it matched the Google name before", async () => {
+    vi.stubGlobal("alert", vi.fn());
+    vi.mocked(updateSignupNameAction).mockResolvedValue({
+      success: true,
+      signupName: "곽현숙",
+    });
+
+    render(
+      <PortalShell
+        role="admin"
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+        pendingUsers={[{
+          id: "pending-1",
+          name: "박용수대리곽현숙",
+          email: "01037868640",
+          signupName: "박용수대리곽현숙",
+          createdAt: "2026-06-03T00:00:00.000Z",
+        }]}
+      />,
+    );
+
+    const signupNameInput = screen.getByLabelText("박용수대리곽현숙 표시 명의");
+    fireEvent.change(signupNameInput, { target: { value: " 곽현숙 " } });
+    fireEvent.click(screen.getByRole("button", { name: "표시 명의 저장" }));
+
+    await waitFor(() => {
+      expect(updateSignupNameAction).toHaveBeenCalledWith("pending-1", " 곽현숙 ");
+    });
+    expect(signupNameInput).toHaveValue("곽현숙");
+    expect(screen.getByText("박용수대리곽현숙")).toBeInTheDocument();
   });
 
   it("summarizes approved account conversion on the admin home without rendering the full list", () => {

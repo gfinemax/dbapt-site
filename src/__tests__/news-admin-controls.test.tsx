@@ -36,6 +36,9 @@ const mockPrisma = vi.hoisted(() => ({
   },
   coopNewsComment: {
     create: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 const mockMkdir = vi.hoisted(() => vi.fn());
@@ -251,6 +254,93 @@ describe("news admin API controls", () => {
       },
     }));
     expect(await response.json()).toMatchObject({ success: true, comment: noticeComment });
+  });
+
+  it("stores administrator display author names on notice comments", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNews.findUnique.mockResolvedValue({ id: "notice-1", category: "NOTICE" });
+    mockPrisma.coopNewsComment.create.mockResolvedValue({
+      ...noticeComment,
+      displayAuthorName: "사무국",
+    });
+
+    const response = await noticeCommentsRoute.POST(
+      new Request("http://localhost/api/news/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newsId: "notice-1",
+          content: " 관리자 확인 의견 ",
+          displayAuthorName: "사무국",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNewsComment.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: {
+        newsId: "notice-1",
+        content: "관리자 확인 의견",
+        authorId: "admin-1",
+        displayAuthorName: "사무국",
+      },
+    }));
+  });
+
+  it("updates notice comments for the author or administrators", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNewsComment.findUnique.mockResolvedValue({
+      ...noticeComment,
+      authorId: "member-1",
+      news: { category: "NOTICE" },
+    });
+    mockPrisma.coopNewsComment.update.mockResolvedValue({
+      ...noticeComment,
+      content: "수정된 댓글",
+      displayAuthorName: "운영자",
+    });
+
+    const response = await noticeCommentsRoute.PATCH(
+      new Request("http://localhost/api/news/comments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          commentId: "notice-comment-1",
+          content: " 수정된 댓글 ",
+          displayAuthorName: "운영자",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNewsComment.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "notice-comment-1" },
+      data: {
+        content: "수정된 댓글",
+        displayAuthorName: "운영자",
+      },
+    }));
+  });
+
+  it("deletes notice comments for the author or administrators", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNewsComment.findUnique.mockResolvedValue({
+      ...noticeComment,
+      authorId: "member-1",
+      news: { category: "NOTICE" },
+    });
+    mockPrisma.coopNewsComment.delete.mockResolvedValue(noticeComment);
+
+    const response = await noticeCommentsRoute.DELETE(
+      new Request("http://localhost/api/news/comments?commentId=notice-comment-1", {
+        method: "DELETE",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNewsComment.delete).toHaveBeenCalledWith({
+      where: { id: "notice-comment-1" },
+    });
   });
 
   it("rejects image upload for unauthenticated sessions", async () => {
@@ -1104,6 +1194,100 @@ describe("news admin visible controls", () => {
         method: "PATCH",
         body: expect.stringContaining("\"displayAuthorName\":\"사무국\""),
       }),
+    ));
+  });
+
+  it("lets administrators choose notice comment authors and edit or delete comments", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          comment: {
+            ...noticeComment,
+            id: "notice-comment-new",
+            content: "사무국 신규 댓글",
+            displayAuthorName: "사무국",
+            author: { id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          comment: {
+            ...noticeComment,
+            content: "수정된 확인 의견",
+            displayAuthorName: "운영자",
+            author: { id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(
+      <NewsClient
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        initialNewsList={[{
+          ...realNotice,
+          comments: [{
+            ...noticeComment,
+            displayAuthorName: "운영자",
+            author: { id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" },
+          }],
+        }]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
+    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+
+    expect(within(drawer).getAllByText("운영자").length).toBeGreaterThan(0);
+    fireEvent.change(within(drawer).getByLabelText("댓글 작성자"), { target: { value: "사무국" } });
+    fireEvent.change(within(drawer).getByLabelText("공지사항 댓글 작성"), {
+      target: { value: "사무국 신규 댓글" },
+    });
+    fireEvent.click(within(drawer).getByRole("button", { name: "댓글 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/news/comments",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"displayAuthorName\":\"사무국\""),
+      }),
+    ));
+
+    fireEvent.click(within(drawer).getAllByRole("button", { name: "댓글 수정" })[0]);
+    fireEvent.change(within(drawer).getByLabelText("댓글 수정 작성자"), { target: { value: "운영자" } });
+    fireEvent.change(within(drawer).getByLabelText("댓글 수정 내용"), {
+      target: { value: "수정된 확인 의견" },
+    });
+    fireEvent.click(within(drawer).getByRole("button", { name: "수정 완료" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/news/comments",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"displayAuthorName\":\"운영자\""),
+      }),
+    ));
+
+    fireEvent.click(within(drawer).getAllByRole("button", { name: "댓글 삭제" })[0]);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news/comments?commentId=notice-comment-1",
+      expect.objectContaining({ method: "DELETE" }),
     ));
   });
 

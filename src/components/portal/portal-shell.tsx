@@ -163,6 +163,8 @@ export function PortalShell({
   const [welcomeModalConfig, setWelcomeModalConfig] = useState({ title: "", description: "", isUpgrade: true });
   const [showToast, setShowToast] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [pendingSavedSignupNames, setPendingSavedSignupNames] = useState<Record<string, string>>({});
+  const [pendingDraftSignupNames, setPendingDraftSignupNames] = useState<Record<string, string>>({});
   const approvedMemberTypeCounts = approvedSocialUsers.reduce(
     (counts, user) => {
       const memberType = normalizeMemberType(user.memberType, user.role);
@@ -584,61 +586,71 @@ export function PortalShell({
                         </p>
                       ) : (
                         <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
+                          <table className="w-full min-w-[980px] text-left text-xs border-collapse">
                             <thead>
                               <tr className="border-b border-[#f2f0ed] text-graphite/80 font-medium">
-                                <th className="pb-3 pr-4">신청인 명의</th>
+                                <th className="pb-3 pr-4">가입명</th>
+                                <th className="pb-3 pr-4">표시명</th>
                                 <th className="pb-3 pr-4">이메일/휴대폰</th>
                                 <th className="pb-3 pr-4">가입 신청일</th>
                                 <th className="pb-3 text-right">권한 부여 액션</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-[#f8f7f4]">
-                              {pendingUsers.map((user) => (
-                                <tr key={user.id} className="text-charcoal-primary">
-                                  <td className="py-3.5 pr-4">
-                                    <form
-                                      className="flex min-w-[180px] flex-col gap-2"
-                                      onSubmit={async (event) => {
-                                        event.preventDefault();
-                                        const formData = new FormData(event.currentTarget);
-                                        const nextSignupName = String(formData.get("signupName") || "");
-                                        const res = await updateSignupNameAction(user.id, nextSignupName);
-                                        if (res.success) {
-                                          alert(`${user.name}님의 표시 명의가 수정되었습니다.`);
-                                          router.refresh();
-                                        } else if (res.error) {
-                                          alert(res.error);
-                                        }
-                                      }}
-                                    >
-                                      <label className="sr-only" htmlFor={`signup-name-${user.id}`}>
-                                        {user.name} 표시 명의
-                                      </label>
-                                      <input
-                                        id={`signup-name-${user.id}`}
-                                        name="signupName"
-                                        defaultValue={user.signupName || user.name}
-                                        className="w-full rounded-lg border border-[#f2f0ed] bg-white px-2.5 py-2 text-xs font-semibold text-charcoal-primary outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                                      />
-                                      <button
-                                        type="submit"
-                                        className="self-start rounded-full bg-[#f8f7f4] px-3 py-1 text-[10px] font-semibold text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
+                              {pendingUsers.map((user) => {
+                                const originalSignupName = user.name || "이름 없음";
+                                const savedSignupName = pendingSavedSignupNames[user.id] ?? user.signupName ?? user.name;
+                                const displayName = pendingDraftSignupNames[user.id] ?? savedSignupName ?? "이름 없음";
+
+                                return (
+                                  <tr key={user.id} className="text-charcoal-primary">
+                                    <td className="py-3.5 pr-4 font-semibold">
+                                      <span className="block max-w-[180px] break-words">{originalSignupName}</span>
+                                    </td>
+                                    <td className="py-3.5 pr-4">
+                                      <form
+                                        className="flex min-w-[180px] flex-col gap-2"
+                                        onSubmit={async (event) => {
+                                          event.preventDefault();
+                                          const formData = new FormData(event.currentTarget);
+                                          const nextSignupName = String(formData.get("signupName") || "");
+                                          const res = await updateSignupNameAction(user.id, nextSignupName);
+                                          if (res.success) {
+                                            const committedSignupName = res.signupName ?? nextSignupName.trim();
+                                            setPendingSavedSignupNames((prev) => ({ ...prev, [user.id]: committedSignupName }));
+                                            setPendingDraftSignupNames((prev) => ({ ...prev, [user.id]: committedSignupName }));
+                                            alert(`${committedSignupName}님의 표시명이 수정되었습니다.`);
+                                            router.refresh();
+                                          } else if (res.error) {
+                                            alert(res.error);
+                                          }
+                                        }}
                                       >
-                                        표시 명의 저장
-                                      </button>
-                                    </form>
-                                    {user.signupName && user.signupName !== user.name && (
-                                      <div className="mt-2 text-[10px] font-medium text-ash">
-                                        Google 이름: {user.name}
-                                      </div>
-                                    )}
-                                    {user.signupMemo && (
-                                      <div className="mt-1 max-w-[220px] text-[10px] leading-4 text-ash">
-                                        {user.signupMemo}
-                                      </div>
-                                    )}
-                                  </td>
+                                        <label className="sr-only" htmlFor={`signup-name-${user.id}`}>
+                                          {user.name} 표시 명의
+                                        </label>
+                                        <input
+                                          id={`signup-name-${user.id}`}
+                                          name="signupName"
+                                          value={displayName}
+                                          onChange={(event) => {
+                                            setPendingDraftSignupNames((prev) => ({ ...prev, [user.id]: event.target.value }));
+                                          }}
+                                          className="w-full rounded-lg border border-[#f2f0ed] bg-white px-2.5 py-2 text-xs font-semibold text-charcoal-primary outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                                        />
+                                        <button
+                                          type="submit"
+                                          className="self-start rounded-full bg-[#f8f7f4] px-3 py-1 text-[10px] font-semibold text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
+                                        >
+                                          표시 명의 저장
+                                        </button>
+                                      </form>
+                                      {user.signupMemo && (
+                                        <div className="mt-1 max-w-[220px] text-[10px] leading-4 text-ash">
+                                          {user.signupMemo}
+                                        </div>
+                                      )}
+                                    </td>
                                   <td className="py-3.5 pr-4">
                                     <div className="font-mono">{user.email}</div>
                                     {user.signupPhone && (
@@ -679,7 +691,8 @@ export function PortalShell({
                                     </Button>
                                   </td>
                                 </tr>
-                              ))}
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>

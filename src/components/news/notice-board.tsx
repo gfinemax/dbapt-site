@@ -28,6 +28,13 @@ function getNoticeComments(notice: any) {
   return Array.isArray(notice?.comments) ? notice.comments : [];
 }
 
+function getNoticeCommentAuthorName(comment: any) {
+  if (comment.author?.role === "ADMIN") {
+    return comment.displayAuthorName || "운영자";
+  }
+  return comment.author?.name || "조합원";
+}
+
 function ImportantNoticeStar() {
   return (
     <span
@@ -484,7 +491,7 @@ export function NoticeBoard({
                       <div key={comment.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3">
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-[10px] font-black text-charcoal-primary">
-                            {comment.author?.name || "조합원"}
+                            {getNoticeCommentAuthorName(comment)}
                           </span>
                           <span className="text-[9px] font-mono font-bold text-ash">
                             {String(comment.createdAt).slice(0, 10).replace(/-/g, ".")}
