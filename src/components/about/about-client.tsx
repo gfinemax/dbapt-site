@@ -212,15 +212,15 @@ const districtPlanNoticeLibraryHref = `/library?category=permits&q=${encodeURICo
 const stationBusGuides = [
   {
     station: "대방역(1호선·신림선)에서 오실 때",
-    route: "2번 출구 앞 정류장에서 [동작05번] 마을버스 탑승 → '대방현대아파트' 정류장 하차 (약 5분 소요)",
+    route: "3번 출구 앞 정류장에서 [동작05번] 또는 [동작12번] 마을버스 탑승 → '남부교회' 정류장 하차 (약 5분 소요)",
   },
   {
     station: "노량진역(1호선·9호선)에서 오실 때",
-    route: "4번 출구에서 동작구청 방향으로 직진, '동작구청 정문' 정류장에서 [동작02번] 또는 [동작11번] 마을버스 탑승 → '대방현대아파트' 정류장 하차 (약 5~6분 소요)",
+    route: "6번 출구 앞 정류장에서 [동작03번] 마을버스 탑승 → '남부교회' 정류장 하차 (약 5분 소요)",
   },
   {
     station: "장승배기역(7호선)에서 오실 때",
-    route: "2번 출구 앞 정류장에서 [동작02번] 또는 [동작11번] 마을버스 탑승 → '대방현대아파트' 정류장 하차 (약 3~4분 소요)",
+    route: "4번 출구 앞 정류장에서 [동작12번] 마을버스 탑승 → '남부교회' 정류장 하차 (약 5분 소요)",
   },
 ] as const;
 
@@ -1033,15 +1033,15 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                 <div className="space-y-1.5">
                   <p className="flex items-start gap-2">
                     <span className="inline-flex items-center justify-center rounded-full bg-sky-blue/15 text-sky-blue text-[9px] font-black px-1.5 py-0.5 shrink-0">대방</span>
-                    <span><strong className="text-charcoal-primary">대방역</strong> 2번 출구 앞 동작05번 마을버스 이용</span>
+                    <span><strong className="text-charcoal-primary">대방역</strong> 3번 출구 앞 동작05번·동작12번 마을버스 이용</span>
                   </p>
                   <p className="flex items-start gap-2">
                     <span className="inline-flex items-center justify-center rounded-full bg-[#54640d]/15 text-[#54640d] text-[9px] font-black px-1.5 py-0.5 shrink-0">노량진</span>
-                    <span><strong className="text-charcoal-primary">노량진역</strong> 동작구청 정문 정류장에서 동작02번·동작11번 이용</span>
+                    <span><strong className="text-charcoal-primary">노량진역</strong> 6번 출구 앞 동작03번 마을버스 이용</span>
                   </p>
                   <p className="flex items-start gap-2">
                     <span className="inline-flex items-center justify-center rounded-full bg-ember-orange/10 text-ember-orange text-[9px] font-black px-1.5 py-0.5 shrink-0">버스</span>
-                    <span><strong className="text-charcoal-primary">장승배기역</strong> 2번 출구 앞 동작02번·동작11번 이용</span>
+                    <span><strong className="text-charcoal-primary">장승배기역</strong> 4번 출구 앞 동작12번 마을버스 이용</span>
                   </p>
                 </div>
               </div>
@@ -1094,7 +1094,7 @@ export function AboutClient({ onOpenPortal }: AboutClientProps) {
                     </div>
 
                     <div>
-                      <h5 className="text-sm font-bold text-charcoal-primary">🚶 &apos;대방현대아파트&apos; 정류장 하차 후 도보 안내</h5>
+                      <h5 className="text-sm font-bold text-charcoal-primary">🚶 &apos;남부교회&apos; 정류장 하차 후 도보 안내</h5>
                       <p className="mt-2 text-xs leading-5 text-graphite">
                         버스에서 내리신 후 아래 지표를 따라 골목으로 들어오시면 됩니다.
                       </p>

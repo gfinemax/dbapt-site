@@ -1132,6 +1132,35 @@ describe("news admin visible controls", () => {
     expect(onRefresh).toHaveBeenCalled();
   });
 
+  it("does not append hardcoded mock posts to the free board", () => {
+    const { rerender } = render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText("최근 임시총회 의결서 공증 완료본 확인했습니다.")).not.toBeInTheDocument();
+    expect(screen.queryByText("신규로 등재된 주간 실무 보고서 유익하네요.")).not.toBeInTheDocument();
+    expect(screen.queryByText("데모 피드")).not.toBeInTheDocument();
+    expect(screen.getByText("검색 조건에 맞는 자유게시판 글이 없습니다.")).toBeInTheDocument();
+
+    rerender(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("실제 자유게시글")).toBeInTheDocument();
+    expect(screen.getByText("정식 토론")).toBeInTheDocument();
+    expect(screen.queryByText("최근 임시총회 의결서 공증 완료본 확인했습니다.")).not.toBeInTheDocument();
+    expect(screen.queryByText("신규로 등재된 주간 실무 보고서 유익하네요.")).not.toBeInTheDocument();
+    expect(screen.queryByText("데모 피드")).not.toBeInTheDocument();
+  });
+
   it("opens a left focus panel from the free board list and keeps the post URL addressable", () => {
     window.history.pushState({}, "", "/news?tab=free");
 

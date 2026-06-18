@@ -18,6 +18,7 @@
 - Follow-up: Remove hardcoded mock notice posts from the public notice board so only database-backed notices appear.
 - Follow-up: Let administrators choose the public notice author label as `운영자` or `사무국` when creating a notice.
 - Follow-up: Remove the circular red pulsing marker from important notice badges and apply the pulsing animation to the `★` mark itself.
+- Follow-up: Remove hardcoded mock free-board posts so the free board shows only database-backed posts or the existing empty state.
 
 ## Explicitly Excluded Scope
 
@@ -34,6 +35,7 @@
 - Removing the approved-member conversion workflow.
 - Deleting real member accounts or audit records from the database.
 - Deleting real notice posts from the database.
+- Deleting real free-board posts from the database.
 - Hiding or changing the underlying admin account that created a notice.
 
 ## Candidate Governing Specification

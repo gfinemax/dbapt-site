@@ -43,7 +43,7 @@ const staticSearchItems: SiteSearchItem[] = [
     description: "대방동 지역주택조합 사무실 주소, 대중교통, 방문 안내를 확인합니다.",
     href: "/about#section-location",
     section: "조합소개",
-    keywords: ["위치", "주소", "찾아오시는 길", "사무실", "대방역", "대방현대아파트"],
+    keywords: ["위치", "주소", "찾아오시는 길", "사무실", "대방역", "남부교회"],
   },
   {
     id: "business-status",

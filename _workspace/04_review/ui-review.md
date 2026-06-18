@@ -15,6 +15,7 @@
 - Follow-up: Add an administrator notice author-label selector for `운영자` / `사무국`
 - Follow-up: Show the same notice author-label selector when editing existing notices
 - Follow-up: Remove the circular red pulse marker from important notice badges and animate the `★` mark instead
+- Follow-up: Remove hardcoded mock free-board posts from the member free-board list
 - Governing spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
 - Implementation plan: `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`
 - Files or pages reviewed:
@@ -33,6 +34,7 @@
   - `src/app/api/news/route.ts`
   - `src/app/news/page.tsx`
   - `src/components/news/notice-board.tsx`
+  - `src/components/news/free-board.tsx`
   - `src/components/news/news-client.tsx`
   - `src/lib/news-display-author.ts`
   - `/login`
@@ -49,6 +51,7 @@
 - Follow-up evidence: Removing hardcoded notice-board mock rows changes only the public notice list's fallback data source. It does not delete database-backed notices, change administrator notice mutation permissions, or expose new content.
 - Follow-up evidence: The notice author selector is rendered only inside the administrator notice creation drawer. It stores a separate public label while preserving the logged-in administrator `authorId`, so audit accountability and mutation permissions remain tied to the real admin account.
 - Follow-up evidence: The important-notice visual change removes only the decorative circular pulse marker and keeps the existing database-backed notice list, notice permissions, and important flag semantics unchanged.
+- Follow-up evidence: Removing hardcoded free-board mock posts changes only the rendered fallback data source inside the login-gated free-board surface. It does not delete database-backed free posts, change write/comment permissions, or expose the free-board publicly.
 
 ## Truthful Presentation Review
 
@@ -58,6 +61,7 @@
 - Follow-up evidence: The author selector is constrained to `운영자` and `사무국`; unsupported labels such as `감사단` are rejected by the API. Public lists and detail views use the selected label instead of implying that the individual admin account name is the public author.
 - Follow-up evidence: Existing notice edit mode now exposes the same `공지 작성자` select and PATCH requests persist the selected label.
 - Follow-up evidence: The important notice badge still truthfully labels starred notices as important; only the animation target changed from a separate dot to the visible `★`.
+- Follow-up evidence: The free board no longer presents sample member posts such as 임시총회 공증 완료본 or 주간 실무 보고서 as live discussion. Empty free-board results now use the existing empty-state sentence.
 
 ## Design And Accessibility Review
 
@@ -67,8 +71,97 @@
 - Follow-up evidence: The new author control is a native labeled select placed in the existing notice creation drawer before the title field. It uses the same rounded stone-border input treatment and remains keyboard accessible through the associated label.
 - Follow-up evidence: The edit-mode author control uses the same native labeled select and sits before the title field in the notice edit form.
 - Follow-up evidence: The separate round marker was removed from the notice-board badge. The `★` mark now carries `animate-ping` and `motion-reduce:animate-none`, keeping the decorative motion reduced-motion-safe without adding layout-affecting elements.
+- Follow-up evidence: The free-board table shell, search input, write button, focus panel, and empty state remain unchanged; only the hardcoded mock rows and their `데모 피드` label were removed.
 
 ## Outcome
 
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: 자료실 자주 찾는 자료의 업로드 문서 열람 액션 명확화
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-02-daebang-library-index.md`
+- Files or pages reviewed:
+  - `src/components/library/library-client.tsx`
+  - `src/__tests__/library-page.test.tsx`
+  - `/library`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only adds a visible `자료 열람` action to documents that were already matched as uploaded materials inside the existing logged-in material panel. It does not expose private documents publicly, change document permissions, add upload/download APIs, or alter public navigation.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Uploaded entries still show `실제 업로드` and preserve the existing document title, description, category/date metadata, and viewer behavior. Placeholder/static index entries remain non-actionable, so the UI no longer presents a static-looking uploaded card as if the user must infer hidden click behavior.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The new action uses the existing dark pill CTA treatment, small text scale, rounded shape, and focus ring pattern. The card no longer relies on a full-card button with an invisible-only action name; keyboard and screen-reader users can target a visible `자료 열람` button. Automated coverage confirms the rule-material panel exposes the button and that existing PDF/Word viewer flows still open from it. Browser visual verification was attempted, but the in-app browser was unavailable and the Playwright CLI was not installed; `/library` returned HTTP 200 from the local dev server.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: 링크 미리보기 대표 이미지를 조합장 사진 대신 조합 대표 hero 이미지로 고정
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed:
+  - `src/app/layout.tsx`
+  - `src/__tests__/root-metadata.test.ts`
+  - `/`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only adds public root metadata for social previews. It does not expose login-gated services, document access, accounting data, personal data, voting, messaging, or new mutation controls.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: `openGraph.images` and `twitter.images` now point to `/assets/hero/community-hero-04.png`, the approved public hero artwork, with alt text `대방동 지역주택조합 대표 이미지`. The metadata does not reference `/assets/about/chairman.jpg`.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The selected image follows `AGENTS.md` by using `public/assets/hero/community-hero-04.png`. `pnpm lint`, `pnpm test`, and `pnpm build` passed. Local HTTP verification confirmed the rendered HTML emits `og:image` and `twitter:image` as `https://dbapt-site.vercel.app/assets/hero/community-hero-04.png`.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: 조합소개 찾아오시는 길 대중교통 안내 문구 수정
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed:
+  - `src/components/about/about-client.tsx`
+  - `src/content/site-search.ts`
+  - `src/__tests__/about-client.test.tsx`
+  - `/about#section-location`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to public `조합소개` location guidance and static site-search keywords. It does not expose login-gated services, document access, accounting data, voting, messaging, or new mutation controls.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The visible route guide now states 대방역 3번 출구 앞 동작05번·동작12번 이용, 노량진역 6번 출구 앞 동작03번 이용, 장승배기역 4번 출구 앞 동작12번 이용, and `남부교회` 정류장 하차. Repository search found no remaining user-facing `대방현대아파트` route content outside the regression test's absence assertion.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Only copy and search keywords changed; layout, typography, card treatment, focus behavior, and motion remain unchanged. `pnpm lint`, `pnpm test`, and `pnpm build` passed. In-app Browser was unavailable in this session, so installed Chrome was used through Playwright to verify desktop 1440px and mobile 390px views: the location section was visible, the detailed route guide opened, new route text appeared including the 장승배기역 4번 출구 동작12번 안내, old stop and old 장승배기 route text were absent, and horizontal overflow was false.
+
+## Outcome
 - Result: PASS
 - Required action: none

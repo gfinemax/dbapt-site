@@ -328,9 +328,9 @@ export function NewsClient({
     return notices[0] || null;
   }, [newsList]);
 
-  // 2. 자유게시판 이번 주 신규글 수 (DB + mock 글 총합)
+  // 2. 자유게시판 이번 주 신규글 수
   const freePostsCount = useMemo(() => {
-    return freePosts.length + 2; // Real database posts + mock posts
+    return freePosts.length;
   }, [freePosts]);
 
   // 3. 주/월간 뉴스레터 최신 호 타이틀 및 개수

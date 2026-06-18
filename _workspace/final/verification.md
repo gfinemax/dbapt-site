@@ -34,6 +34,8 @@
 - Added the same `공지 작성자` selector to the existing notice edit form so 수정 mode can change `운영자` / `사무국`.
 - Removed the separate circular red pulse marker from the public notice-board important badge.
 - Applied the existing reduced-motion-safe pulse animation directly to the important badge `★` mark.
+- Removed hardcoded mock free-board posts from the login-gated free-board list.
+- Updated the free-board summary count to use only database-backed posts.
 - Added tests:
   - `src/__tests__/member-management-sync.test.ts`
   - `src/__tests__/member-management-dashboard.test.tsx`
@@ -50,6 +52,7 @@
   - updated `src/__tests__/news-admin-controls.test.tsx` for notice display-author API validation, selected-label submission, and selected-label rendering
   - updated `src/__tests__/news-admin-controls.test.tsx` for selected-label PATCH submission from the notice edit drawer
   - updated `src/__tests__/news-admin-controls.test.tsx` for the important badge star animation and circular marker removal
+  - updated `src/__tests__/news-admin-controls.test.tsx` for hardcoded free-board mock exclusion
 
 ## Checks Run
 
@@ -135,6 +138,12 @@
 - `pnpm lint`: PASS after important badge microinteraction update.
 - `pnpm test`: PASS, 41 files / 243 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
 - `pnpm build`: PASS after important badge microinteraction update. Build output includes `/news`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "does not append hardcoded mock posts"`: RED first because the free board still rendered `MOCK_POSTS` with the `데모 피드` label.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "does not append hardcoded mock posts"`: PASS after removing the hardcoded mock post merge.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 1 file / 40 tests.
+- `pnpm lint`: PASS after free-board mock removal.
+- `pnpm test`: PASS, 41 files / 244 tests. jsdom printed existing `Window.scrollTo()` not-implemented warnings.
+- `pnpm build`: PASS after free-board mock removal. Build output includes `/news`.
 
 ## Browser Checks
 
@@ -182,6 +191,9 @@
   - `GET http://127.0.0.1:3000/news?tab=notice`: 200 OK.
   - The page response no longer contains `notice-important-pulse` and contains `notice-important-star`.
   - `.next` bundle contains `notice-important-star` and no source reference renders `notice-important-pulse`.
+- Fallback source verification after free-board mock removal:
+  - `rg` found the removed mock free-board titles and `데모 피드` only in the regression test assertions.
+  - `GET http://127.0.0.1:3000/news?tab=free` with an approved session cookie: 200 OK; `자유게시판` present; the removed mock free-board titles and `데모 피드` absent.
 
 ## Unresolved Risks Or Follow-Up Specs
 

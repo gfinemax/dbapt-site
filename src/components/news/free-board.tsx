@@ -15,34 +15,6 @@ type FreeBoardProps = {
   onRefresh: () => Promise<void>;
 };
 
-const MOCK_POSTS = [
-  {
-    id: "mock-post-1",
-    title: "최근 임시총회 의결서 공증 완료본 확인했습니다.",
-    content: "공개자료실 문서함에서 총회의사록 신속하게 공증 완료된 버전 확인했습니다. 사무국에서 발빠르게 등재해주시니 기밀성 유지되면서도 투명함이 느껴져 든든하네요. 모두 고생 많으셨습니다. 앞으로도 화이팅입니다!",
-    isStarred: false,
-    createdAt: "2026.05.28",
-    author: { name: "이조합", loginId: "member2", role: "MEMBER" },
-    comments: [
-      {
-        id: "mock-comm-1",
-        content: "동감합니다. 매 분기 예산 집행 세부 내역도 자금 입출금이랑 대조되어서 올라오니까 믿음직스럽네요.",
-        createdAt: "2026.05.28 14:22",
-        author: { name: "정조합", loginId: "member3", role: "MEMBER" },
-      },
-    ],
-  },
-  {
-    id: "mock-post-2",
-    title: "신규로 등재된 주간 실무 보고서 유익하네요.",
-    content: "시공사 설계팀과의 도면 협의 및 주차 대수 추가 최적화 도면 수정 보고서가 신속하게 올라와서 좋네요. 다가오는 건축심의 본신청에서도 시정 지적 없이 깔끔하게 조치 결과 보고 수령하길 조합원 가족 모두 기원합니다.",
-    isStarred: false,
-    createdAt: "2026.05.27",
-    author: { name: "박조합", loginId: "member4", role: "MEMBER" },
-    comments: [],
-  },
-] as const;
-
 type FreeBoardCommentView = {
   id: string;
   content: string;
@@ -102,7 +74,6 @@ function FreeBoardPostRows({
       className={cn(
         "cursor-pointer transition-all duration-150 hover:bg-sky-blue/[0.03]",
         index % 2 === 1 ? "bg-[#fdfcfa]" : "bg-white",
-        !post.isReal && "border-dashed text-graphite/90",
       )}
     >
       <td className="px-5 py-4 text-center text-xs text-ash font-mono tabular-nums">
@@ -117,7 +88,7 @@ function FreeBoardPostRows({
               </span>
             )}
             <span className="rounded bg-stone-surface px-1.5 py-0.5 text-[9px] font-extrabold text-charcoal-primary">
-              {post.isReal ? "정식 토론" : "데모 피드"}
+              정식 토론
             </span>
             <span className="text-[13px] font-bold text-charcoal-primary leading-snug">
               {post.title}
@@ -247,7 +218,7 @@ export function FreeBoard({
     return `${cleanName.slice(0, 1)}*조합원 (${maskedId})`;
   };
 
-  // Combine real database posts with simulated demonstration mocks
+  // Show only database-backed free-board posts. Demo copy must not appear in operations.
   const combinedPosts = useMemo(() => {
     const realPosts = posts.map((p) => ({
       id: p.id,
@@ -261,24 +232,14 @@ export function FreeBoard({
       isReal: true,
     }));
 
-    let filteredReal = realPosts;
-    let filteredMock = MOCK_POSTS.map((p) => ({
-      ...p,
-      isReal: false,
-      comments: buildCommentTree(p.comments.map((c) => ({
-        ...c,
-        isReal: false,
-      }))),
-      commentCount: p.comments.length,
-    }));
+    let filteredPosts = realPosts;
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
-      filteredReal = filteredReal.filter((p) => p.title.toLowerCase().includes(q) || getPlainNoticeText(p.content).toLowerCase().includes(q));
-      filteredMock = filteredMock.filter((p) => p.title.toLowerCase().includes(q) || getPlainNoticeText(p.content).toLowerCase().includes(q));
+      filteredPosts = filteredPosts.filter((p) => p.title.toLowerCase().includes(q) || getPlainNoticeText(p.content).toLowerCase().includes(q));
     }
 
-    return [...filteredReal, ...filteredMock];
+    return filteredPosts;
   }, [posts, searchQuery]);
 
   const focusedPost = useMemo(
@@ -575,7 +536,7 @@ export function FreeBoard({
                 </button>
                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-ash font-mono">
                   <span className="rounded bg-stone-surface px-1.5 py-0.5 text-[9px] font-extrabold text-charcoal-primary">
-                    {focusedPost.isReal ? "정식 토론" : "데모 피드"}
+                    정식 토론
                   </span>
                   <span>작성자: {getMaskedAuthorName(focusedPost.author)}</span>
                   <span>•</span>

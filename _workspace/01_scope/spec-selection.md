@@ -26,6 +26,8 @@ Additional follow-up scope lets administrators choose a public notice author lab
 
 Additional follow-up scope changes only the important notice badge microinteraction: the separate circular red pulse marker is removed and the reduced-motion-safe pulse animation is applied to the visible `★` mark.
 
+Additional follow-up scope removes hardcoded mock free-board posts. This is a rendering-data-source change: database-backed free-board posts still render, and the existing empty state appears when no real free-board rows are available.
+
 It does not write to PeopleOn, persist sync snapshots, create scheduled jobs, save manual matches, bulk-create accounts, expose new public navigation, introduce PeopleOn-side role mutation actions, remove local conversion actions, delete real database records, or change password storage/submission behavior.
 
 ## Conflicts

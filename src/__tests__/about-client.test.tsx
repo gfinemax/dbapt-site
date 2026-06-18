@@ -149,6 +149,11 @@ describe("about client", () => {
     expect(screen.getByRole("heading", { name: "대방역(1호선·신림선)에서 오실 때" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "노량진역(1호선·9호선)에서 오실 때" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "장승배기역(7호선)에서 오실 때" })).toBeInTheDocument();
+    expect(screen.getByText("3번 출구 앞 정류장에서 [동작05번] 또는 [동작12번] 마을버스 탑승 → '남부교회' 정류장 하차 (약 5분 소요)")).toBeInTheDocument();
+    expect(screen.getByText("6번 출구 앞 정류장에서 [동작03번] 마을버스 탑승 → '남부교회' 정류장 하차 (약 5분 소요)")).toBeInTheDocument();
+    expect(screen.getByText("4번 출구 앞 정류장에서 [동작12번] 마을버스 탑승 → '남부교회' 정류장 하차 (약 5분 소요)")).toBeInTheDocument();
+    expect(screen.queryByText(/2번 출구 앞 정류장에서 \[동작02번\] 또는 \[동작11번\]/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/대방현대아파트/)).not.toBeInTheDocument();
     expect(screen.getByText(/직접구운족발.*바로 옆 골목길/)).toBeInTheDocument();
     expect(screen.getByText(/남부루터교회 삼거리에서 숭의여고 방향으로 50m 위/)).toBeInTheDocument();
   });
