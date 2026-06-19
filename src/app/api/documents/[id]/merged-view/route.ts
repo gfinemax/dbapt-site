@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
 import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
+import { getInlinePdfResponseHeaders } from "@/lib/pdf-response-headers";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -90,8 +91,7 @@ export async function GET(
 
     return new Response(mergedBuffer, {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${encodeURIComponent(document.fileName)}"`,
+        ...getInlinePdfResponseHeaders(document.fileName),
         "Cache-Control": "no-store",
       },
     });

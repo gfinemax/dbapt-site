@@ -71,6 +71,11 @@ export function PdfViewerModal({
   const canPreviewInline = isPdfFile(previewFileName);
   const pdfAttachments = (activeDocument.attachments || []).filter((attachment) => isPdfFile(attachment.fileName));
   const shouldUseMergedPreview = canPreviewInline && pdfAttachments.length > 0;
+  const previewUrl = canPreviewInline
+    ? shouldUseMergedPreview
+      ? `/api/documents/${activeDocument.id}/merged-view`
+      : `/api/documents/${activeDocument.id}/view`
+    : null;
   const previewKey = canPreviewInline
     ? `${activeDocument.id}:${previewFileName}:${pdfAttachments.map((attachment) => attachment.id).join(",")}`
     : null;
@@ -314,17 +319,33 @@ export function PdfViewerModal({
                 </Button>
               </div>
 
-              {canPreviewInline ? (
+              {canPreviewInline && previewUrl ? (
                 <div data-testid="pdf-preview-frame-area" className="relative h-[76vh] min-h-[560px] bg-[#f0ede9]">
+                  <div className="flex h-full flex-col items-center justify-center gap-4 bg-parchment-card px-6 py-10 text-center sm:hidden">
+                    <div className="flex size-14 items-center justify-center rounded-2xl border border-stone-surface bg-white text-[11px] font-black uppercase text-charcoal-primary">
+                      PDF
+                    </div>
+                    <div className="max-w-sm space-y-2">
+                      <p className="text-sm font-bold text-charcoal-primary">스마트폰에서는 브라우저 PDF 보기로 엽니다.</p>
+                      <p className="text-xs leading-5 text-graphite">
+                        모바일 브라우저가 내장 프레임을 다운로드로 처리할 수 있어, 새 화면에서 바로 열람하도록 분리했습니다.
+                      </p>
+                    </div>
+                    <Button asChild className="rounded-full bg-midnight px-5 text-xs font-bold text-white hover:bg-midnight/90">
+                      <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                        스마트폰에서 바로 보기
+                      </a>
+                    </Button>
+                  </div>
                   <iframe
-                    src={shouldUseMergedPreview ? `/api/documents/${activeDocument.id}/merged-view` : `/api/documents/${activeDocument.id}/view`}
-                    className="relative z-10 h-full w-full border-none bg-[#f0ede9]"
+                    src={previewUrl}
+                    className="relative z-10 hidden h-full w-full border-none bg-[#f0ede9] sm:block"
                     onLoad={() => setLoadedPreviewKey(previewKey)}
                     title="문서 온라인 열람 뷰어"
                   />
 
                   {isLoading && (
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-parchment-card">
+                    <div className="absolute inset-0 z-20 hidden flex-col items-center justify-center gap-4 bg-parchment-card sm:flex">
                       <div className="h-10 w-10 rounded-full border-4 border-midnight border-t-transparent animate-spin" />
                       <div className="space-y-1.5 text-center">
                         <p className="text-xs font-bold text-charcoal-primary">보안 문서를 안전하게 로드하는 중입니다</p>
@@ -374,9 +395,17 @@ export function PdfViewerModal({
                   </Button>
                 </div>
                 <div className="h-[76vh] min-h-[560px] bg-[#f0ede9] max-sm:min-h-[420px]">
+                  <div className="flex h-full flex-col items-center justify-center gap-3 bg-parchment-card px-6 py-8 text-center sm:hidden">
+                    <p className="text-xs font-bold text-charcoal-primary">추가 첨부 PDF를 새 화면에서 엽니다.</p>
+                    <Button asChild className="rounded-full bg-midnight px-4 text-[11px] font-bold text-white hover:bg-midnight/90">
+                      <a href={`/api/documents/attachments/${attachment.id}/view`} target="_blank" rel="noopener noreferrer">
+                        첨부 바로 보기
+                      </a>
+                    </Button>
+                  </div>
                   <iframe
                     src={`/api/documents/attachments/${attachment.id}/view`}
-                    className="h-full w-full border-none bg-[#f0ede9]"
+                    className="hidden h-full w-full border-none bg-[#f0ede9] sm:block"
                     title={`추가 첨부 PDF 열람 뷰어 ${index + 1}`}
                   />
                 </div>

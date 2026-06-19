@@ -1,23 +1,24 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: anonymous smartphone access for approved disclosure PDF preview links, plus longer login sessions.
-- Governing spec: direct operator request in the current thread, narrowed to approved `DISCLOSURE` inline PDF preview only.
-- Implementation plan: test-first access-boundary fix with route, page-loader, and auth-session regression tests.
-- Files or pages reviewed: `/disclosure?document=<documentId>`, `src/app/disclosure/page.tsx`, document inline preview API routes, `src/lib/auth.ts`, `src/lib/session-config.ts`, and related tests.
+- Feature: OpenChat copied public notice/news announcements now route to the public website detail page instead of direct attachment PDF URLs.
+- Related local feature: smartphone PDF preview avoids automatic iframe PDF loading and offers a direct browser-open action.
+- Governing spec: direct operator request in the current thread, narrowed to public notice/news link behavior and mobile PDF preview behavior.
+- Implementation plan: test-first regression fixes in `src/__tests__/openchat-announcements.test.ts`, `src/__tests__/news-deep-links.test.ts`, `src/__tests__/news-notice-deep-link.test.tsx`, `src/__tests__/pdf-viewer-modal.test.tsx`, and `src/__tests__/document-public-view-api.test.ts`.
+- Files or pages reviewed: `src/lib/notifications/openchat-announcements.ts`, `src/lib/news/deep-links.ts`, `src/components/news/news-client.tsx`, `src/components/news/coop-newsletter.tsx`, `src/components/portal/pdf-viewer-modal.tsx`, document inline preview API routes, `src/lib/pdf-response-headers.ts`, and related tests.
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: Anonymous access is limited to `category: DISCLOSURE` and `status: APPROVED` inline PDF preview routes. Approved accounting PDFs still return 401 when anonymous, pending documents remain blocked, and download routes were not opened.
+- Evidence: Public notice/news posts were already loaded for non-login visitors. The change only points copied announcements to those public detail URLs and keeps free-board member-only links/login gating unchanged. PDF access/download policy is not widened.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: No labels, counts, documents, or personal-data claims were added. The change only lets an existing OpenChat item-level disclosure link preload the approved document and stream the inline PDF preview without creating new public navigation or action controls.
+- Evidence: Announcement copy now tells users to check the corresponding website post content. It no longer implies that a direct PDF attachment is the primary destination for public notice/news posts.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: No typography, color, imagery, spacing, or motion styles were changed. Existing PDF viewer and disclosure page tests continue to pass; build completed successfully.
+- Evidence: No broad visual redesign was introduced. The newsletter detail modal gained an explicit `aria-label` for addressable detail state, and the mobile PDF fallback retains existing warm canvas/parchment styling and focusable anchor controls. In-app Browser was unavailable in this session and Playwright CLI is not installed, so visible verification used component tests plus a local `/news?tab=newsletter` HTTP 200 check.
 
 ## Outcome
 - Result: PASS
-- Required action: none
+- Required action: none.

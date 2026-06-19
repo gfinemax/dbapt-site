@@ -20,3 +20,13 @@ export function findNoticeFromSearchParams(
 
   return newsList.find((notice) => notice.id === noticeId && notice.category === "NOTICE") || null;
 }
+
+export function findNewsletterFromSearchParams(
+  newsList: readonly CoopNewsView[],
+  searchParams: SearchParamsReader,
+): CoopNewsView | null {
+  const newsId = searchParams.get("news");
+  if (!newsId) return null;
+
+  return newsList.find((news) => news.id === newsId && news.category === "WEEKLY_MONTHLY") || null;
+}

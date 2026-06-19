@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  findNewsletterFromSearchParams,
   findNoticeFromSearchParams,
   getNewsTabFromSearchParams,
 } from "@/lib/news/deep-links";
@@ -52,5 +53,19 @@ describe("news deep-link helpers", () => {
         new URLSearchParams("news=newsletter-1"),
       ),
     ).toBeNull();
+  });
+
+  it("finds only newsletter items from the news query", () => {
+    const params = new URLSearchParams("news=newsletter-1");
+
+    expect(
+      findNewsletterFromSearchParams(
+        [
+          news({ id: "notice-1", category: "NOTICE" }),
+          news({ id: "newsletter-1", category: "WEEKLY_MONTHLY" }),
+        ],
+        params,
+      )?.id,
+    ).toBe("newsletter-1");
   });
 });

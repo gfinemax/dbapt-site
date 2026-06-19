@@ -22,6 +22,7 @@ import {
   type NoticeCommentMutation,
 } from "@/lib/news/comment-mutations";
 import {
+  findNewsletterFromSearchParams,
   findNoticeFromSearchParams,
   getNewsTabFromSearchParams,
   type NewsTabId,
@@ -138,6 +139,7 @@ export function NewsClient({
   const isAdmin = session?.role === "ADMIN";
   const initialTab = getNewsTabFromSearchParams(searchParams) ?? "notice";
   const initialNoticeFromUrl = findNoticeFromSearchParams(initialNewsList, searchParams);
+  const initialNewsletterFromUrl = findNewsletterFromSearchParams(initialNewsList, searchParams);
 
   const [activeTab, setActiveTab] = useState<NewsTabId>(initialTab);
   const [newsList, setNewsList] = useState<CoopNewsView[]>(initialNewsList);
@@ -169,6 +171,7 @@ export function NewsClient({
   const [isSubmittingNoticeComment, setIsSubmittingNoticeComment] = useState(false);
   const [noticeCommentMutatingId, setNoticeCommentMutatingId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const requestedNewsletterFromUrl = findNewsletterFromSearchParams(newsList, searchParams);
 
   useEffect(() => {
     setMounted(true);
@@ -431,6 +434,13 @@ export function NewsClient({
 
     setActiveTab("notice");
     setActiveViewNotice(requestedNotice);
+  }, [newsList, searchParams]);
+
+  useEffect(() => {
+    const requestedNewsletter = findNewsletterFromSearchParams(newsList, searchParams);
+    if (!requestedNewsletter) return;
+
+    setActiveTab("newsletter");
   }, [newsList, searchParams]);
 
   // Sync state with server props
@@ -741,6 +751,7 @@ export function NewsClient({
               isLoggedIn={isLoggedIn}
               isAdmin={isAdmin}
               newsList={newsletterItems}
+              initialOpenNewsId={requestedNewsletterFromUrl?.id ?? initialNewsletterFromUrl?.id ?? null}
               onRefresh={async () => {
                 const res = await fetch("/api/news?category=WEEKLY_MONTHLY");
                 const data = await res.json();

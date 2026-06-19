@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
 import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
+import { getInlinePdfResponseHeaders } from "@/lib/pdf-response-headers";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -64,10 +65,7 @@ export async function GET(
     const fileBuffer = await file.arrayBuffer();
 
     return new Response(fileBuffer, {
-      headers: {
-        "Content-Type": file.type || "application/pdf",
-        "Content-Disposition": `inline; filename="${encodeURIComponent(attachment.fileName)}"`,
-      },
+      headers: getInlinePdfResponseHeaders(attachment.fileName),
     });
   } catch (e) {
     console.error("View attachment dynamic route error:", e);

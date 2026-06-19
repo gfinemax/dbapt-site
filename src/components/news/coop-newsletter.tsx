@@ -13,6 +13,7 @@ type CoopNewsletterProps = {
   isLoggedIn: boolean;
   isAdmin: boolean;
   newsList: CoopNewsView[];
+  initialOpenNewsId?: string | null;
   onRefresh: () => Promise<void>;
 };
 
@@ -28,11 +29,13 @@ export function CoopNewsletter({
   isLoggedIn,
   isAdmin,
   newsList = [],
+  initialOpenNewsId = null,
   onRefresh,
 }: CoopNewsletterProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [activeViewNews, setActiveViewNews] = useState<NewsletterListItem | null>(null);
+  const [activeViewNewsId, setActiveViewNewsId] = useState<string | null>(null);
+  const [dismissedOpenNewsId, setDismissedOpenNewsId] = useState<string | null>(null);
   const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, "copying" | "copied" | "error">>({});
 
   // Upload Form State
@@ -45,6 +48,26 @@ export function CoopNewsletter({
 
   // Combine real database data with the single upcoming issue preview.
   const combinedData = useMemo(() => buildNewsletterList(newsList, searchQuery), [newsList, searchQuery]);
+
+  const selectedViewNews = activeViewNewsId
+    ? combinedData.find((news) => news.id === activeViewNewsId) || null
+    : null;
+  const deepLinkedViewNews = initialOpenNewsId && dismissedOpenNewsId !== initialOpenNewsId
+    ? combinedData.find((news) => news.id === initialOpenNewsId && news.isReal) || null
+    : null;
+  const activeViewNews = selectedViewNews ?? deepLinkedViewNews;
+
+  const openNewsletterDetail = (news: NewsletterListItem) => {
+    setActiveViewNewsId(news.id);
+    setDismissedOpenNewsId(null);
+  };
+
+  const closeNewsletterDetail = () => {
+    if (activeViewNews?.id === initialOpenNewsId) {
+      setDismissedOpenNewsId(initialOpenNewsId);
+    }
+    setActiveViewNewsId(null);
+  };
 
   const handlePasteImage = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const imageFile = Array.from(e.clipboardData.files).find((file) => file.type.startsWith("image/"));
@@ -131,7 +154,7 @@ export function CoopNewsletter({
       }
 
       if (activeViewNews?.id === news.id) {
-        setActiveViewNews(null);
+        closeNewsletterDetail();
       }
       await onRefresh();
     } catch (err) {
@@ -201,7 +224,7 @@ export function CoopNewsletter({
             return (
               <div
                 key={news.id}
-                onClick={() => setActiveViewNews(news)}
+                onClick={() => openNewsletterDetail(news)}
                 className="stone-card bg-white rounded-2xl border border-stone-surface/80 flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer group relative"
               >
                 {/* 상단 썸네일/그라데이션 영역 */}
@@ -301,14 +324,17 @@ export function CoopNewsletter({
       {/* 1. 조합뉴스 상세 열람 모달 */}
       {activeViewNews && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
-          <div className="absolute inset-0" onClick={() => setActiveViewNews(null)} />
-          <div className="relative w-full max-w-xl rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+          <div className="absolute inset-0" onClick={closeNewsletterDetail} />
+          <div
+            aria-label="조합뉴스 상세 모달"
+            className="relative w-full max-w-xl rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
               <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold text-sky-blue uppercase tracking-wider">
                 Coop Newsletter
               </span>
               <button
-                onClick={() => setActiveViewNews(null)}
+                onClick={closeNewsletterDetail}
                 className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
               >
                 닫기

@@ -103,7 +103,7 @@ describe("openchat announcements", () => {
     expect(message).not.toContain("documents/2026/private.pdf");
   });
 
-  it("creates an announcement message for cooperative newsletter posts with the registered PDF attachment URL", async () => {
+  it("creates an announcement message for cooperative newsletter posts with the public detail URL", async () => {
     const { upsertOpenChatAnnouncementForNews } = await import("@/lib/notifications/openchat-announcements");
     const prisma = createMockPrisma();
 
@@ -125,10 +125,11 @@ describe("openchat announcements", () => {
     expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
     expect(message).toContain("새 조합소식이 등록되었습니다.");
     expect(message).toContain("- 분류: 주/월간 조합소식");
-    expect(message).toContain("https://dbapt.example/uploads/newsletter.pdf");
+    expect(message).toContain("https://dbapt.example/news?tab=newsletter&news=newsletter-1");
+    expect(message).not.toContain("https://dbapt.example/uploads/newsletter.pdf");
   });
 
-  it("creates an announcement message for cooperative notice posts with the registered PDF attachment URL", async () => {
+  it("creates an announcement message for cooperative notice posts with the public detail URL", async () => {
     const { upsertOpenChatAnnouncementForNews } = await import("@/lib/notifications/openchat-announcements");
     const prisma = createMockPrisma();
 
@@ -149,7 +150,8 @@ describe("openchat announcements", () => {
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
     expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
     expect(message).toContain("- 분류: 조합 공지사항");
-    expect(message).toContain("https://dbapt.example/uploads/notice.pdf");
+    expect(message).toContain("https://dbapt.example/news?tab=notice&news=notice-1");
+    expect(message).not.toContain("https://dbapt.example/uploads/notice.pdf");
   });
 
   it("uses an item-level cooperative news URL when no PDF attachment is registered", async () => {

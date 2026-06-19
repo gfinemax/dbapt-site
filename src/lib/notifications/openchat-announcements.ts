@@ -142,12 +142,6 @@ function normalizeSiteUrl(siteUrl?: string) {
   return value.replace(/\/+$/, "");
 }
 
-function buildSiteUrl(path: string, siteUrl?: string) {
-  if (/^https?:\/\//i.test(path)) return path;
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${normalizeSiteUrl(siteUrl)}${normalizedPath}`;
-}
-
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
@@ -190,9 +184,7 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
   const title = normalizeOneLine(news.title);
   const createdAt = news.createdAt ?? params.now ?? new Date();
   const meta = getCooperativeNewsAnnouncementMeta(news);
-  const newsUrl = news.attachmentPath
-    ? buildSiteUrl(news.attachmentPath, params.siteUrl)
-    : `${normalizeSiteUrl(params.siteUrl)}/news?tab=${meta.tab}&news=${encodeURIComponent(news.id)}`;
+  const newsUrl = `${normalizeSiteUrl(params.siteUrl)}/news?tab=${meta.tab}&news=${encodeURIComponent(news.id)}`;
 
   return [
     "[대방동 지역주택조합 조합소식 안내]",
@@ -202,7 +194,7 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
     `- 제목: ${title}`,
     `- 등록일: ${formatDate(createdAt)}`,
     "",
-    "홈페이지 조합소식 등록자료를 확인해 주세요.",
+    "홈페이지에서 해당 글 내용을 확인해 주세요.",
     newsUrl,
   ].join("\n");
 }

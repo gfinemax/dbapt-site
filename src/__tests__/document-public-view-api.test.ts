@@ -30,6 +30,10 @@ function createPdfBlob() {
   return new Blob(["%PDF-1.4 public"], { type: "application/pdf" });
 }
 
+function createOctetStreamPdfBlob() {
+  return new Blob(["%PDF-1.4 public"], { type: "application/octet-stream" });
+}
+
 describe("public document PDF view API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,6 +62,29 @@ describe("public document PDF view API", () => {
     expect(response.headers.get("Content-Disposition")).toContain("inline");
     expect(mockDownloadDocumentFile).toHaveBeenCalledWith("documents/delegate-minutes.pdf");
     expect(mockPrisma.documentLog.create).not.toHaveBeenCalled();
+  });
+
+  it("forces inline PDF headers even when storage returns octet-stream", async () => {
+    mockPrisma.document.findUnique.mockResolvedValue({
+      id: "doc-public",
+      title: "대의원 회의록",
+      category: "DISCLOSURE",
+      status: "APPROVED",
+      fileName: "대의원 회의록.pdf",
+      filePath: "documents/delegate-minutes.pdf",
+    });
+    mockDownloadDocumentFile.mockResolvedValue(createOctetStreamPdfBlob());
+
+    const { GET } = await import("@/app/api/documents/[id]/view/route");
+    const response = await GET(
+      new Request("http://localhost/api/documents/doc-public/view"),
+      { params: Promise.resolve({ id: "doc-public" }) },
+    );
+
+    expect(response.headers.get("Content-Type")).toBe("application/pdf");
+    expect(response.headers.get("Content-Disposition")).toContain("inline");
+    expect(response.headers.get("Content-Disposition")).toContain("filename*=UTF-8''");
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
   });
 
   it("does not open approved accounting PDFs to anonymous visitors", async () => {

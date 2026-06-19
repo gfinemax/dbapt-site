@@ -87,6 +87,23 @@ describe("PdfViewerModal", () => {
     expect(screen.getByTestId("pdf-viewer-actions")).toHaveClass("grid", "grid-cols-3", "sm:flex");
   });
 
+  it("offers a mobile direct-open link instead of relying only on an embedded PDF frame", () => {
+    render(
+      <PdfViewerModal
+        documentId="doc-1"
+        documentTitle="대의원 회의록"
+        fileName="delegate-minutes.pdf"
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveClass("hidden", "sm:block");
+    expect(screen.getByRole("link", { name: "스마트폰에서 바로 보기" })).toHaveAttribute(
+      "href",
+      "/api/documents/doc-1/view",
+    );
+  });
+
   it("toggles between a reply document and its related received document", () => {
     render(
       <PdfViewerModal

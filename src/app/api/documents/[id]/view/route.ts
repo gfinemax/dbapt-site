@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
 import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
+import { getInlinePdfResponseHeaders } from "@/lib/pdf-response-headers";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -65,11 +66,7 @@ export async function GET(
     const fileBuffer = await file.arrayBuffer();
 
     return new Response(fileBuffer, {
-      headers: {
-        "Content-Type": file.type || "application/pdf",
-        // 'inline' 배치로 지정해 브라우저 내장 PDF 엔진으로 즉시 렌더링되게 설정
-        "Content-Disposition": `inline; filename="${encodeURIComponent(document.fileName)}"`,
-      },
+      headers: getInlinePdfResponseHeaders(document.fileName),
     });
   } catch (e) {
     console.error("View dynamic route error:", e);
