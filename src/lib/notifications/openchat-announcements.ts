@@ -170,7 +170,7 @@ export function buildOpenChatAnnouncementMessage(params: {
     `- 제목: ${title}`,
     `- 등록일: ${formatDate(publishedAt)}`,
     "",
-    "홈페이지 로그인 후 해당 공개자료를 확인해 주세요.",
+    "홈페이지에서 해당 공개자료를 확인해 주세요.",
     disclosureUrl,
   ].join("\n");
 }
