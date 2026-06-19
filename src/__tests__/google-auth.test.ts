@@ -19,6 +19,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/auth", () => ({
   createSessionToken: createSessionTokenMock,
+  SESSION_MAX_AGE_MS: 30 * 24 * 60 * 60 * 1000,
 }));
 
 beforeEach(() => {

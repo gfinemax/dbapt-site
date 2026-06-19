@@ -87,4 +87,37 @@ describe("document merged PDF view API", () => {
     const mergedPdf = await PDFDocument.load(await response.arrayBuffer());
     expect(mergedPdf.getPageCount()).toBe(3);
   });
+
+  it("merges approved disclosure PDFs without a login session", async () => {
+    mockGetSession.mockResolvedValue(null);
+    mockPrisma.document.findUnique.mockResolvedValue({
+      id: "doc-public",
+      title: "운영관리규정 최신본",
+      category: "DISCLOSURE",
+      status: "APPROVED",
+      fileName: "main.pdf",
+      filePath: "documents/main.pdf",
+      attachments: [
+        {
+          id: "att-1",
+          fileName: "appendix-1.pdf",
+          filePath: "documents/appendix-1.pdf",
+        },
+      ],
+    });
+    mockDownloadDocumentFile
+      .mockResolvedValueOnce(await createPdfBlob())
+      .mockResolvedValueOnce(await createPdfBlob());
+
+    const { GET } = await import("@/app/api/documents/[id]/merged-view/route");
+    const response = await GET(
+      new Request("http://localhost/api/documents/doc-public/merged-view"),
+      { params: Promise.resolve({ id: "doc-public" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/pdf");
+    expect(mockDownloadDocumentFile).toHaveBeenCalledTimes(2);
+    expect(mockPrisma.documentLog.create).not.toHaveBeenCalled();
+  });
 });

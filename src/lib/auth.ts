@@ -11,12 +11,12 @@ import {
 } from "./signup-password";
 import { normalizeMemberType, type MemberType } from "./member-type";
 import { getUserDisplayName } from "./user-display-name";
+import { SESSION_MAX_AGE_MS, SESSION_MAX_AGE_SECONDS } from "./session-config";
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "default-secret-key-at-least-32-characters-long-dbapt"
 );
 
-const SESSION_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 const PHONE_PASSWORD_SIGNUP_SUCCESS_MESSAGE = "가입 신청이 접수되었습니다. 사무국 확인 후 승인됩니다.";
 
 type SessionUser = {
@@ -38,7 +38,7 @@ export async function encrypt(payload: Record<string, unknown>) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("2h")
+    .setExpirationTime(`${SESSION_MAX_AGE_SECONDS}s`)
     .sign(SECRET_KEY);
 }
 

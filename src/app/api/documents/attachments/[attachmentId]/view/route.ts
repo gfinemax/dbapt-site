@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
+import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -18,14 +19,6 @@ export async function GET(
     role: string;
   } | null;
 
-  if (!session) {
-    return NextResponse.json({ error: "인증되지 않은 사용자입니다." }, { status: 401 });
-  }
-
-  if (session.role === "PENDING") {
-    return NextResponse.json({ error: "가입 승인 대기 중에는 자료를 열람할 수 없습니다." }, { status: 403 });
-  }
-
   const { attachmentId } = await params;
 
   try {
@@ -40,8 +33,9 @@ export async function GET(
       return NextResponse.json({ error: "존재하지 않는 첨부파일입니다." }, { status: 404 });
     }
 
-    if (attachment.document.status === "PENDING" && session.role !== "ADMIN") {
-      return NextResponse.json({ error: "해당 첨부파일을 열람할 수 있는 권한이 없습니다." }, { status: 403 });
+    const accessError = getDocumentViewAccessError(attachment.document, session);
+    if (accessError) {
+      return NextResponse.json({ error: accessError.error }, { status: accessError.status });
     }
 
     if (!isPdfFile(attachment.fileName)) {
@@ -51,18 +45,20 @@ export async function GET(
       );
     }
 
-    const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
-    const userAgent = request.headers.get("user-agent") || "Unknown";
+    if (shouldWriteDocumentViewLog(session)) {
+      const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
+      const userAgent = request.headers.get("user-agent") || "Unknown";
 
-    await prisma.documentLog.create({
-      data: {
-        userId: session.id,
-        documentId: attachment.documentId,
-        actionType: "VIEW",
-        ipAddress,
-        userAgent,
-      },
-    });
+      await prisma.documentLog.create({
+        data: {
+          userId: session.id,
+          documentId: attachment.documentId,
+          actionType: "VIEW",
+          ipAddress,
+          userAgent,
+        },
+      });
+    }
 
     const file = await downloadDocumentFile(attachment.filePath);
     const fileBuffer = await file.arrayBuffer();

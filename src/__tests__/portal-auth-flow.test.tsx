@@ -2,6 +2,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect } from "vitest";
+import { decodeJwt } from "jose";
 import { createSessionToken, decrypt, encrypt } from "../lib/auth";
 import { prisma } from "../lib/db";
 import bcrypt from "bcryptjs";
@@ -49,6 +50,20 @@ describe("Phase 2 Authentication and Session Logic", () => {
       expect(decrypted?.name).toBe("오하동");
       expect(decrypted?.email).toBe("gfinemax@gmail.com");
       expect(decrypted?.role).toBe("MEMBER");
+    });
+
+    it("keeps session tokens valid for smartphone revisit windows", async () => {
+      const token = await createSessionToken({
+        id: "member-1",
+        loginId: "member1",
+        name: "정식 조합원",
+        role: "MEMBER",
+      });
+
+      const payload = decodeJwt(token);
+      const lifetimeSeconds = Number(payload.exp) - Number(payload.iat);
+
+      expect(lifetimeSeconds).toBeGreaterThanOrEqual(30 * 24 * 60 * 60);
     });
   });
 

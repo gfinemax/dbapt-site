@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
+import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -18,15 +19,6 @@ export async function GET(
     role: string;
   } | null;
 
-  if (!session) {
-    return NextResponse.json({ error: "인증되지 않은 사용자입니다." }, { status: 401 });
-  }
-
-  // PENDING 유저는 자료실 열람 권한이 없습니다.
-  if (session.role === "PENDING") {
-    return NextResponse.json({ error: "가입 승인 대기 중에는 자료를 열람할 수 없습니다." }, { status: 403 });
-  }
-
   const { id } = await params;
 
   try {
@@ -40,8 +32,9 @@ export async function GET(
     }
 
     // 2. 관리자 권한 및 공개 상태 보안 검증
-    if (document.status === "PENDING" && session.role !== "ADMIN") {
-      return NextResponse.json({ error: "해당 문서를 볼 수 있는 권한이 없습니다." }, { status: 403 });
+    const accessError = getDocumentViewAccessError(document, session);
+    if (accessError) {
+      return NextResponse.json({ error: accessError.error }, { status: accessError.status });
     }
 
     if (!isPdfFile(document.fileName)) {
@@ -52,18 +45,20 @@ export async function GET(
     }
 
     // 3. 보안 감사 로그 생성 (Append-only - VIEW 액션 타입)
-    const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
-    const userAgent = request.headers.get("user-agent") || "Unknown";
+    if (shouldWriteDocumentViewLog(session)) {
+      const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
+      const userAgent = request.headers.get("user-agent") || "Unknown";
 
-    await prisma.documentLog.create({
-      data: {
-        userId: session.id,
-        documentId: document.id,
-        actionType: "VIEW", // 열람 이력 기록
-        ipAddress,
-        userAgent,
-      },
-    });
+      await prisma.documentLog.create({
+        data: {
+          userId: session.id,
+          documentId: document.id,
+          actionType: "VIEW", // 열람 이력 기록
+          ipAddress,
+          userAgent,
+        },
+      });
+    }
 
     // 4. Supabase Storage 비공개 버킷에서 파일 스트리밍
     const file = await downloadDocumentFile(document.filePath);

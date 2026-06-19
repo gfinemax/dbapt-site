@@ -19,7 +19,16 @@ function getDisclosureCardContentDelegate() {
   }).disclosureCardContent;
 }
 
-export default async function DisclosurePage() {
+type DisclosurePageProps = {
+  searchParams?: Promise<{
+    document?: string;
+  }>;
+};
+
+export default async function DisclosurePage({ searchParams }: DisclosurePageProps = {}) {
+  const resolvedSearchParams = await searchParams;
+  const requestedDocumentId =
+    typeof resolvedSearchParams?.document === "string" ? resolvedSearchParams.document : null;
   const session = (await getSession()) as {
     id: string;
     loginId: string | null;
@@ -164,6 +173,23 @@ export default async function DisclosurePage() {
       }
     } catch (e) {
       console.error("Error loading disclosure page session data:", e);
+    }
+  } else if (requestedDocumentId) {
+    try {
+      const publicDocument = await prisma.document.findFirst({
+        where: {
+          id: requestedDocumentId,
+          category: "DISCLOSURE",
+          status: "APPROVED",
+        },
+        include: {
+          attachments: true,
+        },
+      });
+
+      documents = publicDocument ? serializeDocuments([publicDocument]) : [];
+    } catch (e) {
+      console.error("Error loading public disclosure document:", e);
     }
   }
 

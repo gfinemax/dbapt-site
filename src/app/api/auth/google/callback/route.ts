@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createSessionToken } from "@/lib/auth";
+import { SESSION_MAX_AGE_MS } from "@/lib/session-config";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
-const SESSION_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 const SIGNUP_APPLICATION_COOKIE = "google_signup_application";
 
 type GoogleTokenResponse = {

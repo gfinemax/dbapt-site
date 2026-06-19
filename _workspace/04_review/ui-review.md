@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: OpenChat copy messages now point to item-level site targets, and shared notice URLs open the notice detail drawer.
-- Governing spec: `docs/superpowers/specs/2026-06-13-openchat-disclosure-announcement-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-06-13-openchat-disclosure-announcements.md`
-- Files or pages reviewed: `src/lib/notifications/openchat-announcements.ts`, `src/app/api/openchat/announcements/route.ts`, `src/components/news/news-client.tsx`, `/news?tab=notice&news=<newsId>`
+- Feature: anonymous smartphone access for approved disclosure PDF preview links, plus longer login sessions.
+- Governing spec: direct operator request in the current thread, narrowed to approved `DISCLOSURE` inline PDF preview only.
+- Implementation plan: test-first access-boundary fix with route, page-loader, and auth-session regression tests.
+- Files or pages reviewed: `/disclosure?document=<documentId>`, `src/app/disclosure/page.tsx`, document inline preview API routes, `src/lib/auth.ts`, `src/lib/session-config.ts`, and related tests.
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: The change keeps OpenChat as admin-generated paste-ready text. It does not add Kakao automation, collect participants, expose private storage URLs, or add a new public/admin UI surface.
+- Evidence: Anonymous access is limited to `category: DISCLOSURE` and `status: APPROVED` inline PDF preview routes. Approved accounting PDFs still return 401 when anonymous, pending documents remain blocked, and download routes were not opened.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: Announcement text remains informational and routes users to site item-level pages or registered public attachment paths. Already-copied announcements create a fresh draft on copy requests instead of silently reusing stale menu-only messages.
+- Evidence: No labels, counts, documents, or personal-data claims were added. The change only lets an existing OpenChat item-level disclosure link preload the approved document and stream the inline PDF preview without creating new public navigation or action controls.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: The visible change reuses the existing notice drawer and does not alter typography, color, imagery, or motion. Production browser checks on `http://127.0.0.1:3001/news?tab=notice&news=568e0aa2-f745-460a-976a-4ffba43ae776` confirmed the drawer opens on desktop and mobile, with no horizontal overflow at 1440px or 390px viewport widths.
+- Evidence: No typography, color, imagery, spacing, or motion styles were changed. Existing PDF viewer and disclosure page tests continue to pass; build completed successfully.
 
 ## Outcome
 - Result: PASS

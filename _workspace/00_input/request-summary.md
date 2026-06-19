@@ -1,6 +1,6 @@
 # Request Summary
 
-- Requested feature slice: make OpenChat "공지문 복사" messages link to the actual registered item instead of only the parent menu.
-- Explicitly excluded scope: no direct private storage URL exposure, no Kakao automation, no redesign.
-- Candidate governing specification: `docs/superpowers/specs/2026-06-13-openchat-disclosure-announcement-design.md`
-- Unanswered decision: none
+- Requested feature slice: allow OpenChat-shared disclosure PDF links to open on smartphones even when the visitor is not logged in, and keep smartphone logins signed in longer after one successful login.
+- Explicitly excluded scope: no public access to pending documents, accounting/payment/refund/private documents, downloads, mutation APIs, or Kakao automation.
+- Candidate governing specification: direct operator request in the current thread; implementation narrowed to approved `DISCLOSURE` inline PDF preview routes.
+- Unanswered decision: none.

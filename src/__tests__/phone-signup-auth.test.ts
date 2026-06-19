@@ -15,6 +15,7 @@ const prismaMock = vi.hoisted(() => ({
 const mockSessionCookie = vi.hoisted(() => ({
   value: "",
 }));
+const mockCookieSet = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/db", () => ({
   prisma: prismaMock,
@@ -23,7 +24,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => ({
     get: vi.fn(() => (mockSessionCookie.value ? { value: mockSessionCookie.value } : undefined)),
-    set: vi.fn(),
+    set: mockCookieSet,
     delete: vi.fn(),
   })),
 }));
@@ -81,6 +82,41 @@ describe("phone password signup auth", () => {
     );
     expect(createdData.passwordHash).not.toBe("safe7821");
     expect(await bcrypt.compare("safe7821", createdData.passwordHash)).toBe(true);
+  });
+
+  it("sets a long-lived session cookie for phone-password login", async () => {
+    const { loginAction } = await import("@/lib/auth");
+    const passwordHash = await bcrypt.hash("safe7821", 10);
+    const formData = new FormData();
+    formData.set("loginId", "010-1234-5678");
+    formData.set("password", "safe7821");
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "member-1",
+      loginId: "01012345678",
+      name: "홍길동",
+      role: "MEMBER",
+      email: null,
+      image: null,
+      isActive: true,
+      passwordHash,
+    });
+
+    const beforeLogin = Date.now();
+    const result = await loginAction(null, formData);
+    const sessionCookieCall = mockCookieSet.mock.calls.find(([name]) => name === "session");
+
+    expect(result).toEqual({ success: true, role: "MEMBER" });
+    expect(sessionCookieCall).toBeDefined();
+    expect(sessionCookieCall?.[2]).toEqual(
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      }),
+    );
+    expect(sessionCookieCall?.[2].expires.getTime() - beforeLogin).toBeGreaterThanOrEqual(
+      29 * 24 * 60 * 60 * 1000,
+    );
   });
 
   it("keeps a phone login id when approving a pending phone signup", async () => {
