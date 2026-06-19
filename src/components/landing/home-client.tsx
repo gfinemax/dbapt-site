@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { HeroSection } from "./hero-section";
 import { FeatureLinks } from "./feature-links";
-import { NoticesSection } from "./notices-section";
+import { NoticesSection, type LandingNotice } from "./notices-section";
 import { PortalPreview } from "./portal-preview";
 import { SiteFooter } from "./site-footer";
 import { AboutClient } from "@/components/about/about-client";
@@ -54,6 +54,7 @@ type HomeClientProps = {
   contributionSummary?: ContributionSummaryView | null;
   contributionDashboard?: ContributionDashboardView | null;
   paymentNotices?: PaymentNoticeView[];
+  notices?: LandingNotice[];
 };
 
 export function HomeClient({
@@ -66,6 +67,7 @@ export function HomeClient({
   contributionSummary,
   contributionDashboard,
   paymentNotices = [],
+  notices = [],
 }: HomeClientProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAboutDrawerOpen, setIsAboutDrawerOpen] = useState(false);
@@ -186,7 +188,7 @@ export function HomeClient({
       <main className="flex-1 animate-page-in">
         <HeroSection isLoggedIn={!!session} />
         <FeatureLinks />
-        <NoticesSection />
+        <NoticesSection notices={notices} />
         <PortalPreview session={session} />
       </main>
 

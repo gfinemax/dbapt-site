@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 공지사항 댓글 답글 작성 지원, 자유게시판 답글 회귀 확인, 가입 승인 회원 자격 변경 관리 표 컬럼 여백 축소
-- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-06-01-daebang-free-board-post-editing.md`, `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`
-- Files or pages reviewed: `src/components/news/news-client.tsx`, `src/components/news/free-board.tsx`, `src/components/portal/approved-member-conversion-panel.tsx`, `/news?tab=notice`, `/news?tab=free`, `/portal/admin/members`
+- Feature: 랜딩 홈 공지 카드에 조합소식 라벨과 공지사항 및 조합원 게시글 통합 표시
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed: `src/app/page.tsx`, `src/components/landing/home-client.tsx`, `src/components/landing/notices-section.tsx`, `src/content/landing.ts`, `/`
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: 댓글 변경은 조합소식 공지사항 댓글 API와 공지사항 열람 UI에 한정되며, 자유게시판은 기존 답글 흐름을 유지한다. 회원관리 변경은 관리자 전용 회원 자격 변경 표의 컬럼 폭과 셀 패딩 조정에 한정된다. 새 알림, 메시징, 비로그인 작성, PeopleOn 쓰기, 회원 자격 변경 로직은 추가하지 않았다.
+- Evidence: 변경은 공개 랜딩 홈의 요약 카드에 제목과 링크만 표시하는 범위에 한정된다. 비로그인 작성, 자유게시판 작성/댓글 흐름, 관리자 권한 정책은 변경하지 않았다.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: 댓글 답글은 한 단계만 지원하며, 답글에 다시 답글을 달면 같은 최상위 댓글 아래로 정규화된다. 회원관리 표는 기존 컬럼과 의미를 유지하고, 새 기능이나 자동 처리처럼 보이는 문구를 추가하지 않았다.
+- Evidence: 홈 카드는 상위 라벨 `조합소식`과 제목 `공지사항 및 조합원 게시글`로 범위를 명시하고, 각 행에 `공지` 또는 `게시글` 라벨을 붙인다. 게시글은 제목 링크만 노출하고 `/news?tab=free&post=...`로 이동한다.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: 기존 댓글 카드, pill 버튼, warm card, Pretendard 기반 UI 스타일을 유지했다. 공지사항 댓글 답글은 접기/펼치기와 작성 버튼을 명확히 제공하고, 회원관리 표는 `table-fixed`, 명시적 `colgroup`, 더 작은 셀 패딩으로 가로 여백만 줄였다.
+- Evidence: 기존 카드 구조, 오렌지 eyebrow, warm canvas, stone border, pill/link 스타일을 유지했다. 카드에는 `aria-labelledby` region을 추가했고, desktop/mobile DOM 측정에서 수평 오버플로우가 없었다.
 
 ## Outcome
 - Result: PASS

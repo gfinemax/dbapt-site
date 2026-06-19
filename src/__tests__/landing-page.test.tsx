@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HomeClient } from "@/components/landing/home-client";
 import { featureLinks, megaMenuNavigation, publicNavigation } from "@/content/landing";
@@ -100,6 +100,70 @@ describe("public landing page", () => {
     expect(
       screen.getByText(/로그인 후 이용할 수 있습니다/),
     ).toBeInTheDocument();
+  });
+
+  it("does not show hardcoded mock notices on the landing page", () => {
+    render(<HomeClient />);
+
+    expect(screen.queryByText("대방동 지역주택조합 홈페이지 준비 안내")).not.toBeInTheDocument();
+    expect(screen.queryByText("조합원 전용 정보공개 서비스 운영 예정")).not.toBeInTheDocument();
+    expect(screen.queryByText("사업정보 및 관련 법령 자료실 안내")).not.toBeInTheDocument();
+    expect(screen.getByText("최근 등록된 공지사항 및 조합원 게시글이 없습니다.")).toBeInTheDocument();
+  });
+
+  it("renders database-backed notices passed from the homepage server", () => {
+    render(
+      <HomeClient
+        notices={[
+          {
+            id: "notice-1",
+            kind: "notice",
+            title: "대방동 지역주택조합 공식 홈페이지 운영 안내",
+            createdAt: "2026-06-18T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("대방동 지역주택조합 공식 홈페이지 운영 안내")).toBeInTheDocument();
+    expect(screen.getByText("2026.06.18")).toBeInTheDocument();
+  });
+
+  it("combines public notices and member board posts in the landing notice card", () => {
+    render(
+      <HomeClient
+        notices={[
+          {
+            id: "notice-1",
+            kind: "notice",
+            title: "대방동 지역주택조합 공식 홈페이지 운영 안내",
+            createdAt: "2026-06-18T00:00:00.000Z",
+          },
+          {
+            id: "free-1",
+            kind: "free",
+            title: "정보공개 자료 열람 문의",
+            createdAt: "2026-06-17T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    const newsCard = screen.getByRole("region", { name: "공지사항 및 조합원 게시글" });
+
+    expect(within(newsCard).getByRole("heading", { name: "공지사항 및 조합원 게시글" })).toBeInTheDocument();
+    expect(within(newsCard).getByText("조합소식")).toBeInTheDocument();
+    expect(within(newsCard).getByText("공지")).toBeInTheDocument();
+    expect(within(newsCard).getByText("게시글")).toBeInTheDocument();
+    expect(within(newsCard).getByRole("link", { name: /대방동 지역주택조합 공식 홈페이지 운영 안내/ })).toHaveAttribute(
+      "href",
+      "/news?tab=notice",
+    );
+    expect(within(newsCard).getByRole("link", { name: /정보공개 자료 열람 문의/ })).toHaveAttribute(
+      "href",
+      "/news?tab=free&post=free-1",
+    );
+    expect(within(newsCard).getByRole("link", { name: "전체보기" })).toHaveAttribute("href", "/news");
   });
 
   it("uses the logged-in portal preview as an issue participation hub", () => {

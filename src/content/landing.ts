@@ -107,12 +107,6 @@ export const featureLinks = [
   },
 ] as const;
 
-export const notices = [
-  { title: "대방동 지역주택조합 홈페이지 준비 안내", date: "2026.05.26" },
-  { title: "조합원 전용 정보공개 서비스 운영 예정", date: "2026.05.26" },
-  { title: "사업정보 및 관련 법령 자료실 안내", date: "2026.05.26" },
-] as const;
-
 export const memberServices = [
   {
     title: "정보공개",
