@@ -62,6 +62,28 @@ describe("disclosure page", () => {
     );
   });
 
+  it("does not mount the nested disclosure drawer content until the disclosure drawer opens", async () => {
+    const { container } = render(
+      <DisclosurePageClientShell
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "사무국",
+          role: "ADMIN",
+        }}
+        documents={[]}
+      />,
+    );
+
+    expect(container.querySelectorAll("#section-rules")).toHaveLength(1);
+
+    window.dispatchEvent(new CustomEvent("open-disclosure"));
+
+    await waitFor(() => {
+      expect(container.querySelectorAll("#section-rules")).toHaveLength(2);
+    });
+  });
+
   it("keeps correspondence direction in the category label without prefixing the document title", () => {
     render(
       <MeetingsTable

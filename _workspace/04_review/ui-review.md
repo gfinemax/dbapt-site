@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: OpenChat copy messages now point to item-level site targets, and shared notice URLs open the notice detail drawer.
-- Governing spec: `docs/superpowers/specs/2026-06-13-openchat-disclosure-announcement-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-06-13-openchat-disclosure-announcements.md`
-- Files or pages reviewed: `src/lib/notifications/openchat-announcements.ts`, `src/app/api/openchat/announcements/route.ts`, `src/components/news/news-client.tsx`, `/news?tab=notice&news=<newsId>`
+- Feature: `/disclosure` hydration mismatch mitigation by deferring the nested disclosure drawer content until the drawer opens.
+- Governing spec: direct bugfix from the reported Next.js hydration console error; no feature spec change.
+- Implementation plan: test-first regression fix in `src/__tests__/disclosure-page.test.tsx`.
+- Files or pages reviewed: `src/components/disclosure/disclosure-page-client-shell.tsx`, `src/__tests__/disclosure-page.test.tsx`, `/disclosure`.
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: The change keeps OpenChat as admin-generated paste-ready text. It does not add Kakao automation, collect participants, expose private storage URLs, or add a new public/admin UI surface.
+- Evidence: The change does not expose new public navigation, private document data, accounting data, voting, messaging, or role-specific services. It only changes when the already-hidden disclosure drawer content mounts.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: Announcement text remains informational and routes users to site item-level pages or registered public attachment paths. Already-copied announcements create a fresh draft on copy requests instead of silently reusing stale menu-only messages.
+- Evidence: No copy, counts, documents, user data, or action labels were added or changed. The public disclosure page remains the same surface, and the drawer content appears only after the existing open event.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: The visible change reuses the existing notice drawer and does not alter typography, color, imagery, or motion. Production browser checks on `http://127.0.0.1:3001/news?tab=notice&news=568e0aa2-f745-460a-976a-4ffba43ae776` confirmed the drawer opens on desktop and mobile, with no horizontal overflow at 1440px or 390px viewport widths.
+- Evidence: No typography, color, imagery, spacing, or motion styles were changed. Production Chrome checks on `http://127.0.0.1:3001/disclosure` at 1440px and 390px showed no horizontal overflow, no hydration-related console messages, one `#section-rules` instance while the drawer is closed, and two instances only after dispatching `open-disclosure`.
 
 ## Outcome
 - Result: PASS

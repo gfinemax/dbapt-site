@@ -316,22 +316,24 @@ export function DisclosurePageClientShell({
         </div>
 
         <div className="flex-1 mt-6">
-          <DisclosureClient
-            session={session}
-            documents={documents}
-            emptyMessages={emptyMessages}
-            cardContents={cardContents}
-            onViewDocument={(document) => {
-              setIsDisclosureDrawerOpen(false);
-              setActiveViewDoc(document);
-            }}
-            onOpenPortal={(cat, search) => {
-              setIsDisclosureDrawerOpen(false);
-              setPortalCategory(cat || "all");
-              setPortalSearch(search || "");
-              setIsDrawerOpen(true);
-            }}
-          />
+          {isDisclosureDrawerOpen && (
+            <DisclosureClient
+              session={session}
+              documents={documents}
+              emptyMessages={emptyMessages}
+              cardContents={cardContents}
+              onViewDocument={(document) => {
+                setIsDisclosureDrawerOpen(false);
+                setActiveViewDoc(document);
+              }}
+              onOpenPortal={(cat, search) => {
+                setIsDisclosureDrawerOpen(false);
+                setPortalCategory(cat || "all");
+                setPortalSearch(search || "");
+                setIsDrawerOpen(true);
+              }}
+            />
+          )}
         </div>
       </div>
 
