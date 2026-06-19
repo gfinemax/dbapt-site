@@ -40,19 +40,33 @@ describe("openchat announcements API", () => {
     vi.clearAllMocks();
   });
 
-  it("returns the latest announcement for an admin document copy request", async () => {
+  it("regenerates the latest draft announcement for an admin document copy request", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPrisma.openChatAnnouncement.findFirst.mockResolvedValue({
       id: "announcement-1",
       documentId: "doc-1",
       status: "DRAFT",
-      message: "공지문 본문",
+      message: "예전 공지문 본문",
       copiedAt: null,
       updatedAt: new Date("2026-06-14T00:00:00.000Z"),
       document: {
         id: "doc-1",
         title: "대의원 회의록",
       },
+    });
+    mockPrisma.document.findUnique.mockResolvedValue({
+      id: "doc-1",
+      title: "대의원 회의록",
+      category: "DISCLOSURE",
+      subCategory: "대의원 회의록",
+      status: "APPROVED",
+      publishedAt: new Date("2026-06-14T00:00:00.000Z"),
+      createdAt: new Date("2026-06-14T00:00:00.000Z"),
+    });
+    mockUpsertOpenChatAnnouncementForDocument.mockResolvedValue({
+      status: "UPDATED",
+      announcementId: "announcement-1",
+      message: "최신 공지문 본문\nhttps://dbapt-site.vercel.app/disclosure?document=doc-1",
     });
 
     const { GET } = await import("@/app/api/openchat/announcements/route");
@@ -77,7 +91,63 @@ describe("openchat announcements API", () => {
         },
       },
     });
-    expect(data.announcement.message).toBe("공지문 본문");
+    expect(mockPrisma.document.findUnique).toHaveBeenCalledWith({ where: { id: "doc-1" } });
+    expect(mockUpsertOpenChatAnnouncementForDocument).toHaveBeenCalledWith({
+      prisma: mockPrisma,
+      document: expect.objectContaining({
+        id: "doc-1",
+        title: "대의원 회의록",
+      }),
+    });
+    expect(data.announcement.message).toBe("최신 공지문 본문\nhttps://dbapt-site.vercel.app/disclosure?document=doc-1");
+  });
+
+  it("creates a fresh draft when the latest cooperative news announcement was already copied", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.openChatAnnouncement.findFirst.mockResolvedValue({
+      id: "announcement-news-copied",
+      coopNewsId: "notice-1",
+      status: "COPIED",
+      message: "예전 조합소식 공지문 본문",
+      copiedAt: new Date("2026-06-18T00:00:00.000Z"),
+      updatedAt: new Date("2026-06-18T00:00:00.000Z"),
+      coopNews: {
+        id: "notice-1",
+        title: "실제 공지",
+      },
+    });
+    mockPrisma.coopNews.findUnique.mockResolvedValue({
+      id: "notice-1",
+      title: "실제 공지",
+      category: "NOTICE",
+      content: "공지 본문",
+      createdAt: new Date("2026-06-18T00:00:00.000Z"),
+    });
+    mockUpsertOpenChatAnnouncementForNews.mockResolvedValue({
+      status: "CREATED",
+      announcementId: "announcement-news-fresh",
+      message: "최신 조합소식 공지문 본문\nhttps://dbapt-site.vercel.app/news?tab=notice&news=notice-1",
+    });
+
+    const { GET } = await import("@/app/api/openchat/announcements/route");
+    const response = await GET(new Request("http://localhost/api/openchat/announcements?newsId=notice-1"));
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockUpsertOpenChatAnnouncementForNews).toHaveBeenCalledWith({
+      prisma: mockPrisma,
+      news: expect.objectContaining({
+        id: "notice-1",
+        title: "실제 공지",
+      }),
+      force: true,
+    });
+    expect(data.announcement).toEqual({
+      id: "announcement-news-fresh",
+      newsId: "notice-1",
+      status: "DRAFT",
+      message: "최신 조합소식 공지문 본문\nhttps://dbapt-site.vercel.app/news?tab=notice&news=notice-1",
+    });
   });
 
   it("generates and returns an announcement when an approved disclosure document has no draft yet", async () => {

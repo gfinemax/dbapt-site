@@ -13,6 +13,7 @@ type OpenChatAnnouncementNews = {
   title: string;
   category: string;
   createdAt?: Date | null;
+  attachmentPath?: string | null;
 };
 
 type OpenChatAnnouncementFreePost = {
@@ -141,6 +142,12 @@ function normalizeSiteUrl(siteUrl?: string) {
   return value.replace(/\/+$/, "");
 }
 
+function buildSiteUrl(path: string, siteUrl?: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizeSiteUrl(siteUrl)}${normalizedPath}`;
+}
+
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
@@ -159,7 +166,7 @@ export function buildOpenChatAnnouncementMessage(params: {
   const subCategory = normalizeOneLine(normalizeSubCategory(document.subCategory));
   const title = normalizeOneLine(document.title);
   const publishedAt = document.publishedAt ?? document.createdAt ?? params.now ?? new Date();
-  const disclosureUrl = `${normalizeSiteUrl(params.siteUrl)}/disclosure`;
+  const disclosureUrl = `${normalizeSiteUrl(params.siteUrl)}/disclosure?document=${encodeURIComponent(document.id)}`;
 
   return [
     "[대방동 지역주택조합 공개자료 안내]",
@@ -169,7 +176,7 @@ export function buildOpenChatAnnouncementMessage(params: {
     `- 제목: ${title}`,
     `- 등록일: ${formatDate(publishedAt)}`,
     "",
-    "홈페이지 로그인 후 공개자료 메뉴에서 확인해 주세요.",
+    "홈페이지 로그인 후 해당 공개자료를 확인해 주세요.",
     disclosureUrl,
   ].join("\n");
 }
@@ -183,7 +190,9 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
   const title = normalizeOneLine(news.title);
   const createdAt = news.createdAt ?? params.now ?? new Date();
   const meta = getCooperativeNewsAnnouncementMeta(news);
-  const newsUrl = `${normalizeSiteUrl(params.siteUrl)}/news?tab=${meta.tab}`;
+  const newsUrl = news.attachmentPath
+    ? buildSiteUrl(news.attachmentPath, params.siteUrl)
+    : `${normalizeSiteUrl(params.siteUrl)}/news?tab=${meta.tab}&news=${encodeURIComponent(news.id)}`;
 
   return [
     "[대방동 지역주택조합 조합소식 안내]",
@@ -193,7 +202,7 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
     `- 제목: ${title}`,
     `- 등록일: ${formatDate(createdAt)}`,
     "",
-    "홈페이지 조합소식 메뉴에서 확인해 주세요.",
+    "홈페이지 조합소식 등록자료를 확인해 주세요.",
     newsUrl,
   ].join("\n");
 }

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { Suspense } from "react";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -11,13 +9,14 @@ import {
 import { NewsClient } from "@/components/news/news-client";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 import { getUserDisplayName } from "@/lib/user-display-name";
+import type { CoopNewsView, FAQView, FreePostView } from "@/lib/news/types";
 
 export default async function NewsPage() {
   const session = (await getSession()) as PersonalLibrarySession | null;
 
-  let newsList: any[] = [];
-  let freePosts: any[] = [];
-  let faqs: any[] = [];
+  let newsList: CoopNewsView[] = [];
+  let freePosts: FreePostView[] = [];
+  let faqs: FAQView[] = [];
   let personalLibraryData = emptyPersonalLibraryData();
 
   try {

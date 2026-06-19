@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+export { getPlainNoticeText } from "@/lib/news/rich-text";
 
 type UploadImage = (file: File) => Promise<{ url: string }>;
 
@@ -24,17 +25,6 @@ function escapeAttr(value: string) {
     .replace(/"/g, "&quot;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-}
-
-export function getPlainNoticeText(content: string) {
-  return content
-    .replace(/<img\b[^>]*>/gi, " [이미지] ")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|li)>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 export function sanitizeNoticeContentHtml(content: string) {

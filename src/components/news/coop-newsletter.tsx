@@ -1,38 +1,20 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { copyTextToClipboard } from "@/lib/copy-to-clipboard";
 import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-response";
+import { buildNewsletterList, type NewsletterListItem } from "@/lib/news/newsletter-list";
+import { uploadPublicFile } from "@/lib/news/public-upload";
+import type { CoopNewsView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
 
 type CoopNewsletterProps = {
   isLoggedIn: boolean;
   isAdmin: boolean;
-  newsList: any[];
+  newsList: CoopNewsView[];
   onRefresh: () => Promise<void>;
 };
-
-const UPCOMING_NEWSLETTER_PREVIEW = {
-  id: "upcoming-newsletter-2026-07-issue-1",
-  title: "대방동 지주택 2026년 7월 조합 월간 소식지 (제1호) 오픈 예정",
-  content:
-    "대방동 지역주택조합은 2026년 7월부터 조합 월간 소식지 제1호를 준비해 조합원께 정기적으로 안내드릴 예정입니다.\n\n제1호에서는 조합 운영 일정, 공개자료 등록 현황, 인허가 진행 기준, 조합비와 계약 관리 원칙, 조합원 주요 질의응답, 다음 달 확인 예정 사항을 한눈에 볼 수 있도록 구성하겠습니다.\n\n확정되지 않은 사안은 확정 표현 없이 현재 확인 가능한 기준과 향후 확인 절차로 구분해 전달하고, 조합원께 필요한 자료 위치와 열람 방법도 함께 안내하겠습니다.",
-  author: { name: "사무국" },
-  createdAt: "2026.07 예정",
-  imagePath: null,
-  attachmentPath: null,
-  attachmentName: null,
-  attachmentSize: null,
-  isStarred: false,
-  isPreview: true,
-} as const;
-
-const UPCOMING_NEWSLETTER_PREVIEWS = [
-  UPCOMING_NEWSLETTER_PREVIEW,
-] as const;
 
 // Dynamic harmony premium HSL gradients for cards if thumbnail image is empty
 const PREMIUM_GRADIENTS = [
@@ -50,7 +32,7 @@ export function CoopNewsletter({
 }: CoopNewsletterProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [activeViewNews, setActiveViewNews] = useState<any | null>(null);
+  const [activeViewNews, setActiveViewNews] = useState<NewsletterListItem | null>(null);
   const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, "copying" | "copied" | "error">>({});
 
   // Upload Form State
@@ -62,50 +44,7 @@ export function CoopNewsletter({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Combine real database data with the single upcoming issue preview.
-  const combinedData = useMemo(() => {
-    const realNews = newsList.map((item) => ({
-      id: item.id,
-      title: item.title,
-      content: item.content,
-      viewCount: item.viewCount,
-      isStarred: item.isStarred,
-      author: item.author,
-      createdAt: item.createdAt.slice(0, 10).replace(/-/g, "."),
-      imagePath: item.imagePath,
-      attachmentPath: item.attachmentPath,
-      attachmentName: item.attachmentName,
-      attachmentSize: item.attachmentSize,
-      isReal: true,
-      isPreview: false,
-    }));
-
-    let filteredReal = realNews;
-    let filteredPreview = [...UPCOMING_NEWSLETTER_PREVIEWS].map((n) => ({ ...n, isReal: false }));
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      filteredReal = filteredReal.filter((n) => n.title.toLowerCase().includes(q));
-      filteredPreview = filteredPreview.filter((n) => n.title.toLowerCase().includes(q));
-    }
-
-    return [...filteredReal, ...filteredPreview];
-  }, [newsList, searchQuery]);
-
-  const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("kind", kind);
-    const uploadRes = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const uploadData = await uploadRes.json();
-    if (!uploadRes.ok) {
-      throw new Error(uploadData.error || "파일 업로드에 실패했습니다.");
-    }
-    return uploadData as { url: string; name: string; size: number };
-  };
+  const combinedData = useMemo(() => buildNewsletterList(newsList, searchQuery), [newsList, searchQuery]);
 
   const handlePasteImage = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const imageFile = Array.from(e.clipboardData.files).find((file) => file.type.startsWith("image/"));
@@ -176,7 +115,7 @@ export function CoopNewsletter({
     }
   };
 
-  const handleDeleteNews = async (news: any) => {
+  const handleDeleteNews = async (news: NewsletterListItem) => {
     if (!news.isReal) return;
     if (!confirm(`"${news.title}" 조합뉴스를 삭제하시겠습니까?`)) return;
 
@@ -201,7 +140,7 @@ export function CoopNewsletter({
     }
   };
 
-  const handleOpenChatCopy = async (news: any) => {
+  const handleOpenChatCopy = async (news: NewsletterListItem) => {
     if (!news.isReal) return;
 
     setOpenChatCopyStatus((prev) => ({ ...prev, [news.id]: "copying" }));

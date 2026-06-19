@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useState, useEffect, useMemo } from "react";
@@ -10,8 +9,52 @@ import { Button } from "@/components/ui/button";
 import {
   NEWS_DISPLAY_AUTHOR_NAMES,
   type NewsDisplayAuthorName,
-  getNewsDisplayAuthorName,
 } from "@/lib/news-display-author";
+import { buildShallowCommentTree } from "@/lib/news/comment-tree";
+import { mergeNewsCategoryRefresh } from "@/lib/news/category-refresh";
+import {
+  appendNoticeComment,
+  appendNoticeCommentToList,
+  removeNoticeComment as removeNoticeCommentFromNotice,
+  removeNoticeCommentFromList,
+  replaceNoticeComment,
+  replaceNoticeCommentInList,
+  type NoticeCommentMutation,
+} from "@/lib/news/comment-mutations";
+import {
+  findNoticeFromSearchParams,
+  getNewsTabFromSearchParams,
+  type NewsTabId,
+} from "@/lib/news/deep-links";
+import {
+  buildNoticeCommentEditDraft,
+  canCommentOnNotice as canCommentOnNoticeItem,
+  canEditNotice,
+  canMutateNoticeComment as canMutateNoticeCommentItem,
+} from "@/lib/news/notice-access";
+import {
+  buildNoticeCommentCreatePayload,
+  buildNoticeCommentUpdatePayload,
+} from "@/lib/news/notice-comment-payload";
+import {
+  buildActiveEditedNoticeView,
+  buildEditedNoticeView,
+  mergeNoticeRefresh,
+  replaceNoticeInList,
+} from "@/lib/news/notice-mutations";
+import { getNoticeCommentAuthorName } from "@/lib/news/comment-author";
+import { buildNoticeEditDraft } from "@/lib/news/notice-edit-draft";
+import { buildNoticeEditPayload } from "@/lib/news/notice-edit-payload";
+import { buildNewsClientSummary } from "@/lib/news/news-client-summary";
+import { uploadPublicFile } from "@/lib/news/public-upload";
+import {
+  getNewsComments,
+  type CoopNewsView,
+  type FAQView,
+  type FreePostView,
+  type NewsCommentView,
+  type NewsSessionView,
+} from "@/lib/news/types";
 import { cn } from "@/lib/utils";
 import { NoticeBoard } from "./notice-board";
 import { FreeBoard } from "./free-board";
@@ -20,19 +63,11 @@ import { CoopNewsletter } from "./coop-newsletter";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
 type NewsClientProps = {
-  session?: {
-    id: string;
-    loginId: string | null;
-    name: string;
-    role: string;
-    email?: string;
-  } | null;
-  initialNewsList?: any[];
-  initialFreePosts?: any[];
-  initialFaqs?: any[];
+  session?: NewsSessionView | null;
+  initialNewsList?: CoopNewsView[];
+  initialFreePosts?: FreePostView[];
+  initialFaqs?: FAQView[];
 };
-
-type NewsTabId = "notice" | "free" | "faq" | "newsletter";
 
 const menuItems = [
   { id: "notice", label: "공지사항", isSecure: false },
@@ -41,41 +76,12 @@ const menuItems = [
   { id: "newsletter", label: "조합뉴스 (주/월간소식)", isSecure: false },
 ] as const;
 
-function legacyNoticeImageHtml(imagePath: string) {
-  const src = imagePath.replace(/"/g, "&quot;");
-  return `<p><img src="${src}" alt="본문 이미지" data-width="100" style="width:100%;max-width:100%;height:auto;" /></p>`;
-}
-
-function getNoticeComments(notice: any) {
-  return Array.isArray(notice?.comments) ? notice.comments : [];
-}
-
-function buildNoticeCommentTree(comments: any[]) {
-  const commentViews = comments.map((comment) => ({
-    ...comment,
-    parentId: comment.parentId || null,
-    replies: [] as any[],
-  }));
-  const byId = new Map(commentViews.map((comment) => [comment.id, comment]));
-  const topLevelComments: any[] = [];
-
-  for (const comment of commentViews) {
-    if (comment.parentId && byId.has(comment.parentId)) {
-      byId.get(comment.parentId)?.replies.push(comment);
-    } else {
-      topLevelComments.push(comment);
-    }
-  }
-
-  return topLevelComments;
-}
-
 function formatNoticeDate(value: unknown) {
   if (!value) return "";
   return String(value).slice(0, 10).replace(/-/g, ".");
 }
 
-function NewsSectionLockTab({ label, router }: { label: string; router: any }) {
+function NewsSectionLockTab({ label, router }: { label: string; router: { push: (href: string) => void } }) {
   return (
     <div className="stone-card bg-[#fbfaf9] rounded-3xl p-10 text-center relative overflow-hidden min-h-[360px] flex flex-col justify-center items-center border border-stone-surface">
       {/* 고해상도 정보 보호용 리드미컬하고 세련된 디테일 블러 프레임 */}
@@ -130,13 +136,15 @@ export function NewsClient({
   const searchParams = useSearchParams();
   const isLoggedIn = !!session;
   const isAdmin = session?.role === "ADMIN";
+  const initialTab = getNewsTabFromSearchParams(searchParams) ?? "notice";
+  const initialNoticeFromUrl = findNoticeFromSearchParams(initialNewsList, searchParams);
 
-  const [activeTab, setActiveTab] = useState<NewsTabId>("notice");
-  const [newsList, setNewsList] = useState<any[]>(initialNewsList);
-  const [freePosts, setFreePosts] = useState<any[]>(initialFreePosts);
-  const [faqs, setFaqs] = useState<any[]>(initialFaqs);
+  const [activeTab, setActiveTab] = useState<NewsTabId>(initialTab);
+  const [newsList, setNewsList] = useState<CoopNewsView[]>(initialNewsList);
+  const [freePosts, setFreePosts] = useState<FreePostView[]>(initialFreePosts);
+  const [faqs, setFaqs] = useState<FAQView[]>(initialFaqs);
 
-  const [activeViewNotice, setActiveViewNotice] = useState<any | null>(null);
+  const [activeViewNotice, setActiveViewNotice] = useState<CoopNewsView | null>(initialNoticeFromUrl);
   const [isEditingNotice, setIsEditingNotice] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
@@ -186,98 +194,42 @@ export function NewsClient({
     };
   }, [activeViewNotice]);
 
-  const isEditableNotice = !!activeViewNotice?.id && !String(activeViewNotice.id).startsWith("mock-") && isAdmin;
-  const canCommentOnNotice = !!activeViewNotice?.id && !String(activeViewNotice.id).startsWith("mock-");
+  const isEditableNotice = canEditNotice(activeViewNotice, isAdmin);
+  const canCommentOnNotice = canCommentOnNoticeItem(activeViewNotice);
 
-  const getNoticeCommentAuthorName = (comment: any) => {
-    if (comment.author?.role === "ADMIN") {
-      return comment.displayAuthorName || "운영자";
-    }
-    return comment.author?.name || "조합원";
+  const canMutateNoticeComment = (comment: NewsCommentView) => {
+    return canMutateNoticeCommentItem(comment, session);
   };
 
-  const canMutateNoticeComment = (comment: any) => {
-    return isAdmin || comment.author?.id === session?.id;
-  };
-
-  const syncNoticeComment = (comment: any) => {
-    setNewsList((prev) => prev.map((item) => {
-      if (item.id !== comment.newsId) return item;
-      return {
-        ...item,
-        comments: getNoticeComments(item).map((existing: any) => (
-          existing.id === comment.id ? comment : existing
-        )),
-      };
-    }));
-    setActiveViewNotice((prev: any) => {
-      if (!prev || prev.id !== comment.newsId) return prev;
-      return {
-        ...prev,
-        comments: getNoticeComments(prev).map((existing: any) => (
-          existing.id === comment.id ? comment : existing
-        )),
-      };
-    });
+  const syncNoticeComment = (comment: NoticeCommentMutation) => {
+    setNewsList((prev) => replaceNoticeCommentInList(prev, comment));
+    setActiveViewNotice((prev) => replaceNoticeComment(prev, comment));
   };
 
   const removeNoticeComment = (commentId: string) => {
-    setNewsList((prev) => prev.map((item) => ({
-      ...item,
-      comments: getNoticeComments(item).filter((comment: any) => comment.id !== commentId && comment.parentId !== commentId),
-    })));
-    setActiveViewNotice((prev: any) => prev ? {
-      ...prev,
-      comments: getNoticeComments(prev).filter((comment: any) => comment.id !== commentId && comment.parentId !== commentId),
-    } : prev);
+    setNewsList((prev) => removeNoticeCommentFromList(prev, commentId));
+    setActiveViewNotice((prev) => removeNoticeCommentFromNotice(prev, commentId));
   };
 
   const refreshNoticeList = async () => {
     const res = await fetch("/api/news?category=NOTICE");
     const data = await res.json();
     if (data.newsList) {
-      setNewsList((prev) => [
-        ...data.newsList,
-        ...prev.filter((n) => n.category !== "NOTICE"),
-      ]);
+      setNewsList((prev) => mergeNoticeRefresh(prev, data.newsList));
     }
-  };
-
-  const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("kind", kind);
-    const uploadRes = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const uploadData = await uploadRes.json();
-    if (!uploadRes.ok) {
-      throw new Error(uploadData.error || "파일 업로드에 실패했습니다.");
-    }
-    return uploadData as { url: string; name: string; size: number };
   };
 
   const beginNoticeEdit = () => {
     if (!activeViewNotice) return;
-    const currentContent = activeViewNotice.content || "";
-    setEditTitle(activeViewNotice.title || "");
-    setEditContent(
-      activeViewNotice.imagePath && !currentContent.includes(activeViewNotice.imagePath)
-        ? `${legacyNoticeImageHtml(activeViewNotice.imagePath)}${currentContent}`
-        : currentContent,
-    );
-    setEditAttachmentPath(activeViewNotice.attachmentPath || null);
-    setEditAttachmentName(activeViewNotice.attachmentName || null);
-    setEditAttachmentSize(activeViewNotice.attachmentSize || null);
+    const draft = buildNoticeEditDraft(activeViewNotice);
+    setEditTitle(draft.title);
+    setEditContent(draft.content);
+    setEditAttachmentPath(draft.attachmentPath);
+    setEditAttachmentName(draft.attachmentName);
+    setEditAttachmentSize(draft.attachmentSize);
     setEditAttachmentFile(null);
-    setEditIsStarred(!!activeViewNotice.isStarred);
-    setEditDisplayAuthorName(
-      NEWS_DISPLAY_AUTHOR_NAMES.includes(activeViewNotice.displayAuthorName)
-        ? activeViewNotice.displayAuthorName
-        : "운영자",
-    );
+    setEditIsStarred(draft.isStarred);
+    setEditDisplayAuthorName(draft.displayAuthorName);
     setIsEditingNotice(true);
   };
 
@@ -305,17 +257,16 @@ export function NewsClient({
       const res = await fetch("/api/news", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.stringify(buildNoticeEditPayload({
           id: activeViewNotice.id,
           title: editTitle,
           content: editContent,
-          category: "NOTICE",
           attachmentPath,
           attachmentName,
           attachmentSize,
           isStarred: editIsStarred,
           displayAuthorName: editDisplayAuthorName,
-        }),
+        })),
       });
 
       const data = await res.json();
@@ -324,25 +275,9 @@ export function NewsClient({
         return;
       }
 
-      const updatedNotice = {
-        ...data.news,
-        createdAt: data.news.createdAt,
-        updatedAt: data.news.updatedAt,
-        author: {
-          name: getNewsDisplayAuthorName({
-            displayAuthorName: data.news.displayAuthorName ?? activeViewNotice.displayAuthorName,
-            author: data.news.author || activeViewNotice.author,
-          }),
-          role: data.news.author?.role || activeViewNotice.author?.role || "ADMIN",
-        },
-      };
-      setNewsList((prev) => prev.map((item) => item.id === updatedNotice.id ? updatedNotice : item));
-      setActiveViewNotice({
-        ...updatedNotice,
-        createdAt: String(updatedNotice.createdAt).slice(0, 10).replace(/-/g, "."),
-        displayAuthorName: editDisplayAuthorName,
-        isReal: true,
-      });
+      const updatedNotice = buildEditedNoticeView(data.news, activeViewNotice);
+      setNewsList((prev) => replaceNoticeInList(prev, updatedNotice));
+      setActiveViewNotice(buildActiveEditedNoticeView(updatedNotice, editDisplayAuthorName));
       setIsEditingNotice(false);
       await refreshNoticeList();
     } catch (err) {
@@ -367,12 +302,13 @@ export function NewsClient({
       const res = await fetch("/api/news/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.stringify(buildNoticeCommentCreatePayload({
           newsId: activeViewNotice.id,
           content,
-          ...(parentCommentId ? { parentCommentId } : {}),
-          ...(isAdmin ? { displayAuthorName: noticeCommentDisplayAuthorName } : {}),
-        }),
+          parentCommentId,
+          isAdmin,
+          displayAuthorName: noticeCommentDisplayAuthorName,
+        })),
       });
       const data = await res.json();
 
@@ -382,17 +318,8 @@ export function NewsClient({
       }
 
       const nextComment = data.comment;
-      setNewsList((prev) => prev.map((item) => {
-        if (item.id !== activeViewNotice.id) return item;
-        return {
-          ...item,
-          comments: [...getNoticeComments(item), nextComment],
-        };
-      }));
-      setActiveViewNotice((prev: any) => prev ? {
-        ...prev,
-        comments: [...getNoticeComments(prev), nextComment],
-      } : prev);
+      setNewsList((prev) => appendNoticeCommentToList(prev, activeViewNotice.id, nextComment));
+      setActiveViewNotice((prev) => appendNoticeComment(prev, activeViewNotice.id, nextComment));
       if (parentCommentId) {
         setNoticeReplyContents((prev) => ({ ...prev, [parentCommentId]: "" }));
         setReplyingNoticeCommentId(null);
@@ -409,17 +336,14 @@ export function NewsClient({
     }
   };
 
-  const beginNoticeCommentEdit = (comment: any) => {
-    setEditingNoticeCommentId(comment.id);
-    setEditNoticeCommentContent(comment.content || "");
-    setEditNoticeCommentDisplayAuthorName(
-      NEWS_DISPLAY_AUTHOR_NAMES.includes(comment.displayAuthorName)
-        ? comment.displayAuthorName
-        : "운영자",
-    );
+  const beginNoticeCommentEdit = (comment: NewsCommentView) => {
+    const draft = buildNoticeCommentEditDraft(comment);
+    setEditingNoticeCommentId(draft.id);
+    setEditNoticeCommentContent(draft.content);
+    setEditNoticeCommentDisplayAuthorName(draft.displayAuthorName);
   };
 
-  const saveNoticeCommentEdit = async (comment: any) => {
+  const saveNoticeCommentEdit = async (comment: NewsCommentView) => {
     const content = editNoticeCommentContent.trim();
     if (!content) {
       alert("댓글 내용을 입력해 주세요.");
@@ -431,11 +355,12 @@ export function NewsClient({
       const res = await fetch("/api/news/comments", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.stringify(buildNoticeCommentUpdatePayload({
           commentId: comment.id,
           content,
-          ...(isAdmin ? { displayAuthorName: editNoticeCommentDisplayAuthorName } : {}),
-        }),
+          isAdmin,
+          displayAuthorName: editNoticeCommentDisplayAuthorName,
+        })),
       });
       const data = await res.json();
 
@@ -444,7 +369,7 @@ export function NewsClient({
         return;
       }
 
-      syncNoticeComment(data.comment);
+      syncNoticeComment(data.comment as NoticeCommentMutation);
       setEditingNoticeCommentId(null);
       setEditNoticeCommentContent("");
     } catch (err) {
@@ -455,7 +380,7 @@ export function NewsClient({
     }
   };
 
-  const deleteNoticeComment = async (comment: any) => {
+  const deleteNoticeComment = async (comment: NewsCommentView) => {
     if (!confirm("댓글을 삭제하시겠습니까?")) return;
 
     setNoticeCommentMutatingId(comment.id);
@@ -483,33 +408,30 @@ export function NewsClient({
     }
   };
 
-  // 1. 최신 중요 공지사항 또는 최신 일반 공지사항
-  const latestStarredNotice = useMemo(() => {
-    const notices = newsList.filter((n) => n.category === "NOTICE");
-    const starred = notices.find((n) => n.isStarred);
-    if (starred) return starred;
-    return notices[0] || null;
-  }, [newsList]);
-
-  // 2. 자유게시판 이번 주 신규글 수
-  const freePostsCount = useMemo(() => {
-    return freePosts.length;
-  }, [freePosts]);
-
-  // 3. 주/월간 뉴스레터 최신 호 타이틀 및 개수
-  const newsletterCount = useMemo(() => {
-    return newsList.filter((n) => n.category === "WEEKLY_MONTHLY").length;
-  }, [newsList]);
-
+  const {
+    latestStarredNotice,
+    freePostsCount,
+    newsletterCount,
+    noticeItems,
+    newsletterItems,
+  } = useMemo(() => buildNewsClientSummary(newsList, freePosts), [newsList, freePosts]);
 
 
   // Sync tab with URL query parameter on mount or url change
   useEffect(() => {
-    const tabParam = searchParams.get("tab") as NewsTabId;
-    if (tabParam && ["notice", "free", "faq", "newsletter"].includes(tabParam)) {
+    const tabParam = getNewsTabFromSearchParams(searchParams);
+    if (tabParam) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const requestedNotice = findNoticeFromSearchParams(newsList, searchParams);
+    if (!requestedNotice) return;
+
+    setActiveTab("notice");
+    setActiveViewNotice(requestedNotice);
+  }, [newsList, searchParams]);
 
   // Sync state with server props
   useEffect(() => {
@@ -712,15 +634,14 @@ export function NewsClient({
             <NoticeBoard
               isLoggedIn={isLoggedIn}
               isAdmin={isAdmin}
-              newsList={newsList.filter((n) => n.category === "NOTICE")}
+              newsList={noticeItems}
               onViewNotice={setActiveViewNotice}
               onRefresh={async () => {
                 const res = await fetch("/api/news?category=NOTICE");
                 const data = await res.json();
-                if (data.newsList) setNewsList((prev) => [
-                  ...data.newsList,
-                  ...prev.filter((n) => n.category !== "NOTICE")
-                ]);
+                if (data.newsList) {
+                  setNewsList((prev) => mergeNewsCategoryRefresh(prev, data.newsList, "NOTICE"));
+                }
               }}
             />
           </section>
@@ -819,14 +740,13 @@ export function NewsClient({
             <CoopNewsletter
               isLoggedIn={isLoggedIn}
               isAdmin={isAdmin}
-              newsList={newsList.filter((n) => n.category === "WEEKLY_MONTHLY")}
+              newsList={newsletterItems}
               onRefresh={async () => {
                 const res = await fetch("/api/news?category=WEEKLY_MONTHLY");
                 const data = await res.json();
-                if (data.newsList) setNewsList((prev) => [
-                  ...data.newsList,
-                  ...prev.filter((n) => n.category !== "WEEKLY_MONTHLY")
-                ]);
+                if (data.newsList) {
+                  setNewsList((prev) => mergeNewsCategoryRefresh(prev, data.newsList, "WEEKLY_MONTHLY"));
+                }
               }}
             />
           </section>
@@ -1048,14 +968,14 @@ export function NewsClient({
                   <section className="border-t border-stone-surface pt-5 space-y-4">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="text-sm font-black text-charcoal-primary">
-                        댓글 {getNoticeComments(activeViewNotice).length}개
+                        댓글 {getNewsComments(activeViewNotice).length}개
                       </h4>
                       <span className="text-[10px] font-bold text-ash">
                         공식 공지 확인 의견
                       </span>
                     </div>
 
-                    {getNoticeComments(activeViewNotice).length === 0 ? (
+                    {getNewsComments(activeViewNotice).length === 0 ? (
                       <div className="rounded-2xl border border-stone-surface bg-white px-4 py-5 text-center">
                         <p className="text-[11px] font-medium text-ash">
                           아직 등록된 댓글이 없습니다. 첫 확인 의견을 남겨보세요.
@@ -1063,7 +983,7 @@ export function NewsClient({
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {buildNoticeCommentTree(getNoticeComments(activeViewNotice)).map((comment: any) => {
+                        {buildShallowCommentTree(getNewsComments(activeViewNotice)).map((comment) => {
                           const repliesExpanded = expandedNoticeReplies[comment.id] || false;
                           return (
                           <article key={comment.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3.5">
@@ -1183,7 +1103,7 @@ export function NewsClient({
 
                             {repliesExpanded && comment.replies.length > 0 && (
                               <div className="mt-3 space-y-2 border-l-2 border-stone-surface pl-3">
-                                {comment.replies.map((reply: any) => (
+                                {comment.replies.map((reply) => (
                                   <div key={reply.id} className="rounded-xl bg-[#f8f7f4] px-3 py-2.5">
                                     <div className="mb-1.5 flex items-center justify-between gap-2 text-[9px] font-bold text-ash font-mono">
                                       <span>작성자: {getNoticeCommentAuthorName(reply)}</span>

@@ -2,39 +2,51 @@
 
 ## Implemented Feature
 
-- 랜딩 홈의 공지 카드 제목을 `공지사항 및 조합원 게시글`로 변경했다.
-- 카드 제목 위 `조합소식` eyebrow를 일관성 유지 목적으로 표시한다.
-- 홈 서버에서 최신 공식 공지 2건과 자유게시판 글 1건을 조회한 뒤 중요 표시와 작성일 기준으로 최대 3건을 표시한다.
-- 각 항목에 `공지` 또는 `게시글` 라벨을 붙이고, 공지는 `/news?tab=notice`, 게시글은 `/news?tab=free&post=<id>`로 연결한다.
-- 하드코딩된 목업 공지 배열은 제거된 상태를 유지했다.
+- OpenChat public document announcements now link to the item-level PDF viewer route: `/disclosure?document=<documentId>`.
+- Cooperative news and notice announcements now link to the registered PDF attachment when one exists.
+- Cooperative news and notice announcements fall back to an item-level news route when no attachment is registered.
+- Existing draft announcements are refreshed on copy requests, and already-copied announcements create a fresh draft before copying so old menu-only messages are not reused.
+- Shared notice URLs with `?tab=notice&news=<newsId>` now open the left notice detail drawer automatically.
+- News client logic was split into typed helpers for notice, FAQ, newsletter, free-board, comment, upload, and deep-link behavior so the UI no longer relies on broad `any` handling.
 
 ## Changed Files
 
-- `src/app/page.tsx`
-- `src/components/landing/home-client.tsx`
-- `src/components/landing/notices-section.tsx`
-- `src/content/landing.ts`
-- `src/__tests__/landing-page.test.tsx`
+- `src/lib/notifications/openchat-announcements.ts`
+- `src/app/api/openchat/announcements/route.ts`
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/components/news/faq-accordion.tsx`
+- `src/components/news/coop-newsletter.tsx`
+- `src/components/news/notice-rich-editor.tsx`
+- `src/app/news/page.tsx`
+- `src/lib/news/*`
+- `src/__tests__/openchat-announcements.test.ts`
+- `src/__tests__/openchat-announcements-api.test.ts`
+- `src/__tests__/news-notice-deep-link.test.tsx`
+- `src/__tests__/news-*.test.ts`
+- `tsconfig.json`
 - `_workspace/00_input/request-summary.md`
 - `_workspace/01_scope/spec-selection.md`
 - `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
 
 ## Checks Run
 
-- `pnpm test -- src/__tests__/landing-page.test.tsx -t "combines public notices"`: passed, 1 test
-- `pnpm test -- src/__tests__/landing-page.test.tsx`: passed, 15 tests
+- `pnpm test src/__tests__/openchat-announcements.test.ts`: passed, 13 tests
+- `pnpm test src/__tests__/openchat-announcements-api.test.ts`: passed, 8 tests
+- `pnpm test src/__tests__/news-notice-deep-link.test.tsx`: passed, 1 test
 - `pnpm lint`: passed
-- `pnpm test`: passed, 42 files / 281 tests
+- `pnpm test`: passed, 64 files / 343 tests
 - `pnpm build`: passed
-- `git diff --check`: passed with CRLF conversion warnings only
 
 ## Browser Checks
 
-- Dev server: `http://127.0.0.1:3000/` ready.
-- Codex in-app browser: unavailable (`iab` browser session not available).
-- HTTP check: `/` returned 200, `조합소식` and `공지사항 및 조합원 게시글` were present, old mock notice text was absent.
-- Chrome headless screenshots: desktop and mobile captures generated under `.next-dev-logs/`.
-- CDP DOM measurement: desktop `innerWidth=1366`, `scrollWidth=1366`; mobile `innerWidth=432`, `scrollWidth=432`; notice card eyebrow `조합소식` and heading `공지사항 및 조합원 게시글` present.
+- Dev server: existing `http://127.0.0.1:3000` responded, but headless Chrome did not hydrate it because the dev HMR websocket failed in that environment.
+- Production server: `pnpm start --hostname 127.0.0.1 --port 3001` served the built app successfully.
+- Chrome headless CDP check: `/news?tab=notice&news=568e0aa2-f745-460a-976a-4ffba43ae776` opened the notice detail drawer on desktop and mobile.
+- Overflow check: desktop `innerWidth=1418`, `scrollWidth=1418`; mobile `innerWidth=390`, `scrollWidth=390`; `overflowX=false`.
+- `dbapt-site-ui-review`: PASS in `_workspace/04_review/ui-review.md`.
 
 ## Unresolved Risks Or Follow-Up Specs
 

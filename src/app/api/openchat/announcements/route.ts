@@ -24,12 +24,13 @@ export async function GET(request: Request) {
   }
 
   try {
-  const documentId = normalizeText(new URL(request.url).searchParams.get("documentId"));
-  const newsId = normalizeText(new URL(request.url).searchParams.get("newsId"));
-  const freePostId = normalizeText(new URL(request.url).searchParams.get("freePostId"));
-  if (!documentId && !newsId && !freePostId) {
-    return NextResponse.json({ error: "문서, 조합소식 또는 자유게시판 글 식별자가 필요합니다." }, { status: 400 });
-  }
+    const url = new URL(request.url);
+    const documentId = normalizeText(url.searchParams.get("documentId"));
+    const newsId = normalizeText(url.searchParams.get("newsId"));
+    const freePostId = normalizeText(url.searchParams.get("freePostId"));
+    if (!documentId && !newsId && !freePostId) {
+      return NextResponse.json({ error: "문서, 조합소식 또는 자유게시판 글 식별자가 필요합니다." }, { status: 400 });
+    }
 
   if (freePostId) {
     const announcement = await prisma.openChatAnnouncement.findFirst({
@@ -50,10 +51,6 @@ export async function GET(request: Request) {
       },
     });
 
-    if (announcement) {
-      return NextResponse.json({ success: true, announcement });
-    }
-
     const post = await prisma.freePost.findUnique({ where: { id: freePostId } });
     if (!post) {
       return NextResponse.json({ error: "자유게시판 글을 찾을 수 없습니다." }, { status: 404 });
@@ -62,9 +59,13 @@ export async function GET(request: Request) {
     const result = await upsertOpenChatAnnouncementForFreePost({
       prisma: prisma as unknown as OpenChatAnnouncementPrisma,
       post,
+      ...(announcement?.status === "COPIED" ? { force: true } : {}),
     });
 
     if (!result.announcementId || !result.message) {
+      if (announcement) {
+        return NextResponse.json({ success: true, announcement });
+      }
       return NextResponse.json({ error: "오픈채팅 공지문 생성 대상 자유게시판 글이 아닙니다." }, { status: 422 });
     }
 
@@ -98,10 +99,6 @@ export async function GET(request: Request) {
       },
     });
 
-    if (announcement) {
-      return NextResponse.json({ success: true, announcement });
-    }
-
     const news = await prisma.coopNews.findUnique({ where: { id: newsId } });
     if (!news) {
       return NextResponse.json({ error: "조합소식을 찾을 수 없습니다." }, { status: 404 });
@@ -110,9 +107,13 @@ export async function GET(request: Request) {
     const result = await upsertOpenChatAnnouncementForNews({
       prisma: prisma as unknown as OpenChatAnnouncementPrisma,
       news,
+      ...(announcement?.status === "COPIED" ? { force: true } : {}),
     });
 
     if (!result.announcementId || !result.message) {
+      if (announcement) {
+        return NextResponse.json({ success: true, announcement });
+      }
       return NextResponse.json({ error: "오픈채팅 공지문 생성 대상 조합소식이 아닙니다." }, { status: 422 });
     }
 
@@ -145,10 +146,6 @@ export async function GET(request: Request) {
     },
   });
 
-  if (announcement) {
-    return NextResponse.json({ success: true, announcement });
-  }
-
   const document = await prisma.document.findUnique({ where: { id: documentId } });
   if (!document) {
     return NextResponse.json({ error: "문서를 찾을 수 없습니다." }, { status: 404 });
@@ -157,9 +154,13 @@ export async function GET(request: Request) {
   const result = await upsertOpenChatAnnouncementForDocument({
     prisma: prisma as unknown as OpenChatAnnouncementPrisma,
     document,
+    ...(announcement?.status === "COPIED" ? { force: true } : {}),
   });
 
   if (!result.announcementId || !result.message) {
+    if (announcement) {
+      return NextResponse.json({ success: true, announcement });
+    }
     return NextResponse.json({ error: "오픈채팅 공지문 생성 대상 문서가 아닙니다." }, { status: 422 });
   }
 

@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useState, useMemo, useEffect } from "react";
@@ -11,29 +10,21 @@ import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-re
 import {
   NEWS_DISPLAY_AUTHOR_NAMES,
   type NewsDisplayAuthorName,
-  getNewsDisplayAuthorName,
 } from "@/lib/news-display-author";
+import { getNoticeCommentAuthorName } from "@/lib/news/comment-author";
+import { buildNoticeBoardList, type NoticeBoardListItem } from "@/lib/news/notice-board-list";
+import { uploadPublicFile } from "@/lib/news/public-upload";
+import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
 type NoticeBoardProps = {
   isLoggedIn: boolean;
   isAdmin: boolean;
-  newsList: any[];
-  onViewNotice?: (notice: any) => void;
+  newsList: CoopNewsView[];
+  onViewNotice?: (notice: NoticeBoardListItem) => void;
   onRefresh: () => Promise<void>;
 };
-
-function getNoticeComments(notice: any) {
-  return Array.isArray(notice?.comments) ? notice.comments : [];
-}
-
-function getNoticeCommentAuthorName(comment: any) {
-  if (comment.author?.role === "ADMIN") {
-    return comment.displayAuthorName || "운영자";
-  }
-  return comment.author?.name || "조합원";
-}
 
 function ImportantNoticeStar() {
   return (
@@ -55,7 +46,7 @@ export function NoticeBoard({
 }: NoticeBoardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [activeViewNotice, setActiveViewNotice] = useState<any | null>(null);
+  const [activeViewNotice, setActiveViewNotice] = useState<NoticeBoardListItem | null>(null);
   const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, "copying" | "copied" | "error">>({});
   const [mounted, setMounted] = useState(false);
 
@@ -83,57 +74,10 @@ export function NoticeBoard({
     useState<NewsDisplayAuthorName>("운영자");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Show only database-backed notices. Demo copy must not appear in operations.
-  const combinedData = useMemo(() => {
-    const realNotices = newsList.map((item) => ({
-      id: item.id,
-      title: item.title,
-      content: item.content,
-      viewCount: item.viewCount,
-      isStarred: item.isStarred,
-      author: {
-        ...item.author,
-        name: getNewsDisplayAuthorName(item),
-      },
-      displayAuthorName: item.displayAuthorName,
-      createdAt: item.createdAt.slice(0, 10).replace(/-/g, "."),
-      imagePath: item.imagePath,
-      attachmentPath: item.attachmentPath,
-      attachmentName: item.attachmentName,
-      attachmentSize: item.attachmentSize,
-      comments: getNoticeComments(item),
-      isReal: true,
-    }));
-
-    let filteredNotices = realNotices;
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      filteredNotices = filteredNotices.filter((n) => n.title.toLowerCase().includes(q));
-    }
-
-    // Starred notices go on top
-    return filteredNotices.sort((a, b) => {
-      if (a.isStarred && !b.isStarred) return -1;
-      if (!a.isStarred && b.isStarred) return 1;
-      return b.createdAt.localeCompare(a.createdAt);
-    });
-  }, [newsList, searchQuery]);
-
-  const uploadPublicFile = async (file: File, kind: "image" | "attachment") => {
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("kind", kind);
-    const uploadRes = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const uploadData = await uploadRes.json();
-    if (!uploadRes.ok) {
-      throw new Error(uploadData.error || "파일 업로드에 실패했습니다.");
-    }
-    return uploadData as { url: string; name: string; size: number };
-  };
+  const combinedData = useMemo(
+    () => buildNoticeBoardList(newsList, searchQuery),
+    [newsList, searchQuery],
+  );
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,7 +135,7 @@ export function NoticeBoard({
     }
   };
 
-  const handleDeleteNotice = async (notice: any) => {
+  const handleDeleteNotice = async (notice: NoticeBoardListItem) => {
     if (!notice.isReal) return;
     if (!confirm(`"${notice.title}" 공지사항을 삭제하시겠습니까?`)) return;
 
@@ -216,7 +160,7 @@ export function NoticeBoard({
     }
   };
 
-  const handleOpenChatCopy = async (notice: any) => {
+  const handleOpenChatCopy = async (notice: NoticeBoardListItem) => {
     if (!notice.isReal) return;
 
     setOpenChatCopyStatus((prev) => ({ ...prev, [notice.id]: "copying" }));
@@ -361,7 +305,7 @@ export function NoticeBoard({
                         }}
                         className="rounded-full bg-sky-blue/10 px-3 py-1.5 text-[10.5px] font-extrabold text-sky-blue hover:bg-sky-blue/15"
                       >
-                        댓글 {getNoticeComments(notice).length}개 보기
+                        댓글 {getNewsComments(notice).length}개 보기
                       </button>
                     </td>
                     {isAdmin && (
@@ -473,7 +417,7 @@ export function NoticeBoard({
               <div className="border-t border-stone-surface pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black text-charcoal-primary">
-                    댓글 {getNoticeComments(activeViewNotice).length}개
+                    댓글 {getNewsComments(activeViewNotice).length}개
                   </h4>
                   {!isLoggedIn && (
                     <span className="text-[10px] font-bold text-ash">
@@ -481,13 +425,13 @@ export function NoticeBoard({
                     </span>
                   )}
                 </div>
-                {getNoticeComments(activeViewNotice).length === 0 ? (
+                {getNewsComments(activeViewNotice).length === 0 ? (
                   <p className="rounded-2xl border border-stone-surface bg-white px-4 py-4 text-[11px] text-ash font-medium">
                     아직 등록된 댓글이 없습니다.
                   </p>
                 ) : (
                   <div className="space-y-2.5">
-                    {getNoticeComments(activeViewNotice).map((comment: any) => (
+                    {getNewsComments(activeViewNotice).map((comment: NewsCommentView) => (
                       <div key={comment.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3">
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-[10px] font-black text-charcoal-primary">

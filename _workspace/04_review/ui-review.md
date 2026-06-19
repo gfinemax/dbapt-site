@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 랜딩 홈 공지 카드에 조합소식 라벨과 공지사항 및 조합원 게시글 통합 표시
-- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
-- Files or pages reviewed: `src/app/page.tsx`, `src/components/landing/home-client.tsx`, `src/components/landing/notices-section.tsx`, `src/content/landing.ts`, `/`
+- Feature: OpenChat copy messages now point to item-level site targets, and shared notice URLs open the notice detail drawer.
+- Governing spec: `docs/superpowers/specs/2026-06-13-openchat-disclosure-announcement-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-13-openchat-disclosure-announcements.md`
+- Files or pages reviewed: `src/lib/notifications/openchat-announcements.ts`, `src/app/api/openchat/announcements/route.ts`, `src/components/news/news-client.tsx`, `/news?tab=notice&news=<newsId>`
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: 변경은 공개 랜딩 홈의 요약 카드에 제목과 링크만 표시하는 범위에 한정된다. 비로그인 작성, 자유게시판 작성/댓글 흐름, 관리자 권한 정책은 변경하지 않았다.
+- Evidence: The change keeps OpenChat as admin-generated paste-ready text. It does not add Kakao automation, collect participants, expose private storage URLs, or add a new public/admin UI surface.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: 홈 카드는 상위 라벨 `조합소식`과 제목 `공지사항 및 조합원 게시글`로 범위를 명시하고, 각 행에 `공지` 또는 `게시글` 라벨을 붙인다. 게시글은 제목 링크만 노출하고 `/news?tab=free&post=...`로 이동한다.
+- Evidence: Announcement text remains informational and routes users to site item-level pages or registered public attachment paths. Already-copied announcements create a fresh draft on copy requests instead of silently reusing stale menu-only messages.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: 기존 카드 구조, 오렌지 eyebrow, warm canvas, stone border, pill/link 스타일을 유지했다. 카드에는 `aria-labelledby` region을 추가했고, desktop/mobile DOM 측정에서 수평 오버플로우가 없었다.
+- Evidence: The visible change reuses the existing notice drawer and does not alter typography, color, imagery, or motion. Production browser checks on `http://127.0.0.1:3001/news?tab=notice&news=568e0aa2-f745-460a-976a-4ffba43ae776` confirmed the drawer opens on desktop and mobile, with no horizontal overflow at 1440px or 390px viewport widths.
 
 ## Outcome
 - Result: PASS

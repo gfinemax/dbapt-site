@@ -98,12 +98,12 @@ describe("openchat announcements", () => {
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
     expect(message).toContain("[대방동 지역주택조합 공개자료 안내]");
-    expect(message).toContain("홈페이지 로그인 후 공개자료 메뉴에서 확인해 주세요.");
-    expect(message).toContain("https://dbapt.example/disclosure");
+    expect(message).toContain("홈페이지 로그인 후 해당 공개자료를 확인해 주세요.");
+    expect(message).toContain("https://dbapt.example/disclosure?document=doc-1");
     expect(message).not.toContain("documents/2026/private.pdf");
   });
 
-  it("creates an announcement message for cooperative newsletter posts without attachment paths", async () => {
+  it("creates an announcement message for cooperative newsletter posts with the registered PDF attachment URL", async () => {
     const { upsertOpenChatAnnouncementForNews } = await import("@/lib/notifications/openchat-announcements");
     const prisma = createMockPrisma();
 
@@ -125,11 +125,10 @@ describe("openchat announcements", () => {
     expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
     expect(message).toContain("새 조합소식이 등록되었습니다.");
     expect(message).toContain("- 분류: 주/월간 조합소식");
-    expect(message).toContain("https://dbapt.example/news?tab=newsletter");
-    expect(message).not.toContain("/uploads/newsletter.pdf");
+    expect(message).toContain("https://dbapt.example/uploads/newsletter.pdf");
   });
 
-  it("creates an announcement message for cooperative notice posts without attachment paths", async () => {
+  it("creates an announcement message for cooperative notice posts with the registered PDF attachment URL", async () => {
     const { upsertOpenChatAnnouncementForNews } = await import("@/lib/notifications/openchat-announcements");
     const prisma = createMockPrisma();
 
@@ -150,8 +149,21 @@ describe("openchat announcements", () => {
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
     expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
     expect(message).toContain("- 분류: 조합 공지사항");
-    expect(message).toContain("https://dbapt.example/news?tab=notice");
-    expect(message).not.toContain("/uploads/notice.pdf");
+    expect(message).toContain("https://dbapt.example/uploads/notice.pdf");
+  });
+
+  it("uses an item-level cooperative news URL when no PDF attachment is registered", async () => {
+    const { buildOpenChatNewsAnnouncementMessage } = await import("@/lib/notifications/openchat-announcements");
+
+    const message = buildOpenChatNewsAnnouncementMessage({
+      news: {
+        ...noticeNews,
+        attachmentPath: null,
+      },
+      siteUrl: "https://dbapt.example",
+    });
+
+    expect(message).toContain("https://dbapt.example/news?tab=notice&news=notice-1");
   });
 
   it("creates an announcement message for free-board posts without body content", async () => {
@@ -186,7 +198,7 @@ describe("openchat announcements", () => {
       document: approvedDisclosure,
     });
 
-    expect(message).toContain("https://dbapt-site.vercel.app/disclosure");
+    expect(message).toContain("https://dbapt-site.vercel.app/disclosure?document=doc-1");
     expect(message).not.toContain("https://www.dbapt.com/disclosure");
   });
 
@@ -200,7 +212,7 @@ describe("openchat announcements", () => {
         document: approvedDisclosure,
       });
 
-      expect(message).toContain("https://dbapt-site.vercel.app/disclosure");
+      expect(message).toContain("https://dbapt-site.vercel.app/disclosure?document=doc-1");
       expect(message).not.toContain("https://www.dbapt.com/disclosure");
     } finally {
       if (previousSiteUrl === undefined) {

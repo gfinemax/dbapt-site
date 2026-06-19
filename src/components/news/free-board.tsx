@@ -1,13 +1,9 @@
 "use client";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { copyTextToClipboard } from "@/lib/copy-to-clipboard";
-import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-response";
 import { cn } from "@/lib/utils";
 import {
   FREE_POST_TYPES,
@@ -20,65 +16,33 @@ import {
   NEWS_DISPLAY_AUTHOR_NAMES,
   type NewsDisplayAuthorName,
 } from "@/lib/news-display-author";
-import { getUserDisplayName } from "@/lib/user-display-name";
+import {
+  buildFreeBoardPostList,
+  type FreeBoardCommentView,
+  type FreeBoardPostListItem,
+  type FreeBoardTypeFilter,
+} from "@/lib/news/free-board-list";
+import { getFreeBoardAuthorLabel } from "@/lib/news/free-board-author";
+import {
+  buildFreeBoardFocusedPostUrl,
+  findFocusedFreePostId,
+} from "@/lib/news/free-board-deep-links";
+import {
+  buildFreeBoardCommentCreatePayload,
+  buildFreeBoardDeleteUrl,
+  buildFreeBoardPostCreatePayload,
+  buildFreeBoardPostUpdatePayload,
+} from "@/lib/news/free-board-api";
+import { uploadPublicFile } from "@/lib/news/public-upload";
+import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
+import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
 type FreeBoardProps = {
-  session: any;
-  posts: any[];
+  session: NewsSessionView | null | undefined;
+  posts: FreePostView[];
   onRefresh: () => Promise<void>;
 };
-
-type FreeBoardCommentView = {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: any;
-  parentId: string | null;
-  replies: FreeBoardCommentView[];
-  isReal: boolean;
-};
-
-function formatFreeBoardDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value.includes("T") ? value.slice(0, 16).replace("T", " ") : value;
-  }
-
-  return new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
-}
-
-function buildCommentTree(comments: any[]): FreeBoardCommentView[] {
-  const commentViews = comments.map((comment) => ({
-    id: comment.id,
-    content: comment.content,
-    createdAt: formatFreeBoardDate(comment.createdAt),
-    author: { ...comment.author, displayAuthorName: comment.displayAuthorName },
-    parentId: comment.parentId || null,
-    replies: [] as FreeBoardCommentView[],
-    isReal: comment.isReal ?? true,
-  }));
-  const byId = new Map(commentViews.map((comment) => [comment.id, comment]));
-  const topLevelComments: FreeBoardCommentView[] = [];
-
-  for (const comment of commentViews) {
-    if (comment.parentId && byId.has(comment.parentId)) {
-      byId.get(comment.parentId)?.replies.push(comment);
-    } else {
-      topLevelComments.push(comment);
-    }
-  }
-
-  return topLevelComments;
-}
 
 function FreeBoardPostRows({
   post,
@@ -91,7 +55,7 @@ function FreeBoardPostRows({
   onDelete,
   onOpenChatCopy,
 }: {
-  post: any;
+  post: FreeBoardPostListItem;
   index: number;
   authorLabel: string;
   showDeletePost: boolean;
@@ -99,7 +63,7 @@ function FreeBoardPostRows({
   openChatCopyStatus?: "copying" | "copied" | "error";
   onOpen: () => void;
   onDelete: (params: { postId?: string; commentId?: string }) => void;
-  onOpenChatCopy: (post: any) => void;
+  onOpenChatCopy: (post: FreeBoardPostListItem) => void;
 }) {
   const typeMeta = getFreePostTypeMeta(post.postType);
 
@@ -204,7 +168,7 @@ export function FreeBoard({
   const isAdmin = session?.role === "ADMIN";
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<FreePostType | "ALL">("ALL");
+  const [typeFilter, setTypeFilter] = useState<FreeBoardTypeFilter>("ALL");
   const [showWriteModal, setShowWriteModal] = useState(false);
   const [focusedPostId, setFocusedPostId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -229,7 +193,7 @@ export function FreeBoard({
   const [writeTitle, setWriteTitle] = useState("");
   const [writeContent, setWriteContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingPost, setEditingPost] = useState<any | null>(null);
+  const [editingPost, setEditingPost] = useState<FreeBoardPostListItem | null>(null);
   const [writeIsStarred, setWriteIsStarred] = useState(false);
   const [writePostType, setWritePostType] = useState<FreePostType>("FREE");
   const [writeDisplayAuthorName, setWriteDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
@@ -253,75 +217,10 @@ export function FreeBoard({
   const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
   const [commentDisplayAuthorName, setCommentDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
 
-  const uploadPublicFile = async (file: File) => {
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("kind", "image");
-    const uploadRes = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const uploadData = await uploadRes.json();
-    if (!uploadRes.ok) {
-      throw new Error(uploadData.error || "이미지 업로드에 실패했습니다.");
-    }
-    return uploadData as { url: string; name: string; size: number };
-  };
-
-  // Anonymize/Mask user details for privacy protection
-  const getMaskedAuthorName = (author: {
-    signupName?: string | null;
-    name?: string | null;
-    loginId: string | null;
-    role: string;
-    id?: string;
-    displayAuthorName?: string | null;
-  }) => {
-    const displayName = author.role === "ADMIN"
-      ? author.displayAuthorName || "사무국"
-      : getUserDisplayName(author);
-    if (author.id === currentUserId) {
-      return `${displayName} (나)`;
-    }
-    if (author.role === "ADMIN") {
-      return displayName;
-    }
-    const cleanName = displayName;
-    const maskedId = author.loginId 
-      ? `${author.loginId.slice(0, 2)}***`
-      : "social";
-    return `${cleanName.slice(0, 1)}*조합원 (${maskedId})`;
-  };
-
-  // Show only database-backed free-board posts. Demo copy must not appear in operations.
-  const combinedPosts = useMemo(() => {
-    const realPosts = posts.map((p) => ({
-      id: p.id,
-      title: p.title,
-      content: p.content,
-      postType: normalizeFreePostType(p.postType, true),
-      isStarred: p.isStarred,
-      createdAt: formatFreeBoardDate(p.createdAt),
-      author: { ...p.author, displayAuthorName: p.displayAuthorName },
-      comments: buildCommentTree(p.comments || []),
-      commentCount: (p.comments || []).length,
-      isReal: true,
-    }));
-
-    let filteredPosts = realPosts;
-
-    if (typeFilter !== "ALL") {
-      filteredPosts = filteredPosts.filter((p) => p.postType === typeFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      filteredPosts = filteredPosts.filter((p) => p.title.toLowerCase().includes(q) || getPlainNoticeText(p.content).toLowerCase().includes(q));
-    }
-
-    return filteredPosts;
-  }, [posts, searchQuery, typeFilter]);
+  const combinedPosts = useMemo(
+    () => buildFreeBoardPostList(posts, typeFilter, searchQuery),
+    [posts, searchQuery, typeFilter],
+  );
 
   const focusedPost = useMemo(
     () => combinedPosts.find((post) => post.id === focusedPostId) || null,
@@ -331,14 +230,7 @@ export function FreeBoard({
 
   const updateFocusedPostUrl = (postId: string | null) => {
     if (typeof window === "undefined") return;
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.set("tab", "free");
-    if (postId) {
-      nextUrl.searchParams.set("post", postId);
-    } else {
-      nextUrl.searchParams.delete("post");
-    }
-    window.history.pushState({}, "", `${nextUrl.pathname}?${nextUrl.searchParams.toString()}`);
+    window.history.pushState({}, "", buildFreeBoardFocusedPostUrl(window.location.href, postId));
   };
 
   const openFocusedPost = (postId: string) => {
@@ -353,8 +245,7 @@ export function FreeBoard({
 
   useEffect(() => {
     const syncFocusedPostFromUrl = () => {
-      const postId = new URLSearchParams(window.location.search).get("post");
-      setFocusedPostId(postId && combinedPosts.some((post) => post.id === postId) ? postId : null);
+      setFocusedPostId(findFocusedFreePostId(new URLSearchParams(window.location.search), combinedPosts));
     };
 
     syncFocusedPostFromUrl();
@@ -375,14 +266,15 @@ export function FreeBoard({
         const res = await fetch("/api/news/free", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          body: JSON.stringify(buildFreeBoardPostUpdatePayload({
             postId: editingPost.id,
             title: writeTitle,
             content: writeContent,
             postType: writePostType,
             isStarred: writeIsStarred,
-            ...(isAdmin ? { displayAuthorName: writeDisplayAuthorName } : {}),
-          }),
+            isAdmin,
+            displayAuthorName: writeDisplayAuthorName,
+          })),
         });
 
         if (!res.ok) {
@@ -403,13 +295,14 @@ export function FreeBoard({
         const res = await fetch("/api/news/free", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          body: JSON.stringify(buildFreeBoardPostCreatePayload({
             title: writeTitle,
             content: writeContent,
             postType: writePostType,
             isStarred: writeIsStarred,
-            ...(isAdmin ? { displayAuthorName: writeDisplayAuthorName } : {}),
-          }),
+            isAdmin,
+            displayAuthorName: writeDisplayAuthorName,
+          })),
         });
 
         if (!res.ok) {
@@ -447,12 +340,13 @@ export function FreeBoard({
       const res = await fetch("/api/news/free", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.stringify(buildFreeBoardCommentCreatePayload({
           postId,
           content: text,
-          ...(parentCommentId ? { parentCommentId } : {}),
-          ...(isAdmin ? { displayAuthorName: commentDisplayAuthorName } : {}),
-        }),
+          parentCommentId,
+          isAdmin,
+          displayAuthorName: commentDisplayAuthorName,
+        })),
       });
 
       if (!res.ok) {
@@ -477,11 +371,11 @@ export function FreeBoard({
     }
   };
 
-  const openReplyInput = (topLevelComment: FreeBoardCommentView, targetAuthor?: any) => {
+  const openReplyInput = (topLevelComment: FreeBoardCommentView, targetAuthor?: NewsUserView) => {
     setReplyingCommentId(topLevelComment.id);
     setExpandedReplies((prev) => ({ ...prev, [topLevelComment.id]: true }));
     if (targetAuthor) {
-      const authorName = getMaskedAuthorName(targetAuthor).split(" ")[0];
+      const authorName = getFreeBoardAuthorLabel(targetAuthor, currentUserId).split(" ")[0];
       setReplyContents((prev) => ({
         ...prev,
         [topLevelComment.id]: prev[topLevelComment.id]?.trim() ? prev[topLevelComment.id] : `@${authorName} `,
@@ -495,11 +389,7 @@ export function FreeBoard({
     }
 
     try {
-      let url = "/api/news/free";
-      if (params.postId) url += `?postId=${params.postId}`;
-      else if (params.commentId) url += `?commentId=${params.commentId}`;
-
-      const res = await fetch(url, { method: "DELETE" });
+      const res = await fetch(buildFreeBoardDeleteUrl(params), { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json();
         alert(err.error || "삭제 작업에 실패했습니다.");
@@ -513,21 +403,12 @@ export function FreeBoard({
     }
   };
 
-  const handleOpenChatCopy = async (post: any) => {
+  const handleOpenChatCopy = async (post: FreeBoardPostListItem) => {
     if (!post.isReal) return;
 
     setOpenChatCopyStatus((prev) => ({ ...prev, [post.id]: "copying" }));
     try {
-      const res = await fetch(`/api/openchat/announcements?freePostId=${encodeURIComponent(post.id)}`);
-      const data = await readOpenChatAnnouncementResponse(res);
-
-      await copyTextToClipboard(data.announcement.message);
-      await fetch("/api/openchat/announcements", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ announcementId: data.announcement.id }),
-      });
-
+      await copyFreeBoardOpenChatAnnouncement({ postId: post.id });
       setOpenChatCopyStatus((prev) => ({ ...prev, [post.id]: "copied" }));
     } catch (e) {
       console.error(e);
@@ -575,7 +456,7 @@ export function FreeBoard({
               id="free-post-type-filter"
               aria-label="글 유형 필터"
               value={typeFilter}
-              onChange={(event) => setTypeFilter(event.target.value as FreePostType | "ALL")}
+              onChange={(event) => setTypeFilter(event.target.value as FreeBoardTypeFilter)}
               className="h-9.5 w-full rounded-xl border border-stone-surface bg-white px-3 text-xs font-bold text-charcoal-primary shadow-2xs outline-none transition focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/30 sm:w-32"
             >
               <option value="ALL">전체 유형</option>
@@ -626,7 +507,7 @@ export function FreeBoard({
                 </tr>
               ) : (
                 combinedPosts.map((post, index) => {
-                  const authorLabel = getMaskedAuthorName(post.author);
+                  const authorLabel = getFreeBoardAuthorLabel(post.author, currentUserId);
                   const showDeletePost = post.isReal && (post.author.id === currentUserId || isAdmin);
                   const showOpenChatCopy = post.isReal && isAdmin;
 
@@ -704,14 +585,15 @@ export function FreeBoard({
                       type="button"
                       aria-label="게시글 수정"
                       onClick={() => {
+                        const displayAuthorName = focusedPost.author.displayAuthorName;
                         setEditingPost(focusedPost);
                         setWriteTitle(focusedPost.title);
                         setWriteContent(focusedPost.content);
                         setWritePostType(normalizeFreePostType(focusedPost.postType, isAdmin));
                         setWriteIsStarred(!!focusedPost.isStarred);
                         setWriteDisplayAuthorName(
-                          NEWS_DISPLAY_AUTHOR_NAMES.includes(focusedPost.author.displayAuthorName as NewsDisplayAuthorName)
-                            ? focusedPost.author.displayAuthorName
+                          displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
+                            ? displayAuthorName as NewsDisplayAuthorName
                             : "운영자",
                         );
                         setShowWriteModal(true);
@@ -728,7 +610,7 @@ export function FreeBoard({
                       {focusedPostTypeMeta.label}
                     </span>
                   )}
-                  <span>작성자: {getMaskedAuthorName(focusedPost.author)}</span>
+                  <span>작성자: {getFreeBoardAuthorLabel(focusedPost.author, currentUserId)}</span>
                   <span>•</span>
                   <span>{focusedPost.createdAt}</span>
                   <span>•</span>
@@ -757,7 +639,7 @@ export function FreeBoard({
                 ) : (
                   <div className="space-y-3">
                     {focusedPost.comments.map((comm: FreeBoardCommentView) => {
-                      const commAuthor = getMaskedAuthorName(comm.author);
+                      const commAuthor = getFreeBoardAuthorLabel(comm.author, currentUserId);
                       const showDeleteComm = comm.isReal && (comm.author.id === currentUserId || isAdmin);
                       const repliesExpanded = expandedReplies[comm.id] || false;
                       return (
@@ -814,7 +696,7 @@ export function FreeBoard({
                           {repliesExpanded && comm.replies.length > 0 && (
                             <div className="mt-3 space-y-2 border-l-2 border-stone-surface pl-3">
                               {comm.replies.map((reply) => {
-                                const replyAuthor = getMaskedAuthorName(reply.author);
+                                const replyAuthor = getFreeBoardAuthorLabel(reply.author, currentUserId);
                                 const showDeleteReply = reply.isReal && (reply.author.id === currentUserId || isAdmin);
                                 return (
                                   <div key={reply.id} className="rounded-xl bg-[#f8f7f4] px-3 py-2.5">
@@ -1064,7 +946,7 @@ export function FreeBoard({
                 <NoticeRichEditor
                   value={writeContent}
                   onChange={setWriteContent}
-                  onUploadImage={uploadPublicFile}
+                  onUploadImage={(file) => uploadPublicFile(file, "image")}
                   ariaLabel="자유게시판 본문 편집창"
                   placeholder="조합원님들과 공유하고 싶은 소통과 상생 의견을 자유롭게 기록해 주십시오."
                 />

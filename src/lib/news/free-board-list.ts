@@ -1,0 +1,91 @@
+import { normalizeFreePostType, type FreePostType } from "@/lib/free-post-type";
+import { buildShallowCommentTree, type ShallowCommentTreeNode } from "@/lib/news/comment-tree";
+import { getPlainNoticeText } from "@/lib/news/rich-text";
+import type { FreePostView, NewsCommentView, NewsUserView } from "@/lib/news/types";
+
+export type FreeBoardTypeFilter = FreePostType | "ALL";
+
+export type FreeBoardComment = {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: NewsUserView;
+  parentId: string | null;
+  isReal: boolean;
+};
+
+export type FreeBoardCommentView = ShallowCommentTreeNode<FreeBoardComment>;
+
+export type FreeBoardPostListItem = {
+  id: string;
+  title: string;
+  content: string;
+  postType: FreePostType;
+  isStarred: boolean;
+  createdAt: string;
+  author: NewsUserView;
+  comments: FreeBoardCommentView[];
+  commentCount: number;
+  isReal: boolean;
+};
+
+export function formatFreeBoardDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value.includes("T") ? value.slice(0, 16).replace("T", " ") : value;
+  }
+
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+export function buildFreeBoardCommentTree(comments: readonly NewsCommentView[]): FreeBoardCommentView[] {
+  const commentViews = comments.map((comment) => ({
+    id: comment.id,
+    content: comment.content,
+    createdAt: formatFreeBoardDate(comment.createdAt),
+    author: { ...comment.author, displayAuthorName: comment.displayAuthorName },
+    parentId: comment.parentId || null,
+    isReal: comment.isReal ?? true,
+  }));
+
+  return buildShallowCommentTree(commentViews);
+}
+
+export function buildFreeBoardPostList(
+  posts: readonly FreePostView[],
+  typeFilter: FreeBoardTypeFilter,
+  searchQuery: string,
+): FreeBoardPostListItem[] {
+  const query = searchQuery.trim().toLowerCase();
+
+  return posts
+    .map((post) => ({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      postType: normalizeFreePostType(post.postType, true),
+      isStarred: !!post.isStarred,
+      createdAt: formatFreeBoardDate(post.createdAt),
+      author: { ...post.author, displayAuthorName: post.displayAuthorName },
+      comments: buildFreeBoardCommentTree(post.comments || []),
+      commentCount: (post.comments || []).length,
+      isReal: true,
+    }))
+    .filter((post) => {
+      const typeMatches = typeFilter === "ALL" || post.postType === typeFilter;
+      const queryMatches =
+        !query ||
+        post.title.toLowerCase().includes(query) ||
+        getPlainNoticeText(post.content).toLowerCase().includes(query);
+
+      return typeMatches && queryMatches;
+    });
+}
