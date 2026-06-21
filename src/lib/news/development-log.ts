@@ -2,6 +2,7 @@ import type { CoopNewsView } from "@/lib/news/types";
 
 export const DEVELOPMENT_LOG_CATEGORIES = {
   published: "DEVELOPMENT_LOG",
+  request: "DEVELOPMENT_REQUEST",
   draft: "DEVELOPMENT_LOG_DRAFT",
   hidden: "DEVELOPMENT_LOG_HIDDEN",
 } as const;
@@ -12,8 +13,8 @@ export type DevelopmentLogCategory =
 export type DevelopmentLogType = "주간 개발일지" | "기능 반영" | "오류 수정" | "요청 반영";
 
 export type DevelopmentLogStatus = {
-  label: "게시 대기" | "게시됨" | "숨김";
-  tone: "draft" | "published" | "hidden";
+  label: "게시 대기" | "게시됨" | "숨김" | "요구사항";
+  tone: "draft" | "published" | "hidden" | "request";
 };
 
 export type DevelopmentLogDraftInput = {
@@ -65,6 +66,10 @@ export function getDevelopmentLogVersionLabel(
 export function getDevelopmentLogStatus(category: string): DevelopmentLogStatus {
   if (category === DEVELOPMENT_LOG_CATEGORIES.published) {
     return { label: "게시됨", tone: "published" };
+  }
+
+  if (category === DEVELOPMENT_LOG_CATEGORIES.request) {
+    return { label: "요구사항", tone: "request" };
   }
 
   if (category === DEVELOPMENT_LOG_CATEGORIES.hidden) {
@@ -125,7 +130,11 @@ export function buildDevelopmentLogList(
 ): CoopNewsView[] {
   return newsList
     .filter((item) => isDevelopmentLogCategory(item.category))
-    .filter((item) => options.includeAdminOnly || item.category === DEVELOPMENT_LOG_CATEGORIES.published)
+    .filter((item) => (
+      options.includeAdminOnly ||
+      item.category === DEVELOPMENT_LOG_CATEGORIES.published ||
+      item.category === DEVELOPMENT_LOG_CATEGORIES.request
+    ))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 }
 

@@ -46,6 +46,30 @@ describe("DevelopmentLog", () => {
     expect(screen.queryByRole("button", { name: "자동 초안 생성" })).not.toBeInTheDocument();
   });
 
+  it("renders development logs as a compact list with a selected detail panel", () => {
+    render(
+      <DevelopmentLog
+        isAdmin={false}
+        logs={[
+          log({ id: "published", category: DEVELOPMENT_LOG_CATEGORIES.published }),
+          log({
+            id: "request",
+            title: "댓글 알림 요구사항",
+            category: DEVELOPMENT_LOG_CATEGORIES.request,
+            content: "댓글 알림이 필요합니다.",
+          }),
+        ]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const list = screen.getByRole("table", { name: "개발일지 목록" });
+    expect(within(list).getByText("사업현황 향후 추진절차 개선")).toBeInTheDocument();
+    expect(within(list).getByText("댓글 알림 요구사항")).toBeInTheDocument();
+    expect(within(list).getByText("댓글")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "개발일지 상세" })).toBeInTheDocument();
+  });
+
   it("lets admins create draft logs and publish draft logs", async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const fetchMock = vi.fn()
@@ -62,6 +86,7 @@ describe("DevelopmentLog", () => {
     render(
       <DevelopmentLog
         isAdmin
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
         logs={[
           log({ id: "draft", title: "게시 대기 개발일지", category: DEVELOPMENT_LOG_CATEGORIES.draft }),
           log({ id: "hidden", title: "숨김 개발일지", category: DEVELOPMENT_LOG_CATEGORIES.hidden }),
@@ -79,8 +104,9 @@ describe("DevelopmentLog", () => {
       expect.objectContaining({ method: "POST" }),
     ));
 
-    const draftCard = screen.getByRole("article", { name: "게시 대기 개발일지" });
-    fireEvent.click(within(draftCard).getByRole("button", { name: "게시" }));
+    const draftRow = within(screen.getByRole("table", { name: "개발일지 목록" })).getByText("게시 대기 개발일지").closest("tr");
+    expect(draftRow).not.toBeNull();
+    fireEvent.click(within(draftRow as HTMLTableRowElement).getByRole("button", { name: "게시" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
       "/api/news",
@@ -90,5 +116,42 @@ describe("DevelopmentLog", () => {
       }),
     ));
     expect(onRefresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("lets logged-in non-admin members submit development requirements", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, news: { id: "request-1" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <DevelopmentLog
+        isAdmin={false}
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        logs={[]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "새 개발일지 작성" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "요구사항 작성" }));
+    fireEvent.change(screen.getByLabelText("요구사항 제목"), {
+      target: { value: "개발일지 댓글 알림 요청" },
+    });
+    fireEvent.change(screen.getByLabelText("요구사항 내용"), {
+      target: { value: "댓글이 달리면 확인하기 쉽게 표시해 주세요." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "요구사항 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining(`"category":"${DEVELOPMENT_LOG_CATEGORIES.request}"`),
+      }),
+    ));
+    expect(onRefresh).toHaveBeenCalled();
   });
 });

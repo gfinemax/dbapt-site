@@ -25,6 +25,11 @@
 - Added version/status presentation for development logs, using `vYYYY.MM.week` labels and status badges for `게시됨`, `게시 대기`, and `숨김`.
 - Added an admin-only automatic development-log draft API that can create `DEVELOPMENT_LOG_DRAFT` entries from recent git-style change subjects, while publish/hide uses the existing `/api/news` mutation path.
 - Connected public navigation and site search to `/news?tab=development`.
+- Moved the `개발일지` tab to the right of `조합뉴스 (주/월간소식)`.
+- Kept release-style development-log writing and status controls admin-only, including manual draft creation, automatic draft generation, publish, hide, and delete.
+- Added logged-in non-admin `요구사항` posts under `DEVELOPMENT_REQUEST`, with own-post deletion while preventing non-admin release-log creation.
+- Extended existing `CoopNewsComment` comments so logged-in users can comment and reply on development logs and requirement posts.
+- Changed the development-log display from fully expanded cards to a compact `개발일지 목록` table with status, title, date, comment count, row controls, and a selected detail/comment panel below.
 
 ## Changed Files
 
@@ -47,9 +52,12 @@
 - `src/components/news/news-client.tsx`
 - `src/components/news/development-log.tsx`
 - `src/lib/news/development-log.ts`
+- `src/app/api/news/route.ts`
+- `src/app/api/news/comments/route.ts`
 - `src/lib/news/deep-links.ts`
 - `src/lib/news/news-client-summary.ts`
 - `src/app/api/news/development-log/draft/route.ts`
+- `src/__tests__/news-admin-controls.test.tsx`
 - `src/__tests__/news-development-log.test.ts`
 - `src/__tests__/news-development-log-api.test.ts`
 - `src/__tests__/news-development-log-component.test.tsx`
@@ -65,8 +73,14 @@
 - `pnpm vitest run src/__tests__/landing-page.test.tsx`: passed, 15 tests
 - `pnpm vitest run src/__tests__/news-development-log.test.ts src/__tests__/news-deep-links.test.ts src/__tests__/news-client-summary.test.ts src/__tests__/news-development-log-api.test.ts src/__tests__/news-development-log-component.test.tsx`: passed, 5 files / 14 tests
 - `pnpm vitest run src/__tests__/news-development-log-component.test.tsx src/__tests__/news-deep-links.test.ts src/__tests__/news-client-summary.test.ts`: passed, 3 files / 8 tests
+- `pnpm vitest run src/__tests__/news-development-log.test.ts src/__tests__/news-development-log-api.test.ts src/__tests__/news-development-log-component.test.tsx`: first RED confirmed for missing `DEVELOPMENT_REQUEST`, non-admin requirement creation, development-log comments, and requirement UI.
+- `pnpm vitest run src/__tests__/news-development-log.test.ts src/__tests__/news-development-log-api.test.ts src/__tests__/news-development-log-component.test.tsx`: passed, 3 files / 12 tests.
+- `pnpm vitest run src/__tests__/news-development-log.test.ts src/__tests__/news-development-log-api.test.ts src/__tests__/news-development-log-component.test.tsx src/__tests__/news-admin-controls.test.tsx`: passed, 4 files / 78 tests.
+- `pnpm vitest run src/__tests__/news-development-log-component.test.tsx`: first RED confirmed for missing compact `개발일지 목록` table and selected `개발일지 상세` panel.
+- `pnpm vitest run src/__tests__/news-development-log-component.test.tsx`: passed, 1 file / 4 tests.
+- `pnpm vitest run src/__tests__/news-development-log.test.ts src/__tests__/news-development-log-api.test.ts src/__tests__/news-development-log-component.test.tsx src/__tests__/news-admin-controls.test.tsx`: passed, 4 files / 79 tests.
 - `pnpm lint`: passed
-- `pnpm test`: passed, 69 files / 373 tests
+- `pnpm test`: passed, 69 files / 381 tests
 - `pnpm build`: passed
 
 ## Browser Checks
@@ -100,8 +114,11 @@
 - Mobility framed-map screenshot written: `_workspace/business-mobility-framed-fullpage.png`.
 - Household-plan screenshots written: `_workspace/business-household-desktop.png`, `_workspace/business-household-mobile.png`.
 - Timeline follow-up screenshot written: `_workspace/business-timeline-202703-fullpage.png`.
-- Development-log browser checks: `/news?tab=development` renders the active `개발일지` tab and public log card on desktop and mobile; mobile tab order places `개발일지` immediately after `공지사항`.
+- Development-log browser checks: `/news?tab=development` renders the active `개발일지` tab on desktop and mobile. Chrome CDP checks at 1440px and 390px confirmed tab order `공지사항`, `자유게시판`, `FAQ`, `조합뉴스 (주/월간소식)`, `개발일지`; `activeDevelopment=true`; public visitor controls do not show `요구사항 작성` or `새 개발일지 작성`; login comment guidance is present; `overflowX=false`.
 - Development-log screenshots written: `_workspace/news-development-log-desktop.png`, `_workspace/news-development-log-mobile-full.png`.
+- Follow-up development-log screenshots written: `_workspace/news-development-log-followup-desktop.png`, `_workspace/news-development-log-followup-mobile.png`.
+- List presentation browser checks: `/news?tab=development` renders `table[aria-label="개발일지 목록"]` and `[aria-label="개발일지 상세"]` on desktop 1440px and mobile 390px. Headers are `상태`, `제목`, `등록일`, `댓글`, `관리`; tab order remains `공지사항`, `자유게시판`, `FAQ`, `조합뉴스 (주/월간소식)`, `개발일지`; `overflowX=false`.
+- List presentation screenshots written: `_workspace/news-development-log-list-desktop.png`, `_workspace/news-development-log-list-mobile.png`.
 - `dbapt-site-ui-review`: PASS in `_workspace/04_review/ui-review.md`.
 
 ## Unresolved Risks Or Follow-Up Specs

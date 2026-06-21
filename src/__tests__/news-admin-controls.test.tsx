@@ -184,6 +184,30 @@ describe("news admin API controls", () => {
     expect(mockPrisma.coopNews.update).not.toHaveBeenCalled();
   });
 
+  it("places the development-log tab immediately after cooperative newsletter", () => {
+    render(
+      <NewsClient
+        initialNewsList={[realNotice, realNewsletter]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    const nav = document.getElementById("news-sub-nav");
+    expect(nav).not.toBeNull();
+    const labels = within(nav as HTMLElement).getAllByRole("button").map((button) => (
+      button.textContent?.replace(/[🔒🔓]/g, "").trim()
+    ));
+
+    expect(labels).toEqual([
+      "공지사항",
+      "자유게시판",
+      "FAQ",
+      "조합뉴스 (주/월간소식)",
+      "개발일지",
+    ]);
+  });
+
   it("updates notice content and attachment metadata for admins", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPrisma.coopNews.update.mockResolvedValue({ ...realNotice, title: "수정 공지" });

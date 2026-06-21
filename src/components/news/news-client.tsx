@@ -73,10 +73,10 @@ type NewsClientProps = {
 
 const menuItems = [
   { id: "notice", label: "공지사항", isSecure: false },
-  { id: "development", label: "개발일지", isSecure: false },
   { id: "free", label: "자유게시판", isSecure: true },
   { id: "faq", label: "FAQ", isSecure: true },
   { id: "newsletter", label: "조합뉴스 (주/월간소식)", isSecure: false },
+  { id: "development", label: "개발일지", isSecure: false },
 ] as const;
 
 function formatNoticeDate(value: unknown) {
@@ -774,6 +774,7 @@ export function NewsClient({
           <section id="section-development" className="space-y-4 animate-in fade-in duration-200">
             <DevelopmentLog
               isAdmin={isAdmin}
+              session={session}
               logs={isAdmin ? adminDevelopmentLogItems : developmentLogItems}
               onRefresh={async () => {
                 const res = await fetch("/api/news");

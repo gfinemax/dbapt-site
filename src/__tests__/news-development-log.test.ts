@@ -60,6 +60,7 @@ describe("development log helpers", () => {
   it("shows only published development logs publicly and includes drafts for admins", () => {
     const logs = [
       news({ id: "published", category: DEVELOPMENT_LOG_CATEGORIES.published }),
+      news({ id: "request", category: DEVELOPMENT_LOG_CATEGORIES.request }),
       news({ id: "draft", category: DEVELOPMENT_LOG_CATEGORIES.draft }),
       news({ id: "hidden", category: DEVELOPMENT_LOG_CATEGORIES.hidden }),
       news({ id: "notice", category: "NOTICE" }),
@@ -67,9 +68,11 @@ describe("development log helpers", () => {
 
     expect(buildDevelopmentLogList(logs, { includeAdminOnly: false }).map((item) => item.id)).toEqual([
       "published",
+      "request",
     ]);
     expect(buildDevelopmentLogList(logs, { includeAdminOnly: true }).map((item) => item.id)).toEqual([
       "published",
+      "request",
       "draft",
       "hidden",
     ]);
@@ -87,6 +90,10 @@ describe("development log helpers", () => {
     expect(getDevelopmentLogStatus(DEVELOPMENT_LOG_CATEGORIES.hidden)).toEqual({
       label: "숨김",
       tone: "hidden",
+    });
+    expect(getDevelopmentLogStatus(DEVELOPMENT_LOG_CATEGORIES.request)).toEqual({
+      label: "요구사항",
+      tone: "request",
     });
   });
 });

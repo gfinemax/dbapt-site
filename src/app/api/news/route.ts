@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
+import { DEVELOPMENT_LOG_CATEGORIES } from "@/lib/news/development-log";
 
 // 1. GET: 공지사항 및 조합뉴스 조회 (Public)
 export async function GET(request: Request) {
@@ -55,9 +56,6 @@ export async function POST(request: Request) {
   if (!session) {
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
-  if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
-  }
 
   try {
     const body = await request.json();
@@ -72,6 +70,11 @@ export async function POST(request: Request) {
       attachmentSize,
       displayAuthorName,
     } = body;
+
+    const isMemberRequirement = category === DEVELOPMENT_LOG_CATEGORIES.request;
+    if (session.role !== "ADMIN" && !isMemberRequirement) {
+      return NextResponse.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
+    }
 
     if (!title || !content || !category) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 내용, 카테고리)이 누락되었습니다." }, { status: 400 });
@@ -205,9 +208,6 @@ export async function DELETE(request: Request) {
   if (!session) {
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
-  if (session.role !== "ADMIN") {
-    return NextResponse.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
-  }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -223,6 +223,14 @@ export async function DELETE(request: Request) {
 
     if (!news) {
       return NextResponse.json({ error: "존재하지 않는 공지사항입니다." }, { status: 404 });
+    }
+
+    if (session.role !== "ADMIN" && news.category !== DEVELOPMENT_LOG_CATEGORIES.request) {
+      return NextResponse.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
+    }
+
+    if (session.role !== "ADMIN" && news.authorId !== session.id) {
+      return NextResponse.json({ error: "삭제 권한이 없습니다." }, { status: 403 });
     }
 
     await prisma.coopNews.delete({

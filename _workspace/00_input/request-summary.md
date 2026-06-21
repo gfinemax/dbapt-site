@@ -15,6 +15,8 @@
 - Follow-up household-plan request: add a readable `평형별 세대계획` block to the public `사업현황` overview, split between current district-unit-plan `254세대` and future minor-change `270세대 예정`, including sale/public housing and unit-type breakdowns.
 - Follow-up timeline request: in `향후 추진절차`, show steps 1, 2, and 3 as active together with `지구단위계획 수립`, and change `건축심의 (2026.10)` to `건축심의 (2027.3 예정)`.
 - Follow-up news request: add a modest unified `개발일지` area inside `조합소식`, combining development log and implementation-request history, with version labels, formatted log content, admin draft generation, and publish/hide confirmation flow.
+- Follow-up development-log request: move the `개발일지` tab to the right of `조합뉴스`, make development-log release writing/deletion admin-only, allow logged-in non-admin users to submit/delete their own public `요구사항`, and support comments/replies on development logs and requirements.
+- Follow-up development-log presentation request: show `개발일지` items in a compact list form instead of rendering every item as a fully expanded card.
 - Explicitly excluded scope: no private document exposure, no authentication/accounting/payment/voting feature changes, no unrelated disclosure/news/admin edits, and no public claim that final permits are already approved.
 - Candidate governing specification: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, public `사업정보` / `사업현황` surface.
 - Unanswered decision: none.

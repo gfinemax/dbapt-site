@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
+import { isDevelopmentLogCategory } from "@/lib/news/development-log";
 
 function isAdminSession(session: { role: string } | null) {
   return session?.role === "ADMIN";
@@ -9,6 +10,10 @@ function isAdminSession(session: { role: string } | null) {
 
 function canMutateComment(session: { id: string; role: string }, comment: { authorId: string }) {
   return comment.authorId === session.id || session.role === "ADMIN";
+}
+
+function canCommentOnNewsCategory(category: string) {
+  return category === "NOTICE" || isDevelopmentLogCategory(category);
 }
 
 export async function POST(request: Request) {
@@ -43,7 +48,7 @@ export async function POST(request: Request) {
       select: { id: true, category: true },
     });
 
-    if (!notice || notice.category !== "NOTICE") {
+    if (!notice || !canCommentOnNewsCategory(notice.category)) {
       return NextResponse.json({ error: "댓글을 등록할 공지사항을 찾을 수 없습니다." }, { status: 404 });
     }
 
@@ -129,7 +134,7 @@ export async function PATCH(request: Request) {
       },
     });
 
-    if (!comment || comment.news.category !== "NOTICE") {
+    if (!comment || !canCommentOnNewsCategory(comment.news.category)) {
       return NextResponse.json({ error: "수정할 댓글을 찾을 수 없습니다." }, { status: 404 });
     }
 
@@ -185,7 +190,7 @@ export async function DELETE(request: Request) {
       },
     });
 
-    if (!comment || comment.news.category !== "NOTICE") {
+    if (!comment || !canCommentOnNewsCategory(comment.news.category)) {
       return NextResponse.json({ error: "삭제할 댓글을 찾을 수 없습니다." }, { status: 404 });
     }
 
