@@ -1,8 +1,8 @@
 import type { CoopNewsView } from "@/lib/news/types";
 
-export type NewsTabId = "notice" | "free" | "faq" | "newsletter";
+export type NewsTabId = "notice" | "free" | "faq" | "newsletter" | "development";
 
-const NEWS_TAB_IDS: readonly NewsTabId[] = ["notice", "free", "faq", "newsletter"];
+const NEWS_TAB_IDS: readonly NewsTabId[] = ["notice", "free", "faq", "newsletter", "development"];
 
 type SearchParamsReader = Pick<URLSearchParams, "get">;
 

@@ -1329,7 +1329,7 @@ describe("disclosure page", () => {
     expect(screen.getByText("현재 첨부 파일: old-report.docx")).toBeInTheDocument();
     expect(screen.getByText("현재 추가 첨부파일")).toBeInTheDocument();
     expect(screen.getByText("old-extra.pdf")).toBeInTheDocument();
-    expect(screen.getByLabelText("첨부파일 선택 (복수 선택 가능)")).toBeInTheDocument();
+    expect(screen.getByLabelText("첨부파일 선택 (본문 파일 교체)")).toBeInTheDocument();
     expect(screen.getByLabelText("추가 첨부파일 추가 (선택, 최대 10개)")).toBeInTheDocument();
   });
 
@@ -1412,7 +1412,7 @@ describe("disclosure page", () => {
 
     fireEvent.click(screen.getAllByRole("button", { name: "23년 1사분기_실적보고서 문서 수정" })[0]);
 
-    const fileInput = screen.getByLabelText("첨부파일 선택 (복수 선택 가능)") as HTMLInputElement;
+    const fileInput = screen.getByLabelText("첨부파일 선택 (본문 파일 교체)") as HTMLInputElement;
     expect(fileInput).toHaveAttribute("multiple");
 
     fireEvent.change(fileInput, {

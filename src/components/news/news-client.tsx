@@ -61,6 +61,7 @@ import { NoticeBoard } from "./notice-board";
 import { FreeBoard } from "./free-board";
 import { FaqAccordion } from "./faq-accordion";
 import { CoopNewsletter } from "./coop-newsletter";
+import { DevelopmentLog } from "./development-log";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 
 type NewsClientProps = {
@@ -72,6 +73,7 @@ type NewsClientProps = {
 
 const menuItems = [
   { id: "notice", label: "공지사항", isSecure: false },
+  { id: "development", label: "개발일지", isSecure: false },
   { id: "free", label: "자유게시판", isSecure: true },
   { id: "faq", label: "FAQ", isSecure: true },
   { id: "newsletter", label: "조합뉴스 (주/월간소식)", isSecure: false },
@@ -415,8 +417,11 @@ export function NewsClient({
     latestStarredNotice,
     freePostsCount,
     newsletterCount,
+    developmentLogCount,
     noticeItems,
     newsletterItems,
+    developmentLogItems,
+    adminDevelopmentLogItems,
   } = useMemo(() => buildNewsClientSummary(newsList, freePosts), [newsList, freePosts]);
 
 
@@ -584,6 +589,7 @@ export function NewsClient({
               <div className="mt-5 pt-3 border-t border-stone-surface/60 flex items-center justify-between">
                 <span className="text-[10px] text-ash font-mono font-medium">
                   {newsletterCount > 0 ? `뉴스레터 ${newsletterCount}집 발행` : "뉴스레터 제1호 오픈 예정"}
+                  {developmentLogCount > 0 ? ` · 개발일지 ${developmentLogCount}건` : ""}
                 </span>
                 <button
                   onClick={() => handleTabClick("newsletter")}
@@ -758,6 +764,21 @@ export function NewsClient({
                 if (data.newsList) {
                   setNewsList((prev) => mergeNewsCategoryRefresh(prev, data.newsList, "WEEKLY_MONTHLY"));
                 }
+              }}
+            />
+          </section>
+        )}
+
+        {/* 5. 개발일지 */}
+        {activeTab === "development" && (
+          <section id="section-development" className="space-y-4 animate-in fade-in duration-200">
+            <DevelopmentLog
+              isAdmin={isAdmin}
+              logs={isAdmin ? adminDevelopmentLogItems : developmentLogItems}
+              onRefresh={async () => {
+                const res = await fetch("/api/news");
+                const data = await res.json();
+                if (data.newsList) setNewsList(data.newsList);
               }}
             />
           </section>

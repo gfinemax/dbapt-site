@@ -7,32 +7,48 @@ import { cn } from "@/lib/utils";
 import { OverviewTab } from "./overview-tab";
 import { PlanTab } from "./plan-tab";
 import { UnitTab } from "./unit-tab";
+import { MobilityTab } from "./mobility-tab";
+import { RenderingTab } from "./rendering-tab";
 import { TimelineTab } from "./timeline-tab";
 import { SiteFooter } from "@/components/landing/site-footer";
 
-type TabId = "overview" | "plan" | "unit" | "timeline";
+type TabId = "overview" | "rendering" | "plan" | "unit" | "mobility" | "timeline";
 
 const tabs = [
   {
     id: "overview",
-    label: "현황요약",
+    label: "건축개요",
     eyebrow: "BUSINESS SUMMARY",
-    title: "한눈에 보는 사업현황",
-    description: "설명회 자료에서 확인되는 핵심 수치와 변경 계획안을 먼저 정리했습니다.",
+    title: "건축개요",
+    description: "현재 지구단위계획과 향후 경미한 변경 예정 세대수를 구분해 안내합니다.",
+  },
+  {
+    id: "rendering",
+    label: "조감도",
+    eyebrow: "RENDERING",
+    title: "조감도",
+    description: "사업계획서의 조감도 이미지를 참고 자료로 제공합니다.",
   },
   {
     id: "plan",
-    label: "조감도·배치도",
-    eyebrow: "PLAN VIEW",
-    title: "조감도 및 단지배치도",
-    description: "공개 가능한 대표 이미지와 단지배치도 확인 사항을 함께 안내합니다.",
+    label: "계획·배치도",
+    eyebrow: "ARCHITECTURE PLAN",
+    title: "건축계획(안) 및 배치도",
+    description: "주요 계획 수치와 배치도를 사업계획서 기준으로 정리했습니다.",
   },
   {
     id: "unit",
-    label: "세대계획",
+    label: "단위세대",
     eyebrow: "UNIT PLAN",
-    title: "평형별 세대 계획",
-    description: "분양주택과 공공주택의 기존안 대비 변경 계획안을 표로 정리했습니다.",
+    title: "단위세대 평면도",
+    description: "사업계획서에 수록된 타입별 단위세대 평면도를 확인합니다.",
+  },
+  {
+    id: "mobility",
+    label: "차량·보행",
+    eyebrow: "SITE CIRCULATION",
+    title: "차량·보행 동선계획",
+    description: "차량 주출입과 보행자 동선을 구분해 배치 계획을 안내합니다.",
   },
   {
     id: "timeline",
@@ -110,15 +126,15 @@ export function BusinessClient() {
       <section className="bg-gradient-to-br from-warm-canvas via-parchment-card to-stone-surface/30 pt-16 pb-20 border-b border-stone-surface text-center">
         <div className="site-container max-w-4xl px-4">
           <span className="inline-flex rounded-full bg-ember-orange/10 px-4 py-1.5 text-xs font-bold text-ember-orange uppercase tracking-wider">
-            2025.09.06 설명회 자료 기준
+            2025.10.30 사업계획서 기준
           </span>
           <h1 className="mt-6 text-4xl sm:text-5xl font-black text-charcoal-primary leading-tight tracking-tight">
             대방동 지역주택조합<br />
             <span className="text-ember-orange">사업현황</span>
           </h1>
           <p className="mt-6 text-base sm:text-lg text-graphite/90 max-w-[21rem] sm:max-w-2xl mx-auto leading-relaxed">
-            지구단위계획 변경안, 건축계획 변경안, 세대수와 향후 추진절차를
-            설명회 자료에서 확인되는 범위로 안내합니다.
+            건축개요, 건축계획안, 배치도, 단위세대 평면도와 동선계획을
+            사업계획서와 조합의 향후 변경 예정 기준으로 안내합니다.
           </p>
         </div>
       </section>
@@ -156,14 +172,22 @@ export function BusinessClient() {
         </BusinessSection>
 
         <BusinessSection tab={tabs[1]}>
-          <PlanTab />
+          <RenderingTab />
         </BusinessSection>
 
         <BusinessSection tab={tabs[2]}>
-          <UnitTab />
+          <PlanTab />
         </BusinessSection>
 
         <BusinessSection tab={tabs[3]}>
+          <UnitTab />
+        </BusinessSection>
+
+        <BusinessSection tab={tabs[4]}>
+          <MobilityTab />
+        </BusinessSection>
+
+        <BusinessSection tab={tabs[5]}>
           <TimelineTab />
         </BusinessSection>
       </main>

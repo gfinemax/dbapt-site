@@ -28,6 +28,7 @@ const news = (overrides: Partial<CoopNewsView> = {}): CoopNewsView => ({
 describe("news deep-link helpers", () => {
   it("accepts only supported tab query values", () => {
     expect(getNewsTabFromSearchParams(new URLSearchParams("tab=free"))).toBe("free");
+    expect(getNewsTabFromSearchParams(new URLSearchParams("tab=development"))).toBe("development");
     expect(getNewsTabFromSearchParams(new URLSearchParams("tab=unknown"))).toBeNull();
     expect(getNewsTabFromSearchParams(new URLSearchParams(""))).toBeNull();
   });

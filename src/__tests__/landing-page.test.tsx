@@ -65,13 +65,19 @@ describe("public landing page", () => {
       href: "/business",
       subItems: expect.arrayContaining([
         { label: "건축개요", href: "/business#overview" },
-        { label: "조감도 / 배치도", href: "/business#plan" },
-        { label: "평형별 평면도", href: "/business#unit" },
+        { label: "조감도", href: "/business#rendering" },
+        { label: "건축계획·배치도", href: "/business#plan" },
+        { label: "단위세대 평면도", href: "/business#unit" },
+        { label: "차량·보행 동선", href: "/business#mobility" },
         { label: "추진절차", href: "/business#timeline" },
       ]),
     });
+    expect(megaMenuNavigation.find((item) => item.title === "사업현황")?.subItems).not.toContainEqual({
+      label: "교통처리계획",
+      href: "/business#traffic",
+    });
     expect(featureLinks.find((item) => item.title === "사업정보")).toMatchObject({
-      description: "사업현황과 위치, 조감도를 확인하세요.",
+      description: "건축개요와 배치도, 조감도를 확인하세요.",
       href: "/business#overview",
     });
   });

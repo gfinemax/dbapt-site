@@ -88,15 +88,15 @@ export const libraryItems: LibraryItem[] = [
   },
   {
     id: "business-briefing",
-    title: "사업 설명회 자료",
-    description: "2025.09.06 설명회 기준 사업현황, 조감도, 배치도, 세대계획 요약을 확인할 수 있습니다.",
+    title: "사업계획서 기준 사업현황",
+    description: "2025.10.30 사업계획서 기준 건축개요, 배치도, 단위세대 평면도, 동선계획, 조감도 요약을 확인할 수 있습니다.",
     category: "business",
     source: "사업현황",
     sourceKind: "site-reference",
     sourceHref: "/business",
     actionLabel: "사업현황 보기",
     access: "public",
-    updatedAt: "2025.09.06 기준",
+    updatedAt: "2025.10.30 기준",
   },
   {
     id: "housing-law",

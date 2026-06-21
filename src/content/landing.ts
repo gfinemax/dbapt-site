@@ -31,8 +31,10 @@ export const megaMenuNavigation = [
     href: "/business",
     subItems: [
       { label: "건축개요", href: "/business#overview" },
-      { label: "조감도 / 배치도", href: "/business#plan" },
-      { label: "평형별 평면도", href: "/business#unit" },
+      { label: "조감도", href: "/business#rendering" },
+      { label: "건축계획·배치도", href: "/business#plan" },
+      { label: "단위세대 평면도", href: "/business#unit" },
+      { label: "차량·보행 동선", href: "/business#mobility" },
       { label: "추진절차", href: "/business#timeline" },
     ],
   },
@@ -61,6 +63,7 @@ export const megaMenuNavigation = [
     href: "/news",
     subItems: [
       { label: "공지사항", href: "/news?tab=notice" },
+      { label: "개발일지", href: "/news?tab=development" },
       { label: "조합뉴스 (주/월간소식)", href: "/news?tab=newsletter" },
       { label: "자유게시판", href: "/news?tab=free" },
       { label: "FAQ", href: "/news?tab=faq" },
@@ -83,13 +86,13 @@ export const megaMenuNavigation = [
 export const featureLinks = [
   {
     title: "사업정보",
-    description: "사업현황과 위치, 조감도를 확인하세요.",
+    description: "건축개요와 배치도, 조감도를 확인하세요.",
     href: "/business#overview",
     icon: "/assets/icons/business-info.png",
   },
   {
     title: "추진현황",
-    description: "현재 단계와 주요 일정을 안내합니다.",
+    description: "향후 추진 계획과 주요 절차를 안내합니다.",
     href: "/business#timeline",
     icon: "/assets/icons/progress.png",
   },

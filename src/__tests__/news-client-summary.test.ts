@@ -38,14 +38,22 @@ describe("buildNewsClientSummary", () => {
       [
         news({ id: "notice-1", category: "NOTICE" }),
         news({ id: "newsletter-1", category: "WEEKLY_MONTHLY" }),
+        news({ id: "development-1", category: "DEVELOPMENT_LOG" }),
+        news({ id: "development-draft", category: "DEVELOPMENT_LOG_DRAFT" }),
       ],
       [freePost(), freePost({ id: "post-2" })],
     );
 
     expect(summary.noticeItems.map((item) => item.id)).toEqual(["notice-1"]);
     expect(summary.newsletterItems.map((item) => item.id)).toEqual(["newsletter-1"]);
+    expect(summary.developmentLogItems.map((item) => item.id)).toEqual(["development-1"]);
+    expect(summary.adminDevelopmentLogItems.map((item) => item.id)).toEqual([
+      "development-1",
+      "development-draft",
+    ]);
     expect(summary.freePostsCount).toBe(2);
     expect(summary.newsletterCount).toBe(1);
+    expect(summary.developmentLogCount).toBe(1);
   });
 
   it("prefers a starred notice for the overview card and otherwise falls back to the first notice", () => {

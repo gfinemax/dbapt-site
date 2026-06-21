@@ -1276,7 +1276,7 @@ export function MeetingsTable({
                     현재 첨부 파일: {editingDoc.fileName}
                   </p>
                   <label className="mt-3 block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="edit-main-file">
-                    첨부파일 선택 (복수 선택 가능)
+                    첨부파일 선택 (본문 파일 교체)
                   </label>
                   <input
                     id="edit-main-file"
