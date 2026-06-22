@@ -10,6 +10,10 @@
 
 **2026-06-22 presentation follow-up:** Render development logs and requirements as a compact list/table with status, title, date, comment count, and row-level controls. Show the selected item in a detail panel below the list so body text and comments remain available without expanding every item at once.
 
+**2026-06-22 draft-quality follow-up:** Generate automatic drafts as release-centered notes first, with the weekly version/window as supporting metadata. Do not expose raw English commit subjects as the main `반영 내용`; translate recognized commit subjects into Korean member-facing changes, keep raw commit subjects under `개발 근거`, and filter chore/build/test-only commits out of the public change list.
+
+**2026-06-22 draft-edit follow-up:** Allow admins to open a generated development-log draft in the left detail panel, edit the title and content, and save the revised draft through the existing news PATCH path before publishing.
+
 **Tech Stack:** Next.js App Router, React, TypeScript, Prisma, Tailwind CSS, Vitest, Testing Library.
 
 ---
@@ -78,3 +82,27 @@
 - [x] **Step 4: Add development-log UI controls for admin release writing, member requirement writing, requirement deletion, and comments.**
 - [x] **Step 5: Move `개발일지` to the right of `조합뉴스` in the `조합소식` tab order.**
 - [x] **Step 6: Convert the development-log surface from expanded cards to a list plus selected-detail panel.**
+
+### Task 6: Release-Centered Draft Follow-Up
+
+**Files:**
+- Modify: `src/lib/news/development-log.ts`
+- Modify: `src/app/api/news/development-log/draft/route.ts`
+- Test: `src/__tests__/news-development-log.test.ts`
+- Test: `src/__tests__/news-development-log-api.test.ts`
+
+- [x] **Step 1: Keep weekly version labels, but expose the Monday-to-Sunday week window as supporting metadata.**
+- [x] **Step 2: Derive a release-centered draft title and Korean member-facing changes from recent commit subjects.**
+- [x] **Step 3: Keep raw commit subjects under `개발 근거` while filtering chore/build/test-only commits out of `반영 내용`.**
+- [x] **Step 4: Limit automatic git subject collection to the selected weekly window instead of a loose recent-days range.**
+
+### Task 7: Generated Draft Edit Follow-Up
+
+**Files:**
+- Modify: `src/components/news/development-log.tsx`
+- Test: `src/__tests__/news-development-log-component.test.tsx`
+
+- [x] **Step 1: Add a failing component test for admin editing of an auto-generated development-log draft.**
+- [x] **Step 2: Add admin-only edit controls inside the left slide detail panel for non-request development logs.**
+- [x] **Step 3: Save edited title and content through the existing `/api/news` PATCH flow while preserving the current development-log category and metadata.**
+- [x] **Step 4: Re-run focused component tests and confirm GREEN.**

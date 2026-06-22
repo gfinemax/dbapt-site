@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import {
   DEVELOPMENT_LOG_CATEGORIES,
   buildDevelopmentLogDraft,
+  getDevelopmentLogWeekWindow,
 } from "@/lib/news/development-log";
 
 export async function POST(request: Request) {
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     const date = typeof body.date === "string" ? new Date(body.date) : new Date();
     const changes = Array.isArray(body.changes)
       ? body.changes.filter((item): item is string => typeof item === "string")
-      : readRecentGitSubjects();
+      : readRecentGitSubjects(date);
     const draft = buildDevelopmentLogDraft({
       date,
       type: parseDevelopmentLogType(body.type),
@@ -63,9 +64,16 @@ export async function POST(request: Request) {
   }
 }
 
-function readRecentGitSubjects() {
+function readRecentGitSubjects(date: Date) {
+  const weekWindow = getDevelopmentLogWeekWindow(date);
+
   try {
-    return execFileSync("git", ["log", "--since=14.days", "--pretty=format:%s"], {
+    return execFileSync("git", [
+      "log",
+      `--since=${weekWindow.start.replaceAll(".", "-")}T00:00:00`,
+      `--until=${weekWindow.end.replaceAll(".", "-")}T23:59:59`,
+      "--pretty=format:%s",
+    ], {
       encoding: "utf8",
       timeout: 3000,
     })

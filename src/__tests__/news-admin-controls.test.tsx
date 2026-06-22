@@ -1863,6 +1863,38 @@ describe("news admin visible controls", () => {
     expect(within(screen.getByLabelText("글 유형")).getByRole("option", { name: "운영안내" })).toBeInTheDocument();
   });
 
+  it("opens another free-board post from a link inside the focused post body", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[
+          {
+            ...realFreePost,
+            id: "free-1",
+            title: "방문 결과 공유",
+            content: '<p><a href="/news?tab=free&post=free-2">관련 질의 글 보기</a></p>',
+          },
+          {
+            ...realFreePost,
+            id: "free-2",
+            title: "관련 질의 글",
+            content: "<p>링크로 바로 열리는 게시글입니다.</p>",
+          },
+        ]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("방문 결과 공유"));
+    let panel = screen.getByLabelText("토론 집중 패널");
+    fireEvent.click(within(panel).getByRole("link", { name: "관련 질의 글 보기" }));
+
+    panel = screen.getByLabelText("토론 집중 패널");
+    expect(within(panel).getByRole("heading", { name: "관련 질의 글" })).toBeInTheDocument();
+    expect(within(panel).getByText("링크로 바로 열리는 게시글입니다.")).toBeInTheDocument();
+    expect(window.location.search).toContain("post=free-2");
+  });
+
   it("lets administrators choose display author names for free-board posts and comments", async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const fetchMock = vi.fn().mockResolvedValue({

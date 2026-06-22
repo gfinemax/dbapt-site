@@ -57,6 +57,9 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
   const [editCommentDisplayAuthorName, setEditCommentDisplayAuthorName] =
     useState<NewsDisplayAuthorName>("운영자");
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
+  const [editingLogId, setEditingLogId] = useState<string | null>(null);
+  const [editLogTitle, setEditLogTitle] = useState("");
+  const [editLogContent, setEditLogContent] = useState("");
 
   const visibleLogs = useMemo(
     () => buildDevelopmentLogList(logs, { includeAdminOnly: isAdmin }),
@@ -286,9 +289,67 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
     );
   };
 
+  const canEditLog = (log: CoopNewsView) => {
+    return isAdmin && log.category !== DEVELOPMENT_LOG_CATEGORIES.request;
+  };
+
+  const beginLogEdit = (log: CoopNewsView) => {
+    setEditingLogId(log.id);
+    setEditLogTitle(log.title);
+    setEditLogContent(log.content);
+  };
+
+  const cancelLogEdit = () => {
+    setEditingLogId(null);
+    setEditLogTitle("");
+    setEditLogContent("");
+  };
+
+  const saveLogEdit = async (log: CoopNewsView) => {
+    const title = editLogTitle.trim();
+    const content = editLogContent.trim();
+    if (!title || !content) {
+      alert("제목과 내용을 모두 입력해 주세요.");
+      return;
+    }
+
+    setMutatingId(log.id);
+    try {
+      const res = await fetch("/api/news", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: log.id,
+          title,
+          content,
+          category: log.category,
+          imagePath: log.imagePath || null,
+          isStarred: !!log.isStarred,
+          attachmentPath: log.attachmentPath || null,
+          attachmentName: log.attachmentName || null,
+          attachmentSize: log.attachmentSize || null,
+          displayAuthorName: log.displayAuthorName || "운영자",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || "개발일지 수정에 실패했습니다.");
+        return;
+      }
+      cancelLogEdit();
+      await refresh();
+    } finally {
+      setMutatingId(null);
+    }
+  };
+
   const composeLabel = composeMode === "log" ? "개발일지" : "요구사항";
   const selectedLog = visibleLogs.find((log) => log.id === selectedLogId) || null;
-  const closeSelectedLog = () => setSelectedLogId(null);
+  const isEditingSelectedLog = !!selectedLog && editingLogId === selectedLog.id;
+  const closeSelectedLog = () => {
+    setSelectedLogId(null);
+    cancelLogEdit();
+  };
   const canUseDocument = typeof document !== "undefined";
 
   return (
@@ -544,17 +605,80 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                 </div>
                 <div className="mt-6 flex-1 space-y-4">
                   <section aria-label="개발일지 상세" className="space-y-3">
-                    <div className="flex flex-col gap-1 border-b border-stone-surface pb-3">
-                      <h4 id={`development-detail-title-${selectedLog.id}`} className="text-[15px] font-black leading-snug text-charcoal-primary">
-                        {selectedLog.title}
-                      </h4>
-                      <p className="text-[10px] font-medium text-ash">
-                        등록일 {String(selectedLog.createdAt).slice(0, 10).replace(/-/g, ".")}
-                      </p>
+                    <div className="flex flex-col gap-3 border-b border-stone-surface pb-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h4 id={`development-detail-title-${selectedLog.id}`} className="text-[15px] font-black leading-snug text-charcoal-primary">
+                          {selectedLog.title}
+                        </h4>
+                        <p className="mt-1 text-[10px] font-medium text-ash">
+                          등록일 {String(selectedLog.createdAt).slice(0, 10).replace(/-/g, ".")}
+                        </p>
+                      </div>
+                      {canEditLog(selectedLog) && !isEditingSelectedLog && (
+                        <button
+                          type="button"
+                          onClick={() => beginLogEdit(selectedLog)}
+                          className="h-8 rounded-full border border-stone-surface bg-white px-3 text-[11px] font-bold text-graphite hover:bg-stone-surface/40"
+                        >
+                          수정
+                        </button>
+                      )}
                     </div>
-                    <div className="whitespace-pre-wrap rounded-xl bg-[#fbfaf9] p-4 text-[12px] leading-7 text-graphite">
-                      {selectedLog.content}
-                    </div>
+                    {isEditingSelectedLog ? (
+                      <form
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void saveLogEdit(selectedLog);
+                        }}
+                        className="space-y-3 rounded-2xl border border-stone-surface bg-white p-4"
+                      >
+                        <div className="space-y-1.5">
+                          <label htmlFor={`development-edit-title-${selectedLog.id}`} className="text-[11px] font-bold text-charcoal-primary">
+                            제목
+                          </label>
+                          <input
+                            id={`development-edit-title-${selectedLog.id}`}
+                            aria-label="개발일지 제목 수정"
+                            value={editLogTitle}
+                            onChange={(event) => setEditLogTitle(event.target.value)}
+                            className="w-full rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label htmlFor={`development-edit-content-${selectedLog.id}`} className="text-[11px] font-bold text-charcoal-primary">
+                            내용
+                          </label>
+                          <textarea
+                            id={`development-edit-content-${selectedLog.id}`}
+                            aria-label="개발일지 내용 수정"
+                            value={editLogContent}
+                            onChange={(event) => setEditLogContent(event.target.value)}
+                            rows={14}
+                            className="w-full resize-y rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs leading-relaxed text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={cancelLogEdit}
+                            className="h-8 rounded-full border border-stone-surface bg-white px-3 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                          >
+                            취소
+                          </button>
+                          <Button
+                            type="submit"
+                            disabled={mutatingId === selectedLog.id}
+                            className="h-8 rounded-full bg-midnight px-4 text-[11px] font-bold text-white hover:bg-black disabled:opacity-50"
+                          >
+                            수정 저장
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="whitespace-pre-wrap rounded-xl bg-[#fbfaf9] p-4 text-[12px] leading-7 text-graphite">
+                        {selectedLog.content}
+                      </div>
+                    )}
                   </section>
 
                   <section className="space-y-3 border-t border-stone-surface pt-4" aria-label={`${selectedLog.title} 댓글`}>

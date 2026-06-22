@@ -127,6 +127,66 @@ describe("DevelopmentLog", () => {
     expect(onRefresh).toHaveBeenCalledTimes(2);
   });
 
+  it("lets admins edit a generated development log before publishing", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, news: { id: "draft" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <DevelopmentLog
+        isAdmin
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        logs={[
+          log({
+            id: "draft",
+            title: "자동 생성 초안",
+            content: "초안 본문",
+            category: DEVELOPMENT_LOG_CATEGORIES.draft,
+          }),
+        ]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "자동 생성 초안" }));
+
+    const detailPanel = screen.getByRole("complementary", { name: "개발일지 상세 패널" });
+    fireEvent.click(within(detailPanel).getByRole("button", { name: "수정" }));
+    fireEvent.change(within(detailPanel).getByLabelText("개발일지 제목 수정"), {
+      target: { value: "조합원 안내 중심 초안" },
+    });
+    fireEvent.change(within(detailPanel).getByLabelText("개발일지 내용 수정"), {
+      target: { value: "조합원에게 전달할 내용으로 다시 정리했습니다." },
+    });
+    fireEvent.click(within(detailPanel).getByRole("button", { name: "수정 저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining('"title":"조합원 안내 중심 초안"'),
+      }),
+    ));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining('"content":"조합원에게 전달할 내용으로 다시 정리했습니다."'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining(`"category":"${DEVELOPMENT_LOG_CATEGORIES.draft}"`),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
   it("lets logged-in non-admin members submit development requirements", async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const fetchMock = vi.fn().mockResolvedValue({

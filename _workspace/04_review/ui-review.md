@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: `개발일지` list items now open in a left slide-out detail panel, matching the free-board focused view pattern.
-- Governing spec: none separate; governed by `docs/superpowers/plans/2026-06-21-news-development-log.md` and the approved user follow-up.
-- Implementation plan: `docs/superpowers/plans/2026-06-21-news-development-log.md`.
-- Files or pages reviewed: `src/components/news/development-log.tsx`, `src/__tests__/news-development-log-component.test.tsx`, `/news?tab=development`.
+- Feature: Free-board rich-content links now support clickable pasted post URLs, custom link labels, and in-panel navigation for internal free-board post links.
+- Governing spec: `docs/superpowers/plans/2026-06-01-daebang-free-board-list-rich-editor.md`.
+- Implementation plan: `docs/superpowers/plans/2026-06-01-daebang-free-board-list-rich-editor.md`.
+- Files or pages reviewed: `src/components/news/notice-rich-editor.tsx`, `src/components/news/free-board.tsx`, `src/__tests__/news-rich-content-links.test.tsx`, `src/__tests__/news-admin-controls.test.tsx`.
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: The change is presentation-only. It does not alter public navigation, login-gated access, API routes, database categories, admin permissions, requirement-post rules, or comment permissions.
+- Evidence: The change stays inside the existing login-gated free-board rich body and focus-panel workflow. It does not alter public navigation, data categories, write permissions, ownership rules, comments, uploads, or APIs.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: The panel shows the selected existing development-log or requirement content and comments. It does not introduce new counts, private data, document access, notifications, voting, payment, or approval claims.
+- Evidence: Links remain ordinary post/body links. Internal free-board links open existing posts by `post` query, and external links keep `target="_blank" rel="noreferrer"`. No private data, document access, notifications, voting, payment, or approval claims are introduced.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: The slide-out panel uses the existing warm canvas, stone border, dark pill/round controls, and free-board-style left overlay pattern. It is exposed as `aside[aria-label="개발일지 상세 패널"]`, includes a visible `목록으로` close button with focus ring, and adds `motion-reduce:animate-none` to the new entrance animation. Chrome CDP checks at 1440px and 390px confirmed the panel opens at left `0`, has no horizontal overflow, and renders the selected title with the close control.
+- Evidence: The rich-content link styling reuses the existing `[&_a]:text-sky-blue [&_a]:underline` renderer. The editor's existing `링크` button now prompts for display text while preserving keyboard/label behavior. Focused tests verify link rendering and in-panel navigation.
 
 ## Outcome
 - Result: PASS

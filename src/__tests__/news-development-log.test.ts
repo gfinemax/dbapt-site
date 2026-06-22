@@ -3,6 +3,7 @@ import {
   DEVELOPMENT_LOG_CATEGORIES,
   buildDevelopmentLogDraft,
   buildDevelopmentLogList,
+  getDevelopmentLogWeekWindow,
   getDevelopmentLogStatus,
   getDevelopmentLogVersionLabel,
 } from "@/lib/news/development-log";
@@ -37,24 +38,40 @@ describe("development log helpers", () => {
     );
   });
 
-  it("builds a public-facing draft from commit-like change records", () => {
+  it("uses a Monday-to-Sunday weekly window as supporting metadata", () => {
+    expect(getDevelopmentLogWeekWindow(new Date("2026-06-21T09:00:00+09:00"))).toEqual({
+      label: "2026년 6월 4주차",
+      start: "2026.06.15",
+      end: "2026.06.21",
+    });
+  });
+
+  it("builds a release-centered draft with weekly grouping as supporting metadata", () => {
     const draft = buildDevelopmentLogDraft({
       date: new Date("2026-06-21T09:00:00+09:00"),
       type: "기능 반영",
-      title: "사업현황 향후 추진절차 개선",
       changes: [
-        "향후 추진절차 1~4단계를 완료 상태로 표시했습니다.",
-        "건축심의 일정을 2027.3 예정으로 수정했습니다.",
+        "feat: update business status images",
+        "fix: business mobility image panel",
+        "chore: add workspace verification artifacts",
       ],
     });
 
     expect(draft.version).toBe("v2026.06.4");
-    expect(draft.title).toBe("사업현황 향후 추진절차 개선");
+    expect(draft.title).toBe("사업현황 자료 업데이트");
     expect(draft.content).toContain("유형\n기능 반영");
     expect(draft.content).toContain("버전\nv2026.06.4");
-    expect(draft.content).toContain("- 향후 추진절차 1~4단계를 완료 상태로 표시했습니다.");
+    expect(draft.content).toContain("릴리즈 기준\n사업현황 자료 업데이트");
+    expect(draft.content).toContain("주간 묶음\n2026년 6월 4주차 · 2026.06.15~2026.06.21");
+    expect(draft.content).toContain("- 사업현황 화면에서 자료 이미지와 도면을 더 쉽게 확인할 수 있습니다.");
+    expect(draft.content).toContain("- 사업현황 자료와 이미지 구성을 업데이트했습니다.");
+    expect(draft.content).toContain("- 사업현황의 차량·보행 동선 이미지 표시를 안정화했습니다.");
+    expect(draft.content).not.toContain("- 검증 결과와 화면 확인 자료를 정리했습니다.");
+    expect(draft.content).toContain("개발 근거");
+    expect(draft.content).toContain("- feat: update business status images");
+    expect(draft.content).not.toContain("홈페이지 변경사항을 한곳에서 확인할 수 있습니다.");
     expect(draft.content).toContain("상태\n게시 대기");
-    expect(draft.content).toContain("작성 기준\n자동 생성: 커밋 및 배포 변경 내역 기준");
+    expect(draft.content).toContain("작성 기준\n자동 생성: 릴리즈 변경 묶음과 주간 커밋 기록 기준");
   });
 
   it("shows only published development logs publicly and includes drafts for admins", () => {

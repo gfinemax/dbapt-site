@@ -6,6 +6,8 @@
 
 **Architecture:** Reuse the existing notice rich editor/sanitized renderer for free-board body HTML. Keep `/api/news/free` as the post/comment API. Add nullable `FreeComment.parentId` for one-level reply threading and normalize replies to replies under the top-level parent. Broaden `/api/upload` only for authenticated body-image uploads while keeping attachments admin-only.
 
+**2026-06-22 link follow-up:** Render plain free-board post URLs in rich bodies as clickable links, preserve custom link text created through the editor, and intercept internal `/news?tab=free&post=...` links so they open the target post in the existing left focus panel instead of showing a raw URL or forcing a separate navigation.
+
 ## Tasks
 
 - [x] Add regression tests for member body-image upload permission and admin-only attachment upload.
@@ -19,5 +21,8 @@
 - [x] Render free-board replies under top-level comments with collapsed `답글 N개 보기` controls and inline reply input.
 - [x] Replace free-board write textarea with the shared rich body editor.
 - [x] Render free-board post bodies with the sanitized rich-content renderer and use plain text for search/list previews.
+- [x] Render pasted plain free-board post URLs as clickable rich-content links.
+- [x] Let the rich editor create links with a custom display label instead of showing only the URL.
+- [x] Open internal free-board post links directly in the current focus panel and keep the `post` URL query in sync.
 - [x] Update workspace review and verification records.
 - [x] Run final `pnpm lint`, `pnpm test`, `pnpm build`, and `/news` runtime check.

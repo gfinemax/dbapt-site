@@ -47,13 +47,13 @@ describe("development log draft API", () => {
     expect(mockPrisma.coopNews.create).not.toHaveBeenCalled();
   });
 
-  it("creates a draft development log from recent commit messages", async () => {
+  it("creates a release-centered draft from the selected weekly commit window", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
-    mockExecFileSync.mockReturnValue("사업현황 향후 추진절차 수정\n모바일 자료실 표시 오류 수정\n");
+    mockExecFileSync.mockReturnValue("feat: update business status images\nfix: business mobility image panel\n");
     mockPrisma.coopNews.create.mockResolvedValue({
       id: "devlog-1",
       category: DEVELOPMENT_LOG_CATEGORIES.draft,
-      title: "2026년 6월 4주차 업데이트",
+      title: "사업현황 자료 업데이트",
       content: "자동 생성 본문",
     });
 
@@ -66,17 +66,30 @@ describe("development log draft API", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      "git",
+      [
+        "log",
+        "--since=2026-06-15T00:00:00",
+        "--until=2026-06-21T23:59:59",
+        "--pretty=format:%s",
+      ],
+      expect.objectContaining({ encoding: "utf8" }),
+    );
     expect(mockPrisma.coopNews.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         category: DEVELOPMENT_LOG_CATEGORIES.draft,
-        title: "2026년 6월 4주차 업데이트",
+        title: "사업현황 자료 업데이트",
         authorId: "admin-1",
         displayAuthorName: "운영자",
       }),
     }));
     expect(mockPrisma.coopNews.create.mock.calls[0][0].data.content).toContain(
-      "- 사업현황 향후 추진절차 수정",
+      "릴리즈 기준\n사업현황 자료 업데이트",
     );
+    expect(mockPrisma.coopNews.create.mock.calls[0][0].data.content).toContain("주간 묶음\n2026년 6월 4주차");
+    expect(mockPrisma.coopNews.create.mock.calls[0][0].data.content).toContain("- 사업현황 자료와 이미지 구성을 업데이트했습니다.");
+    expect(mockPrisma.coopNews.create.mock.calls[0][0].data.content).toContain("- feat: update business status images");
     expect(mockPrisma.coopNews.create.mock.calls[0][0].data.content).toContain("버전\nv2026.06.4");
     expect(await response.json()).toMatchObject({ success: true, news: { id: "devlog-1" } });
   });

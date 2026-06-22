@@ -238,6 +238,14 @@ export function FreeBoard({
     updateFocusedPostUrl(postId);
   };
 
+  const openFocusedPostFromLink = (href: string) => {
+    if (typeof window === "undefined") return;
+    const nextUrl = new URL(href, window.location.href);
+    const postId = findFocusedFreePostId(nextUrl.searchParams, combinedPosts);
+    if (!postId) return;
+    openFocusedPost(postId);
+  };
+
   const closeFocusedPost = () => {
     setFocusedPostId(null);
     updateFocusedPostUrl(null);
@@ -619,7 +627,10 @@ export function FreeBoard({
               </div>
 
               <div className="pt-2">
-                <NoticeRichContent content={focusedPost.content} />
+                <NoticeRichContent
+                  content={focusedPost.content}
+                  onInternalLinkClick={openFocusedPostFromLink}
+                />
               </div>
 
               <section className="space-y-4 border-t border-stone-surface pt-5">
