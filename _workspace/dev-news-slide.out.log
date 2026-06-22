@@ -1,0 +1,27 @@
+
+> dbapt-site@0.1.0 dev C:\workspace\antigravity\dbapt-site
+> next dev "--hostname" "127.0.0.1" "--port" "3000"
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env
+✓ Ready in 1935ms
+Creating turbopack project { dir: 'C:\\workspace\\antigravity\\dbapt-site', testMode: true }
+
+ GET /news?tab=development 200 in 1302ms (next.js: 439ms, application-code: 863ms)
+ GET /news?tab=development 200 in 330ms (next.js: 11ms, application-code: 318ms)
+ GET /news?tab=development 200 in 189ms (next.js: 8ms, application-code: 181ms)
+ GET /news?tab=development 200 in 173ms (next.js: 7ms, application-code: 166ms)
+ GET /news?tab=development 200 in 121ms (next.js: 8ms, application-code: 113ms)
+ GET /news?tab=development 200 in 221ms (next.js: 9ms, application-code: 213ms)
+ GET /news?tab=development 200 in 184ms (next.js: 7ms, application-code: 177ms)
+✓ Compiled in 27ms
+ GET /news?tab=development 200 in 504ms (next.js: 259ms, application-code: 244ms)
+ GET /news?tab=development 200 in 134ms (next.js: 8ms, application-code: 126ms)
+ GET /news?tab=development 200 in 408ms (next.js: 8ms, application-code: 401ms)
+ GET /news?tab=development 200 in 198ms (next.js: 10ms, application-code: 187ms)
+ GET /news?tab=development 200 in 153ms (next.js: 9ms, application-code: 144ms)
+ GET / 200 in 525ms (next.js: 86ms, application-code: 439ms)
+ GET /news 200 in 228ms (next.js: 6ms, application-code: 222ms)
+ GET /news?tab=development 200 in 219ms (next.js: 6ms, application-code: 213ms)
