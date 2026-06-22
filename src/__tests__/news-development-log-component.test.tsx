@@ -39,14 +39,14 @@ describe("DevelopmentLog", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "사업현황 향후 추진절차 개선" })).toBeInTheDocument();
+    expect(within(screen.getByRole("table", { name: "개발일지 목록" })).getByText("사업현황 향후 추진절차 개선")).toBeInTheDocument();
     expect(screen.getByText("v2026.06.4")).toBeInTheDocument();
     expect(screen.getByText("게시됨")).toBeInTheDocument();
     expect(screen.queryByText("초안 개발일지")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "자동 초안 생성" })).not.toBeInTheDocument();
   });
 
-  it("renders development logs as a compact list with a selected detail panel", () => {
+  it("opens development log details in a left slide view from the compact list", () => {
     render(
       <DevelopmentLog
         isAdmin={false}
@@ -67,7 +67,16 @@ describe("DevelopmentLog", () => {
     expect(within(list).getByText("사업현황 향후 추진절차 개선")).toBeInTheDocument();
     expect(within(list).getByText("댓글 알림 요구사항")).toBeInTheDocument();
     expect(within(list).getByText("댓글")).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "개발일지 상세" })).toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: "개발일지 상세 패널" })).not.toBeInTheDocument();
+
+    fireEvent.click(within(list).getByRole("button", { name: "댓글 알림 요구사항" }));
+
+    const detailPanel = screen.getByRole("complementary", { name: "개발일지 상세 패널" });
+    expect(within(detailPanel).getByRole("heading", { name: "댓글 알림 요구사항" })).toBeInTheDocument();
+    expect(within(detailPanel).getByText("댓글 알림이 필요합니다.")).toBeInTheDocument();
+
+    fireEvent.click(within(detailPanel).getByRole("button", { name: "목록으로" }));
+    expect(screen.queryByRole("complementary", { name: "개발일지 상세 패널" })).not.toBeInTheDocument();
   });
 
   it("lets admins create draft logs and publish draft logs", async () => {

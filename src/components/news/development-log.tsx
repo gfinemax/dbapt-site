@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   NEWS_DISPLAY_AUTHOR_NAMES,
@@ -286,9 +287,12 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
   };
 
   const composeLabel = composeMode === "log" ? "개발일지" : "요구사항";
-  const selectedLog = visibleLogs.find((log) => log.id === selectedLogId) || visibleLogs[0] || null;
+  const selectedLog = visibleLogs.find((log) => log.id === selectedLogId) || null;
+  const closeSelectedLog = () => setSelectedLogId(null);
+  const canUseDocument = typeof document !== "undefined";
 
   return (
+    <>
     <div className="space-y-5">
       <div className="flex flex-col gap-3 border-b border-[#f2f0ed] pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -500,16 +504,45 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
             </div>
           </div>
 
-          {selectedLog && (() => {
+          {canUseDocument && selectedLog && createPortal((() => {
             const comments = buildShallowCommentTree(selectedLog.comments || []);
 
             return (
-              <article
-                aria-label={selectedLog.title}
-                aria-labelledby={`development-detail-title-${selectedLog.id}`}
-                className="stone-card overflow-hidden rounded-2xl border border-stone-surface bg-white"
-              >
-                <div className="space-y-4 p-5 sm:p-6">
+              <>
+                <div
+                  onClick={closeSelectedLog}
+                  className="fixed inset-0 z-[120] bg-black/30 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in motion-reduce:animate-none motion-reduce:transition-none"
+                />
+                <aside
+                  aria-label="개발일지 상세 패널"
+                  className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-2xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out motion-reduce:animate-none sm:p-8"
+                >
+                <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-6">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-7 items-center justify-center rounded-full bg-midnight text-xs font-semibold text-white">
+                      D
+                    </span>
+                    <div>
+                      <h2 className="text-base font-bold text-charcoal-primary">
+                        개발일지 열람
+                      </h2>
+                      <p className="mt-0.5 text-[11px] font-medium text-ash">
+                        Development Log & Request History
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeSelectedLog}
+                    className="flex items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] px-3 py-1.5 text-xs font-medium text-graphite transition duration-200 hover:bg-stone-surface focus:outline-none focus:ring-2 focus:ring-sky-blue/30 active:bg-[#e8e6e1]"
+                  >
+                    <svg className="size-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    목록으로
+                  </button>
+                </div>
+                <div className="mt-6 flex-1 space-y-4">
                   <section aria-label="개발일지 상세" className="space-y-3">
                     <div className="flex flex-col gap-1 border-b border-stone-surface pb-3">
                       <h4 id={`development-detail-title-${selectedLog.id}`} className="text-[15px] font-black leading-snug text-charcoal-primary">
@@ -731,12 +764,14 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                     )}
                   </section>
                 </div>
-              </article>
+                </aside>
+              </>
             );
-          })()}
+          })(), document.body)}
         </div>
       )}
     </div>
+    </>
   );
 }
 
