@@ -37,6 +37,12 @@ function ImportantNoticeStar() {
   );
 }
 
+function toDateInputValue(value: Date | string = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return offsetDate.toISOString().slice(0, 16);
+}
+
 export function NoticeBoard({
   isLoggedIn,
   isAdmin,
@@ -69,6 +75,7 @@ export function NoticeBoard({
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadContent, setUploadContent] = useState("");
   const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
+  const [uploadRegisteredAt, setUploadRegisteredAt] = useState(() => toDateInputValue());
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
   const [uploadDisplayAuthorName, setUploadDisplayAuthorName] =
     useState<NewsDisplayAuthorName>("운영자");
@@ -106,6 +113,7 @@ export function NoticeBoard({
           title: uploadTitle,
           content: uploadContent,
           category: "NOTICE",
+          registeredAt: uploadRegisteredAt,
           attachmentPath,
           attachmentName,
           attachmentSize,
@@ -123,6 +131,7 @@ export function NoticeBoard({
       setUploadTitle("");
       setUploadContent("");
       setUploadAttachmentFile(null);
+      setUploadRegisteredAt(toDateInputValue());
       setUploadIsStarred(false);
       setUploadDisplayAuthorName("운영자");
       setShowUploadModal(false);
@@ -236,7 +245,7 @@ export function NoticeBoard({
                 <th className="px-5 py-3.5 w-14 text-center">No.</th>
                 <th className="px-5 py-3.5">제목</th>
                 <th className="px-5 py-3.5 w-24 text-center">등록자</th>
-                <th className="px-5 py-3.5 w-28 text-center">작성일</th>
+                <th className="px-5 py-3.5 w-28 text-center">등록일</th>
                 <th className="px-5 py-3.5 w-28 text-center">댓글</th>
                 {isAdmin && <th className="px-5 py-3.5 w-36 text-center">관리</th>}
               </tr>
@@ -549,6 +558,20 @@ export function NoticeBoard({
                 <label htmlFor="star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
                   중요 공지사항으로 상단 고정 표시 (★)
                 </label>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="notice-registered-at" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  등록일
+                </label>
+                <input
+                  id="notice-registered-at"
+                  aria-label="등록일"
+                  type="datetime-local"
+                  value={uploadRegisteredAt}
+                  onChange={(e) => setUploadRegisteredAt(e.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                />
               </div>
 
               <div className="space-y-1.5">

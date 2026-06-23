@@ -25,7 +25,7 @@ export function buildNoticeBoardList(
         name: getNewsDisplayAuthorName(item),
       },
       displayAuthorName: item.displayAuthorName,
-      createdAt: item.createdAt.slice(0, 10).replace(/-/g, "."),
+      createdAt: formatNoticeDate(item.registeredAt ?? item.createdAt),
       imagePath: item.imagePath,
       attachmentPath: item.attachmentPath,
       attachmentName: item.attachmentName,
@@ -39,4 +39,8 @@ export function buildNoticeBoardList(
       if (!a.isStarred && b.isStarred) return 1;
       return b.createdAt.localeCompare(a.createdAt);
     });
+}
+
+function formatNoticeDate(value: string) {
+  return value.slice(0, 10).replace(/-/g, ".");
 }

@@ -35,7 +35,9 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const kind = formData.get("kind") === "attachment" ? "attachment" : "image";
+    const rawKind = formData.get("kind");
+    const kind = rawKind === "attachment" || rawKind === "free-attachment" ? rawKind : "image";
+    const isAttachmentKind = kind === "attachment" || kind === "free-attachment";
 
     if (kind === "attachment" && session.role !== "ADMIN") {
       return NextResponse.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
@@ -48,7 +50,7 @@ export async function POST(request: Request) {
     if (kind === "image" && file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json({ error: "이미지는 5MB 이하만 업로드할 수 있습니다." }, { status: 400 });
     }
-    if (kind === "attachment" && file.size > MAX_ATTACHMENT_SIZE) {
+    if (isAttachmentKind && file.size > MAX_ATTACHMENT_SIZE) {
       return NextResponse.json({ error: "첨부파일은 20MB 이하만 업로드할 수 있습니다." }, { status: 400 });
     }
 
@@ -56,10 +58,10 @@ export async function POST(request: Request) {
     if (kind === "image" && (!ALLOWED_IMAGE_EXTENSIONS.has(extension) || !ALLOWED_IMAGE_TYPES.has(file.type))) {
       return NextResponse.json({ error: "jpg, png, gif, webp 이미지만 업로드할 수 있습니다." }, { status: 400 });
     }
-    if (kind === "attachment" && (IMAGE_ATTACHMENT_EXTENSIONS.has(extension) || file.type.startsWith("image/"))) {
+    if (isAttachmentKind && (IMAGE_ATTACHMENT_EXTENSIONS.has(extension) || file.type.startsWith("image/"))) {
       return NextResponse.json({ error: "이미지는 본문 이미지로만 업로드할 수 있습니다." }, { status: 400 });
     }
-    if (kind === "attachment" && !ALLOWED_ATTACHMENT_EXTENSIONS.has(extension)) {
+    if (isAttachmentKind && !ALLOWED_ATTACHMENT_EXTENSIONS.has(extension)) {
       return NextResponse.json({ error: "허용되지 않는 첨부파일 형식입니다." }, { status: 400 });
     }
 

@@ -22,7 +22,11 @@ export type FreeBoardPostListItem = {
   content: string;
   postType: FreePostType;
   isStarred: boolean;
-  createdAt: string;
+  registeredAt: string;
+  registeredAtRaw: string;
+  attachmentPath: string | null;
+  attachmentName: string | null;
+  attachmentSize: number | null;
   author: NewsUserView;
   comments: FreeBoardCommentView[];
   commentCount: number;
@@ -67,18 +71,26 @@ export function buildFreeBoardPostList(
   const query = searchQuery.trim().toLowerCase();
 
   return posts
-    .map((post) => ({
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      postType: normalizeFreePostType(post.postType, true),
-      isStarred: !!post.isStarred,
-      createdAt: formatFreeBoardDate(post.createdAt),
-      author: { ...post.author, displayAuthorName: post.displayAuthorName },
-      comments: buildFreeBoardCommentTree(post.comments || []),
-      commentCount: (post.comments || []).length,
-      isReal: true,
-    }))
+    .map((post) => {
+      const registeredAtRaw = post.registeredAt || post.createdAt;
+
+      return {
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        postType: normalizeFreePostType(post.postType, true),
+        isStarred: !!post.isStarred,
+        registeredAt: formatFreeBoardDate(registeredAtRaw),
+        registeredAtRaw,
+        attachmentPath: post.attachmentPath ?? null,
+        attachmentName: post.attachmentName ?? null,
+        attachmentSize: post.attachmentSize ?? null,
+        author: { ...post.author, displayAuthorName: post.displayAuthorName },
+        comments: buildFreeBoardCommentTree(post.comments || []),
+        commentCount: (post.comments || []).length,
+        isReal: true,
+      };
+    })
     .filter((post) => {
       const typeMatches = typeFilter === "ALL" || post.postType === typeFilter;
       const queryMatches =

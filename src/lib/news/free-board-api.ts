@@ -8,6 +8,10 @@ type FreeBoardPostPayloadInput = {
   isStarred: boolean;
   isAdmin: boolean;
   displayAuthorName: NewsDisplayAuthorName;
+  attachmentPath?: string | null;
+  attachmentName?: string | null;
+  attachmentSize?: number | null;
+  registeredAt?: string;
 };
 
 type FreeBoardPostUpdatePayloadInput = FreeBoardPostPayloadInput & {
@@ -34,13 +38,21 @@ export function buildFreeBoardPostCreatePayload({
   isStarred,
   isAdmin,
   displayAuthorName,
+  attachmentPath,
+  attachmentName,
+  attachmentSize,
+  registeredAt,
 }: FreeBoardPostPayloadInput) {
   return {
     title,
     content,
     postType,
     isStarred,
+    attachmentPath: attachmentPath ?? null,
+    attachmentName: attachmentName ?? null,
+    attachmentSize: attachmentSize ?? null,
     ...(isAdmin ? { displayAuthorName } : {}),
+    ...(isAdmin && registeredAt ? { registeredAt } : {}),
   };
 }
 
@@ -52,6 +64,10 @@ export function buildFreeBoardPostUpdatePayload({
   isStarred,
   isAdmin,
   displayAuthorName,
+  attachmentPath,
+  attachmentName,
+  attachmentSize,
+  registeredAt,
 }: FreeBoardPostUpdatePayloadInput) {
   return {
     postId,
@@ -59,7 +75,11 @@ export function buildFreeBoardPostUpdatePayload({
     content,
     postType,
     isStarred,
+    attachmentPath: attachmentPath ?? null,
+    attachmentName: attachmentName ?? null,
+    attachmentSize: attachmentSize ?? null,
     ...(isAdmin ? { displayAuthorName } : {}),
+    ...(isAdmin && registeredAt ? { registeredAt } : {}),
   };
 }
 

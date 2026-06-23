@@ -106,8 +106,14 @@ const realFreePost = {
   id: "free-1",
   title: "실제 자유게시글",
   content: "실제 자유게시글 내용",
+  postType: "FREE",
+  isStarred: false,
   createdAt: "2026-06-01T00:00:00.000Z",
+  registeredAt: "2026-06-02T00:30:00.000Z",
   updatedAt: "2026-06-01T00:00:00.000Z",
+  attachmentPath: null,
+  attachmentName: null,
+  attachmentSize: null,
   author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
   comments: [],
 };
@@ -239,6 +245,45 @@ describe("news admin API controls", () => {
         isStarred: true,
       }),
     }));
+  });
+
+  it("stores registeredAt for admin-created coop news", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNews.create.mockResolvedValue(realNotice);
+
+    const response = await newsRoute.POST(
+      jsonRequest({
+        title: "공지",
+        content: "본문",
+        category: "NOTICE",
+        registeredAt: "2026-06-21T09:30",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNews.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        registeredAt: new Date("2026-06-21T09:30"),
+      }),
+    }));
+  });
+
+  it("rejects direct createdAt changes for coop news", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+
+    const response = await newsRoute.PATCH(
+      jsonRequest({
+        id: "notice-1",
+        title: "수정 공지",
+        content: "수정 본문",
+        category: "NOTICE",
+        createdAt: "2026-06-21T00:30:00.000Z",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "작성일은 시스템 기록으로만 보관됩니다." });
+    expect(mockPrisma.coopNews.update).not.toHaveBeenCalled();
   });
 
   it("rejects notice comments for unauthenticated sessions", async () => {
@@ -556,6 +601,31 @@ describe("news admin API controls", () => {
     expect(await attachmentResponse.json()).toMatchObject({ error: "관리자 권한이 필요합니다." });
   });
 
+  it("allows authenticated members to upload free-board attachments without opening admin attachments", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+
+    const response = await uploadRoute.POST({
+      formData: async () => ({
+        get: (name: string) => {
+          if (name === "kind") return "free-attachment";
+          return {
+            name: "free-board.pdf",
+            type: "application/pdf",
+            size: 5,
+            arrayBuffer: async () => new ArrayBuffer(5),
+          };
+        },
+      }),
+    } as unknown as Request);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      success: true,
+      name: "free-board.pdf",
+      kind: "free-attachment",
+    });
+  });
+
   it("accepts public attachment uploads with a separate size cap", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     const request = {
@@ -826,6 +896,36 @@ describe("news admin API controls", () => {
     }));
   });
 
+  it("stores free-board attachment metadata when members create posts", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.freePost.create.mockResolvedValue({
+      ...realFreePost,
+      attachmentPath: "/uploads/free-agenda.pdf",
+      attachmentName: "free-agenda.pdf",
+      attachmentSize: 4096,
+    });
+
+    const response = await freeRoute.POST(
+      jsonRequest({
+        title: "첨부 포함 글",
+        content: "내용",
+        attachmentPath: "/uploads/free-agenda.pdf",
+        attachmentName: "free-agenda.pdf",
+        attachmentSize: 4096,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: "첨부 포함 글",
+        attachmentPath: "/uploads/free-agenda.pdf",
+        attachmentName: "free-agenda.pdf",
+        attachmentSize: 4096,
+      }),
+    }));
+  });
+
   it("stores administrator display author names on free-board posts and comments", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPrisma.freePost.create.mockResolvedValue({ ...realFreePost, displayAuthorName: "운영자" });
@@ -1008,6 +1108,76 @@ describe("news admin API controls", () => {
         postType: "FREE",
       }),
     }));
+  });
+
+  it("lets administrators update free-board attachment metadata and registered dates", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+    mockPrisma.freePost.update.mockResolvedValue({
+      ...realFreePost,
+      attachmentPath: "/uploads/updated-free.pdf",
+      attachmentName: "updated-free.pdf",
+      attachmentSize: 8192,
+      registeredAt: "2026-06-21T00:30:00.000Z",
+    });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+        attachmentPath: "/uploads/updated-free.pdf",
+        attachmentName: "updated-free.pdf",
+        attachmentSize: 8192,
+        registeredAt: "2026-06-21T00:30:00.000Z",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        attachmentPath: "/uploads/updated-free.pdf",
+        attachmentName: "updated-free.pdf",
+        attachmentSize: 8192,
+        registeredAt: new Date("2026-06-21T00:30:00.000Z"),
+      }),
+    }));
+  });
+
+  it("rejects free-board registered date changes for non-admin authors", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+        registeredAt: "2026-06-21T00:30:00.000Z",
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: "등록일 변경은 관리자만 가능합니다." });
+    expect(mockPrisma.freePost.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects free-board created date changes because created dates are system records", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+        createdAt: "2026-06-21T00:30:00.000Z",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "작성일은 시스템 기록으로만 보관됩니다." });
+    expect(mockPrisma.freePost.update).not.toHaveBeenCalled();
   });
 });
 
@@ -1532,6 +1702,103 @@ describe("news admin visible controls", () => {
     expect(onRefresh).toHaveBeenCalled();
   });
 
+  it("keeps newsletter cards while opening details in a left slide panel", () => {
+    const scrollToMock = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+
+    render(
+      <CoopNewsletter
+        isLoggedIn
+        isAdmin
+        newsList={[realNewsletter]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 조합뉴스"));
+
+    const panel = screen.getByRole("complementary", { name: "조합뉴스 상세 패널" });
+    expect(panel).toHaveClass("left-0");
+    expect(panel).toHaveClass("max-w-2xl");
+    expect(panel).toHaveClass("z-[130]");
+    expect(panel).toHaveClass("overflow-y-auto");
+    expect(panel).not.toHaveClass("overflow-hidden");
+    expect(panel).toHaveClass("slide-in-from-left");
+    expect(panel.parentElement).toBe(document.body);
+    expect(within(panel).getByText("조합뉴스 열람")).toBeInTheDocument();
+    expect(within(panel).getByText("실제 조합뉴스")).toBeInTheDocument();
+    expect(screen.queryByLabelText("조합뉴스 상세 모달")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "실제 조합뉴스 목록 오픈채팅 공지문 복사" })).toBeInTheDocument();
+    expect(scrollToMock).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
+  });
+
+  it("opens newsletter creation in a left slide panel", () => {
+    const scrollToMock = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+
+    render(
+      <CoopNewsletter
+        isLoggedIn
+        isAdmin
+        newsList={[]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ 신규 주/월간소식 등록" }));
+
+    const panel = screen.getByRole("complementary", { name: "조합뉴스 작성 패널" });
+    expect(panel).toHaveClass("left-0");
+    expect(panel).toHaveClass("max-w-2xl");
+    expect(panel).toHaveClass("z-[130]");
+    expect(panel).toHaveClass("overflow-y-auto");
+    expect(panel).not.toHaveClass("overflow-hidden");
+    expect(panel).toHaveClass("slide-in-from-left");
+    expect(panel.parentElement).toBe(document.body);
+    expect(within(panel).getByText("신규 주/월간소식 작성")).toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: "조합뉴스 즉시 등록" })).toBeInTheDocument();
+    expect(scrollToMock).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "auto" });
+  });
+
+  it("lets administrators edit newsletters in the left slide panel", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, news: { ...realNewsletter, title: "수정된 조합뉴스" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <CoopNewsletter
+        isLoggedIn
+        isAdmin
+        newsList={[{ ...realNewsletter, registeredAt: "2026-06-21T00:30:00.000Z" }]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 조합뉴스"));
+    const panel = screen.getByRole("complementary", { name: "조합뉴스 상세 패널" });
+    fireEvent.click(within(panel).getByRole("button", { name: "수정" }));
+    fireEvent.change(within(panel).getByLabelText("조합뉴스 제목 수정"), {
+      target: { value: "수정된 조합뉴스" },
+    });
+    fireEvent.click(within(panel).getByRole("button", { name: "수정사항 저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"title\":\"수정된 조합뉴스\""),
+      }),
+    ));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        body: expect.stringContaining("\"registeredAt\":\"2026-06-21T09:30\""),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
   it("copies an openchat announcement message for a real cooperative newsletter", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
@@ -1761,8 +2028,9 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("columnheader", { name: "No." })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "제목" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "작성자" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "작성일" })).toBeInTheDocument();
-    expect(screen.getByText("2026-06-01 09:00")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "등록일" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "작성일" })).not.toBeInTheDocument();
+    expect(screen.getByText("2026-06-02 09:30")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
     expect(screen.getByRole("button", { name: "이미지 삽입" })).toBeInTheDocument();
@@ -2115,6 +2383,77 @@ describe("news admin visible controls", () => {
 
     expect(screen.queryByLabelText("토론 집중 패널")).not.toBeInTheDocument();
     expect(window.location.search).not.toContain("post=free-1");
+  });
+
+  it("shows free-board attachments and lets administrators replace attachments and registered dates while editing", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          url: "/uploads/updated-free.pdf",
+          name: "updated-free.pdf",
+          size: 8192,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          post: { ...realFreePost, title: "첨부 수정 글" },
+        }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <FreeBoard
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        posts={[{
+          ...realFreePost,
+          title: "첨부 있는 자유글",
+          attachmentPath: "/uploads/free-agenda.pdf",
+          attachmentName: "free-agenda.pdf",
+          attachmentSize: 4096,
+          author: { id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" },
+        }]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("첨부 있는 자유글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+    expect(within(panel).getByRole("link", { name: "free-agenda.pdf 다운로드" })).toHaveAttribute(
+      "href",
+      "/uploads/free-agenda.pdf",
+    );
+
+    fireEvent.click(within(panel).getByRole("button", { name: "게시글 수정" }));
+    const drawer = screen.getByLabelText("게시글 수정 드로어");
+    expect(screen.getByLabelText("등록일")).toHaveValue("2026-06-02T09:30");
+    expect(screen.queryByLabelText("작성일")).not.toBeInTheDocument();
+    expect(within(drawer).getByText("free-agenda.pdf")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("첨부파일"), {
+      target: { files: [new File(["updated"], "updated-free.pdf", { type: "application/pdf" })] },
+    });
+    await waitFor(() => expect(screen.getByText("updated-free.pdf")).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("등록일"), { target: { value: "2026-06-21T09:30" } });
+    fireEvent.click(screen.getByRole("button", { name: "수정 완료" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const uploadBody = fetchMock.mock.calls[0]?.[1]?.body as FormData;
+    expect(uploadBody.get("kind")).toBe("free-attachment");
+    const patchBody = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body));
+    expect(patchBody).toMatchObject({
+      postId: "free-1",
+      attachmentPath: "/uploads/updated-free.pdf",
+      attachmentName: "updated-free.pdf",
+      attachmentSize: 8192,
+      registeredAt: "2026-06-21T09:30",
+    });
+    expect(onRefresh).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "목록으로" }));
   });
 
   it("shows one-level replies in the focus panel and sends parent comment ids for new replies", async () => {

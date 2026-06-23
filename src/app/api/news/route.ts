@@ -4,6 +4,16 @@ import { prisma } from "@/lib/db";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { DEVELOPMENT_LOG_CATEGORIES } from "@/lib/news/development-log";
 
+function hasCreatedAtInput(body: Record<string, unknown>) {
+  return Object.prototype.hasOwnProperty.call(body, "createdAt");
+}
+
+function parseRegisteredAtInput(value: unknown) {
+  if (value === undefined || value === null || value === "") return undefined;
+  const registeredAt = new Date(String(value));
+  return Number.isNaN(registeredAt.getTime()) ? null : registeredAt;
+}
+
 // 1. GET: 공지사항 및 조합뉴스 조회 (Public)
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -40,7 +50,7 @@ export async function GET(request: Request) {
           orderBy: { createdAt: "asc" },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { registeredAt: "desc" },
     });
 
     return NextResponse.json({ newsList });
@@ -69,7 +79,12 @@ export async function POST(request: Request) {
       attachmentName,
       attachmentSize,
       displayAuthorName,
+      registeredAt,
     } = body;
+
+    if (hasCreatedAtInput(body)) {
+      return NextResponse.json({ error: "작성일은 시스템 기록으로만 보관됩니다." }, { status: 400 });
+    }
 
     const isMemberRequirement = category === DEVELOPMENT_LOG_CATEGORIES.request;
     if (session.role !== "ADMIN" && !isMemberRequirement) {
@@ -78,6 +93,15 @@ export async function POST(request: Request) {
 
     if (!title || !content || !category) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 내용, 카테고리)이 누락되었습니다." }, { status: 400 });
+    }
+
+    if (registeredAt !== undefined && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "등록일 변경은 관리자만 가능합니다." }, { status: 403 });
+    }
+
+    const parsedRegisteredAt = parseRegisteredAtInput(registeredAt);
+    if (parsedRegisteredAt === null) {
+      return NextResponse.json({ error: "등록일 형식이 올바르지 않습니다." }, { status: 400 });
     }
 
     const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);
@@ -96,6 +120,7 @@ export async function POST(request: Request) {
         attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : null,
         isStarred: !!isStarred,
         displayAuthorName: parsedDisplayAuthorName.value,
+        ...(parsedRegisteredAt ? { registeredAt: parsedRegisteredAt } : {}),
         authorId: session.id,
       },
       include: {
@@ -140,7 +165,12 @@ export async function PATCH(request: Request) {
       attachmentName,
       attachmentSize,
       displayAuthorName,
+      registeredAt,
     } = body;
+
+    if (hasCreatedAtInput(body)) {
+      return NextResponse.json({ error: "작성일은 시스템 기록으로만 보관됩니다." }, { status: 400 });
+    }
 
     if (!id) {
       return NextResponse.json({ error: "수정할 대상 ID가 누락되었습니다." }, { status: 400 });
@@ -148,6 +178,11 @@ export async function PATCH(request: Request) {
 
     if (!title || !content || !category) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 내용, 카테고리)이 누락되었습니다." }, { status: 400 });
+    }
+
+    const parsedRegisteredAt = parseRegisteredAtInput(registeredAt);
+    if (parsedRegisteredAt === null) {
+      return NextResponse.json({ error: "등록일 형식이 올바르지 않습니다." }, { status: 400 });
     }
 
     const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);
@@ -166,6 +201,7 @@ export async function PATCH(request: Request) {
         attachmentName: attachmentName || null,
         attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : null,
         isStarred: !!isStarred,
+        ...(parsedRegisteredAt ? { registeredAt: parsedRegisteredAt } : {}),
         ...(displayAuthorName !== undefined
           ? { displayAuthorName: parsedDisplayAuthorName.value }
           : {}),

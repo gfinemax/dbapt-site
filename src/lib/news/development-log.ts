@@ -166,7 +166,7 @@ export function buildDevelopmentLogList(
       item.category === DEVELOPMENT_LOG_CATEGORIES.published ||
       item.category === DEVELOPMENT_LOG_CATEGORIES.request
     ))
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    .sort((a, b) => String(b.registeredAt ?? b.createdAt).localeCompare(String(a.registeredAt ?? a.createdAt)));
 }
 
 function getSundayStartWeekOfMonth(date: Date) {

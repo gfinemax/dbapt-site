@@ -17,12 +17,19 @@ describe("free board API helpers", () => {
         isStarred: false,
         isAdmin: false,
         displayAuthorName: "사무국",
+        attachmentPath: "/uploads/free.pdf",
+        attachmentName: "free.pdf",
+        attachmentSize: 2048,
+        registeredAt: "2026-06-20T12:00",
       }),
     ).toEqual({
       title: "새 글",
       content: "<p>본문</p>",
       postType: "FREE",
       isStarred: false,
+      attachmentPath: "/uploads/free.pdf",
+      attachmentName: "free.pdf",
+      attachmentSize: 2048,
     });
 
     expect(
@@ -34,6 +41,10 @@ describe("free board API helpers", () => {
         isStarred: true,
         isAdmin: true,
         displayAuthorName: "사무국",
+        attachmentPath: null,
+        attachmentName: null,
+        attachmentSize: null,
+        registeredAt: "2026-06-21T09:30",
       }),
     ).toEqual({
       postId: "post-1",
@@ -42,6 +53,10 @@ describe("free board API helpers", () => {
       postType: "NOTICE",
       isStarred: true,
       displayAuthorName: "사무국",
+      attachmentPath: null,
+      attachmentName: null,
+      attachmentSize: null,
+      registeredAt: "2026-06-21T09:30",
     });
   });
 

@@ -65,7 +65,7 @@ describe("news notice deep links", () => {
     });
   });
 
-  it("opens the newsletter detail modal from a shared newsletter URL without a session", async () => {
+  it("opens the newsletter detail panel from a shared newsletter URL without a session", async () => {
     mockSearchParams.value = "tab=newsletter&news=newsletter-1";
 
     render(
@@ -77,11 +77,14 @@ describe("news notice deep links", () => {
       />,
     );
 
-    const modal = await screen.findByLabelText("조합뉴스 상세 모달");
+    const panel = await screen.findByRole("complementary", { name: "조합뉴스 상세 패널" });
 
-    expect(within(modal).getByText("대방동 2026년 7월 조합 월간 소식지")).toBeInTheDocument();
-    expect(within(modal).getByText("월간 조합소식 본문입니다.")).toBeInTheDocument();
-    expect(within(modal).getByRole("link", { name: /첨부파일: newsletter.pdf/ })).toHaveAttribute(
+    expect(panel).toHaveClass("left-0");
+    expect(panel).toHaveClass("slide-in-from-left");
+    expect(within(panel).getByRole("heading", { name: "조합뉴스 열람" })).toBeInTheDocument();
+    expect(within(panel).getByText("대방동 2026년 7월 조합 월간 소식지")).toBeInTheDocument();
+    expect(within(panel).getByText("월간 조합소식 본문입니다.")).toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: /첨부파일: newsletter.pdf/ })).toHaveAttribute(
       "href",
       "/uploads/newsletter.pdf",
     );

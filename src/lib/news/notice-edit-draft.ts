@@ -12,6 +12,7 @@ export type NoticeEditDraft = {
   attachmentSize: number | null;
   isStarred: boolean;
   displayAuthorName: NewsDisplayAuthorName;
+  registeredAt: string;
 };
 
 export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
@@ -28,11 +29,16 @@ export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
     attachmentName: notice.attachmentName || null,
     attachmentSize: notice.attachmentSize || null,
     isStarred: !!notice.isStarred,
+    registeredAt: toDateInputValue(notice.registeredAt ?? notice.createdAt),
     displayAuthorName:
       displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
         ? (displayAuthorName as NewsDisplayAuthorName)
         : "운영자",
   };
+}
+
+function toDateInputValue(value: string) {
+  return String(value).slice(0, 16);
 }
 
 function legacyNoticeImageHtml(imagePath: string) {

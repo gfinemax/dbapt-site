@@ -4,6 +4,51 @@ import { prisma } from "@/lib/db";
 import { normalizeFreePostType } from "@/lib/free-post-type";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 
+function normalizeFreePostAttachment(body: {
+  attachmentPath?: unknown;
+  attachmentName?: unknown;
+  attachmentSize?: unknown;
+}) {
+  const attachmentPath = typeof body.attachmentPath === "string" && body.attachmentPath.trim()
+    ? body.attachmentPath.trim()
+    : null;
+  const attachmentName = typeof body.attachmentName === "string" && body.attachmentName.trim()
+    ? body.attachmentName.trim()
+    : null;
+  const attachmentSizeNumber = Number(body.attachmentSize);
+  const attachmentSize = Number.isFinite(attachmentSizeNumber) && attachmentSizeNumber > 0
+    ? Math.round(attachmentSizeNumber)
+    : null;
+
+  if (!attachmentPath || !attachmentName) {
+    return {
+      attachmentPath: null,
+      attachmentName: null,
+      attachmentSize: null,
+    };
+  }
+
+  return {
+    attachmentPath,
+    attachmentName,
+    attachmentSize,
+  };
+}
+
+function hasFreePostAttachmentPayload(body: Record<string, unknown>) {
+  return "attachmentPath" in body || "attachmentName" in body || "attachmentSize" in body;
+}
+
+function parseCreatedAt(value: unknown): Date | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function hasCreatedAtPayload(body: Record<string, unknown>) {
+  return "createdAt" in body;
+}
+
 // 1. GET: 자유게시판 글 및 댓글 목록 조회 (MEMBER, ADMIN, REFUND 전용)
 export async function GET() {
   const session = (await getSession()) as { id: string; role: string } | null;
@@ -40,7 +85,7 @@ export async function GET() {
       },
       orderBy: [
         { isStarred: "desc" },
-        { createdAt: "desc" },
+        { registeredAt: "desc" },
       ],
     });
 
@@ -60,7 +105,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { title, content, postId, parentCommentId, isStarred, postType, displayAuthorName } = body; // 만약 postId가 존재하면 댓글 추가로 판별
+    const { title, content, postId, parentCommentId, isStarred, postType, displayAuthorName, registeredAt } = body; // 만약 postId가 존재하면 댓글 추가로 판별
     const parsedDisplayAuthorName = session.role === "ADMIN"
       ? parseNewsDisplayAuthorName(displayAuthorName)
       : { ok: true as const, value: null };
@@ -122,6 +167,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "제목과 내용을 모두 입력해 주세요." }, { status: 400 });
       }
 
+      if (hasCreatedAtPayload(body)) {
+        return NextResponse.json({ error: "작성일은 시스템 기록으로만 보관됩니다." }, { status: 400 });
+      }
+      const parsedRegisteredAt = parseCreatedAt(registeredAt);
+      if (registeredAt && session.role !== "ADMIN") {
+        return NextResponse.json({ error: "등록일 변경은 관리자만 가능합니다." }, { status: 403 });
+      }
+
       const post = await prisma.freePost.create({
         data: {
           title,
@@ -130,6 +183,8 @@ export async function POST(request: Request) {
           authorId: session.id,
           isStarred: session.role === "ADMIN" ? !!isStarred : false,
           displayAuthorName: session.role === "ADMIN" ? parsedDisplayAuthorName.value : null,
+          ...normalizeFreePostAttachment(body),
+          ...(parsedRegisteredAt && session.role === "ADMIN" ? { registeredAt: parsedRegisteredAt } : {}),
         },
       });
 
@@ -196,7 +251,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { postId, title, content, isStarred, postType, displayAuthorName } = body;
+    const { postId, title, content, isStarred, postType, displayAuthorName, registeredAt } = body;
 
     if (!postId) {
       return NextResponse.json({ error: "수정할 대상 ID가 누락되었습니다." }, { status: 400 });
@@ -215,17 +270,32 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "수정 권한이 없습니다." }, { status: 403 });
     }
 
+    if (hasCreatedAtPayload(body)) {
+      return NextResponse.json({ error: "작성일은 시스템 기록으로만 보관됩니다." }, { status: 400 });
+    }
+    const parsedRegisteredAt = parseCreatedAt(registeredAt);
+    if (registeredAt && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "등록일 변경은 관리자만 가능합니다." }, { status: 403 });
+    }
+
     const updateData: {
       title: string;
       content: string;
       postType: string;
+      attachmentPath?: string | null;
+      attachmentName?: string | null;
+      attachmentSize?: number | null;
       isStarred?: boolean;
       displayAuthorName?: string | null;
+      registeredAt?: Date;
     } = {
       title,
       content,
       postType: normalizeFreePostType(postType, session.role === "ADMIN"),
     };
+    if (hasFreePostAttachmentPayload(body)) {
+      Object.assign(updateData, normalizeFreePostAttachment(body));
+    }
     if (session.role === "ADMIN") {
       const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);
       if (!parsedDisplayAuthorName.ok) {
@@ -233,6 +303,9 @@ export async function PATCH(request: Request) {
       }
       updateData.isStarred = !!isStarred;
       updateData.displayAuthorName = parsedDisplayAuthorName.value;
+      if (parsedRegisteredAt) {
+        updateData.registeredAt = parsedRegisteredAt;
+      }
     }
 
     const updated = await prisma.freePost.update({

@@ -38,6 +38,29 @@ describe("buildNoticeBoardList", () => {
     });
   });
 
+  it("uses registeredAt as the visible and sortable notice date", () => {
+    const items = buildNoticeBoardList(
+      [
+        notice({
+          id: "created-newer",
+          title: "작성일은 최신",
+          createdAt: "2026-06-22T00:00:00.000Z",
+          registeredAt: "2026-06-18T00:00:00.000Z",
+        }),
+        notice({
+          id: "registered-newer",
+          title: "등록일은 최신",
+          createdAt: "2026-06-19T00:00:00.000Z",
+          registeredAt: "2026-06-21T00:00:00.000Z",
+        }),
+      ],
+      "",
+    );
+
+    expect(items.map((item) => item.id)).toEqual(["registered-newer", "created-newer"]);
+    expect(items[0].createdAt).toBe("2026.06.21");
+  });
+
   it("searches by notice title after normalization", () => {
     const items = buildNoticeBoardList(
       [

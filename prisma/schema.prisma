@@ -528,12 +528,15 @@ model CoopNews {
   attachmentName String? // 공지/조합뉴스 공개 첨부파일 원본명
   attachmentSize Int? // 공지/조합뉴스 공개 첨부파일 크기(bytes)
   displayAuthorName String? // 공개 화면에 표시할 조직 작성자명
+  registeredAt   DateTime @default(now()) // 화면 표시 및 정렬용 등록일
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   authorId       String
   author         User     @relation(fields: [authorId], references: [id])
   comments       CoopNewsComment[]
   openChatAnnouncements OpenChatAnnouncement[]
+
+  @@index([registeredAt])
 }
 
 // 6. 공지사항 댓글
@@ -560,15 +563,21 @@ model FreePost {
   title             String
   content           String
   imagePath         String? // 첨부 이미지 경로
+  attachmentPath    String? // 공개 첨부파일 경로
+  attachmentName    String? // 공개 첨부파일명
+  attachmentSize    Int? // 공개 첨부파일 크기(byte)
   postType          String        @default("FREE") // FREE, DISCUSSION, QUESTION, PROPOSAL, NOTICE
   displayAuthorName String? // 관리자 작성글 공개 작성자명: 운영자, 사무국
   isStarred         Boolean       @default(false)
+  registeredAt      DateTime      @default(now()) // 화면 표시 및 정렬용 등록일
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   authorId          String
   author            User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments          FreeComment[]
   openChatAnnouncements OpenChatAnnouncement[]
+
+  @@index([registeredAt])
 }
 
 // 8. 자유게시판 댓글

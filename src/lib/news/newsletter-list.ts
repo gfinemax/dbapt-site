@@ -8,6 +8,8 @@ export type NewsletterListItem = {
   isStarred: boolean;
   author: Pick<NewsUserView, "name">;
   createdAt: string;
+  registeredAt?: string;
+  createdAtRaw?: string;
   imagePath: string | null;
   attachmentPath: string | null;
   attachmentName: string | null;
@@ -23,6 +25,8 @@ const UPCOMING_NEWSLETTER_PREVIEW: NewsletterListItem = {
     "대방동 지역주택조합은 2026년 7월부터 조합 월간 소식지 제1호를 준비해 조합원께 정기적으로 안내드릴 예정입니다.\n\n제1호에서는 조합 운영 일정, 공개자료 등록 현황, 인허가 진행 기준, 조합비와 계약 관리 원칙, 조합원 주요 질의응답, 다음 달 확인 예정 사항을 한눈에 볼 수 있도록 구성하겠습니다.\n\n확정되지 않은 사안은 확정 표현 없이 현재 확인 가능한 기준과 향후 확인 절차로 구분해 전달하고, 조합원께 필요한 자료 위치와 열람 방법도 함께 안내하겠습니다.",
   author: { name: "사무국" },
   createdAt: "2026.07 예정",
+  registeredAt: undefined,
+  createdAtRaw: undefined,
   imagePath: null,
   attachmentPath: null,
   attachmentName: null,
@@ -47,7 +51,9 @@ export function buildNewsletterList(
     viewCount: item.viewCount,
     isStarred: !!item.isStarred,
     author: { name: item.author.name || "사무국" },
-    createdAt: formatNewsletterDate(item.createdAt),
+    createdAt: formatNewsletterDate(item.registeredAt ?? item.createdAt),
+    registeredAt: item.registeredAt,
+    createdAtRaw: item.createdAt,
     imagePath: item.imagePath ?? null,
     attachmentPath: item.attachmentPath ?? null,
     attachmentName: item.attachmentName ?? null,

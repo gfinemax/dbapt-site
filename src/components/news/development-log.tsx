@@ -39,12 +39,24 @@ const statusStyles = {
 
 type ComposeMode = "log" | "request";
 
+function formatRegisteredDate(log: Pick<CoopNewsView, "registeredAt" | "createdAt">) {
+  return String(log.registeredAt ?? log.createdAt).slice(0, 10).replace(/-/g, ".");
+}
+
+function toDateInputValue(value: Date | string = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 16);
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return offsetDate.toISOString().slice(0, 16);
+}
+
 export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: DevelopmentLogProps) {
   const [mutatingId, setMutatingId] = useState<string | null>(null);
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
   const [composeMode, setComposeMode] = useState<ComposeMode | null>(null);
   const [composeTitle, setComposeTitle] = useState("");
   const [composeContent, setComposeContent] = useState("");
+  const [composeRegisteredAt, setComposeRegisteredAt] = useState(() => toDateInputValue());
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
   const [commentContents, setCommentContents] = useState<Record<string, string>>({});
   const [replyContents, setReplyContents] = useState<Record<string, string>>({});
@@ -60,6 +72,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const [editLogTitle, setEditLogTitle] = useState("");
   const [editLogContent, setEditLogContent] = useState("");
+  const [editLogRegisteredAt, setEditLogRegisteredAt] = useState("");
 
   const visibleLogs = useMemo(
     () => buildDevelopmentLogList(logs, { includeAdminOnly: isAdmin }),
@@ -72,6 +85,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
     setComposeMode(null);
     setComposeTitle("");
     setComposeContent("");
+    setComposeRegisteredAt(toDateInputValue());
   };
 
   const refresh = async () => {
@@ -118,6 +132,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
           title,
           content,
           category,
+          ...(isAdmin ? { registeredAt: composeRegisteredAt } : {}),
           isStarred: false,
           ...(isAdmin ? { displayAuthorName: "운영자" } : {}),
         }),
@@ -145,6 +160,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
           title: log.title,
           content: log.content,
           category,
+          registeredAt: log.registeredAt ?? log.createdAt,
           imagePath: log.imagePath || null,
           isStarred: !!log.isStarred,
           attachmentPath: log.attachmentPath || null,
@@ -297,12 +313,14 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
     setEditingLogId(log.id);
     setEditLogTitle(log.title);
     setEditLogContent(log.content);
+    setEditLogRegisteredAt(toDateInputValue(log.registeredAt ?? log.createdAt));
   };
 
   const cancelLogEdit = () => {
     setEditingLogId(null);
     setEditLogTitle("");
     setEditLogContent("");
+    setEditLogRegisteredAt("");
   };
 
   const saveLogEdit = async (log: CoopNewsView) => {
@@ -323,6 +341,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
           title,
           content,
           category: log.category,
+          registeredAt: editLogRegisteredAt,
           imagePath: log.imagePath || null,
           isStarred: !!log.isStarred,
           attachmentPath: log.attachmentPath || null,
@@ -442,6 +461,21 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
               placeholder={composeMode === "log" ? "반영 내용과 이용자 변경점을 적어 주세요." : "필요한 기능이나 수정 요청을 구체적으로 적어 주세요."}
             />
           </div>
+          {isAdmin && (
+            <div className="space-y-1.5">
+              <label htmlFor="development-compose-registered-at" className="text-[11px] font-bold text-charcoal-primary">
+                등록일
+              </label>
+              <input
+                id="development-compose-registered-at"
+                aria-label={`${composeLabel} 등록일`}
+                type="datetime-local"
+                value={composeRegisteredAt}
+                onChange={(event) => setComposeRegisteredAt(event.target.value)}
+                className="w-full rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+              />
+            </div>
+          )}
           <div className="flex justify-end">
             <Button
               type="submit"
@@ -512,7 +546,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                           </button>
                         </td>
                         <td className="px-4 py-3 align-middle text-[11px] font-medium text-ash">
-                          {String(log.createdAt).slice(0, 10).replace(/-/g, ".")}
+                          {formatRegisteredDate(log)}
                         </td>
                         <td className="px-4 py-3 text-center align-middle text-[11px] font-bold text-graphite">
                           {log.comments?.length || 0}
@@ -611,7 +645,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                           {selectedLog.title}
                         </h4>
                         <p className="mt-1 text-[10px] font-medium text-ash">
-                          등록일 {String(selectedLog.createdAt).slice(0, 10).replace(/-/g, ".")}
+                          등록일 {formatRegisteredDate(selectedLog)}
                         </p>
                       </div>
                       {canEditLog(selectedLog) && !isEditingSelectedLog && (
@@ -655,6 +689,19 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                             onChange={(event) => setEditLogContent(event.target.value)}
                             rows={14}
                             className="w-full resize-y rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs leading-relaxed text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label htmlFor={`development-edit-registered-at-${selectedLog.id}`} className="text-[11px] font-bold text-charcoal-primary">
+                            등록일
+                          </label>
+                          <input
+                            id={`development-edit-registered-at-${selectedLog.id}`}
+                            aria-label="개발일지 등록일 수정"
+                            type="datetime-local"
+                            value={editLogRegisteredAt}
+                            onChange={(event) => setEditLogRegisteredAt(event.target.value)}
+                            className="w-full rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
                           />
                         </div>
                         <div className="flex justify-end gap-2">

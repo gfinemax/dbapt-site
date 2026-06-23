@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { copyTextToClipboard } from "@/lib/copy-to-clipboard";
 import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-response";
@@ -25,6 +26,12 @@ const PREMIUM_GRADIENTS = [
   "from-amber-500/20 via-sunburst-yellow/10 to-stone-surface/30",
 ];
 
+function toDateInputValue(value: Date | string = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return offsetDate.toISOString().slice(0, 16);
+}
+
 export function CoopNewsletter({
   isLoggedIn,
   isAdmin,
@@ -43,8 +50,21 @@ export function CoopNewsletter({
   const [uploadContent, setUploadContent] = useState("");
   const [uploadImageFile, setUploadImageFile] = useState<File | null>(null);
   const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
+  const [uploadRegisteredAt, setUploadRegisteredAt] = useState(() => toDateInputValue());
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editImagePath, setEditImagePath] = useState<string | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editAttachmentPath, setEditAttachmentPath] = useState<string | null>(null);
+  const [editAttachmentName, setEditAttachmentName] = useState<string | null>(null);
+  const [editAttachmentSize, setEditAttachmentSize] = useState<number | null>(null);
+  const [editAttachmentFile, setEditAttachmentFile] = useState<File | null>(null);
+  const [editRegisteredAt, setEditRegisteredAt] = useState("");
+  const [editIsStarred, setEditIsStarred] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // Combine real database data with the single upcoming issue preview.
   const combinedData = useMemo(() => buildNewsletterList(newsList, searchQuery), [newsList, searchQuery]);
@@ -56,16 +76,29 @@ export function CoopNewsletter({
     ? combinedData.find((news) => news.id === initialOpenNewsId && news.isReal) || null
     : null;
   const activeViewNews = selectedViewNews ?? deepLinkedViewNews;
+  const portalRoot = typeof document === "undefined" ? null : document.body;
+
+  const scrollViewportToTop = () => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  };
 
   const openNewsletterDetail = (news: NewsletterListItem) => {
+    scrollViewportToTop();
     setActiveViewNewsId(news.id);
     setDismissedOpenNewsId(null);
+  };
+
+  const openNewsletterCreate = () => {
+    scrollViewportToTop();
+    setShowUploadModal(true);
   };
 
   const closeNewsletterDetail = () => {
     if (activeViewNews?.id === initialOpenNewsId) {
       setDismissedOpenNewsId(initialOpenNewsId);
     }
+    cancelNewsEdit();
     setActiveViewNewsId(null);
   };
 
@@ -109,6 +142,7 @@ export function CoopNewsletter({
           title: uploadTitle,
           content: uploadContent,
           category: "WEEKLY_MONTHLY",
+          registeredAt: uploadRegisteredAt,
           imagePath,
           attachmentPath,
           attachmentName,
@@ -127,6 +161,7 @@ export function CoopNewsletter({
       setUploadContent("");
       setUploadImageFile(null);
       setUploadAttachmentFile(null);
+      setUploadRegisteredAt(toDateInputValue());
       setUploadIsStarred(false);
       setShowUploadModal(false);
       await onRefresh();
@@ -160,6 +195,90 @@ export function CoopNewsletter({
     } catch (err) {
       console.error(err);
       alert("조합뉴스 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  const beginNewsEdit = (news: NewsletterListItem) => {
+    setEditingNewsId(news.id);
+    setEditTitle(news.title);
+    setEditContent(news.content);
+    setEditImagePath(news.imagePath || null);
+    setEditImageFile(null);
+    setEditAttachmentPath(news.attachmentPath || null);
+    setEditAttachmentName(news.attachmentName || null);
+    setEditAttachmentSize(news.attachmentSize || null);
+    setEditAttachmentFile(null);
+    setEditRegisteredAt(toDateInputValue(news.registeredAt ?? news.createdAtRaw ?? new Date()));
+    setEditIsStarred(!!news.isStarred);
+  };
+
+  const cancelNewsEdit = () => {
+    setEditingNewsId(null);
+    setEditTitle("");
+    setEditContent("");
+    setEditImagePath(null);
+    setEditImageFile(null);
+    setEditAttachmentPath(null);
+    setEditAttachmentName(null);
+    setEditAttachmentSize(null);
+    setEditAttachmentFile(null);
+    setEditRegisteredAt("");
+    setEditIsStarred(false);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent, news: NewsletterListItem) => {
+    e.preventDefault();
+    if (!editTitle.trim() || !editContent.trim()) {
+      alert("조합뉴스 제목과 본문 내용을 모두 입력해 주세요.");
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      let imagePath = editImagePath;
+      let attachmentPath = editAttachmentPath;
+      let attachmentName = editAttachmentName;
+      let attachmentSize = editAttachmentSize;
+
+      if (editImageFile) {
+        const uploadData = await uploadPublicFile(editImageFile, "image");
+        imagePath = uploadData.url;
+      }
+      if (editAttachmentFile) {
+        const uploadData = await uploadPublicFile(editAttachmentFile, "attachment");
+        attachmentPath = uploadData.url;
+        attachmentName = uploadData.name;
+        attachmentSize = uploadData.size;
+      }
+
+      const res = await fetch("/api/news", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: news.id,
+          title: editTitle,
+          content: editContent,
+          category: "WEEKLY_MONTHLY",
+          registeredAt: editRegisteredAt,
+          imagePath,
+          attachmentPath,
+          attachmentName,
+          attachmentSize,
+          isStarred: editIsStarred,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || "조합뉴스 수정에 실패했습니다.");
+        return;
+      }
+      cancelNewsEdit();
+      await onRefresh();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "조합뉴스 수정 중 오류가 발생했습니다.");
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -204,7 +323,7 @@ export function CoopNewsletter({
 
         {isLoggedIn && isAdmin && (
           <Button
-            onClick={() => setShowUploadModal(true)}
+            onClick={openNewsletterCreate}
             className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
           >
             + 신규 주/월간소식 등록
@@ -274,7 +393,7 @@ export function CoopNewsletter({
                   <div className="flex items-center justify-between text-[10px] font-bold text-ash font-mono border-t border-stone-surface/40 pt-3">
                     <span>작성자: {news.author.name}</span>
                     <div className="flex flex-wrap items-center justify-end gap-2">
-                      <span>{news.createdAt}</span>
+                      <span>등록일 {news.createdAt}</span>
                       {isAdmin && news.isReal && (
                         <button
                           type="button"
@@ -321,62 +440,216 @@ export function CoopNewsletter({
         </div>
       )}
 
-      {/* 1. 조합뉴스 상세 열람 모달 */}
-      {activeViewNews && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
-          <div className="absolute inset-0" onClick={closeNewsletterDetail} />
+      {/* 1. 조합뉴스 상세 열람 패널 */}
+      {portalRoot && activeViewNews && createPortal(
+        <>
           <div
-            aria-label="조합뉴스 상세 모달"
-            className="relative w-full max-w-xl rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
+            className="fixed inset-0 z-[110] bg-black/35 backdrop-blur-xs animate-in fade-in duration-300 motion-reduce:animate-none"
+            onClick={closeNewsletterDetail}
+          />
+          <aside
+            aria-label="조합뉴스 상세 패널"
+            className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-2xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 text-left shadow-2xl animate-in slide-in-from-left duration-300 ease-out motion-reduce:animate-none sm:p-8"
           >
-            <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
-              <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold text-sky-blue uppercase tracking-wider">
-                Coop Newsletter
-              </span>
+            <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-4">
+              <div className="min-w-0 space-y-1">
+                <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-blue">
+                  Coop Newsletter
+                </span>
+                <h2 className="text-lg font-black text-charcoal-primary">조합뉴스 열람</h2>
+              </div>
               <button
                 onClick={closeNewsletterDetail}
                 className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
               >
-                닫기
+                목록으로
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-              <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
-                {activeViewNews.title}
-              </h3>
-              
-              <div className="flex items-center gap-3 text-[10.5px] font-bold text-ash font-mono border-y border-stone-surface/60 py-2">
-                <span>📂 분류: 주/월간 조합소식지</span>
-                <span>•</span>
-                <span>작성자: {activeViewNews.author.name}</span>
-                <span>•</span>
-                <span>등록일: {activeViewNews.createdAt}</span>
-              </div>
+            <div className="space-y-4 pt-5">
+              {editingNewsId === activeViewNews.id ? (
+                <form onSubmit={(event) => void handleEditSubmit(event, activeViewNews)} className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-black text-charcoal-primary">조합뉴스 수정</h3>
+                    <button
+                      type="button"
+                      onClick={cancelNewsEdit}
+                      className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                    >
+                      수정 취소
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="newsletter-edit-title" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      소식지 제목 *
+                    </label>
+                    <input
+                      id="newsletter-edit-title"
+                      aria-label="조합뉴스 제목 수정"
+                      type="text"
+                      required
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="newsletter-edit-content" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      상세 본문 내용 *
+                    </label>
+                    <textarea
+                      id="newsletter-edit-content"
+                      aria-label="조합뉴스 내용 수정"
+                      required
+                      rows={6}
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="w-full resize-none rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs leading-relaxed text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="newsletter-edit-registered-at" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      등록일
+                    </label>
+                    <input
+                      id="newsletter-edit-registered-at"
+                      aria-label="조합뉴스 등록일 수정"
+                      type="datetime-local"
+                      value={editRegisteredAt}
+                      onChange={(e) => setEditRegisteredAt(e.target.value)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="newsletter-edit-image-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      카드 썸네일 이미지 파일 (선택)
+                    </label>
+                    {editImagePath && (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-white px-3 py-2 text-[11px] font-bold text-graphite">
+                        <span>현재 썸네일 이미지가 등록되어 있습니다.</span>
+                        <button
+                          type="button"
+                          onClick={() => setEditImagePath(null)}
+                          className="rounded-full bg-stone-surface px-2.5 py-1 text-[10px] font-bold text-graphite"
+                        >
+                          이미지 제거
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      id="newsletter-edit-image-file"
+                      type="file"
+                      accept="image/png,image/jpeg,image/gif,image/webp"
+                      onChange={(e) => setEditImageFile(e.target.files?.[0] || null)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
+                    />
+                    {editImageFile && (
+                      <p className="text-[10px] font-bold text-sky-blue">새 이미지: {editImageFile.name}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="newsletter-edit-attachment-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      첨부파일 (선택)
+                    </label>
+                    {editAttachmentPath && (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-white px-3 py-2 text-[11px] font-bold text-graphite">
+                        <span>현재 첨부파일: {editAttachmentName || "다운로드"}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditAttachmentPath(null);
+                            setEditAttachmentName(null);
+                            setEditAttachmentSize(null);
+                          }}
+                          className="rounded-full bg-stone-surface px-2.5 py-1 text-[10px] font-bold text-graphite"
+                        >
+                          첨부 제거
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      id="newsletter-edit-attachment-file"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.hwp,.hwpx,.zip"
+                      onChange={(e) => setEditAttachmentFile(e.target.files?.[0] || null)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
+                    />
+                    {editAttachmentFile && (
+                      <p className="text-[10px] font-bold text-sky-blue">새 첨부파일: {editAttachmentFile.name}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 py-1 select-none">
+                    <input
+                      type="checkbox"
+                      id="newsletter-edit-starred-checkbox"
+                      checked={editIsStarred}
+                      onChange={(e) => setEditIsStarred(e.target.checked)}
+                      className="size-4.5 border border-stone-surface rounded focus:ring-sky-blue text-midnight cursor-pointer"
+                    />
+                    <label htmlFor="newsletter-edit-starred-checkbox" className="text-[11.5px] font-extrabold text-graphite/90 cursor-pointer font-mono">
+                      주요 브리핑(중요 배지)으로 표시
+                    </label>
+                  </div>
+                  <div className="flex justify-end border-t border-stone-surface pt-4">
+                    <Button
+                      type="submit"
+                      disabled={isSavingEdit}
+                      className="h-9 rounded-full bg-midnight px-5 text-xs font-bold text-white hover:bg-black disabled:opacity-50"
+                    >
+                      {isSavingEdit ? "저장 중…" : "수정사항 저장"}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
+                      {activeViewNews.title}
+                    </h3>
+                    {isAdmin && activeViewNews.isReal && (
+                      <button
+                        type="button"
+                        onClick={() => beginNewsEdit(activeViewNews)}
+                        className="shrink-0 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                      >
+                        수정
+                      </button>
+                    )}
+                  </div>
 
-              <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal whitespace-pre-wrap pt-2">
-                {activeViewNews.imagePath && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={activeViewNews.imagePath}
-                    alt=""
-                    className="mb-4 max-h-72 w-full rounded-2xl object-cover border border-stone-surface"
-                  />
-                )}
-                {activeViewNews.content}
-              </div>
-              {activeViewNews.attachmentPath && (
-                <a
-                  href={activeViewNews.attachmentPath}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-stone-surface bg-white px-4 py-3 text-xs font-bold text-charcoal-primary hover:border-sky-blue"
-                >
-                  <span>첨부파일: {activeViewNews.attachmentName || "다운로드"}</span>
-                  <span className="text-[10px] text-sky-blue">열기</span>
-                </a>
+                  <div className="flex items-center gap-3 text-[10.5px] font-bold text-ash font-mono border-y border-stone-surface/60 py-2">
+                    <span>📂 분류: 주/월간 조합소식지</span>
+                    <span>•</span>
+                    <span>작성자: {activeViewNews.author.name}</span>
+                    <span>•</span>
+                    <span>등록일: {activeViewNews.createdAt}</span>
+                  </div>
+
+                  <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal whitespace-pre-wrap pt-2">
+                    {activeViewNews.imagePath && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={activeViewNews.imagePath}
+                        alt=""
+                        className="mb-4 max-h-72 w-full rounded-2xl object-cover border border-stone-surface"
+                      />
+                    )}
+                    {activeViewNews.content}
+                  </div>
+                  {activeViewNews.attachmentPath && (
+                    <a
+                      href={activeViewNews.attachmentPath}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-stone-surface bg-white px-4 py-3 text-xs font-bold text-charcoal-primary hover:border-sky-blue"
+                    >
+                      <span>첨부파일: {activeViewNews.attachmentName || "다운로드"}</span>
+                      <span className="text-[10px] text-sky-blue">열기</span>
+                    </a>
+                  )}
+                </>
               )}
-              {isAdmin && activeViewNews.isReal && (
+              {isAdmin && activeViewNews.isReal && editingNewsId !== activeViewNews.id && (
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-stone-surface">
                   <Button
                     type="button"
@@ -410,28 +683,38 @@ export function CoopNewsletter({
                 </div>
               )}
             </div>
-          </div>
-        </div>
+          </aside>
+        </>,
+        portalRoot,
       )}
 
-      {/* 2. 신규 조합뉴스 등록 모달 (관리자용) */}
-      {showUploadModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
-          <div className="absolute inset-0" onClick={() => setShowUploadModal(false)} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-5">
-              <h3 className="text-sm font-black text-charcoal-primary flex items-center gap-1.5">
-                <span>📅</span> 신규 주/월간소식 등록
-              </h3>
+      {/* 2. 신규 조합뉴스 등록 패널 (관리자용) */}
+      {portalRoot && showUploadModal && createPortal(
+        <>
+          <div
+            className="fixed inset-0 z-[110] bg-black/35 backdrop-blur-xs animate-in fade-in duration-300 motion-reduce:animate-none"
+            onClick={() => setShowUploadModal(false)}
+          />
+          <aside
+            aria-label="조합뉴스 작성 패널"
+            className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-2xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 text-left shadow-2xl animate-in slide-in-from-left duration-300 ease-out motion-reduce:animate-none sm:p-8"
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-4">
+              <div className="min-w-0 space-y-1">
+                <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-blue">
+                  Coop Newsletter
+                </span>
+                <h2 className="text-lg font-black text-charcoal-primary">신규 주/월간소식 작성</h2>
+              </div>
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-[10px] font-bold text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
               >
-                닫기
+                목록으로
               </button>
             </div>
 
-            <form onSubmit={handleUploadSubmit} className="space-y-4">
+            <form onSubmit={handleUploadSubmit} className="space-y-4 pt-5">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
                   소식지 제목 *
@@ -483,6 +766,20 @@ export function CoopNewsletter({
               </div>
 
               <div className="space-y-1.5">
+                <label htmlFor="newsletter-registered-at" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  등록일
+                </label>
+                <input
+                  id="newsletter-registered-at"
+                  aria-label="등록일"
+                  type="datetime-local"
+                  value={uploadRegisteredAt}
+                  onChange={(e) => setUploadRegisteredAt(e.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4.5 py-2.5 text-xs outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue"
+                />
+              </div>
+
+              <div className="space-y-1.5">
                 <label htmlFor="newsletter-attachment-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
                   첨부파일 (선택)
                 </label>
@@ -523,8 +820,9 @@ export function CoopNewsletter({
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
+          </aside>
+        </>,
+        portalRoot,
       )}
     </div>
   );

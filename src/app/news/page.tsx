@@ -47,11 +47,12 @@ export default async function NewsPage() {
           orderBy: { createdAt: "asc" },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { registeredAt: "desc" },
     });
 
     newsList = newsData.map((item) => ({
       ...item,
+      registeredAt: item.registeredAt.toISOString(),
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
       author: {
@@ -105,11 +106,12 @@ export default async function NewsPage() {
             orderBy: { createdAt: "asc" },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { registeredAt: "desc" },
       });
 
       freePosts = postsData.map((post) => ({
         ...post,
+        registeredAt: post.registeredAt.toISOString(),
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
         postType: post.postType || "FREE",

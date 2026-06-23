@@ -47,6 +47,21 @@ describe("buildNewsletterList", () => {
     });
   });
 
+  it("uses registeredAt as the visible newsletter date", () => {
+    const items = buildNewsletterList([
+      {
+        ...newsletter("newsletter-registered"),
+        createdAt: "2026-06-19T00:00:00.000Z",
+        registeredAt: "2026-06-21T00:00:00.000Z",
+      },
+    ], "");
+
+    expect(items[0]).toMatchObject({
+      id: "newsletter-registered",
+      createdAt: "2026.06.21",
+    });
+  });
+
   it("filters real and preview rows by title", () => {
     const items = buildNewsletterList([
       newsletter("newsletter-1", "현장 브리핑"),

@@ -44,6 +44,27 @@ type FreeBoardProps = {
   onRefresh: () => Promise<void>;
 };
 
+function formatAttachmentSize(size: number | null | undefined) {
+  if (!size) return "";
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024)).toLocaleString("ko-KR")}KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+function toKoreaDateTimeLocalValue(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date).replace(" ", "T");
+}
+
 function FreeBoardPostRows({
   post,
   index,
@@ -102,7 +123,7 @@ function FreeBoardPostRows({
         {authorLabel}
       </td>
       <td className="px-5 py-4 text-center text-xs text-ash font-mono">
-        {post.createdAt}
+        {post.registeredAt}
       </td>
       <td className="px-5 py-4 text-center">
         <button
@@ -197,15 +218,46 @@ export function FreeBoard({
   const [writeIsStarred, setWriteIsStarred] = useState(false);
   const [writePostType, setWritePostType] = useState<FreePostType>("FREE");
   const [writeDisplayAuthorName, setWriteDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
+  const [writeAttachmentPath, setWriteAttachmentPath] = useState<string | null>(null);
+  const [writeAttachmentName, setWriteAttachmentName] = useState<string | null>(null);
+  const [writeAttachmentSize, setWriteAttachmentSize] = useState<number | null>(null);
+  const [writeRegisteredAt, setWriteRegisteredAt] = useState("");
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
 
-  const handleCloseWriteModal = () => {
-    setShowWriteModal(false);
+  const resetWriteForm = () => {
     setEditingPost(null);
     setWriteTitle("");
     setWriteContent("");
     setWriteIsStarred(false);
     setWritePostType("FREE");
     setWriteDisplayAuthorName("운영자");
+    setWriteAttachmentPath(null);
+    setWriteAttachmentName(null);
+    setWriteAttachmentSize(null);
+    setWriteRegisteredAt("");
+  };
+
+  const handleCloseWriteModal = () => {
+    setShowWriteModal(false);
+    resetWriteForm();
+  };
+
+  const handleAttachmentChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setIsUploadingAttachment(true);
+    try {
+      const uploadData = await uploadPublicFile(file, "free-attachment");
+      setWriteAttachmentPath(uploadData.url);
+      setWriteAttachmentName(uploadData.name);
+      setWriteAttachmentSize(uploadData.size);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "첨부파일 업로드 중 오류가 발생했습니다.");
+    } finally {
+      setIsUploadingAttachment(false);
+    }
   };
 
 
@@ -282,6 +334,10 @@ export function FreeBoard({
             isStarred: writeIsStarred,
             isAdmin,
             displayAuthorName: writeDisplayAuthorName,
+            attachmentPath: writeAttachmentPath,
+            attachmentName: writeAttachmentName,
+            attachmentSize: writeAttachmentSize,
+            registeredAt: writeRegisteredAt,
           })),
         });
 
@@ -291,13 +347,8 @@ export function FreeBoard({
           return;
         }
 
-        setEditingPost(null);
-        setWriteTitle("");
-        setWriteContent("");
-        setWriteIsStarred(false);
-        setWritePostType("FREE");
-        setWriteDisplayAuthorName("운영자");
         setShowWriteModal(false);
+        resetWriteForm();
         await onRefresh();
       } else {
         const res = await fetch("/api/news/free", {
@@ -310,6 +361,10 @@ export function FreeBoard({
             isStarred: writeIsStarred,
             isAdmin,
             displayAuthorName: writeDisplayAuthorName,
+            attachmentPath: writeAttachmentPath,
+            attachmentName: writeAttachmentName,
+            attachmentSize: writeAttachmentSize,
+            registeredAt: writeRegisteredAt,
           })),
         });
 
@@ -319,11 +374,8 @@ export function FreeBoard({
           return;
         }
 
-        setWriteTitle("");
-        setWriteContent("");
-        setWritePostType("FREE");
-        setWriteDisplayAuthorName("운영자");
         setShowWriteModal(false);
+        resetWriteForm();
         await onRefresh();
       }
     } catch (err) {
@@ -476,12 +528,10 @@ export function FreeBoard({
             </select>
             <Button
               onClick={() => {
-                setEditingPost(null);
-                setWriteTitle("");
-                setWriteContent("");
-                setWritePostType("FREE");
-                setWriteIsStarred(false);
-                setWriteDisplayAuthorName("운영자");
+                resetWriteForm();
+                if (isAdmin) {
+                  setWriteRegisteredAt(toKoreaDateTimeLocalValue(new Date().toISOString()));
+                }
                 setShowWriteModal(true);
               }}
               className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
@@ -501,7 +551,7 @@ export function FreeBoard({
                 <th className="px-5 py-3.5 w-14 text-center">No.</th>
                 <th className="px-5 py-3.5">제목</th>
                 <th className="px-5 py-3.5 w-36 text-center">작성자</th>
-                <th className="px-5 py-3.5 w-32 text-center">작성일</th>
+                <th className="px-5 py-3.5 w-32 text-center">등록일</th>
                 <th className="px-5 py-3.5 w-24 text-center">댓글</th>
                 <th className="px-5 py-3.5 w-36 text-center">관리</th>
               </tr>
@@ -599,6 +649,10 @@ export function FreeBoard({
                         setWriteContent(focusedPost.content);
                         setWritePostType(normalizeFreePostType(focusedPost.postType, isAdmin));
                         setWriteIsStarred(!!focusedPost.isStarred);
+                        setWriteAttachmentPath(focusedPost.attachmentPath);
+                        setWriteAttachmentName(focusedPost.attachmentName);
+                        setWriteAttachmentSize(focusedPost.attachmentSize);
+                        setWriteRegisteredAt(toKoreaDateTimeLocalValue(focusedPost.registeredAtRaw));
                         setWriteDisplayAuthorName(
                           displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
                             ? displayAuthorName as NewsDisplayAuthorName
@@ -620,10 +674,27 @@ export function FreeBoard({
                   )}
                   <span>작성자: {getFreeBoardAuthorLabel(focusedPost.author, currentUserId)}</span>
                   <span>•</span>
-                  <span>{focusedPost.createdAt}</span>
+                  <span>{focusedPost.registeredAt}</span>
                   <span>•</span>
                   <span>댓글 {focusedPost.commentCount}개</span>
                 </div>
+                {focusedPost.attachmentPath && focusedPost.attachmentName && (
+                  <a
+                    href={focusedPost.attachmentPath}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${focusedPost.attachmentName} 다운로드`}
+                    className="inline-flex max-w-full items-center gap-2 rounded-xl border border-sky-blue/20 bg-sky-blue/10 px-3 py-2 text-[11px] font-extrabold text-sky-blue hover:bg-sky-blue/15"
+                  >
+                    <span aria-hidden="true">첨부</span>
+                    <span className="truncate">{focusedPost.attachmentName}</span>
+                    {focusedPost.attachmentSize ? (
+                      <span className="shrink-0 font-mono text-[10px] text-sky-blue/75">
+                        {formatAttachmentSize(focusedPost.attachmentSize)}
+                      </span>
+                    ) : null}
+                  </a>
+                )}
               </div>
 
               <div className="pt-2">
@@ -921,6 +992,22 @@ export function FreeBoard({
                 </select>
               </div>
 
+              {isAdmin && (
+                <div className="space-y-1.5">
+                  <label htmlFor="free-post-registered-at" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                    등록일
+                  </label>
+                  <input
+                    id="free-post-registered-at"
+                    aria-label="등록일"
+                    type="datetime-local"
+                    value={writeRegisteredAt}
+                    onChange={(event) => setWriteRegisteredAt(event.target.value)}
+                    className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                  />
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-charcoal-primary font-mono block">
                   게시글 제목 *
@@ -933,6 +1020,50 @@ export function FreeBoard({
                   onChange={(e) => setWriteTitle(e.target.value)}
                   className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="free-post-attachment" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  첨부파일
+                </label>
+                <input
+                  id="free-post-attachment"
+                  aria-label="첨부파일"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.hwp,.hwpx,.zip"
+                  onChange={handleAttachmentChange}
+                  disabled={isUploadingAttachment}
+                  className="block w-full rounded-xl border border-dashed border-stone-surface bg-white px-4 py-2.5 text-xs text-graphite file:mr-3 file:rounded-full file:border-0 file:bg-midnight file:px-3 file:py-1.5 file:text-[11px] file:font-bold file:text-white disabled:opacity-60"
+                />
+                {writeAttachmentName ? (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-white px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] font-extrabold text-charcoal-primary">
+                        {writeAttachmentName}
+                      </p>
+                      {writeAttachmentSize ? (
+                        <p className="mt-0.5 text-[10px] font-bold text-ash font-mono">
+                          {formatAttachmentSize(writeAttachmentSize)}
+                        </p>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWriteAttachmentPath(null);
+                        setWriteAttachmentName(null);
+                        setWriteAttachmentSize(null);
+                      }}
+                      className="shrink-0 rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[10px] font-medium text-ash">
+                    PDF, 한글, 오피스 문서, ZIP 파일을 20MB 이하로 첨부할 수 있습니다.
+                  </p>
+                )}
               </div>
 
               {isAdmin && (

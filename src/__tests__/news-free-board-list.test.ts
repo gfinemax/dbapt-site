@@ -17,6 +17,7 @@ const post = (overrides: Partial<FreePostView> = {}): FreePostView => ({
   postType: "FREE",
   isStarred: false,
   createdAt: "2026-06-19T00:00:00.000Z",
+  registeredAt: "2026-06-20T01:30:00.000Z",
   author,
   comments: [],
   ...overrides,
@@ -84,5 +85,28 @@ describe("buildFreeBoardPostList", () => {
     );
 
     expect(items[0]?.postType).toBe("FREE");
+  });
+
+  it("keeps free-board attachment metadata and uses the registered date for display and editing", () => {
+    const items = buildFreeBoardPostList(
+      [
+        post({
+          attachmentPath: "/uploads/free-agenda.pdf",
+          attachmentName: "free-agenda.pdf",
+          attachmentSize: 4096,
+        }),
+      ],
+      "ALL",
+      "",
+    );
+
+    expect(items[0]).toMatchObject({
+      registeredAt: "2026-06-20 10:30",
+      registeredAtRaw: "2026-06-20T01:30:00.000Z",
+      attachmentPath: "/uploads/free-agenda.pdf",
+      attachmentName: "free-agenda.pdf",
+      attachmentSize: 4096,
+    });
+    expect(items[0]).not.toHaveProperty("createdAtRaw");
   });
 });

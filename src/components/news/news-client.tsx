@@ -156,6 +156,7 @@ export function NewsClient({
   const [editAttachmentName, setEditAttachmentName] = useState<string | null>(null);
   const [editAttachmentSize, setEditAttachmentSize] = useState<number | null>(null);
   const [editAttachmentFile, setEditAttachmentFile] = useState<File | null>(null);
+  const [editRegisteredAt, setEditRegisteredAt] = useState("");
   const [editIsStarred, setEditIsStarred] = useState(false);
   const [editDisplayAuthorName, setEditDisplayAuthorName] =
     useState<NewsDisplayAuthorName>("운영자");
@@ -233,6 +234,7 @@ export function NewsClient({
     setEditAttachmentName(draft.attachmentName);
     setEditAttachmentSize(draft.attachmentSize);
     setEditAttachmentFile(null);
+    setEditRegisteredAt(draft.registeredAt);
     setEditIsStarred(draft.isStarred);
     setEditDisplayAuthorName(draft.displayAuthorName);
     setIsEditingNotice(true);
@@ -269,6 +271,7 @@ export function NewsClient({
           attachmentPath,
           attachmentName,
           attachmentSize,
+          registeredAt: editRegisteredAt,
           isStarred: editIsStarred,
           displayAuthorName: editDisplayAuthorName,
         })),
@@ -519,7 +522,7 @@ export function NewsClient({
               </div>
               {latestStarredNotice && (
                 <div className="mt-5 pt-3 border-t border-stone-surface/60 flex items-center justify-between">
-                  <span className="text-[10px] text-ash font-mono font-medium">등록일: {latestStarredNotice.createdAt.slice(0, 10).replace(/-/g, ".")}</span>
+                  <span className="text-[10px] text-ash font-mono font-medium">등록일: {formatNoticeDate(latestStarredNotice.registeredAt ?? latestStarredNotice.createdAt)}</span>
                   <button
                     onClick={() => {
                       setActiveViewNotice(latestStarredNotice);
@@ -886,6 +889,20 @@ export function NewsClient({
                     </p>
                   </div>
 
+                  <div className="space-y-1.5">
+                    <label htmlFor="edit-notice-registered-at" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      등록일
+                    </label>
+                    <input
+                      id="edit-notice-registered-at"
+                      aria-label="등록일"
+                      type="datetime-local"
+                      value={editRegisteredAt}
+                      onChange={(e) => setEditRegisteredAt(e.target.value)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                    />
+                  </div>
+
                   <div className="flex items-center gap-2.5 py-1 select-none">
                     <input
                       type="checkbox"
@@ -971,7 +988,7 @@ export function NewsClient({
                       <span>•</span>
                       <span>작성자: {activeViewNotice.author?.name || "조합 사무국"}</span>
                       <span>•</span>
-                      <span>등록일: {formatNoticeDate(activeViewNotice.createdAt)}</span>
+                      <span>등록일: {formatNoticeDate(activeViewNotice.registeredAt ?? activeViewNotice.createdAt)}</span>
                     </div>
                   </div>
 

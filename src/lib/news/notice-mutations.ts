@@ -36,6 +36,7 @@ export function buildEditedNoticeView(
     category: editedNotice.category ?? fallbackNotice.category,
     title: editedNotice.title ?? fallbackNotice.title,
     content: editedNotice.content ?? fallbackNotice.content,
+    registeredAt: String(editedNotice.registeredAt ?? fallbackNotice.registeredAt ?? fallbackNotice.createdAt),
     createdAt: String(editedNotice.createdAt ?? fallbackNotice.createdAt),
     updatedAt: editedNotice.updatedAt === undefined ? fallbackNotice.updatedAt : String(editedNotice.updatedAt),
     displayAuthorName,
@@ -50,7 +51,8 @@ export function buildActiveEditedNoticeView(
 ): CoopNewsView {
   return {
     ...editedNotice,
-    createdAt: formatNoticeDate(editedNotice.createdAt),
+    registeredAt: editedNotice.registeredAt,
+    createdAt: formatNoticeDate(editedNotice.registeredAt ?? editedNotice.createdAt),
     displayAuthorName,
     isReal: true,
   };

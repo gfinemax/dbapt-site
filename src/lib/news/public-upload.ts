@@ -1,4 +1,4 @@
-export type PublicUploadKind = "image" | "attachment";
+export type PublicUploadKind = "image" | "attachment" | "free-attachment";
 
 export type PublicUploadResult = {
   url: string;

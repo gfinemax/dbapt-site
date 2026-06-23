@@ -23,12 +23,13 @@ export default async function Home() {
         select: {
           id: true,
           title: true,
+          registeredAt: true,
           createdAt: true,
           isStarred: true,
         },
         orderBy: [
           { isStarred: "desc" },
-          { createdAt: "desc" },
+          { registeredAt: "desc" },
         ],
         take: 2,
       }),
@@ -36,12 +37,13 @@ export default async function Home() {
         select: {
           id: true,
           title: true,
+          registeredAt: true,
           createdAt: true,
           isStarred: true,
         },
         orderBy: [
           { isStarred: "desc" },
-          { createdAt: "desc" },
+          { registeredAt: "desc" },
         ],
         take: 1,
       }),
@@ -52,14 +54,14 @@ export default async function Home() {
         id: notice.id,
         kind: "notice" as const,
         title: notice.title,
-        createdAt: notice.createdAt.toISOString(),
+        createdAt: notice.registeredAt.toISOString(),
         isStarred: notice.isStarred,
       })),
       ...freePostData.map((post) => ({
         id: post.id,
         kind: "free" as const,
         title: post.title,
-        createdAt: post.createdAt.toISOString(),
+        createdAt: post.registeredAt.toISOString(),
         isStarred: post.isStarred,
       })),
     ]

@@ -79,6 +79,55 @@ describe("DevelopmentLog", () => {
     expect(screen.queryByRole("complementary", { name: "개발일지 상세 패널" })).not.toBeInTheDocument();
   });
 
+  it("shows and submits registered dates for development log edits", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, news: { id: "draft" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <DevelopmentLog
+        isAdmin
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        logs={[
+          log({
+            id: "draft",
+            title: "등록일 수정 대상",
+            category: DEVELOPMENT_LOG_CATEGORIES.draft,
+            createdAt: "2026-06-18T00:00:00.000Z",
+            registeredAt: "2026-06-21T00:30:00.000Z",
+          }),
+        ]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    const row = within(screen.getByRole("table", { name: "개발일지 목록" })).getByText("등록일 수정 대상").closest("tr");
+    expect(row).not.toBeNull();
+    expect(within(row as HTMLTableRowElement).getByText("2026.06.21")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "등록일 수정 대상" }));
+    const detailPanel = screen.getByRole("complementary", { name: "개발일지 상세 패널" });
+    expect(within(detailPanel).getByText("등록일 2026.06.21")).toBeInTheDocument();
+
+    fireEvent.click(within(detailPanel).getByRole("button", { name: "수정" }));
+    expect(within(detailPanel).getByLabelText("개발일지 등록일 수정")).toHaveValue("2026-06-21T09:30");
+    fireEvent.change(within(detailPanel).getByLabelText("개발일지 등록일 수정"), {
+      target: { value: "2026-06-22T10:15" },
+    });
+    fireEvent.click(within(detailPanel).getByRole("button", { name: "수정 저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining('"registeredAt":"2026-06-22T10:15"'),
+      }),
+    ));
+  });
+
   it("lets admins create draft logs and publish draft logs", async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const fetchMock = vi.fn()

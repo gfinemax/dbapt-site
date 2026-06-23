@@ -41,6 +41,7 @@ export type CoopNewsView = {
   attachmentName?: string | null;
   attachmentSize?: number | null;
   displayAuthorName?: string | null;
+  registeredAt?: string;
   createdAt: string;
   updatedAt?: string;
   author: NewsUserView;
@@ -55,6 +56,10 @@ export type FreePostView = {
   postType: FreePostType | string;
   displayAuthorName?: string | null;
   isStarred?: boolean;
+  attachmentPath?: string | null;
+  attachmentName?: string | null;
+  attachmentSize?: number | null;
+  registeredAt?: string;
   createdAt: string;
   updatedAt?: string;
   author: NewsUserView;
