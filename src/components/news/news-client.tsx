@@ -426,6 +426,7 @@ export function NewsClient({
     developmentLogItems,
     adminDevelopmentLogItems,
   } = useMemo(() => buildNewsClientSummary(newsList, freePosts), [newsList, freePosts]);
+  const hasPublicSharedFreePosts = !isLoggedIn && freePosts.some((post) => post.isPublicShareEnabled);
 
 
   // Sync tab with URL query parameter on mount or url change
@@ -669,11 +670,13 @@ export function NewsClient({
         {/* 2. 자유게시판 */}
         {activeTab === "free" && (
           <section id="section-free" className="space-y-4 animate-in fade-in duration-200">
-            {isLoggedIn ? (
+            {isLoggedIn || hasPublicSharedFreePosts ? (
               <FreeBoard
                 session={session}
                 posts={freePosts}
+                isPublicShareView={!isLoggedIn}
                 onRefresh={async () => {
+                  if (!isLoggedIn) return;
                   const res = await fetch("/api/news/free");
                   const data = await res.json();
                   if (data.posts) setFreePosts(data.posts);

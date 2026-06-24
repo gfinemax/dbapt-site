@@ -569,6 +569,8 @@ model FreePost {
   postType          String        @default("FREE") // FREE, DISCUSSION, QUESTION, PROPOSAL, NOTICE
   displayAuthorName String? // 관리자 작성글 공개 작성자명: 운영자, 사무국
   isStarred         Boolean       @default(false)
+  isPublicShareEnabled Boolean    @default(false) // 비로그인 공유 링크 열람 허용
+  publicShareEnabledAt DateTime?  // 공개 공유가 처음 활성화된 시각
   registeredAt      DateTime      @default(now()) // 화면 표시 및 정렬용 등록일
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -578,6 +580,7 @@ model FreePost {
   openChatAnnouncements OpenChatAnnouncement[]
 
   @@index([registeredAt])
+  @@index([isPublicShareEnabled, registeredAt])
 }
 
 // 8. 자유게시판 댓글

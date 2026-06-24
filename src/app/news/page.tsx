@@ -11,7 +11,21 @@ import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-
 import { getUserDisplayName } from "@/lib/user-display-name";
 import type { CoopNewsView, FAQView, FreePostView } from "@/lib/news/types";
 
-export default async function NewsPage() {
+type NewsPageProps = {
+  searchParams?: Promise<{
+    tab?: string | string[];
+    post?: string | string[];
+  }>;
+};
+
+function getFirstSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
+  const resolvedSearchParams = await searchParams;
+  const requestedTab = getFirstSearchParam(resolvedSearchParams?.tab);
+  const requestedFreePostId = getFirstSearchParam(resolvedSearchParams?.post);
   const session = (await getSession()) as PersonalLibrarySession | null;
 
   let newsList: CoopNewsView[] = [];
@@ -135,6 +149,8 @@ export default async function NewsPage() {
             displayAuthorName: c.displayAuthorName,
           },
         })),
+        isPublicShareEnabled: post.isPublicShareEnabled,
+        publicShareEnabledAt: post.publicShareEnabledAt?.toISOString() ?? null,
       }));
 
       const faqData = await prisma.fAQ.findMany({
@@ -145,6 +161,46 @@ export default async function NewsPage() {
         ...faq,
         createdAt: faq.createdAt.toISOString(),
       }));
+    } else if (requestedTab === "free" && requestedFreePostId) {
+      const publicSharedPost = await prisma.freePost.findFirst({
+        where: {
+          id: requestedFreePostId,
+          isPublicShareEnabled: true,
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              signupName: true,
+              loginId: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      if (publicSharedPost) {
+        const publicAuthorName = publicSharedPost.displayAuthorName || "조합원";
+        freePosts = [{
+          ...publicSharedPost,
+          registeredAt: publicSharedPost.registeredAt.toISOString(),
+          createdAt: publicSharedPost.createdAt.toISOString(),
+          updatedAt: publicSharedPost.updatedAt.toISOString(),
+          postType: publicSharedPost.postType || "FREE",
+          author: {
+            id: publicSharedPost.author.id,
+            name: publicAuthorName,
+            signupName: publicAuthorName,
+            loginId: null,
+            role: publicSharedPost.author.role,
+            displayAuthorName: publicSharedPost.displayAuthorName,
+          },
+          comments: [],
+          isPublicShareEnabled: publicSharedPost.isPublicShareEnabled,
+          publicShareEnabledAt: publicSharedPost.publicShareEnabledAt?.toISOString() ?? null,
+        }];
+      }
     }
   } catch (e) {
     console.error("Error loading news page server data:", e);

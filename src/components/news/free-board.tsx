@@ -42,6 +42,7 @@ type FreeBoardProps = {
   session: NewsSessionView | null | undefined;
   posts: FreePostView[];
   onRefresh: () => Promise<void>;
+  isPublicShareView?: boolean;
 };
 
 function formatAttachmentSize(size: number | null | undefined) {
@@ -184,9 +185,11 @@ export function FreeBoard({
   session,
   posts = [],
   onRefresh,
+  isPublicShareView = false,
 }: FreeBoardProps) {
   const currentUserId = session?.id;
   const isAdmin = session?.role === "ADMIN";
+  const isReadOnlyPublicShare = isPublicShareView && !session;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<FreeBoardTypeFilter>("ALL");
@@ -216,6 +219,7 @@ export function FreeBoard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPost, setEditingPost] = useState<FreeBoardPostListItem | null>(null);
   const [writeIsStarred, setWriteIsStarred] = useState(false);
+  const [writeIsPublicShareEnabled, setWriteIsPublicShareEnabled] = useState(false);
   const [writePostType, setWritePostType] = useState<FreePostType>("FREE");
   const [writeDisplayAuthorName, setWriteDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
   const [writeAttachmentPath, setWriteAttachmentPath] = useState<string | null>(null);
@@ -229,6 +233,7 @@ export function FreeBoard({
     setWriteTitle("");
     setWriteContent("");
     setWriteIsStarred(false);
+    setWriteIsPublicShareEnabled(false);
     setWritePostType("FREE");
     setWriteDisplayAuthorName("운영자");
     setWriteAttachmentPath(null);
@@ -338,6 +343,7 @@ export function FreeBoard({
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
             registeredAt: writeRegisteredAt,
+            isPublicShareEnabled: writeIsPublicShareEnabled,
           })),
         });
 
@@ -365,6 +371,7 @@ export function FreeBoard({
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
             registeredAt: writeRegisteredAt,
+            isPublicShareEnabled: writeIsPublicShareEnabled,
           })),
         });
 
@@ -490,9 +497,10 @@ export function FreeBoard({
               </p>
             </div>
             <span className="shrink-0 text-[10px] font-bold text-meadow-green bg-meadow-green/10 border border-meadow-green/20 rounded-full px-2.5 py-0.5 select-none lg:hidden">
-              조합원 인증 완료 🔓
+              {isReadOnlyPublicShare ? "공개 공유 링크" : "조합원 인증 완료 🔓"}
             </span>
           </div>
+          {!isReadOnlyPublicShare && (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
             <span className="hidden shrink-0 text-[10px] font-bold text-meadow-green bg-meadow-green/10 border border-meadow-green/20 rounded-full px-2.5 py-0.5 select-none lg:inline-flex">
               조합원 인증 완료 🔓
@@ -539,6 +547,12 @@ export function FreeBoard({
               ✍️ 새 게시글 작성
             </Button>
           </div>
+          )}
+          {isReadOnlyPublicShare && (
+            <span className="hidden shrink-0 text-[10px] font-bold text-meadow-green bg-meadow-green/10 border border-meadow-green/20 rounded-full px-2.5 py-0.5 select-none lg:inline-flex">
+              공개 공유 링크
+            </span>
+          )}
         </div>
       </div>
 
@@ -649,6 +663,7 @@ export function FreeBoard({
                         setWriteContent(focusedPost.content);
                         setWritePostType(normalizeFreePostType(focusedPost.postType, isAdmin));
                         setWriteIsStarred(!!focusedPost.isStarred);
+                        setWriteIsPublicShareEnabled(!!focusedPost.isPublicShareEnabled);
                         setWriteAttachmentPath(focusedPost.attachmentPath);
                         setWriteAttachmentName(focusedPost.attachmentName);
                         setWriteAttachmentSize(focusedPost.attachmentSize);
@@ -704,6 +719,15 @@ export function FreeBoard({
                 />
               </div>
 
+              {isReadOnlyPublicShare ? (
+                <section className="space-y-3 border-t border-stone-surface pt-5">
+                  <div className="rounded-2xl border border-stone-surface bg-white px-4 py-4">
+                    <p className="text-[11px] font-medium leading-relaxed text-ash">
+                      댓글과 답글은 조합원 로그인 후 확인하거나 작성할 수 있습니다.
+                    </p>
+                  </div>
+                </section>
+              ) : (
               <section className="space-y-4 border-t border-stone-surface pt-5">
                 <div className="flex items-center justify-between gap-3">
                   <h4 className="text-sm font-black text-charcoal-primary">
@@ -922,6 +946,7 @@ export function FreeBoard({
                   </div>
                 </form>
               </section>
+              )}
             </div>
           </aside>
         </>,
@@ -1067,17 +1092,36 @@ export function FreeBoard({
               </div>
 
               {isAdmin && (
-                <div className="flex items-center gap-2.5 py-1 select-none">
-                  <input
-                    type="checkbox"
-                    id="write-star-checkbox"
-                    checked={writeIsStarred}
-                    onChange={(e) => setWriteIsStarred(e.target.checked)}
-                    className="size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
-                  />
-                  <label htmlFor="write-star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
-                    중요 게시글로 상단 고정 표시 (★)
-                  </label>
+                <div className="space-y-2 rounded-2xl border border-stone-surface bg-white px-3 py-3">
+                  <div className="flex items-center gap-2.5 select-none">
+                    <input
+                      type="checkbox"
+                      id="write-star-checkbox"
+                      checked={writeIsStarred}
+                      onChange={(e) => setWriteIsStarred(e.target.checked)}
+                      className="size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
+                    />
+                    <label htmlFor="write-star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
+                      중요 게시글로 상단 고정 표시 (★)
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-2.5 select-none">
+                    <input
+                      type="checkbox"
+                      id="write-public-share-checkbox"
+                      checked={writeIsPublicShareEnabled}
+                      onChange={(e) => setWriteIsPublicShareEnabled(e.target.checked)}
+                      className="mt-0.5 size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
+                    />
+                    <label htmlFor="write-public-share-checkbox" className="cursor-pointer">
+                      <span className="block text-[11.5px] font-extrabold text-graphite/95 font-mono">
+                        카톡 공유 허용
+                      </span>
+                      <span className="mt-0.5 block text-[10px] font-medium leading-relaxed text-ash">
+                        체크하면 로그인하지 않아도 이 게시글 본문을 읽을 수 있습니다.
+                      </span>
+                    </label>
+                  </div>
                 </div>
               )}
 

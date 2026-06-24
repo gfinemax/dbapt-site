@@ -15,6 +15,7 @@ import * as uploadRoute from "@/app/api/upload/route";
 
 const mockGetSession = vi.hoisted(() => vi.fn());
 const mockRouterPush = vi.hoisted(() => vi.fn());
+const mockSearchParamsValue = vi.hoisted(() => ({ value: "" }));
 const mockPrisma = vi.hoisted(() => ({
   coopNews: {
     create: vi.fn(),
@@ -51,7 +52,7 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockRouterPush }),
-  useSearchParams: () => new URLSearchParams(""),
+  useSearchParams: () => new URLSearchParams(mockSearchParamsValue.value),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -147,6 +148,7 @@ function jsonRequest(body: Record<string, unknown>) {
 describe("news admin API controls", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchParamsValue.value = "";
     mockMkdir.mockResolvedValue(undefined);
     mockWriteFile.mockResolvedValue(undefined);
   });
@@ -962,6 +964,57 @@ describe("news admin API controls", () => {
     }));
   });
 
+  it("stores public share flags only for administrator free-board posts", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.create.mockResolvedValue({
+      ...realFreePost,
+      isPublicShareEnabled: true,
+      publicShareEnabledAt: new Date("2026-06-25T00:00:00.000Z"),
+    });
+
+    const response = await freeRoute.POST(
+      jsonRequest({
+        title: "공개 공유 글",
+        content: "본문",
+        postType: "NOTICE",
+        isPublicShareEnabled: true,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        isPublicShareEnabled: true,
+        publicShareEnabledAt: expect.any(Date),
+      }),
+    }));
+
+    vi.clearAllMocks();
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.freePost.create.mockResolvedValue({
+      ...realFreePost,
+      isPublicShareEnabled: false,
+      publicShareEnabledAt: null,
+    });
+
+    const memberResponse = await freeRoute.POST(
+      jsonRequest({
+        title: "일반 글",
+        content: "본문",
+        postType: "FREE",
+        isPublicShareEnabled: true,
+      }),
+    );
+
+    expect(memberResponse.status).toBe(200);
+    expect(mockPrisma.freePost.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        isPublicShareEnabled: false,
+        publicShareEnabledAt: null,
+      }),
+    }));
+  });
+
   it("rejects invalid administrator display author names on free-board posts", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
 
@@ -1184,6 +1237,8 @@ describe("news admin API controls", () => {
 describe("news admin visible controls", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchParamsValue.value = "";
+    window.history.pushState({}, "", "/news");
     vi.spyOn(window, "confirm").mockReturnValue(true);
     vi.spyOn(window, "alert").mockImplementation(() => {});
   });
@@ -2383,6 +2438,45 @@ describe("news admin visible controls", () => {
 
     expect(screen.queryByLabelText("토론 집중 패널")).not.toBeInTheDocument();
     expect(window.location.search).not.toContain("post=free-1");
+  });
+
+  it("renders a public shared free-board post read-only for unauthenticated visitors", async () => {
+    mockSearchParamsValue.value = "tab=free&post=free-1";
+    window.history.pushState({}, "", "/news?tab=free&post=free-1");
+
+    render(
+      <NewsClient
+        session={null}
+        initialNewsList={[realNotice]}
+        initialFreePosts={[{
+          ...realFreePost,
+          isPublicShareEnabled: true,
+          author: {
+            id: "admin-1",
+            name: "사무국",
+            loginId: null,
+            role: "ADMIN",
+            displayAuthorName: "사무국",
+          },
+          comments: [freeComment],
+        }]}
+        initialFaqs={[]}
+      />,
+    );
+
+    expect(screen.queryByText("조합원 로그인 검증")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /새 게시글 작성/ })).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("토론 집중 패널")).toBeInTheDocument();
+    });
+
+    const panel = screen.getByLabelText("토론 집중 패널");
+    expect(within(panel).getByRole("heading", { name: "실제 자유게시글" })).toBeInTheDocument();
+    expect(within(panel).getByText("실제 자유게시글 내용")).toBeInTheDocument();
+    expect(within(panel).getByText(/댓글과 답글은 조합원 로그인 후/)).toBeInTheDocument();
+    expect(within(panel).queryByText("원댓글입니다.")).not.toBeInTheDocument();
+    expect(within(panel).queryByRole("button", { name: "의견 등록" })).not.toBeInTheDocument();
   });
 
   it("shows free-board attachments and lets administrators replace attachments and registered dates while editing", async () => {

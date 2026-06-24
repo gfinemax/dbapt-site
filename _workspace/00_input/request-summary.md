@@ -1,6 +1,6 @@
 # Request Summary
 
-- requested feature slice: Apply visible/editable `등록일` across 조합소식 공지사항, 자유게시판, 조합뉴스, and 개발일지 while keeping `작성일` as a system record only. Keep FAQ unchanged. Preserve 조합뉴스 as the existing card view, and change 조합뉴스 열람/작성/수정 from centered modal to the same left slide-panel interaction used by the other boards.
-- explicitly excluded scope: No FAQ behavior changes, no public access-boundary expansion, no new private document/accounting/payment/voting features, and no redesign/replacement of the existing 조합뉴스 card list view.
-- candidate governing specification: `docs/superpowers/plans/2026-06-01-daebang-news-admin-media-controls.md` plus `docs/superpowers/plans/2026-06-21-news-development-log.md`; free-board registered-date work continues the prior free-board rich-editor/admin-controls slice.
+- requested feature slice: Add per-post public share permission for 자유게시판 so an administrator can allow a specific post to be opened from a KakaoTalk/shared link without login. Public visitors may read the selected post body only.
+- explicitly excluded scope: No public access to the full free-board list, search-only archive, private portal data, documents, payment/accounting data, voting, new authentication behavior, or anonymous writing/commenting/editing/deleting. Public comments are hidden in this slice.
+- candidate governing specification: User-approved narrow access-boundary decision from this thread, implemented as `docs/superpowers/plans/2026-06-25-free-board-public-share.md` against the existing `FreePost` 자유게시판 workflow.
 - unanswered decision: none

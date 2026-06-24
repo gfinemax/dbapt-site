@@ -21,6 +21,7 @@ describe("free board API helpers", () => {
         attachmentName: "free.pdf",
         attachmentSize: 2048,
         registeredAt: "2026-06-20T12:00",
+        isPublicShareEnabled: true,
       }),
     ).toEqual({
       title: "새 글",
@@ -45,6 +46,7 @@ describe("free board API helpers", () => {
         attachmentName: null,
         attachmentSize: null,
         registeredAt: "2026-06-21T09:30",
+        isPublicShareEnabled: true,
       }),
     ).toEqual({
       postId: "post-1",
@@ -57,6 +59,7 @@ describe("free board API helpers", () => {
       attachmentName: null,
       attachmentSize: null,
       registeredAt: "2026-06-21T09:30",
+      isPublicShareEnabled: true,
     });
   });
 

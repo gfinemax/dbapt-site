@@ -56,6 +56,8 @@ export type FreePostView = {
   postType: FreePostType | string;
   displayAuthorName?: string | null;
   isStarred?: boolean;
+  isPublicShareEnabled?: boolean;
+  publicShareEnabledAt?: string | null;
   attachmentPath?: string | null;
   attachmentName?: string | null;
   attachmentSize?: number | null;

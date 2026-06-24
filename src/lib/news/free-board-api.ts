@@ -12,6 +12,7 @@ type FreeBoardPostPayloadInput = {
   attachmentName?: string | null;
   attachmentSize?: number | null;
   registeredAt?: string;
+  isPublicShareEnabled?: boolean;
 };
 
 type FreeBoardPostUpdatePayloadInput = FreeBoardPostPayloadInput & {
@@ -42,6 +43,7 @@ export function buildFreeBoardPostCreatePayload({
   attachmentName,
   attachmentSize,
   registeredAt,
+  isPublicShareEnabled,
 }: FreeBoardPostPayloadInput) {
   return {
     title,
@@ -53,6 +55,7 @@ export function buildFreeBoardPostCreatePayload({
     attachmentSize: attachmentSize ?? null,
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),
+    ...(isAdmin ? { isPublicShareEnabled: !!isPublicShareEnabled } : {}),
   };
 }
 
@@ -68,6 +71,7 @@ export function buildFreeBoardPostUpdatePayload({
   attachmentName,
   attachmentSize,
   registeredAt,
+  isPublicShareEnabled,
 }: FreeBoardPostUpdatePayloadInput) {
   return {
     postId,
@@ -80,6 +84,7 @@ export function buildFreeBoardPostUpdatePayload({
     attachmentSize: attachmentSize ?? null,
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),
+    ...(isAdmin ? { isPublicShareEnabled: !!isPublicShareEnabled } : {}),
   };
 }
 

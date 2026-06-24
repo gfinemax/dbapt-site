@@ -27,6 +27,8 @@ export type FreeBoardPostListItem = {
   attachmentPath: string | null;
   attachmentName: string | null;
   attachmentSize: number | null;
+  isPublicShareEnabled: boolean;
+  publicShareEnabledAt: string | null;
   author: NewsUserView;
   comments: FreeBoardCommentView[];
   commentCount: number;
@@ -85,6 +87,8 @@ export function buildFreeBoardPostList(
         attachmentPath: post.attachmentPath ?? null,
         attachmentName: post.attachmentName ?? null,
         attachmentSize: post.attachmentSize ?? null,
+        isPublicShareEnabled: !!post.isPublicShareEnabled,
+        publicShareEnabledAt: post.publicShareEnabledAt ?? null,
         author: { ...post.author, displayAuthorName: post.displayAuthorName },
         comments: buildFreeBoardCommentTree(post.comments || []),
         commentCount: (post.comments || []).length,

@@ -105,7 +105,17 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { title, content, postId, parentCommentId, isStarred, postType, displayAuthorName, registeredAt } = body; // 만약 postId가 존재하면 댓글 추가로 판별
+    const {
+      title,
+      content,
+      postId,
+      parentCommentId,
+      isStarred,
+      postType,
+      displayAuthorName,
+      registeredAt,
+      isPublicShareEnabled,
+    } = body; // 만약 postId가 존재하면 댓글 추가로 판별
     const parsedDisplayAuthorName = session.role === "ADMIN"
       ? parseNewsDisplayAuthorName(displayAuthorName)
       : { ok: true as const, value: null };
@@ -174,6 +184,7 @@ export async function POST(request: Request) {
       if (registeredAt && session.role !== "ADMIN") {
         return NextResponse.json({ error: "등록일 변경은 관리자만 가능합니다." }, { status: 403 });
       }
+      const publicShareEnabled = session.role === "ADMIN" ? !!isPublicShareEnabled : false;
 
       const post = await prisma.freePost.create({
         data: {
@@ -183,6 +194,8 @@ export async function POST(request: Request) {
           authorId: session.id,
           isStarred: session.role === "ADMIN" ? !!isStarred : false,
           displayAuthorName: session.role === "ADMIN" ? parsedDisplayAuthorName.value : null,
+          isPublicShareEnabled: publicShareEnabled,
+          publicShareEnabledAt: publicShareEnabled ? new Date() : null,
           ...normalizeFreePostAttachment(body),
           ...(parsedRegisteredAt && session.role === "ADMIN" ? { registeredAt: parsedRegisteredAt } : {}),
         },
@@ -251,7 +264,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { postId, title, content, isStarred, postType, displayAuthorName, registeredAt } = body;
+    const { postId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled } = body;
 
     if (!postId) {
       return NextResponse.json({ error: "수정할 대상 ID가 누락되었습니다." }, { status: 400 });
@@ -288,6 +301,8 @@ export async function PATCH(request: Request) {
       isStarred?: boolean;
       displayAuthorName?: string | null;
       registeredAt?: Date;
+      isPublicShareEnabled?: boolean;
+      publicShareEnabledAt?: Date | null;
     } = {
       title,
       content,
@@ -303,6 +318,10 @@ export async function PATCH(request: Request) {
       }
       updateData.isStarred = !!isStarred;
       updateData.displayAuthorName = parsedDisplayAuthorName.value;
+      updateData.isPublicShareEnabled = !!isPublicShareEnabled;
+      updateData.publicShareEnabledAt = isPublicShareEnabled
+        ? post.publicShareEnabledAt || new Date()
+        : null;
       if (parsedRegisteredAt) {
         updateData.registeredAt = parsedRegisteredAt;
       }
