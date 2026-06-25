@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PortalShell } from "@/components/portal/portal-shell";
-import { updateSignupNameAction } from "@/lib/auth";
+import { changePasswordAction, updateSignupNameAction } from "@/lib/auth";
 
 vi.mock("next/navigation", () => ({
   useRouter() {
@@ -15,6 +15,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/auth", () => ({
   logoutAction: vi.fn(),
   approveUserAction: vi.fn(),
+  changePasswordAction: vi.fn(),
   updateSignupNameAction: vi.fn(),
 }));
 
@@ -111,6 +112,42 @@ describe("portal shell", () => {
     expect(screen.getByText("120,000,000 원")).toBeInTheDocument();
     expect(screen.getByText("25,000,000 원")).toBeInTheDocument();
     expect(screen.getByText("연체 미납금 납부 안내")).toBeInTheDocument();
+  });
+
+  it("changes the logged-in user's password from the profile menu", async () => {
+    vi.mocked(changePasswordAction).mockResolvedValue({
+      success: true,
+      message: "비밀번호가 변경되었습니다.",
+    });
+
+    render(
+      <PortalShell
+        role="admin"
+        session={{
+          id: "admin-1",
+          loginId: "admin",
+          name: "운영자",
+          role: "ADMIN",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /운영자님/ }));
+    fireEvent.change(screen.getByLabelText("현재 비밀번호"), { target: { value: "oldPass9081" } });
+    fireEvent.change(screen.getByLabelText("새 비밀번호"), { target: { value: "newPass9081" } });
+    fireEvent.change(screen.getByLabelText("새 비밀번호 확인"), { target: { value: "newPass9081" } });
+    fireEvent.click(screen.getByRole("button", { name: "비밀번호 변경" }));
+
+    await waitFor(() => {
+      expect(changePasswordAction).toHaveBeenCalled();
+    });
+
+    const submittedFormData = vi.mocked(changePasswordAction).mock.calls[0][1] as FormData;
+    expect(submittedFormData.get("currentPassword")).toBe("oldPass9081");
+    expect(submittedFormData.get("newPassword")).toBe("newPass9081");
+    expect(submittedFormData.get("newPasswordConfirm")).toBe("newPass9081");
+    expect(screen.getByText("비밀번호가 변경되었습니다.")).toBeInTheDocument();
+    expect(screen.getByLabelText("현재 비밀번호")).toHaveValue("");
   });
 
   it("uses a full-width refund status card with ERP-sync guidance", () => {

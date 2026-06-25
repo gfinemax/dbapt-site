@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { portalProfiles, portalRoleOrder, type PortalRole } from "@/content/portal";
 import { cn } from "@/lib/utils";
-import { logoutAction, approveUserAction, updateSignupNameAction } from "@/lib/auth";
+import { logoutAction, approveUserAction, changePasswordAction, updateSignupNameAction } from "@/lib/auth";
 import { DocumentTable, type Document } from "./document-table";
 import { PersonalDocumentHub } from "./personal-document-hub";
 import { PdfViewerModal } from "./pdf-viewer-modal";
@@ -175,8 +175,11 @@ export function PortalShell({
   const [welcomeModalConfig, setWelcomeModalConfig] = useState({ title: "", description: "", isUpgrade: true });
   const [showToast, setShowToast] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const passwordFormRef = useRef<HTMLFormElement>(null);
   const [pendingSavedSignupNames, setPendingSavedSignupNames] = useState<Record<string, string>>({});
   const [pendingDraftSignupNames, setPendingDraftSignupNames] = useState<Record<string, string>>({});
+  const [passwordChangeStatus, setPasswordChangeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const approvedMemberTypeCounts = approvedSocialUsers.reduce(
     (counts, user) => {
       const memberType = normalizeMemberType(user.memberType, user.role);
@@ -334,6 +337,23 @@ export function PortalShell({
     router.refresh();
   };
 
+  const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsChangingPassword(true);
+    setPasswordChangeStatus(null);
+
+    const result = await changePasswordAction(null, new FormData(event.currentTarget));
+
+    if (result.success) {
+      passwordFormRef.current?.reset();
+      setPasswordChangeStatus({ type: "success", message: result.message || "비밀번호가 변경되었습니다." });
+    } else {
+      setPasswordChangeStatus({ type: "error", message: result.error || "비밀번호 변경 중 문제가 발생했습니다." });
+    }
+
+    setIsChangingPassword(false);
+  };
+
   return (
     <main className={cn(isDrawerMode ? "bg-transparent p-0" : "min-h-screen bg-warm-canvas px-4 pb-14 pt-4 sm:px-6")}>
       {!isDrawerMode && (
@@ -369,7 +389,7 @@ export function PortalShell({
 
                 {/* 드롭다운 메뉴 (DESIGN.md 규격: White Card + Recessed panel 느낌) */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2.5 w-64 rounded-2xl bg-white border border-stone-surface shadow-lg z-50 p-4 transition-all duration-200">
+                  <div className="absolute right-0 mt-2.5 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white border border-stone-surface shadow-lg z-50 p-4 transition-all duration-200">
                     <h4 className="text-xs font-bold text-charcoal-primary mb-2">조합원 프로필 정보</h4>
                     
                     {/* Recessed Panel 내역 명세 */}
@@ -387,6 +407,78 @@ export function PortalShell({
                         <strong className="text-midnight">{getRoleLabel(session.role)}</strong>
                       </div>
                     </div>
+
+                    <form
+                      ref={passwordFormRef}
+                      onSubmit={handlePasswordChange}
+                      className="mt-4 rounded-2xl bg-white p-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h5 className="text-xs font-bold text-charcoal-primary">비밀번호 변경</h5>
+                          <p className="mt-1 text-[10px] leading-4 text-ash">
+                            현재 비밀번호 확인 후 새 비밀번호를 저장합니다.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        <label className="block text-[10px] font-semibold text-graphite" htmlFor="currentPassword">
+                          현재 비밀번호
+                        </label>
+                        <input
+                          id="currentPassword"
+                          name="currentPassword"
+                          type="password"
+                          autoComplete="current-password"
+                          className="h-9 w-full rounded-xl border border-stone-surface bg-parchment-card px-3 text-xs font-medium text-charcoal-primary outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                        />
+
+                        <label className="block text-[10px] font-semibold text-graphite" htmlFor="newPassword">
+                          새 비밀번호
+                        </label>
+                        <input
+                          id="newPassword"
+                          name="newPassword"
+                          type="password"
+                          autoComplete="new-password"
+                          className="h-9 w-full rounded-xl border border-stone-surface bg-parchment-card px-3 text-xs font-medium text-charcoal-primary outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                        />
+
+                        <label className="block text-[10px] font-semibold text-graphite" htmlFor="newPasswordConfirm">
+                          새 비밀번호 확인
+                        </label>
+                        <input
+                          id="newPasswordConfirm"
+                          name="newPasswordConfirm"
+                          type="password"
+                          autoComplete="new-password"
+                          className="h-9 w-full rounded-xl border border-stone-surface bg-parchment-card px-3 text-xs font-medium text-charcoal-primary outline-none transition focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                        />
+                      </div>
+
+                      {passwordChangeStatus && (
+                        <p
+                          className={cn(
+                            "mt-3 rounded-xl px-3 py-2 text-[11px] font-semibold",
+                            passwordChangeStatus.type === "success"
+                              ? "bg-meadow-green/10 text-meadow-green"
+                              : "bg-ember-orange/10 text-ember-orange",
+                          )}
+                        >
+                          {passwordChangeStatus.message}
+                        </p>
+                      )}
+
+                      <Button
+                        type="submit"
+                        size="sm"
+                        disabled={isChangingPassword}
+                        className="mt-3 h-9 w-full rounded-full bg-midnight px-3 text-[11px] font-bold text-white hover:bg-charcoal-primary"
+                      >
+                        {isChangingPassword ? "변경 중..." : "비밀번호 변경"}
+                      </Button>
+                    </form>
 
                     <div className="mt-4 pt-3 border-t border-stone-surface flex items-center justify-between">
                       <span className="text-[10px] text-ash font-medium">안전한 세션 가동 중</span>

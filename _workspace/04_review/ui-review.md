@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: PDF upload automatic optimization controls and metadata flow.
-- Governing spec: `_workspace/01_scope/spec-selection.md`.
-- Implementation plan: `docs/superpowers/plans/2026-06-25-pdf-upload-optimization.md`.
-- Files or pages reviewed: `src/components/portal/document-upload-form.tsx`, `src/components/disclosure/meetings-table.tsx`, `/portal/admin` desktop and mobile upload form.
+- Feature: Logged-in account password change form in the portal profile menu.
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-25-account-password-change.md`
+- Files or pages reviewed: `src/components/portal/portal-shell.tsx`, `/login`, `/portal/admin`
 
 ## Boundary Review
-- Finding: PASS.
-- Evidence: The change only affects admin document upload/replacement preparation and file metadata persistence. Public navigation, document access checks, viewing routes, download routes, audit logging, and bookmark behavior were not changed.
+- Finding: PASS
+- Evidence: The new form is only rendered inside the logged-in portal profile dropdown. Public navigation and logged-out pages do not expose password mutation controls. The server action updates only the current session user's `passwordHash`.
 
 ## Truthful Presentation Review
-- Finding: PASS.
-- Evidence: The UI says `자동 최적화` only attempts optimization for PDFs over 5MB and stores the optimized file only when it is at least 15% smaller. This matches the implemented `prepareDocumentUploadFile` policy. `원본 그대로 저장` is available for quality-sensitive documents.
+- Finding: PASS
+- Evidence: The UI says `비밀번호 변경` and requires the current password. Passwordless Google accounts return a message directing users to manage the Google password externally. Operator-managed password reset for other users remains documented as CLI-only.
 
 ## Design And Accessibility Review
-- Finding: PASS.
-- Evidence: The new controls use accessible radio inputs inside labeled option blocks, preserve visible focus styles, and follow the existing warm card/pill styling. Browser verification saved `_workspace/pdf-upload-optimization-desktop.png` and `_workspace/pdf-upload-optimization-mobile.png`; both showed `PDF 저장 방식`, default checked `자동 최적화`, available `원본 그대로 저장`, no horizontal overflow, and no Next.js error overlay.
+- Finding: PASS
+- Evidence: The form uses labeled password inputs, rounded card/pill controls, warm stone surfaces, visible focus styles, and existing Pretendard typography. CDP browser verification on `http://localhost:3000/portal/admin` confirmed the profile menu renders on desktop and mobile with no horizontal overflow.
 
 ## Outcome
 - Result: PASS

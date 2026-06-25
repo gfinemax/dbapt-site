@@ -183,6 +183,73 @@ export async function signupWithPhonePasswordAction(prevState: unknown, formData
   }
 }
 
+export async function changePasswordAction(prevState: unknown, formData: FormData) {
+  void prevState;
+
+  const currentPassword = stringField(formData, "currentPassword");
+  const newPassword = stringField(formData, "newPassword");
+  const newPasswordConfirm = stringField(formData, "newPasswordConfirm");
+
+  if (!currentPassword || !newPassword || !newPasswordConfirm) {
+    return { error: "현재 비밀번호와 새 비밀번호를 모두 입력해주세요." };
+  }
+
+  if (newPassword !== newPasswordConfirm) {
+    return { error: "새 비밀번호 확인이 일치하지 않습니다." };
+  }
+
+  try {
+    const session = await getSession() as { id?: string } | null;
+    if (!session?.id) {
+      return { error: "로그인 후 비밀번호를 변경할 수 있습니다." };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: {
+        id: true,
+        loginId: true,
+        phone: true,
+        passwordHash: true,
+        isActive: true,
+      },
+    });
+
+    if (!user || !user.isActive) {
+      return { error: "비밀번호를 변경할 수 있는 계정을 찾을 수 없습니다." };
+    }
+
+    if (!user.passwordHash) {
+      return { error: "사이트 비밀번호가 없는 계정입니다. Google 계정에서 비밀번호를 관리해 주세요." };
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) {
+      return { error: "현재 비밀번호가 올바르지 않습니다." };
+    }
+
+    const passwordValidation = validateSignupPassword(newPassword, user.loginId || user.phone || "");
+    if (!passwordValidation.valid) {
+      return { error: passwordValidation.error };
+    }
+
+    if (await bcrypt.compare(newPassword, user.passwordHash)) {
+      return { error: "새 비밀번호는 현재 비밀번호와 다르게 입력해주세요." };
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    return { success: true, message: "비밀번호가 변경되었습니다." };
+  } catch (e) {
+    console.error("Change password action error:", e);
+    return { error: "비밀번호 변경 중 문제가 발생했습니다." };
+  }
+}
+
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.set("session", "", {
