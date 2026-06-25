@@ -11,6 +11,10 @@ export type Attachment = {
   filePath: string;
   fileName: string;
   fileSize: number;
+  originalFileSize?: number | null;
+  storedFileSize?: number | null;
+  fileOptimized?: boolean;
+  fileSizeReductionPercent?: number | null;
   createdAt: string;
 };
 
@@ -26,6 +30,10 @@ export type Document = {
   replyDueDate?: string | null;
   fileName: string;
   fileSize: number;
+  originalFileSize?: number | null;
+  storedFileSize?: number | null;
+  fileOptimized?: boolean;
+  fileSizeReductionPercent?: number | null;
   status: string;
   isStarred?: boolean;
   publishedAt: string | null;

@@ -14,6 +14,8 @@ type UploadedDocumentFile = {
   path?: unknown;
   name?: unknown;
   size?: unknown;
+  originalSize?: unknown;
+  optimized?: unknown;
 };
 
 type DisclosureNotificationDocument = Parameters<typeof notifyDisclosureDocumentApproved>[0]["document"];
@@ -77,6 +79,11 @@ function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string)
   const path = typeof file.path === "string" ? file.path.trim() : "";
   const name = typeof file.name === "string" ? file.name.trim() : "";
   const size = typeof file.size === "number" ? file.size : Number(file.size);
+  const rawOriginalSize =
+    typeof file.originalSize === "number" ? file.originalSize : Number(file.originalSize);
+  const originalSize = Number.isFinite(rawOriginalSize) && rawOriginalSize > 0 ? rawOriginalSize : size;
+  const optimized = file.optimized === true && originalSize > size;
+  const reductionPercent = optimized ? Math.round((1 - size / originalSize) * 100) : 0;
 
   if (!path || !name || !Number.isFinite(size) || size <= 0) {
     return { error: `${label} 정보가 올바르지 않습니다.` };
@@ -94,7 +101,15 @@ function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string)
     return { error: `${label}은 PDF, HWP, HWPX, Word 파일만 업로드할 수 있습니다.` };
   }
 
-  return { path, name, size };
+  return {
+    path,
+    name,
+    size,
+    originalSize,
+    storedSize: size,
+    optimized,
+    reductionPercent,
+  };
 }
 
 async function triggerDisclosureNotification(document: DisclosureNotificationDocument) {
@@ -186,7 +201,15 @@ export async function POST(request: Request) {
       }
 
       const rawAttachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 10) : [];
-      const attachmentsData: { filePath: string; fileName: string; fileSize: number }[] = [];
+      const attachmentsData: {
+        filePath: string;
+        fileName: string;
+        fileSize: number;
+        originalFileSize: number;
+        storedFileSize: number;
+        fileOptimized: boolean;
+        fileSizeReductionPercent: number;
+      }[] = [];
 
       for (const attachment of rawAttachments) {
         const uploadedAttachment = validateUploadedDocumentFile(attachment, "추가 첨부파일");
@@ -198,6 +221,10 @@ export async function POST(request: Request) {
           filePath: uploadedAttachment.path,
           fileName: uploadedAttachment.name,
           fileSize: uploadedAttachment.size,
+          originalFileSize: uploadedAttachment.originalSize,
+          storedFileSize: uploadedAttachment.storedSize,
+          fileOptimized: uploadedAttachment.optimized,
+          fileSizeReductionPercent: uploadedAttachment.reductionPercent,
         });
       }
 
@@ -217,6 +244,10 @@ export async function POST(request: Request) {
           filePath: uploadedFile.path,
           fileName: uploadedFile.name,
           fileSize: uploadedFile.size,
+          originalFileSize: uploadedFile.originalSize,
+          storedFileSize: uploadedFile.storedSize,
+          fileOptimized: uploadedFile.optimized,
+          fileSizeReductionPercent: uploadedFile.reductionPercent,
           status: "APPROVED",
           isStarred,
           publishedAt,

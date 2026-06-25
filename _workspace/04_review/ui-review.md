@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 자유게시판 게시글별 공개 공유 허용. 관리자는 글 작성/수정 시 `카톡 공유 허용`을 켤 수 있고, 비로그인 방문자는 `/news?tab=free&post=<id>`로 허용된 글 본문만 읽기 전용으로 볼 수 있다.
-- Governing spec: `docs/superpowers/plans/2026-06-25-free-board-public-share.md`.
-- Implementation plan: User-approved per-post public share plan recorded in `_workspace/00_input/request-summary.md` and `_workspace/01_scope/spec-selection.md`.
-- Files or pages reviewed: `/news?tab=free&post=4f2be04a-977f-42cb-a3bb-3f002a5cad24`, `src/app/news/page.tsx`, `src/app/api/news/free/route.ts`, `src/components/news/news-client.tsx`, `src/components/news/free-board.tsx`, `prisma/schema.prisma`.
+- Feature: PDF upload automatic optimization controls and metadata flow.
+- Governing spec: `_workspace/01_scope/spec-selection.md`.
+- Implementation plan: `docs/superpowers/plans/2026-06-25-pdf-upload-optimization.md`.
+- Files or pages reviewed: `src/components/portal/document-upload-form.tsx`, `src/components/disclosure/meetings-table.tsx`, `/portal/admin` desktop and mobile upload form.
 
 ## Boundary Review
-- Finding: PASS
-- Evidence: Public access is limited to one requested `FreePost` when `isPublicShareEnabled` is true. Full 자유게시판 list loading still requires a session. Writing, comments, replies, editing, deleting, and openchat copy controls remain unavailable to unauthenticated visitors.
+- Finding: PASS.
+- Evidence: The change only affects admin document upload/replacement preparation and file metadata persistence. Public navigation, document access checks, viewing routes, download routes, audit logging, and bookmark behavior were not changed.
 
 ## Truthful Presentation Review
-- Finding: PASS
-- Evidence: Public shared posts show a read-only notice that comments and replies require 조합원 login. The public view does not present anonymous posting or membership-only workflows as available.
+- Finding: PASS.
+- Evidence: The UI says `자동 최적화` only attempts optimization for PDFs over 5MB and stores the optimized file only when it is at least 15% smaller. This matches the implemented `prepareDocumentUploadFile` policy. `원본 그대로 저장` is available for quality-sensitive documents.
 
 ## Design And Accessibility Review
-- Finding: PASS
-- Evidence: The implementation reuses the existing left focus panel, warm canvas, rounded controls, and compact board layout. Admin sharing uses a checkbox control in the existing write/edit drawer. Browser checks on desktop `1365x900` and mobile `390x844` confirmed the panel opens at top, the title/body are visible, login gate/write button are absent, and horizontal overflow is false.
+- Finding: PASS.
+- Evidence: The new controls use accessible radio inputs inside labeled option blocks, preserve visible focus styles, and follow the existing warm card/pill styling. Browser verification saved `_workspace/pdf-upload-optimization-desktop.png` and `_workspace/pdf-upload-optimization-mobile.png`; both showed `PDF 저장 방식`, default checked `자동 최적화`, available `원본 그대로 저장`, no horizontal overflow, and no Next.js error overlay.
 
 ## Outcome
 - Result: PASS

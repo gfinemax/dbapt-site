@@ -6,6 +6,11 @@ import { cn } from "@/lib/utils";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { type Document } from "@/components/portal/document-table";
 import { DocumentUploadForm } from "../portal/document-upload-form";
+import { DocumentBookmarkButton } from "../portal/document-bookmark-button";
+import {
+  prepareDocumentUploadFile,
+  type PdfUploadOptimizationMode,
+} from "@/lib/pdf-upload-optimization";
 
 // ── 공개자료 문서함 분류 타입 ──
 export type MeetingCategory =
@@ -165,6 +170,7 @@ type DocumentEditFormState = {
   attachments: NonNullable<Document["attachments"]>;
   replacementFile: File | null;
   replacementAttachments: File[];
+  pdfOptimizationMode: PdfUploadOptimizationMode;
   documentDate: string;
   publishedAt: string;
   isStarred: boolean;
@@ -233,6 +239,7 @@ type MeetingsTableProps = {
   onBackToFolders?: () => void;
   documents?: Document[];
   onViewDocument?: (document: Document) => void;
+  onDocumentBookmarkChange?: (documentId: string, isBookmarked: boolean) => void;
 };
 
 function getInitialCategoryFilter(
@@ -261,9 +268,11 @@ export function MeetingsTable({
   initialCorrespondenceTypes,
   onBackToFolders,
   documents = [],
-  onViewDocument
+  onViewDocument,
+  onDocumentBookmarkChange
 }: MeetingsTableProps) {
   const isAdmin = role?.toUpperCase() === "ADMIN";
+  const showBookmarkColumn = isLoggedIn;
   const [page, setPage] = useState(1);
   const [filterCat, setFilterCat] = useState<CategoryFilter>(() => getInitialCategoryFilter(initialFilterCat, initialCorrespondenceTypes));
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
@@ -391,6 +400,7 @@ export function MeetingsTable({
       attachments: source.attachments || [],
       replacementFile: null,
       replacementAttachments: [],
+      pdfOptimizationMode: "auto",
       documentDate: toDateInputValue(source.documentDate || source.createdAt),
       publishedAt: toDateInputValue(source.publishedAt || source.createdAt),
       isStarred: !!source.isStarred,
@@ -417,9 +427,12 @@ export function MeetingsTable({
         ...(editingDoc.replacementFile ? [editingDoc.replacementFile] : []),
         ...editingDoc.replacementAttachments,
       ];
-      const oversizedFile = replacementFiles.find((file) => file.size > MAX_DOCUMENT_UPLOAD_SIZE);
+      const preparedReplacementFiles = await Promise.all(
+        replacementFiles.map((file) => prepareDocumentUploadFile(file, { mode: editingDoc.pdfOptimizationMode })),
+      );
+      const oversizedFile = preparedReplacementFiles.find((file) => file.file.size > MAX_DOCUMENT_UPLOAD_SIZE);
       if (oversizedFile) {
-        setEditError(`${oversizedFile.name} 파일은 20MB 이하만 업로드할 수 있습니다.`);
+        setEditError(`${oversizedFile.originalFile.name} 파일은 최적화 후에도 20MB 이하만 업로드할 수 있습니다.`);
         return;
       }
 
@@ -431,9 +444,9 @@ export function MeetingsTable({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            files: replacementFiles.map((file) => ({
-              name: file.name,
-              size: file.size,
+            files: preparedReplacementFiles.map((file) => ({
+              name: file.originalFile.name,
+              size: file.file.size,
             })),
           }),
         });
@@ -450,7 +463,7 @@ export function MeetingsTable({
           return;
         }
 
-        await Promise.all(signedUploads.map((upload, index) => uploadToSignedUrl(upload, replacementFiles[index])));
+        await Promise.all(signedUploads.map((upload, index) => uploadToSignedUrl(upload, preparedReplacementFiles[index].file)));
 
         const attachmentStart = editingDoc.replacementFile ? 1 : 0;
         uploadedMainFile = editingDoc.replacementFile ? signedUploads[0] : null;
@@ -489,18 +502,24 @@ export function MeetingsTable({
       };
 
       if (uploadedMainFile && editingDoc.replacementFile) {
+        const preparedMainFile = preparedReplacementFiles[0];
         requestBody.file = {
           path: uploadedMainFile.path,
           name: editingDoc.replacementFile.name,
-          size: editingDoc.replacementFile.size,
+          size: preparedMainFile.storedSize,
+          originalSize: preparedMainFile.originalSize,
+          optimized: preparedMainFile.optimized,
         };
       }
 
       if (uploadedAttachments && editingDoc.replacementAttachments.length > 0) {
+        const preparedAttachmentStart = editingDoc.replacementFile ? 1 : 0;
         requestBody.appendAttachments = uploadedAttachments.map((upload, index) => ({
           path: upload.path,
           name: editingDoc.replacementAttachments[index].name,
-          size: editingDoc.replacementAttachments[index].size,
+          size: preparedReplacementFiles[preparedAttachmentStart + index].storedSize,
+          originalSize: preparedReplacementFiles[preparedAttachmentStart + index].originalSize,
+          optimized: preparedReplacementFiles[preparedAttachmentStart + index].optimized,
         }));
       }
 
@@ -815,6 +834,7 @@ export function MeetingsTable({
               <col className="w-24" />
               <col />
               <col className="w-24" />
+              {showBookmarkColumn && <col className="w-28" />}
               {isAdmin && <col className="w-16" />}
             </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface">
@@ -822,13 +842,14 @@ export function MeetingsTable({
                 <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">발생일</th>
                 <th className="px-3 py-3.5 font-semibold text-ash text-xs">문서 제목</th>
                 <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">회신기한</th>
+                {showBookmarkColumn && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">보관</th>}
                 {isAdmin && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50">
               {paged.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 4 : 3} className="px-5 py-16 text-center text-sm text-graphite">
+                  <td colSpan={3 + (showBookmarkColumn ? 1 : 0) + (isAdmin ? 1 : 0)} className="px-5 py-16 text-center text-sm text-graphite">
                     검색 조건에 맞는 문서가 없습니다.
                   </td>
                 </tr>
@@ -885,6 +906,19 @@ export function MeetingsTable({
                     <td className="px-3 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">
                       {renderReplyDueCell(doc)}
                     </td>
+                    {showBookmarkColumn && (
+                      <td className="px-3 py-3.5 text-center">
+                        {doc.sourceDocument ? (
+                          <DocumentBookmarkButton
+                            document={doc.sourceDocument}
+                            includeDocumentTitleInLabel
+                            onBookmarkChange={onDocumentBookmarkChange}
+                          />
+                        ) : (
+                          <span className="text-[11px] text-ash">-</span>
+                        )}
+                      </td>
+                    )}
                     {isAdmin && (
                       <td className="px-3 py-3.5 text-center">
                         <div className="flex items-center justify-center gap-1">
@@ -1002,6 +1036,13 @@ export function MeetingsTable({
                     )) || null}
                   </span>
                   <div className="flex items-center gap-1.5">
+                    {doc.sourceDocument && (
+                      <DocumentBookmarkButton
+                        document={doc.sourceDocument}
+                        includeDocumentTitleInLabel
+                        onBookmarkChange={onDocumentBookmarkChange}
+                      />
+                    )}
                     {isLoggedIn ? (
                       <span className="inline-flex items-center gap-1 text-meadow-green text-[10px] font-bold bg-meadow-green/10 px-2.5 py-1 rounded-full">
                         🔓 열람
@@ -1305,6 +1346,43 @@ export function MeetingsTable({
                       새 본문 파일: {editingDoc.replacementFile.name}
                     </p>
                   )}
+                  <fieldset className="mt-3 rounded-xl border border-stone-surface bg-white p-3">
+                    <legend className="px-1 text-xs font-semibold text-charcoal-primary">PDF 저장 방식</legend>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-[#f8f7f4] px-3 py-2 text-xs text-graphite transition hover:bg-parchment-card">
+                        <input
+                          type="radio"
+                          name="editPdfOptimizationMode"
+                          value="auto"
+                          checked={editingDoc.pdfOptimizationMode === "auto"}
+                          onChange={() => setEditingDoc((prev) => prev ? { ...prev, pdfOptimizationMode: "auto" } : prev)}
+                          className="mt-0.5 size-4 cursor-pointer border-[#f2f0ed] text-ember-orange focus:ring-ember-orange"
+                        />
+                        <span>
+                          <span className="block font-bold text-charcoal-primary">자동 최적화</span>
+                          <span className="mt-0.5 block text-[10px] leading-relaxed text-ash">
+                            5MB 초과 PDF만 최적화를 시도하고, 15% 이상 줄어들 때 최적화본 1개만 저장합니다.
+                          </span>
+                        </span>
+                      </label>
+                      <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-[#f8f7f4] px-3 py-2 text-xs text-graphite transition hover:bg-parchment-card">
+                        <input
+                          type="radio"
+                          name="editPdfOptimizationMode"
+                          value="original"
+                          checked={editingDoc.pdfOptimizationMode === "original"}
+                          onChange={() => setEditingDoc((prev) => prev ? { ...prev, pdfOptimizationMode: "original" } : prev)}
+                          className="mt-0.5 size-4 cursor-pointer border-[#f2f0ed] text-ember-orange focus:ring-ember-orange"
+                        />
+                        <span>
+                          <span className="block font-bold text-charcoal-primary">원본 그대로 저장</span>
+                          <span className="mt-0.5 block text-[10px] leading-relaxed text-ash">
+                            도면, 직인, 서명 품질이 민감한 PDF는 최적화 없이 저장합니다.
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                  </fieldset>
                 </div>
 
                 <div className="rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">

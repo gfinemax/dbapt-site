@@ -1,60 +1,38 @@
 # Verification
 
 ## Implemented Feature
+- Added PDF upload automatic optimization policy for admin document uploads and disclosure document replacement flows.
+- Added `자동 최적화` and `원본 그대로 저장` controls.
+- Added final-file-only metadata fields for documents and attachments:
+  - `originalFileSize`
+  - `storedFileSize`
+  - `fileOptimized`
+  - `fileSizeReductionPercent`
+- Added migration `prisma/migrations/20260625093000_add_document_file_optimization_metadata/migration.sql`.
+- Applied the migration to the current database with `pnpm exec prisma migrate deploy`.
 
-- Added per-post public share fields to `FreePost`: `isPublicShareEnabled` and `publicShareEnabledAt`.
-- Added a Prisma migration for the new fields and applied it with `pnpm exec prisma migrate deploy`.
-- Added an administrator-only `카톡 공유 허용` checkbox to the free-board write/edit drawer.
-- Updated free-board create/update payloads and `/api/news/free` so only administrators can enable public sharing.
-- Updated `/news` server loading so unauthenticated visitors receive only the requested public-shared post for `/news?tab=free&post=<id>`.
-- Updated the free-board client to render public shared posts read-only without login gate, write, comment, reply, edit, delete, or openchat controls.
-- Enabled public sharing for the user-provided post ID `4f2be04a-977f-42cb-a3bb-3f002a5cad24`.
-
-## Changed Files
-
-- `_workspace/00_input/request-summary.md`
-- `_workspace/01_scope/spec-selection.md`
-- `_workspace/04_review/ui-review.md`
-- `_workspace/final/verification.md`
-- `docs/superpowers/plans/2026-06-25-free-board-public-share.md`
-- `prisma/schema.prisma`
-- `prisma/migrations/20260625015000_add_free_post_public_share/migration.sql`
-- `src/app/api/news/free/route.ts`
-- `src/app/news/page.tsx`
-- `src/components/news/free-board.tsx`
-- `src/components/news/news-client.tsx`
-- `src/lib/news/free-board-api.ts`
-- `src/lib/news/free-board-list.ts`
-- `src/lib/news/types.ts`
-- `src/__tests__/news-admin-controls.test.tsx`
-- `src/__tests__/news-free-board-api.test.ts`
+## Changed Files Summary
+- `src/lib/pdf-upload-optimization.ts`: shared PDF preparation helper using safe `pdf-lib` structural optimization.
+- `src/components/portal/document-upload-form.tsx`: new upload controls and prepared-file signed upload flow.
+- `src/components/disclosure/meetings-table.tsx`: same prepared-file flow for replacement and appended attachments.
+- `src/app/api/documents/route.ts`: create API metadata normalization and persistence.
+- `src/app/api/documents/[id]/route.ts`: update API metadata normalization and persistence.
+- `prisma/schema.prisma`: document and attachment optimization metadata fields.
+- Tests added/updated under `src/__tests__/`.
 
 ## Checks Run
-
-- `pnpm exec vitest run src/__tests__/news-free-board-api.test.ts`: first RED confirmed the public-share payload field was not included.
-- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "public share|public shared"`: first RED confirmed API persistence and unauthenticated public rendering were missing.
-- `pnpm exec vitest run src/__tests__/news-free-board-api.test.ts`: passed, 1 file / 4 tests.
-- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "public share|public shared"`: passed, 1 file / 2 selected tests.
-- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx`: passed, 1 file / 78 tests.
-- `pnpm exec vitest run src/__tests__/news-free-board-api.test.ts src/__tests__/news-free-board-list.test.ts src/__tests__/news-free-board-deep-links.test.ts`: passed, 3 files / 10 tests.
-- `pnpm exec prisma validate`: passed.
-- `pnpm exec prisma generate`: passed.
-- `pnpm exec prisma migrate deploy`: applied `20260625015000_add_free_post_public_share`.
-- `pnpm exec prisma migrate status`: passed, database schema is up to date.
-- `pnpm lint`: passed.
-- `pnpm test`: passed, 70 files / 405 tests. Existing jsdom `Window's scrollTo()` warnings were printed.
-- `pnpm build`: passed.
+- `pnpm exec prisma format && pnpm exec prisma generate`: PASS.
+- `pnpm exec prisma migrate deploy`: PASS.
+- `pnpm lint`: PASS.
+- `pnpm test -- src/__tests__/pdf-upload-optimization.test.ts src/__tests__/document-upload-form.test.tsx src/__tests__/document-upload-api.test.ts`: PASS, 28 tests.
+- `pnpm test`: PASS, 72 files / 421 tests.
+- `pnpm build`: PASS.
 
 ## Browser Checks
+- `/portal/admin` desktop 1440x1000: PASS. Screenshot saved to `_workspace/pdf-upload-optimization-desktop.png`.
+- `/portal/admin` mobile 390x844: PASS. Screenshot saved to `_workspace/pdf-upload-optimization-mobile.png`.
+- Verified default checked `자동 최적화`, available `원본 그대로 저장`, policy text, no horizontal overflow, and no Next.js error overlay.
 
-- Started local dev server at `http://127.0.0.1:3000` for browser checks, then restarted dbapt-site at `http://127.0.0.1:3001` for user preview after cleaning repo-local dev logs.
-- Checked `http://127.0.0.1:3000/news`: HTTP 200.
-- Chrome CDP desktop check on `http://127.0.0.1:3000/news?tab=free&post=4f2be04a-977f-42cb-a3bb-3f002a5cad24` with viewport `1365x900`: panel present, title present, read-only comment notice present, login gate absent, write button absent, horizontal overflow false, panel top `0`.
-- Chrome CDP mobile check on the same URL with viewport `390x844`: panel present, title present, read-only comment notice present, login gate absent, write button absent, horizontal overflow false, panel top `0`.
-- Final preview URL `http://127.0.0.1:3001/news?tab=free&post=4f2be04a-977f-42cb-a3bb-3f002a5cad24`: HTTP 200 and the shared post title is present in the HTML.
-- Screenshots saved to `_workspace/public-share-desktop.png` and `_workspace/public-share-mobile.png`.
-- `dbapt-site-ui-review`: PASS in `_workspace/04_review/ui-review.md`.
-
-## Unresolved Risks Or Follow-Up Specs
-
-- `tsc --noEmit` was attempted as an extra check and failed on existing repo-wide test typing issues unrelated to this slice; `next build` TypeScript passed for the application.
+## Unresolved Risks Or Follow-Ups
+- Current PDF optimization is safe structural optimization through `pdf-lib`; it does not downsample scanned images. That avoids quality loss but means some scanned PDFs may not shrink much.
+- Image upload compression remains out of scope for this slice.

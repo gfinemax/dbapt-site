@@ -4,6 +4,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { type Document } from "@/components/portal/document-table";
+import {
+  prepareDocumentUploadFile,
+  type PdfUploadOptimizationMode,
+} from "@/lib/pdf-upload-optimization";
 
 type DocumentUploadFormProps = {
   onSuccess?: (document?: Document) => void;
@@ -113,6 +117,7 @@ export function DocumentUploadForm({
   const [publishedAt, setPublishedAt] = useState(getTodayString());
   const [file, setFile] = useState<File | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [pdfOptimizationMode, setPdfOptimizationMode] = useState<PdfUploadOptimizationMode>("auto");
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -153,22 +158,24 @@ export function DocumentUploadForm({
     setError("");
     setSuccess(false);
 
-    const filesToUpload = [file, ...attachments];
-    const oversizedFile = filesToUpload.find((uploadFile) => uploadFile.size > MAX_DOCUMENT_UPLOAD_SIZE);
-    if (oversizedFile) {
-      setError(`${oversizedFile.name} 파일은 20MB 이하만 업로드할 수 있습니다.`);
-      setIsPending(false);
-      return;
-    }
-
     try {
+      const filesToUpload = [file, ...attachments];
+      const preparedFiles = await Promise.all(
+        filesToUpload.map((uploadFile) => prepareDocumentUploadFile(uploadFile, { mode: pdfOptimizationMode })),
+      );
+      const oversizedFile = preparedFiles.find((preparedFile) => preparedFile.file.size > MAX_DOCUMENT_UPLOAD_SIZE);
+      if (oversizedFile) {
+        setError(`${oversizedFile.originalFile.name} 파일은 최적화 후에도 20MB 이하만 업로드할 수 있습니다.`);
+        return;
+      }
+
       const uploadUrlResponse = await fetch("/api/documents/upload-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          files: filesToUpload.map((uploadFile) => ({
-            name: uploadFile.name,
-            size: uploadFile.size,
+          files: preparedFiles.map((preparedFile) => ({
+            name: preparedFile.originalFile.name,
+            size: preparedFile.file.size,
           })),
         }),
       });
@@ -180,14 +187,15 @@ export function DocumentUploadForm({
       }
 
       const signedUploads = uploadUrlData.uploads as SignedDocumentUpload[];
-      if (!Array.isArray(signedUploads) || signedUploads.length !== filesToUpload.length) {
+      if (!Array.isArray(signedUploads) || signedUploads.length !== preparedFiles.length) {
         setError("문서 업로드 준비 정보가 올바르지 않습니다.");
         return;
       }
 
-      await Promise.all(signedUploads.map((upload, index) => uploadToSignedUrl(upload, filesToUpload[index])));
+      await Promise.all(signedUploads.map((upload, index) => uploadToSignedUrl(upload, preparedFiles[index].file)));
 
       const [mainUpload, ...attachmentUploads] = signedUploads;
+      const [mainPreparedFile, ...preparedAttachments] = preparedFiles;
       const res = await fetch("/api/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -206,12 +214,16 @@ export function DocumentUploadForm({
           file: {
             path: mainUpload.path,
             name: file.name,
-            size: file.size,
+            size: mainPreparedFile.storedSize,
+            originalSize: mainPreparedFile.originalSize,
+            optimized: mainPreparedFile.optimized,
           },
           attachments: attachmentUploads.map((upload, index) => ({
             path: upload.path,
             name: attachments[index].name,
-            size: attachments[index].size,
+            size: preparedAttachments[index].storedSize,
+            originalSize: preparedAttachments[index].originalSize,
+            optimized: preparedAttachments[index].optimized,
           })),
         }),
       });
@@ -230,6 +242,7 @@ export function DocumentUploadForm({
       setPublishedAt(getTodayString());
       setFile(null);
       setAttachments([]);
+      setPdfOptimizationMode("auto");
       setIsStarred(false);
       setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
       setIsReplyCorrespondence(false);
@@ -506,6 +519,44 @@ export function DocumentUploadForm({
               className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
             />
           </div>
+
+          <fieldset className="sm:col-span-2 rounded-xl border border-stone-surface bg-[#f8f7f4] p-3">
+            <legend className="px-1 text-xs font-semibold text-charcoal-primary">PDF 저장 방식</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-white px-3 py-2 text-xs text-graphite transition hover:bg-parchment-card">
+                <input
+                  type="radio"
+                  name="pdfOptimizationMode"
+                  value="auto"
+                  checked={pdfOptimizationMode === "auto"}
+                  onChange={() => setPdfOptimizationMode("auto")}
+                  className="mt-0.5 size-4 cursor-pointer border-[#f2f0ed] text-ember-orange focus:ring-ember-orange"
+                />
+                <span>
+                  <span className="block font-bold text-charcoal-primary">자동 최적화</span>
+                  <span className="mt-0.5 block text-[10px] leading-relaxed text-ash">
+                    5MB 초과 PDF만 최적화를 시도하고, 15% 이상 줄어들 때 최적화본 1개만 저장합니다.
+                  </span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-white px-3 py-2 text-xs text-graphite transition hover:bg-parchment-card">
+                <input
+                  type="radio"
+                  name="pdfOptimizationMode"
+                  value="original"
+                  checked={pdfOptimizationMode === "original"}
+                  onChange={() => setPdfOptimizationMode("original")}
+                  className="mt-0.5 size-4 cursor-pointer border-[#f2f0ed] text-ember-orange focus:ring-ember-orange"
+                />
+                <span>
+                  <span className="block font-bold text-charcoal-primary">원본 그대로 저장</span>
+                  <span className="mt-0.5 block text-[10px] leading-relaxed text-ash">
+                    도면, 직인, 서명 품질이 민감한 PDF는 최적화 없이 저장합니다.
+                  </span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
 
           <div className="sm:col-span-2 flex items-center gap-2 py-1">
             <input

@@ -37,6 +37,7 @@ model User {
   // 관계 정의
   documentLogs                     DocumentLog[]
   personalDocumentBookmarks        PersonalDocumentBookmark[]
+  personalContentBookmarks         PersonalContentBookmark[]
   refundInfo                       RefundInfo?
   contributionSummary              ContributionSummary?
   contributionProfile              MemberContributionProfile?
@@ -56,27 +57,31 @@ model User {
 
 // 2. 정보공개 및 회계 보고 문서
 model Document {
-  id                 String    @id @default(uuid())
-  title              String // 문서 제목
-  description        String? // 문서 설명
-  category           String // DISCLOSURE, ACCOUNTING, NOTICE
-  subCategory        String? // 세부 카테고리 (예: 총회 의사록, 이사회 회의록 등)
-  correspondenceType String? // 수발신 공문 방향: 발신, 수신, 회신
-  replyToDocumentId  String? // 회신 공문이 참조하는 수신 공문 ID
-  replyNotRequired   Boolean   @default(false) // 수신 공문 중 회신 불필요 여부
-  replyDueDate       DateTime? // 수신 공문 회신 기한
-  filePath           String // 업로드된 내부 파일 경로 (보안 저장)
-  fileName           String // 원본 파일명
-  fileSize           Int // 파일 용량 (bytes)
-  attachmentPath     String? // 추가 첨부파일 저장 경로
-  attachmentName     String? // 추가 첨부파일 원본 파일명
-  attachmentSize     Int? // 추가 첨부파일 용량 (bytes)
-  isStarred          Boolean   @default(false) // 중요 문서 별표 마킹
-  status             String    @default("PENDING") // PENDING, APPROVED
-  publishedAt        DateTime? // 실제 조합원 대상 공개 일시
-  documentDate       DateTime  @default(now()) // 실제 총회 개최일 / 이사회 개최일 / 공문 발생일
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                       String    @id @default(uuid())
+  title                    String // 문서 제목
+  description              String? // 문서 설명
+  category                 String // DISCLOSURE, ACCOUNTING, NOTICE
+  subCategory              String? // 세부 카테고리 (예: 총회 의사록, 이사회 회의록 등)
+  correspondenceType       String? // 수발신 공문 방향: 발신, 수신, 회신
+  replyToDocumentId        String? // 회신 공문이 참조하는 수신 공문 ID
+  replyNotRequired         Boolean   @default(false) // 수신 공문 중 회신 불필요 여부
+  replyDueDate             DateTime? // 수신 공문 회신 기한
+  filePath                 String // 업로드된 내부 파일 경로 (보안 저장)
+  fileName                 String // 원본 파일명
+  fileSize                 Int // 파일 용량 (bytes)
+  originalFileSize         Int? // 최적화 전 원본 파일 용량 (bytes)
+  storedFileSize           Int? // 실제 저장된 파일 용량 (bytes)
+  fileOptimized            Boolean   @default(false) // PDF 업로드 최적화 적용 여부
+  fileSizeReductionPercent Int? // 최적화로 절감된 용량 비율
+  attachmentPath           String? // 추가 첨부파일 저장 경로
+  attachmentName           String? // 추가 첨부파일 원본 파일명
+  attachmentSize           Int? // 추가 첨부파일 용량 (bytes)
+  isStarred                Boolean   @default(false) // 중요 문서 별표 마킹
+  status                   String    @default("PENDING") // PENDING, APPROVED
+  publishedAt              DateTime? // 실제 조합원 대상 공개 일시
+  documentDate             DateTime  @default(now()) // 실제 총회 개최일 / 이사회 개최일 / 공문 발생일
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   // 관계 정의
   logs                    DocumentLog[]
@@ -223,12 +228,16 @@ model OpenChatAnnouncement {
 
 // 2.5. 문서 추가 첨부파일 정보 (1:N 관계)
 model Attachment {
-  id         String   @id @default(uuid())
-  documentId String
-  filePath   String // 업로드된 내부 파일 경로 (보안 저장)
-  fileName   String // 원본 파일명
-  fileSize   Int // 파일 용량 (bytes)
-  createdAt  DateTime @default(now())
+  id                       String   @id @default(uuid())
+  documentId               String
+  filePath                 String // 업로드된 내부 파일 경로 (보안 저장)
+  fileName                 String // 원본 파일명
+  fileSize                 Int // 파일 용량 (bytes)
+  originalFileSize         Int? // 최적화 전 원본 파일 용량 (bytes)
+  storedFileSize           Int? // 실제 저장된 파일 용량 (bytes)
+  fileOptimized            Boolean  @default(false) // PDF 업로드 최적화 적용 여부
+  fileSizeReductionPercent Int? // 최적화로 절감된 용량 비율
+  createdAt                DateTime @default(now())
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
@@ -260,6 +269,20 @@ model PersonalDocumentBookmark {
 
   @@unique([userId, documentId])
   @@index([documentId])
+}
+
+// 3.2. 조합소식/게시판 개인 보관함
+model PersonalContentBookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  targetType String // COOP_NEWS, FREE_POST
+  targetId   String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId])
 }
 
 // 4. 환불 조합원 전용 환불 정보 (1:1 매핑)
@@ -517,23 +540,23 @@ model Session {
 
 // 5. 조합소식 (공지사항 및 주/월간소식)
 model CoopNews {
-  id             String   @id @default(uuid())
-  category       String // NOTICE (공지사항), WEEKLY_MONTHLY (주/월간소식)
-  title          String
-  content        String // markdown or HTML text
-  viewCount      Int      @default(0)
-  isStarred      Boolean  @default(false)
-  imagePath      String? // 주/월간소식 메인 썸네일
-  attachmentPath String? // 공지/조합뉴스 공개 첨부파일 경로
-  attachmentName String? // 공지/조합뉴스 공개 첨부파일 원본명
-  attachmentSize Int? // 공지/조합뉴스 공개 첨부파일 크기(bytes)
-  displayAuthorName String? // 공개 화면에 표시할 조직 작성자명
-  registeredAt   DateTime @default(now()) // 화면 표시 및 정렬용 등록일
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  authorId       String
-  author         User     @relation(fields: [authorId], references: [id])
-  comments       CoopNewsComment[]
+  id                    String                 @id @default(uuid())
+  category              String // NOTICE (공지사항), WEEKLY_MONTHLY (주/월간소식)
+  title                 String
+  content               String // markdown or HTML text
+  viewCount             Int                    @default(0)
+  isStarred             Boolean                @default(false)
+  imagePath             String? // 주/월간소식 메인 썸네일
+  attachmentPath        String? // 공지/조합뉴스 공개 첨부파일 경로
+  attachmentName        String? // 공지/조합뉴스 공개 첨부파일 원본명
+  attachmentSize        Int? // 공지/조합뉴스 공개 첨부파일 크기(bytes)
+  displayAuthorName     String? // 공개 화면에 표시할 조직 작성자명
+  registeredAt          DateTime               @default(now()) // 화면 표시 및 정렬용 등록일
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  authorId              String
+  author                User                   @relation(fields: [authorId], references: [id])
+  comments              CoopNewsComment[]
   openChatAnnouncements OpenChatAnnouncement[]
 
   @@index([registeredAt])
@@ -541,17 +564,17 @@ model CoopNews {
 
 // 6. 공지사항 댓글
 model CoopNewsComment {
-  id                String   @id @default(uuid())
+  id                String            @id @default(uuid())
   content           String
   displayAuthorName String? // 관리자 공지 댓글 공개 작성자명: 운영자, 사무국
-  createdAt         DateTime @default(now())
+  createdAt         DateTime          @default(now())
   newsId            String
-  news              CoopNews @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  news              CoopNews          @relation(fields: [newsId], references: [id], onDelete: Cascade)
   parentId          String?
   parent            CoopNewsComment?  @relation("CoopNewsCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies           CoopNewsComment[] @relation("CoopNewsCommentReplies")
   authorId          String
-  author            User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author            User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([newsId, createdAt])
   @@index([newsId, parentId])
@@ -559,24 +582,24 @@ model CoopNewsComment {
 
 // 7. 자유게시판 글
 model FreePost {
-  id                String        @id @default(uuid())
-  title             String
-  content           String
-  imagePath         String? // 첨부 이미지 경로
-  attachmentPath    String? // 공개 첨부파일 경로
-  attachmentName    String? // 공개 첨부파일명
-  attachmentSize    Int? // 공개 첨부파일 크기(byte)
-  postType          String        @default("FREE") // FREE, DISCUSSION, QUESTION, PROPOSAL, NOTICE
-  displayAuthorName String? // 관리자 작성글 공개 작성자명: 운영자, 사무국
-  isStarred         Boolean       @default(false)
-  isPublicShareEnabled Boolean    @default(false) // 비로그인 공유 링크 열람 허용
-  publicShareEnabledAt DateTime?  // 공개 공유가 처음 활성화된 시각
-  registeredAt      DateTime      @default(now()) // 화면 표시 및 정렬용 등록일
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  authorId          String
-  author            User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments          FreeComment[]
+  id                    String                 @id @default(uuid())
+  title                 String
+  content               String
+  imagePath             String? // 첨부 이미지 경로
+  attachmentPath        String? // 공개 첨부파일 경로
+  attachmentName        String? // 공개 첨부파일명
+  attachmentSize        Int? // 공개 첨부파일 크기(byte)
+  postType              String                 @default("FREE") // FREE, DISCUSSION, QUESTION, PROPOSAL, NOTICE
+  displayAuthorName     String? // 관리자 작성글 공개 작성자명: 운영자, 사무국
+  isStarred             Boolean                @default(false)
+  isPublicShareEnabled  Boolean                @default(false) // 비로그인 공유 링크 열람 허용
+  publicShareEnabledAt  DateTime? // 공개 공유가 처음 활성화된 시각
+  registeredAt          DateTime               @default(now()) // 화면 표시 및 정렬용 등록일
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  authorId              String
+  author                User                   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments              FreeComment[]
   openChatAnnouncements OpenChatAnnouncement[]
 
   @@index([registeredAt])

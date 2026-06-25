@@ -3,6 +3,14 @@ import { describe, expect, it } from "vitest";
 import { DocumentUploadForm } from "@/components/portal/document-upload-form";
 
 describe("document upload form", () => {
+  it("defaults PDF uploads to automatic optimization with an original-file override", () => {
+    render(<DocumentUploadForm />);
+
+    expect(screen.getByRole("radio", { name: /자동 최적화/ })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /원본 그대로 저장/ })).not.toBeChecked();
+    expect(screen.getByText(/5MB 초과 PDF만 최적화를 시도/)).toBeInTheDocument();
+  });
+
   it("supports regulation subcategories and common regulation file formats", () => {
     const { container } = render(<DocumentUploadForm />);
 

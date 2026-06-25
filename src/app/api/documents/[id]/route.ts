@@ -155,14 +155,34 @@ type UploadedDocumentFile = {
   path?: unknown;
   name?: unknown;
   size?: unknown;
+  originalSize?: unknown;
+  optimized?: unknown;
 };
 
 function parseUploadedDocumentFiles(
   input: unknown,
   label: string,
-): { files: { filePath: string; fileName: string; fileSize: number }[] } | { error: string } {
+): {
+  files: {
+    filePath: string;
+    fileName: string;
+    fileSize: number;
+    originalFileSize: number;
+    storedFileSize: number;
+    fileOptimized: boolean;
+    fileSizeReductionPercent: number;
+  }[];
+} | { error: string } {
   const rawFiles = Array.isArray(input) ? input.slice(0, 10) : [];
-  const files: { filePath: string; fileName: string; fileSize: number }[] = [];
+  const files: {
+    filePath: string;
+    fileName: string;
+    fileSize: number;
+    originalFileSize: number;
+    storedFileSize: number;
+    fileOptimized: boolean;
+    fileSizeReductionPercent: number;
+  }[] = [];
 
   for (const rawFile of rawFiles) {
     const uploadedFile = validateUploadedDocumentFile(rawFile as UploadedDocumentFile, label);
@@ -174,6 +194,10 @@ function parseUploadedDocumentFiles(
       filePath: uploadedFile.path,
       fileName: uploadedFile.name,
       fileSize: uploadedFile.size,
+      originalFileSize: uploadedFile.originalSize,
+      storedFileSize: uploadedFile.storedSize,
+      fileOptimized: uploadedFile.optimized,
+      fileSizeReductionPercent: uploadedFile.reductionPercent,
     });
   }
 
@@ -184,6 +208,11 @@ function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string)
   const path = typeof file.path === "string" ? file.path.trim() : "";
   const name = typeof file.name === "string" ? file.name.trim() : "";
   const size = typeof file.size === "number" ? file.size : Number(file.size);
+  const rawOriginalSize =
+    typeof file.originalSize === "number" ? file.originalSize : Number(file.originalSize);
+  const originalSize = Number.isFinite(rawOriginalSize) && rawOriginalSize > 0 ? rawOriginalSize : size;
+  const optimized = file.optimized === true && originalSize > size;
+  const reductionPercent = optimized ? Math.round((1 - size / originalSize) * 100) : 0;
 
   if (!path || !name || !Number.isFinite(size) || size <= 0) {
     return { error: `${label} 정보가 올바르지 않습니다.` };
@@ -201,7 +230,15 @@ function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string)
     return { error: `${label}은 PDF, HWP, HWPX, Word 파일만 업로드할 수 있습니다.` };
   }
 
-  return { path, name, size };
+  return {
+    path,
+    name,
+    size,
+    originalSize,
+    storedSize: size,
+    optimized,
+    reductionPercent,
+  };
 }
 
 // PATCH: 문서 메타데이터 수정 및 별표(중요) 토글 (관리자 전용)
@@ -233,9 +270,21 @@ export async function PATCH(
       filePath?: string;
       fileName?: string;
       fileSize?: number;
+      originalFileSize?: number;
+      storedFileSize?: number;
+      fileOptimized?: boolean;
+      fileSizeReductionPercent?: number;
       attachments?: {
         deleteMany?: Record<string, never>;
-        create: { filePath: string; fileName: string; fileSize: number }[];
+        create: {
+          filePath: string;
+          fileName: string;
+          fileSize: number;
+          originalFileSize: number;
+          storedFileSize: number;
+          fileOptimized: boolean;
+          fileSizeReductionPercent: number;
+        }[];
       };
     } = {};
 
@@ -342,6 +391,10 @@ export async function PATCH(
       data.filePath = uploadedFile.path;
       data.fileName = uploadedFile.name;
       data.fileSize = uploadedFile.size;
+      data.originalFileSize = uploadedFile.originalSize;
+      data.storedFileSize = uploadedFile.storedSize;
+      data.fileOptimized = uploadedFile.optimized;
+      data.fileSizeReductionPercent = uploadedFile.reductionPercent;
     }
 
     if (hasOwn(body, "attachments")) {

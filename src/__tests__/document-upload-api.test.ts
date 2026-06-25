@@ -148,11 +148,11 @@ describe("document upload API", () => {
         fileSize: 6 * 1024 * 1024,
         attachments: {
           create: [
-            {
+            expect.objectContaining({
               filePath: "documents/2026-06-05/attachment.docx",
               fileName: "attachment.docx",
               fileSize: 1024,
-            },
+            }),
           ],
         },
         correspondenceType: "회신",
@@ -161,6 +161,68 @@ describe("document upload API", () => {
       }),
     }));
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("persists upload optimization metadata for documents and attachments", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.create.mockResolvedValue({
+      id: "doc-optimized",
+      title: "최적화 문서",
+      attachments: [],
+    });
+
+    const { POST } = await import("@/app/api/documents/route");
+    const response = await POST(
+      new Request("http://localhost/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "최적화 문서",
+          category: "DISCLOSURE",
+          subCategory: "총회 의사록",
+          documentDate: "2026-06-05",
+          publishedAt: "2026-06-05",
+          file: {
+            path: "documents/2026-06-05/main.pdf",
+            name: "main.pdf",
+            size: 7 * 1024 * 1024,
+            originalSize: 10 * 1024 * 1024,
+            optimized: true,
+          },
+          attachments: [
+            {
+              path: "documents/2026-06-05/attachment.pdf",
+              name: "attachment.pdf",
+              size: 2 * 1024 * 1024,
+              originalSize: 2 * 1024 * 1024,
+              optimized: false,
+            },
+          ],
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        fileSize: 7 * 1024 * 1024,
+        originalFileSize: 10 * 1024 * 1024,
+        storedFileSize: 7 * 1024 * 1024,
+        fileOptimized: true,
+        fileSizeReductionPercent: 30,
+        attachments: {
+          create: [
+            expect.objectContaining({
+              fileSize: 2 * 1024 * 1024,
+              originalFileSize: 2 * 1024 * 1024,
+              storedFileSize: 2 * 1024 * 1024,
+              fileOptimized: false,
+              fileSizeReductionPercent: 0,
+            }),
+          ],
+        },
+      }),
+    }));
   });
 
   it("triggers disclosure notification dry-run after approved disclosure metadata is saved", async () => {
@@ -685,11 +747,11 @@ describe("document upload API", () => {
         fileSize: 4096,
         attachments: {
           create: [
-            {
+            expect.objectContaining({
               filePath: "documents/2026-06-09/new-attachment.pdf",
               fileName: "new-attachment.pdf",
               fileSize: 2048,
-            },
+            }),
           ],
         },
       }),
