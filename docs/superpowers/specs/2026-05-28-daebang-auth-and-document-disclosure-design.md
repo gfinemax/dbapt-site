@@ -49,6 +49,12 @@
   * **장점**: 대용량 파일 저장에 안전하며 멀티 서버 환경에 적합.
   * **단점**: AWS 계정 셋업 및 요금 발생.
 
+### 2.4 PDF 저장 용량 최적화 기준
+
+PDF 업로드는 원본과 압축본을 함께 저장하지 않고 최종 저장 파일 1개만 유지한다. 기본값은 `자동 최적화`이며, 5MB 초과 PDF만 최적화를 시도하고 15% 이상 줄어든 경우에만 최적화본을 저장한다. 품질 확인이 필요한 도면, 직인, 서명, 스캔 문서는 관리자가 `원본 그대로 저장`을 선택할 수 있다.
+
+현재 기준은 PDF 내부 구조를 정리하는 안전한 최적화이며, 스캔 이미지를 강제 다운샘플링하거나 PDF를 이미지로 변환하지 않는다.
+
 ---
 
 ## 3. 데이터 모델 설계 (Prisma Schema 초안)
@@ -69,6 +75,8 @@ model User {
   // 관계 정의
   documentLogs  DocumentLog[]
   refundInfo    RefundInfo?
+  documentBookmarks PersonalDocumentBookmark[]
+  contentBookmarks  PersonalContentBookmark[]
 }
 
 enum Role {
@@ -86,6 +94,10 @@ model Document {
   filePath     String                                // 업로드된 내부 파일 경로 (보안 저장)
   fileName     String                                // 원본 파일명
   fileSize     Int                                   // 파일 용량 (bytes)
+  originalFileSize Int?                              // 업로드 원본 용량
+  storedFileSize   Int?                              // 실제 저장된 최종 파일 용량
+  uploadOptimizationStatus String?                   // 자동 최적화 적용 결과
+  uploadReductionPercent   Int?                      // 용량 절감률
   status       DocStatus    @default(PENDING)        // 상태: PENDING (대기), APPROVED (승인/게시)
   publishedAt  DateTime?                             // 실제 조합원 대상 공개 일시
   createdAt    DateTime     @default(now())
@@ -93,6 +105,31 @@ model Document {
 
   // 관계 정의
   logs         DocumentLog[]
+  bookmarks    PersonalDocumentBookmark[]
+}
+
+model PersonalDocumentBookmark {
+  id          String   @id @default(uuid())
+  userId      String
+  documentId  String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+}
+
+model PersonalContentBookmark {
+  id          String   @id @default(uuid())
+  userId      String
+  targetType  String
+  targetId    String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
 }
 
 enum DocCategory {
@@ -156,9 +193,13 @@ model RefundInfo {
 * `/portal/member` 및 `/portal/refund`에 정적으로 렌더링되었던 빈 카드를 대체하여, **카테고리별 문서 목록 조회 테이블**을 제공한다.
 * 제목 검색, 카테고리 필터링이 가능하도록 Client/Server 컴포넌트 쿼리를 결합한다.
 * **환불조합원(`/portal/refund`)**은 권한 검증 API를 통해 지정된 공통 문서 카테고리와 자신의 개인 환불 현황(`RefundInfo`)만 조회할 수 있도록 필터를 고정한다.
+* 공개자료와 권한 내 문서는 개인자료실 `내 보관함`에 저장할 수 있다.
+* 공지사항, 조합뉴스, 자유게시판 게시글은 개인자료실 `보관한 게시글`에 저장할 수 있다.
+* 개인자료실에서 문서를 열어도 전체 화면 PDF 뷰어로 열리며, 모든 PDF 뷰어는 `PDF만 크게` 전환을 제공한다.
 
 ### 4.3 관리자용 문서 관리 화면 (`/portal/admin`)
 * **문서 업로드**: 관리자가 PDF 등 문서 파일을 선택하고 카테고리와 제목을 입력하여 업로드하는 다이얼로그 폼 구현.
+  * PDF 기본 저장 방식은 `자동 최적화`이며, 필요 시 `원본 그대로 저장`을 선택할 수 있다.
 * **승인 프로세스**: 업로드된 문서의 승인 상태 전환 토글을 제공하여, `APPROVED` 상태가 되어야만 일반 조합원에게 노출되도록 제어.
 * **보안 감사 이력 확인**: 어떤 조합원이 어떤 문서를 언제 열람/다운로드했는지 감사 로그(`DocumentLog`) 테이블을 조회하는 목록 뷰를 관리자 화면 하단에 제공.
 
