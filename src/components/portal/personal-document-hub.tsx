@@ -1,18 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Document } from "./document-table";
+import { DocumentBookmarkButton } from "./document-bookmark-button";
+import type { PersonalLibraryContentBookmark } from "@/lib/personal-library-data";
 
 type PersonalDocumentHubProps = {
   documents: Document[];
   role: string;
+  contentBookmarks?: PersonalLibraryContentBookmark[];
   isDrawerMode?: boolean;
   onOpenDocument?: (doc: Document) => void;
 };
 
-type ActiveTab = "recommended" | "saved";
+type ActiveTab = "recommended" | "saved" | "content";
 type DocumentFlagOverrides = Record<
   string,
   Pick<Document, "isViewedByCurrentUser" | "isBookmarkedByCurrentUser">
@@ -60,12 +64,12 @@ const getCategoryLabel = (category: string) => {
 export function PersonalDocumentHub({
   documents,
   role,
+  contentBookmarks = [],
   isDrawerMode = false,
   onOpenDocument,
 }: PersonalDocumentHubProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("recommended");
   const [documentFlagOverrides, setDocumentFlagOverrides] = useState<DocumentFlagOverrides>({});
-  const [bookmarkingId, setBookmarkingId] = useState<string | null>(null);
 
   const localDocs = useMemo(
     () =>
@@ -111,43 +115,19 @@ export function PersonalDocumentHub({
     onOpenDocument?.(doc);
   };
 
-  const handleBookmarkToggle = async (doc: Document) => {
-    const nextBookmarked = !doc.isBookmarkedByCurrentUser;
-    setBookmarkingId(doc.id);
-    try {
-      const response = await fetch(
-        nextBookmarked
-          ? "/api/me/document-bookmarks"
-          : `/api/me/document-bookmarks?documentId=${encodeURIComponent(doc.id)}`,
-        {
-          method: nextBookmarked ? "POST" : "DELETE",
-          headers: nextBookmarked ? { "Content-Type": "application/json" } : undefined,
-          body: nextBookmarked ? JSON.stringify({ documentId: doc.id }) : undefined,
-        },
-      );
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        alert(body.error || "문서 보관 상태를 변경하지 못했습니다.");
-        return;
-      }
-      setDocumentFlagOverrides((current) => ({
-        ...current,
-        [doc.id]: {
-          ...current[doc.id],
-          isBookmarkedByCurrentUser: nextBookmarked,
-        },
-      }));
-      if (nextBookmarked) {
-        setActiveTab("saved");
-      }
-      if (!nextBookmarked && activeTab === "saved" && savedDocs.length === 1) {
-        setActiveTab("recommended");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("문서 보관 상태 변경 중 문제가 발생했습니다.");
-    } finally {
-      setBookmarkingId(null);
+  const handleBookmarkChange = (documentId: string, nextBookmarked: boolean) => {
+    setDocumentFlagOverrides((current) => ({
+      ...current,
+      [documentId]: {
+        ...current[documentId],
+        isBookmarkedByCurrentUser: nextBookmarked,
+      },
+    }));
+    if (nextBookmarked) {
+      setActiveTab("saved");
+    }
+    if (!nextBookmarked && activeTab === "saved" && savedDocs.length === 1) {
+      setActiveTab("recommended");
     }
   };
 
@@ -201,16 +181,11 @@ export function PersonalDocumentHub({
             <p className="mt-0.5 font-mono text-[10px] text-ash">{formatSize(doc.fileSize)}</p>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => handleBookmarkToggle(doc)}
-              disabled={bookmarkingId === doc.id}
-              className="h-8 rounded-full border-stone-surface px-3 text-[11px] font-bold hover:border-ember-orange hover:text-ember-orange"
-            >
-              {doc.isBookmarkedByCurrentUser ? "보관 해제" : "보관"}
-            </Button>
+            <DocumentBookmarkButton
+              document={doc}
+              onBookmarkChange={handleBookmarkChange}
+              className="h-8 px-3 text-[11px]"
+            />
             <Button
               type="button"
               size="sm"
@@ -224,6 +199,51 @@ export function PersonalDocumentHub({
       </article>
     );
   };
+
+  const renderContentCard = (item: PersonalLibraryContentBookmark) => (
+    <article
+      key={item.id}
+      className="w-full min-w-0 rounded-2xl bg-white p-4 shadow-[inset_0_0_0_1px_#f2f0ed] transition-colors hover:bg-warm-canvas/60"
+    >
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="rounded-full bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue">
+            {item.sourceLabel}
+          </span>
+          {item.isStarred && (
+            <span className="rounded-full bg-sunburst-yellow/20 px-2.5 py-1 text-[10px] font-bold text-charcoal-primary">
+              중요
+            </span>
+          )}
+          <span className="rounded-full bg-ember-orange/10 px-2.5 py-1 text-[10px] font-bold text-ember-orange">
+            보관됨
+          </span>
+        </div>
+        <span className="font-mono text-[11px] text-ash">
+          {formatDate(item.registeredAt)}
+        </span>
+      </div>
+
+      <h4 className="mt-3 break-all text-sm font-bold leading-snug text-charcoal-primary">
+        {item.title}
+      </h4>
+      {item.description && (
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-graphite/75">
+          {item.description}
+        </p>
+      )}
+
+      <div className="mt-4 flex justify-end border-t border-stone-surface pt-3">
+        <Link
+          href={item.href}
+          aria-label={`${item.title} 열기`}
+          className="inline-flex h-8 items-center rounded-full bg-midnight px-3 text-[11px] font-bold text-white transition hover:bg-charcoal-primary"
+        >
+          열기
+        </Link>
+      </div>
+    </article>
+  );
 
   return (
     <section
@@ -271,9 +291,34 @@ export function PersonalDocumentHub({
         >
           내 보관함 {savedDocs.length}
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("content")}
+          className={cn(
+            "rounded-full px-4 py-2 text-xs font-bold transition-colors",
+            activeTab === "content"
+              ? "bg-midnight text-white"
+              : "bg-parchment-card text-graphite hover:bg-stone-surface",
+          )}
+        >
+          보관한 게시글 {contentBookmarks.length}
+        </button>
       </div>
 
-      {activeDocs.length === 0 ? (
+      {activeTab === "content" ? (
+        contentBookmarks.length === 0 ? (
+          <div className="rounded-2xl bg-parchment-card px-5 py-10 text-center text-sm text-graphite">
+            <p className="font-bold text-charcoal-primary">아직 보관한 게시글이 없습니다.</p>
+            <p className="mt-2 text-xs leading-5 text-graphite/75">
+              공지사항, 조합뉴스, 자유게시판에서 보관 버튼을 누르면 이곳에 모입니다.
+            </p>
+          </div>
+        ) : (
+          <div aria-label="보관한 게시글 목록" className="grid gap-3">
+            {contentBookmarks.map((item) => renderContentCard(item))}
+          </div>
+        )
+      ) : activeDocs.length === 0 ? (
         <div className="rounded-2xl bg-parchment-card px-5 py-10 text-center text-sm text-graphite">
           <p className="font-bold text-charcoal-primary">
             {activeTab === "recommended"

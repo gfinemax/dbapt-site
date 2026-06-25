@@ -8,6 +8,7 @@ import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 import { getPersonalLibraryLabel } from "@/lib/personal-library-label";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
 import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
+import type { PersonalLibraryContentBookmark } from "@/lib/personal-library-data";
 
 type PersonalLibrarySession = {
   id: string;
@@ -21,6 +22,7 @@ type PersonalLibraryDrawerHostProps = {
   children: ReactNode;
   session?: PersonalLibrarySession | null;
   documents?: Document[];
+  contentBookmarks?: PersonalLibraryContentBookmark[];
   logs?: LogEntry[];
   refundInfo?: {
     totalPaid: number;
@@ -66,6 +68,7 @@ export function PersonalLibraryDrawerHost({
   children,
   session,
   documents = [],
+  contentBookmarks = [],
   logs = [],
   refundInfo,
   contributionSummary,
@@ -160,6 +163,7 @@ export function PersonalLibraryDrawerHost({
                   role={getPortalRole(session.role)}
                   session={session}
                   documents={documents}
+                  contentBookmarks={contentBookmarks}
                   logs={logs}
                   refundInfo={refundInfo}
                   contributionSummary={contributionSummary}

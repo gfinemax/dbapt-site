@@ -41,9 +41,13 @@ const mockPrisma = vi.hoisted(() => ({
     update: vi.fn(),
     delete: vi.fn(),
   },
+  personalContentBookmark: {
+    findMany: vi.fn(),
+  },
 }));
 const mockMkdir = vi.hoisted(() => vi.fn());
 const mockWriteFile = vi.hoisted(() => vi.fn());
+const mockUploadPublicFile = vi.hoisted(() => vi.fn());
 const testUploadNames = ["notice.pdf", "blob"];
 
 vi.mock("@/lib/auth", () => ({
@@ -57,6 +61,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/db", () => ({
   prisma: mockPrisma,
+}));
+
+vi.mock("@/lib/document-storage", () => ({
+  uploadPublicFile: mockUploadPublicFile,
 }));
 
 vi.mock("node:fs/promises", async (importOriginal) => {
@@ -151,6 +159,7 @@ describe("news admin API controls", () => {
     mockSearchParamsValue.value = "";
     mockMkdir.mockResolvedValue(undefined);
     mockWriteFile.mockResolvedValue(undefined);
+    mockUploadPublicFile.mockImplementation(async (file: File) => `/uploads/${file.name}`);
   });
 
   it("rejects notice creation for non-admin sessions", async () => {
@@ -214,6 +223,67 @@ describe("news admin API controls", () => {
       "조합뉴스 (주/월간소식)",
       "개발일지",
     ]);
+  });
+
+  it("lets logged-in users bookmark notice, newsletter, and free-board posts into the personal library", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ bookmarked: true }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { rerender } = render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[realNotice]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 개인자료실 보관" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/me/content-bookmarks",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ targetType: "COOP_NEWS", targetId: "notice-1" }),
+      }),
+    ));
+
+    rerender(
+      <CoopNewsletter
+        isLoggedIn
+        isAdmin={false}
+        newsList={[realNewsletter]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "실제 조합뉴스 개인자료실 보관" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/me/content-bookmarks",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ targetType: "COOP_NEWS", targetId: "newsletter-1" }),
+      }),
+    ));
+
+    rerender(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 개인자료실 보관" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/me/content-bookmarks",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ targetType: "FREE_POST", targetId: "free-1" }),
+      }),
+    ));
   });
 
   it("updates notice content and attachment metadata for admins", async () => {

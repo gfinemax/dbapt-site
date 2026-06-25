@@ -67,21 +67,40 @@ export function DisclosurePageClientShell({
   const [portalCategory, setPortalCategory] = useState<string>("all");
   const [portalSearch, setPortalSearch] = useState<string>("");
   const personalLibraryLabel = getPersonalLibraryLabel(session);
+  const [documentBookmarkOverrides, setDocumentBookmarkOverrides] = useState<Record<string, boolean>>({});
+  const localDocuments = useMemo(
+    () =>
+      documents.map((document) =>
+        document.id in documentBookmarkOverrides
+          ? {
+              ...document,
+              isBookmarkedByCurrentUser: documentBookmarkOverrides[document.id],
+            }
+          : document,
+      ),
+    [documents, documentBookmarkOverrides],
+  );
+  const handleDocumentBookmarkChange = (documentId: string, isBookmarked: boolean) => {
+    setDocumentBookmarkOverrides((current) => ({
+      ...current,
+      [documentId]: isBookmarked,
+    }));
+  };
   const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
   const activeViewDocRelation = useMemo(
-    () => activeViewDoc ? getPdfRelatedDocument(activeViewDoc, documents) : null,
-    [activeViewDoc, documents],
+    () => activeViewDoc ? getPdfRelatedDocument(activeViewDoc, localDocuments) : null,
+    [activeViewDoc, localDocuments],
   );
   const requestedDocumentId = searchParams.get("document");
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!requestedDocumentId) return;
-    const requestedDocument = documents.find((document) => document.id === requestedDocumentId);
+    const requestedDocument = localDocuments.find((document) => document.id === requestedDocumentId);
     if (requestedDocument) {
       setActiveViewDoc(requestedDocument);
     }
-  }, [documents, requestedDocumentId]);
+  }, [localDocuments, requestedDocumentId]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // 드로어 활성화 시 본문 스크롤 차단 처리 (디테일한 UX 보장)
@@ -163,9 +182,10 @@ export function DisclosurePageClientShell({
             setIsDrawerOpen(true);
           }} 
           session={session} 
-          documents={documents}
+          documents={localDocuments}
           emptyMessages={emptyMessages}
           cardContents={cardContents}
+          onDocumentBookmarkChange={handleDocumentBookmarkChange}
           onViewDocument={(document) => {
             setActiveViewDoc(document);
           }}
@@ -216,7 +236,7 @@ export function DisclosurePageClientShell({
             <PortalShell
               role={getPortalRole(session.role)}
               session={session}
-              documents={documents}
+              documents={localDocuments}
               logs={logs}
               refundInfo={refundInfo}
               pendingUsers={pendingUsers}

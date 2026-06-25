@@ -33,6 +33,7 @@ export type FreeBoardPostListItem = {
   comments: FreeBoardCommentView[];
   commentCount: number;
   isReal: boolean;
+  isBookmarkedByCurrentUser: boolean;
 };
 
 export function formatFreeBoardDate(value: string) {
@@ -93,6 +94,7 @@ export function buildFreeBoardPostList(
         comments: buildFreeBoardCommentTree(post.comments || []),
         commentCount: (post.comments || []).length,
         isReal: true,
+        isBookmarkedByCurrentUser: !!post.isBookmarkedByCurrentUser,
       };
     })
     .filter((post) => {

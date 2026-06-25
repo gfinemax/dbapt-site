@@ -214,6 +214,27 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
     }
   }
 
+  if (personalLibraryData.contentBookmarks.length > 0) {
+    const bookmarkedCoopNewsIds = new Set(
+      personalLibraryData.contentBookmarks
+        .filter((bookmark) => bookmark.targetType === "COOP_NEWS")
+        .map((bookmark) => bookmark.targetId),
+    );
+    const bookmarkedFreePostIds = new Set(
+      personalLibraryData.contentBookmarks
+        .filter((bookmark) => bookmark.targetType === "FREE_POST")
+        .map((bookmark) => bookmark.targetId),
+    );
+    newsList = newsList.map((item) => ({
+      ...item,
+      isBookmarkedByCurrentUser: bookmarkedCoopNewsIds.has(item.id),
+    }));
+    freePosts = freePosts.map((post) => ({
+      ...post,
+      isBookmarkedByCurrentUser: bookmarkedFreePostIds.has(post.id),
+    }));
+  }
+
   return (
     <PersonalLibraryDrawerHost session={session} {...personalLibraryData}>
       <main className="flex-1 animate-page-in min-h-screen bg-warm-canvas">

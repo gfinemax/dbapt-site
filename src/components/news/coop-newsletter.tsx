@@ -9,6 +9,7 @@ import { buildNewsletterList, type NewsletterListItem } from "@/lib/news/newslet
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import type { CoopNewsView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
+import { PersonalBookmarkButton } from "./personal-bookmark-button";
 
 type CoopNewsletterProps = {
   isLoggedIn: boolean;
@@ -394,6 +395,14 @@ export function CoopNewsletter({
                     <span>작성자: {news.author.name}</span>
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       <span>등록일 {news.createdAt}</span>
+                      {isLoggedIn && news.isReal && (
+                        <PersonalBookmarkButton
+                          title={news.title}
+                          targetType="COOP_NEWS"
+                          targetId={news.id}
+                          initialBookmarked={news.isBookmarkedByCurrentUser}
+                        />
+                      )}
                       {isAdmin && news.isReal && (
                         <button
                           type="button"
@@ -606,15 +615,25 @@ export function CoopNewsletter({
                     <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
                       {activeViewNews.title}
                     </h3>
-                    {isAdmin && activeViewNews.isReal && (
-                      <button
-                        type="button"
-                        onClick={() => beginNewsEdit(activeViewNews)}
-                        className="shrink-0 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
-                      >
-                        수정
-                      </button>
-                    )}
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                      {isLoggedIn && activeViewNews.isReal && (
+                        <PersonalBookmarkButton
+                          title={activeViewNews.title}
+                          targetType="COOP_NEWS"
+                          targetId={activeViewNews.id}
+                          initialBookmarked={activeViewNews.isBookmarkedByCurrentUser}
+                        />
+                      )}
+                      {isAdmin && activeViewNews.isReal && (
+                        <button
+                          type="button"
+                          onClick={() => beginNewsEdit(activeViewNews)}
+                          className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                        >
+                          수정
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 text-[10.5px] font-bold text-ash font-mono border-y border-stone-surface/60 py-2">

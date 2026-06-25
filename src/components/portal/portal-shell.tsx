@@ -19,6 +19,10 @@ import { buildContributionDashboardView } from "@/lib/contribution-dashboard";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
 import { normalizeMemberType } from "@/lib/member-type";
 import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
+import type { PersonalLibraryContentBookmark } from "@/lib/personal-library-data";
+
+const EMPTY_DOCUMENTS: Document[] = [];
+const EMPTY_CONTENT_BOOKMARKS: PersonalLibraryContentBookmark[] = [];
 
 // 헬퍼 함수 파일 레벨 최상단 배치 (ESLint 선언 순서 및 렌더링 낭비 방지)
 const getRoleLabel = (r: string) => {
@@ -79,6 +83,7 @@ type PortalShellProps = {
     role: string;
   } | null;
   documents?: Document[];
+  contentBookmarks?: PersonalLibraryContentBookmark[];
   logs?: LogEntry[];
   refundInfo?: {
     totalPaid: number;
@@ -115,7 +120,8 @@ type PortalShellProps = {
 export function PortalShell({
   role,
   session,
-  documents = [],
+  documents = EMPTY_DOCUMENTS,
+  contentBookmarks = EMPTY_CONTENT_BOOKMARKS,
   logs = [],
   refundInfo,
   contributionSummary,
@@ -145,6 +151,12 @@ export function PortalShell({
   const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
   const activeViewDocRelation = activeViewDoc ? getPdfRelatedDocument(activeViewDoc, managedDocs) : null;
   const handleOpenDocument = onOpenDocument ?? setActiveViewDoc;
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setManagedDocs(documents);
+  }, [documents]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleDocumentDeleted = (id: string) => {
     setManagedDocs(prev => prev.filter(d => d.id !== id));
@@ -748,6 +760,7 @@ export function PortalShell({
             {role !== "admin" && (
               <PersonalDocumentHub
                 documents={managedDocs}
+                contentBookmarks={contentBookmarks}
                 role={role}
                 isDrawerMode={isDrawerMode}
                 onOpenDocument={handleOpenDocument}

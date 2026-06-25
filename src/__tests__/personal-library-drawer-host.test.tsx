@@ -61,6 +61,8 @@ describe("personal library drawer host", () => {
             fileName: "2026년 시구합동 실태조사 결과통지.pdf",
             fileSize: 2048,
             status: "APPROVED",
+            isStarred: true,
+            isViewedByCurrentUser: false,
             publishedAt: "2026-06-11T00:00:00.000Z",
             createdAt: "2026-06-11T00:00:00.000Z",
           },
@@ -78,7 +80,9 @@ describe("personal library drawer host", () => {
     fireEvent.click(within(drawer).getByRole("button", { name: "열람" }));
 
     const viewerPanel = screen.getByTestId("pdf-viewer-panel");
+    const viewerLayer = screen.getByTestId("pdf-viewer-modal-layer");
     expect(viewerPanel).toBeInTheDocument();
     expect(drawer.contains(viewerPanel)).toBe(false);
+    expect(viewerLayer.parentElement).toBe(document.body);
   });
 });

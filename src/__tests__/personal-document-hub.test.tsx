@@ -161,4 +161,49 @@ describe("PersonalDocumentHub", () => {
     const stash = screen.getByLabelText("내 보관함 목록");
     expect(within(stash).getByText("보관할 공개자료")).toBeInTheDocument();
   });
+
+  it("shows bookmarked notices and free-board posts in a separate personal content tab", () => {
+    render(
+      <PersonalDocumentHub
+        documents={[]}
+        role="member"
+        contentBookmarks={[
+          {
+            id: "bookmark-notice",
+            targetType: "COOP_NEWS",
+            targetId: "notice-1",
+            sourceLabel: "공지사항",
+            title: "개인 보관 공지",
+            description: "공지 요약",
+            href: "/news?tab=notice&notice=notice-1",
+            createdAt: "2026-06-20T00:00:00.000Z",
+            registeredAt: "2026-06-19T00:00:00.000Z",
+            isStarred: true,
+          },
+          {
+            id: "bookmark-free",
+            targetType: "FREE_POST",
+            targetId: "free-1",
+            sourceLabel: "자유게시판",
+            title: "개인 보관 자유글",
+            description: "자유글 요약",
+            href: "/news?tab=free&post=free-1",
+            createdAt: "2026-06-21T00:00:00.000Z",
+            registeredAt: "2026-06-18T00:00:00.000Z",
+            isStarred: false,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "보관한 게시글 2" }));
+
+    const contentList = screen.getByLabelText("보관한 게시글 목록");
+    expect(within(contentList).getByText("개인 보관 공지")).toBeInTheDocument();
+    expect(within(contentList).getByText("개인 보관 자유글")).toBeInTheDocument();
+    expect(within(contentList).getByRole("link", { name: "개인 보관 공지 열기" })).toHaveAttribute(
+      "href",
+      "/news?tab=notice&notice=notice-1",
+    );
+  });
 });

@@ -139,6 +139,133 @@ describe("disclosure page", () => {
     expect(screen.queryByText(/데모 시연용/)).not.toBeInTheDocument();
   });
 
+  it("lets logged-in users bookmark documents from compact registered-material rows", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ bookmarked: true }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const onViewDocument = vi.fn();
+
+    const { container } = render(
+      <DisclosureClient
+        session={{ id: "member-1", loginId: "member", name: "조합원", role: "MEMBER" }}
+        documents={[
+          {
+            id: "doc-operation-rules",
+            title: "운영관리규정(260418 제정)",
+            description: "2026년 정기총회 제정",
+            category: "DISCLOSURE",
+            subCategory: "운영관리규정",
+            fileName: "operation-rules.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-04-18T00:00:00.000Z",
+            documentDate: "2026-04-18T00:00:00.000Z",
+            createdAt: "2026-04-18T00:00:00.000Z",
+            isBookmarkedByCurrentUser: false,
+          },
+        ]}
+        onViewDocument={onViewDocument}
+      />,
+    );
+
+    const rulesCard = within(container.querySelector("#section-rules") as HTMLElement)
+      .getByText("운영관리규정")
+      .closest(".stone-card");
+    expect(rulesCard).toBeInTheDocument();
+
+    fireEvent.click(
+      within(rulesCard as HTMLElement).getByRole("button", {
+        name: "운영관리규정(260418 제정) 개인자료실 보관",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/me/document-bookmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: "doc-operation-rules" }),
+      });
+    });
+    expect(onViewDocument).not.toHaveBeenCalled();
+  });
+
+  it("does not show disclosure bookmark controls to anonymous visitors", () => {
+    render(
+      <DisclosureClient
+        documents={[
+          {
+            id: "doc-operation-rules",
+            title: "운영관리규정(260418 제정)",
+            description: "2026년 정기총회 제정",
+            category: "DISCLOSURE",
+            subCategory: "운영관리규정",
+            fileName: "operation-rules.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-04-18T00:00:00.000Z",
+            documentDate: "2026-04-18T00:00:00.000Z",
+            createdAt: "2026-04-18T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /개인자료실 보관/ })).not.toBeInTheDocument();
+  });
+
+  it("lets users bookmark documents from the folder document list without opening the document", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ bookmarked: true }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const onViewDocument = vi.fn();
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        documents={[
+          {
+            id: "doc-received",
+            title: "제2026-026 조합원 관련 민원 회신",
+            description: "수신 공문",
+            category: "DISCLOSURE",
+            subCategory: "공문서",
+            correspondenceType: "수신",
+            fileName: "received.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-06-10T00:00:00.000Z",
+            documentDate: "2026-06-10T00:00:00.000Z",
+            createdAt: "2026-06-10T00:00:00.000Z",
+            isBookmarkedByCurrentUser: false,
+          },
+        ]}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="수신 공문"
+        onViewDocument={onViewDocument}
+      />,
+    );
+
+    const bookmarkButtons = screen.getAllByRole("button", {
+      name: "제2026-026 조합원 관련 민원 회신 개인자료실 보관",
+    });
+    expect(bookmarkButtons.length).toBeGreaterThanOrEqual(2);
+
+    fireEvent.click(bookmarkButtons[0]);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/me/document-bookmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: "doc-received" }),
+      });
+    });
+    expect(onViewDocument).not.toHaveBeenCalled();
+  });
+
   it("places the business documents under operations and supervision", () => {
     const { container } = render(<DisclosureClient />);
 

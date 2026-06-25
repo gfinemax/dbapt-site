@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { MeetingsTable, type MeetingCategory, type CorrespondenceType } from "./meetings-table";
 import { type Document } from "@/components/portal/document-table";
+import { DocumentBookmarkButton } from "@/components/portal/document-bookmark-button";
 
 type DisclosureClientProps = {
   onOpenPortal?: (category?: string, search?: string) => void;
@@ -19,6 +20,7 @@ type DisclosureClientProps = {
   } | null;
   documents?: Document[];
   onViewDocument?: (document: Document) => void;
+  onDocumentBookmarkChange?: (documentId: string, isBookmarked: boolean) => void;
   emptyMessages?: DisclosureEmptyMessage[];
   cardContents?: DisclosureCardContent[];
 };
@@ -339,6 +341,7 @@ export function DisclosureClient({
   session,
   documents = [],
   onViewDocument,
+  onDocumentBookmarkChange,
   emptyMessages,
   cardContents,
 }: DisclosureClientProps) {
@@ -646,7 +649,7 @@ export function DisclosureClient({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-x-hidden">
       {/* 1. 공개자료 대형 배너 (Hero Section) - 조합소개 감성 계승 */}
       <section className="bg-gradient-to-br from-warm-canvas via-parchment-card to-stone-surface/30 pt-16 pb-20 border-b border-stone-surface text-center">
         <div className="site-container max-w-4xl px-4">
@@ -725,7 +728,7 @@ export function DisclosureClient({
       </nav>
 
       {/* 3. 본문 통합 내용 영역 (Sections) */}
-      <div className="site-container max-w-4xl px-4 py-16 sm:py-24 space-y-24 sm:space-y-36">
+      <div className="site-container max-w-4xl overflow-x-hidden px-4 py-16 sm:py-24 space-y-24 sm:space-y-36">
         {Object.entries(disclosureData).map(([key, data]) => {
           const tabKey = key as TabId;
           return (
@@ -1103,6 +1106,11 @@ export function DisclosureClient({
                                             {openChatCopyStatus[doc.id] === "copying" ? "복사 중" : "공지문 복사"}
                                           </Button>
                                         )}
+                                        <DocumentBookmarkButton
+                                          document={doc}
+                                          includeDocumentTitleInLabel
+                                          onBookmarkChange={onDocumentBookmarkChange}
+                                        />
                                         <Button
                                           onClick={() => {
                                             if (onViewDocument) onViewDocument(doc);
@@ -1350,6 +1358,7 @@ export function DisclosureClient({
                   onBackToFolders={() => setIsLeftDrawerOpen(false)}
                   documents={documents}
                   onViewDocument={onViewDocument}
+                  onDocumentBookmarkChange={onDocumentBookmarkChange}
                 />
               )}
             </div>

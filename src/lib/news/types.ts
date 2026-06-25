@@ -47,6 +47,7 @@ export type CoopNewsView = {
   author: NewsUserView;
   comments: NewsCommentView[];
   isReal?: boolean;
+  isBookmarkedByCurrentUser?: boolean;
 };
 
 export type FreePostView = {
@@ -67,6 +68,7 @@ export type FreePostView = {
   author: NewsUserView;
   comments: NewsCommentView[];
   isReal?: boolean;
+  isBookmarkedByCurrentUser?: boolean;
 };
 
 export type FAQView = {

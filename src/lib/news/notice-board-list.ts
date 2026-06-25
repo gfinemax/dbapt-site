@@ -32,6 +32,7 @@ export function buildNoticeBoardList(
       attachmentSize: item.attachmentSize,
       comments: getNewsComments(item),
       isReal: true,
+      isBookmarkedByCurrentUser: !!item.isBookmarkedByCurrentUser,
     }))
     .filter((notice) => !query || notice.title.toLowerCase().includes(query))
     .sort((a, b) => {

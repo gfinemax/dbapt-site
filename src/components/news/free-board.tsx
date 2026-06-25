@@ -37,6 +37,7 @@ import { uploadPublicFile } from "@/lib/news/public-upload";
 import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
 import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
+import { PersonalBookmarkButton } from "./personal-bookmark-button";
 
 type FreeBoardProps = {
   session: NewsSessionView | null | undefined;
@@ -72,6 +73,7 @@ function FreeBoardPostRows({
   authorLabel,
   showDeletePost,
   showOpenChatCopy,
+  showBookmark,
   openChatCopyStatus,
   onOpen,
   onDelete,
@@ -82,6 +84,7 @@ function FreeBoardPostRows({
   authorLabel: string;
   showDeletePost: boolean;
   showOpenChatCopy: boolean;
+  showBookmark: boolean;
   openChatCopyStatus?: "copying" | "copied" | "error";
   onOpen: () => void;
   onDelete: (params: { postId?: string; commentId?: string }) => void;
@@ -139,8 +142,16 @@ function FreeBoardPostRows({
         </button>
       </td>
       <td className="px-5 py-4 text-center">
-        {(showOpenChatCopy || showDeletePost) && (
+        {(showBookmark || showOpenChatCopy || showDeletePost) && (
           <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {showBookmark && (
+              <PersonalBookmarkButton
+                title={post.title}
+                targetType="FREE_POST"
+                targetId={post.id}
+                initialBookmarked={post.isBookmarkedByCurrentUser}
+              />
+            )}
             {showOpenChatCopy && (
               <button
                 type="button"
@@ -582,6 +593,7 @@ export function FreeBoard({
                   const authorLabel = getFreeBoardAuthorLabel(post.author, currentUserId);
                   const showDeletePost = post.isReal && (post.author.id === currentUserId || isAdmin);
                   const showOpenChatCopy = post.isReal && isAdmin;
+                  const showBookmark = !!session && post.isReal && !isReadOnlyPublicShare;
 
                   return (
                     <FreeBoardPostRows
@@ -591,6 +603,7 @@ export function FreeBoard({
                       authorLabel={authorLabel}
                       showDeletePost={showDeletePost}
                       showOpenChatCopy={showOpenChatCopy}
+                      showBookmark={showBookmark}
                       openChatCopyStatus={openChatCopyStatus[post.id]}
                       onOpen={() => openFocusedPost(post.id)}
                       onDelete={handleDeletePostOrComment}
@@ -652,34 +665,44 @@ export function FreeBoard({
                   )}
                   {focusedPost.title}
                   </h3>
-                  {focusedPost.isReal && (focusedPost.author.id === currentUserId || isAdmin) && (
-                    <button
-                      type="button"
-                      aria-label="게시글 수정"
-                      onClick={() => {
-                        const displayAuthorName = focusedPost.author.displayAuthorName;
-                        setEditingPost(focusedPost);
-                        setWriteTitle(focusedPost.title);
-                        setWriteContent(focusedPost.content);
-                        setWritePostType(normalizeFreePostType(focusedPost.postType, isAdmin));
-                        setWriteIsStarred(!!focusedPost.isStarred);
-                        setWriteIsPublicShareEnabled(!!focusedPost.isPublicShareEnabled);
-                        setWriteAttachmentPath(focusedPost.attachmentPath);
-                        setWriteAttachmentName(focusedPost.attachmentName);
-                        setWriteAttachmentSize(focusedPost.attachmentSize);
-                        setWriteRegisteredAt(toKoreaDateTimeLocalValue(focusedPost.registeredAtRaw));
-                        setWriteDisplayAuthorName(
-                          displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
-                            ? displayAuthorName as NewsDisplayAuthorName
-                            : "운영자",
-                        );
-                        setShowWriteModal(true);
-                      }}
-                      className="shrink-0 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
-                    >
-                      수정
-                    </button>
-                  )}
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                    {session && focusedPost.isReal && !isReadOnlyPublicShare && (
+                      <PersonalBookmarkButton
+                        title={focusedPost.title}
+                        targetType="FREE_POST"
+                        targetId={focusedPost.id}
+                        initialBookmarked={focusedPost.isBookmarkedByCurrentUser}
+                      />
+                    )}
+                    {focusedPost.isReal && (focusedPost.author.id === currentUserId || isAdmin) && (
+                      <button
+                        type="button"
+                        aria-label="게시글 수정"
+                        onClick={() => {
+                          const displayAuthorName = focusedPost.author.displayAuthorName;
+                          setEditingPost(focusedPost);
+                          setWriteTitle(focusedPost.title);
+                          setWriteContent(focusedPost.content);
+                          setWritePostType(normalizeFreePostType(focusedPost.postType, isAdmin));
+                          setWriteIsStarred(!!focusedPost.isStarred);
+                          setWriteIsPublicShareEnabled(!!focusedPost.isPublicShareEnabled);
+                          setWriteAttachmentPath(focusedPost.attachmentPath);
+                          setWriteAttachmentName(focusedPost.attachmentName);
+                          setWriteAttachmentSize(focusedPost.attachmentSize);
+                          setWriteRegisteredAt(toKoreaDateTimeLocalValue(focusedPost.registeredAtRaw));
+                          setWriteDisplayAuthorName(
+                            displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
+                              ? displayAuthorName as NewsDisplayAuthorName
+                              : "운영자",
+                          );
+                          setShowWriteModal(true);
+                        }}
+                        className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                      >
+                        수정
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 border-y border-stone-surface/65 py-2.5 text-[11px] font-bold text-ash font-mono">
                   {focusedPostTypeMeta && (

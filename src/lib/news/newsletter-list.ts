@@ -16,6 +16,7 @@ export type NewsletterListItem = {
   attachmentSize: number | null;
   isReal: boolean;
   isPreview: boolean;
+  isBookmarkedByCurrentUser: boolean;
 };
 
 const UPCOMING_NEWSLETTER_PREVIEW: NewsletterListItem = {
@@ -34,6 +35,7 @@ const UPCOMING_NEWSLETTER_PREVIEW: NewsletterListItem = {
   isStarred: false,
   isReal: false,
   isPreview: true,
+  isBookmarkedByCurrentUser: false,
 };
 
 const UPCOMING_NEWSLETTER_PREVIEWS = [
@@ -50,6 +52,7 @@ export function buildNewsletterList(
     content: item.content,
     viewCount: item.viewCount,
     isStarred: !!item.isStarred,
+    isBookmarkedByCurrentUser: !!item.isBookmarkedByCurrentUser,
     author: { name: item.author.name || "사무국" },
     createdAt: formatNewsletterDate(item.registeredAt ?? item.createdAt),
     registeredAt: item.registeredAt,

@@ -70,6 +70,51 @@ describe("PdfViewerModal", () => {
     expect(screen.getByRole("button", { name: "화면 축소" })).toBeInTheDocument();
   });
 
+  it("portals the viewer layer to the document body outside transformed ancestors", () => {
+    render(
+      <div data-testid="transformed-root" style={{ transform: "translateX(0)" }}>
+        <PdfViewerModal
+          documentId="doc-1"
+          documentTitle="보관함 문서"
+          fileName="saved-document.pdf"
+          onClose={vi.fn()}
+        />
+      </div>,
+    );
+
+    const layer = screen.getByTestId("pdf-viewer-modal-layer");
+    const transformedRoot = screen.getByTestId("transformed-root");
+
+    expect(layer.parentElement).toBe(document.body);
+    expect(transformedRoot.contains(layer)).toBe(false);
+  });
+
+  it("can switch to a PDF-only enlarged view and return to the detailed viewer", () => {
+    render(
+      <PdfViewerModal
+        documentId="doc-1"
+        documentTitle="2026년 제3차 이사회 의사록"
+        fileName="board-minutes.pdf"
+        description="2026년 6월20일 개최한 제3차 이사회 의사록"
+        onClose={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "PDF만 크게" }));
+
+    expect(screen.getByTestId("pdf-viewer-panel")).toHaveClass("h-[98vh]", "w-[98vw]");
+    expect(screen.getByTestId("pdf-preview-scroll-area")).toHaveClass("p-0");
+    expect(screen.getByTestId("pdf-preview-frame-area")).toHaveClass("h-full", "min-h-0");
+    expect(screen.queryByTestId("pdf-viewer-header")).not.toBeInTheDocument();
+    expect(screen.queryByText("본문 문서")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "상세 보기" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "상세 보기" }));
+
+    expect(screen.getByTestId("pdf-viewer-header")).toBeInTheDocument();
+    expect(screen.getByText("본문 문서")).toBeInTheDocument();
+  });
+
   it("keeps the viewer header readable on mobile widths", () => {
     render(
       <PdfViewerModal

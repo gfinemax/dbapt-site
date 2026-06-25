@@ -6,6 +6,9 @@ const prismaMock = vi.hoisted(() => ({
   paymentNotice: { findMany: vi.fn() },
   documentLog: { findMany: vi.fn() },
   personalDocumentBookmark: { findMany: vi.fn() },
+  personalContentBookmark: { findMany: vi.fn() },
+  coopNews: { findMany: vi.fn() },
+  freePost: { findMany: vi.fn() },
   refundInfo: { findUnique: vi.fn() },
   user: { findMany: vi.fn() },
 }));
@@ -35,6 +38,9 @@ describe("personal library data", () => {
     prismaMock.paymentNotice.findMany.mockResolvedValue([]);
     prismaMock.documentLog.findMany.mockResolvedValue([]);
     prismaMock.personalDocumentBookmark.findMany.mockResolvedValue([]);
+    prismaMock.personalContentBookmark.findMany.mockResolvedValue([]);
+    prismaMock.coopNews.findMany.mockResolvedValue([]);
+    prismaMock.freePost.findMany.mockResolvedValue([]);
     prismaMock.refundInfo.findUnique.mockResolvedValue(null);
     prismaMock.user.findMany.mockReset();
   });
@@ -158,5 +164,71 @@ describe("personal library data", () => {
         id: expect.any(String),
       }),
     );
+  });
+
+  it("loads saved coop news and free-board posts for the personal library", async () => {
+    prismaMock.personalContentBookmark.findMany.mockResolvedValue([
+      {
+        id: "bookmark-news",
+        targetType: "COOP_NEWS",
+        targetId: "notice-1",
+        createdAt: new Date("2026-06-20T00:00:00.000Z"),
+      },
+      {
+        id: "bookmark-free",
+        targetType: "FREE_POST",
+        targetId: "free-1",
+        createdAt: new Date("2026-06-21T00:00:00.000Z"),
+      },
+    ]);
+    prismaMock.coopNews.findMany.mockResolvedValue([
+      {
+        id: "notice-1",
+        category: "NOTICE",
+        title: "중요 공지사항",
+        content: "<p>공지 본문입니다.</p>",
+        isStarred: true,
+        registeredAt: new Date("2026-06-19T09:00:00.000Z"),
+      },
+    ]);
+    prismaMock.freePost.findMany.mockResolvedValue([
+      {
+        id: "free-1",
+        postType: "NOTICE",
+        title: "자유게시판 운영 안내",
+        content: "<p>게시글 본문입니다.</p>",
+        isStarred: true,
+        registeredAt: new Date("2026-06-18T09:00:00.000Z"),
+      },
+    ]);
+
+    const { loadPersonalLibraryData } = await import("@/lib/personal-library-data");
+    const data = await loadPersonalLibraryData({
+      id: "member-1",
+      loginId: "member1",
+      name: "이조합",
+      role: "MEMBER",
+    });
+
+    expect(prismaMock.personalContentBookmark.findMany).toHaveBeenCalledWith({
+      where: { userId: "member-1" },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(data.contentBookmarks).toEqual([
+      expect.objectContaining({
+        id: "bookmark-news",
+        targetType: "COOP_NEWS",
+        targetId: "notice-1",
+        title: "중요 공지사항",
+        href: "/news?tab=notice&notice=notice-1",
+      }),
+      expect.objectContaining({
+        id: "bookmark-free",
+        targetType: "FREE_POST",
+        targetId: "free-1",
+        title: "자유게시판 운영 안내",
+        href: "/news?tab=free&post=free-1",
+      }),
+    ]);
   });
 });

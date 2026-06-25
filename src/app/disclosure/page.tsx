@@ -25,6 +25,24 @@ type DisclosurePageProps = {
   }>;
 };
 
+async function addCurrentUserBookmarkFlags(documents: Document[], userId: string) {
+  if (documents.length === 0) return documents;
+
+  const bookmarks = await prisma.personalDocumentBookmark.findMany({
+    where: {
+      userId,
+      documentId: { in: documents.map((document) => document.id) },
+    },
+    select: { documentId: true },
+  });
+  const bookmarkedIds = new Set(bookmarks.map((bookmark) => bookmark.documentId));
+
+  return documents.map((document) => ({
+    ...document,
+    isBookmarkedByCurrentUser: bookmarkedIds.has(document.id),
+  }));
+}
+
 export default async function DisclosurePage({ searchParams }: DisclosurePageProps = {}) {
   const resolvedSearchParams = await searchParams;
   const requestedDocumentId =
@@ -81,7 +99,7 @@ export default async function DisclosurePage({ searchParams }: DisclosurePagePro
         orderBy: { documentDate: "desc" },
       });
       
-      documents = serializeDocuments(docs);
+      documents = await addCurrentUserBookmarkFlags(serializeDocuments(docs), session.id);
 
       const savedEmptyMessages = await prisma.disclosureEmptyMessage.findMany({
         orderBy: { subCategory: "asc" },

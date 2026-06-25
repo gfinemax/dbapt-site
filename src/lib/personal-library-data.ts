@@ -19,6 +19,7 @@ export type PersonalLibrarySession = {
 
 export type PersonalLibraryData = {
   documents: Document[];
+  contentBookmarks: PersonalLibraryContentBookmark[];
   logs: LogEntry[];
   refundInfo: {
     totalPaid: number;
@@ -48,8 +49,22 @@ export type PersonalLibraryData = {
   }[];
 };
 
+export type PersonalLibraryContentBookmark = {
+  id: string;
+  targetType: "COOP_NEWS" | "FREE_POST";
+  targetId: string;
+  sourceLabel: string;
+  title: string;
+  description: string | null;
+  href: string;
+  createdAt: string;
+  registeredAt: string;
+  isStarred: boolean;
+};
+
 export const emptyPersonalLibraryData = (): PersonalLibraryData => ({
   documents: [],
+  contentBookmarks: [],
   logs: [],
   refundInfo: null,
   contributionSummary: null,
@@ -58,6 +73,111 @@ export const emptyPersonalLibraryData = (): PersonalLibraryData => ({
   pendingUsers: [],
   approvedSocialUsers: [],
 });
+
+function toPlainText(value: string | null | undefined) {
+  return (value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getCoopNewsSourceLabel(category: string) {
+  return category === "WEEKLY_MONTHLY" ? "조합뉴스" : "공지사항";
+}
+
+function getCoopNewsHref(category: string, id: string) {
+  return category === "WEEKLY_MONTHLY"
+    ? `/news?tab=newsletter&news=${encodeURIComponent(id)}`
+    : `/news?tab=notice&notice=${encodeURIComponent(id)}`;
+}
+
+async function loadPersonalContentBookmarks(userId: string): Promise<PersonalLibraryContentBookmark[]> {
+  const bookmarks = await prisma.personalContentBookmark.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  if (bookmarks.length === 0) return [];
+
+  const coopNewsIds = bookmarks
+    .filter((bookmark) => bookmark.targetType === "COOP_NEWS")
+    .map((bookmark) => bookmark.targetId);
+  const freePostIds = bookmarks
+    .filter((bookmark) => bookmark.targetType === "FREE_POST")
+    .map((bookmark) => bookmark.targetId);
+
+  const [coopNewsItems, freePostItems] = await Promise.all([
+    coopNewsIds.length > 0
+      ? prisma.coopNews.findMany({
+          where: { id: { in: coopNewsIds } },
+          select: {
+            id: true,
+            category: true,
+            title: true,
+            content: true,
+            isStarred: true,
+            registeredAt: true,
+          },
+        })
+      : Promise.resolve([]),
+    freePostIds.length > 0
+      ? prisma.freePost.findMany({
+          where: { id: { in: freePostIds } },
+          select: {
+            id: true,
+            postType: true,
+            title: true,
+            content: true,
+            isStarred: true,
+            registeredAt: true,
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const coopNewsById = new Map(coopNewsItems.map((item) => [item.id, item]));
+  const freePostById = new Map(freePostItems.map((item) => [item.id, item]));
+
+  const contentBookmarks: PersonalLibraryContentBookmark[] = [];
+
+  for (const bookmark of bookmarks) {
+    if (bookmark.targetType === "COOP_NEWS") {
+      const item = coopNewsById.get(bookmark.targetId);
+      if (!item) continue;
+      contentBookmarks.push({
+        id: bookmark.id,
+        targetType: "COOP_NEWS" as const,
+        targetId: item.id,
+        sourceLabel: getCoopNewsSourceLabel(item.category),
+        title: item.title,
+        description: toPlainText(item.content).slice(0, 120) || null,
+        href: getCoopNewsHref(item.category, item.id),
+        createdAt: bookmark.createdAt.toISOString(),
+        registeredAt: item.registeredAt.toISOString(),
+        isStarred: item.isStarred,
+      });
+      continue;
+    }
+
+    if (bookmark.targetType === "FREE_POST") {
+      const item = freePostById.get(bookmark.targetId);
+      if (!item) continue;
+      contentBookmarks.push({
+        id: bookmark.id,
+        targetType: "FREE_POST" as const,
+        targetId: item.id,
+        sourceLabel: item.postType === "NOTICE" ? "자유게시판 공지" : "자유게시판",
+        title: item.title,
+        description: toPlainText(item.content).slice(0, 120) || null,
+        href: `/news?tab=free&post=${encodeURIComponent(item.id)}`,
+        createdAt: bookmark.createdAt.toISOString(),
+        registeredAt: item.registeredAt.toISOString(),
+        isStarred: item.isStarred,
+      });
+    }
+  }
+
+  return contentBookmarks;
+}
 
 export async function loadPersonalLibraryData(
   session: PersonalLibrarySession | null,
@@ -78,6 +198,7 @@ export async function loadPersonalLibraryData(
     orderBy: { documentDate: "desc" },
   });
   data.documents = serializeDocuments(docs);
+  data.contentBookmarks = await loadPersonalContentBookmarks(session.id);
 
   const [summary, notices] = await Promise.all([
     prisma.contributionSummary.findUnique({

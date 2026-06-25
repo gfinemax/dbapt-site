@@ -17,6 +17,7 @@ import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
+import { PersonalBookmarkButton } from "./personal-bookmark-button";
 
 type NoticeBoardProps = {
   isLoggedIn: boolean;
@@ -293,6 +294,15 @@ export function NoticeBoard({
                         {notice.attachmentPath && (
                           <span className="bg-stone-surface text-graphite text-[8px] font-black scale-90 rounded px-1 shrink-0 select-none">첨부</span>
                         )}
+                        {isLoggedIn && notice.isReal && (
+                          <PersonalBookmarkButton
+                            title={notice.title}
+                            targetType="COOP_NEWS"
+                            targetId={notice.id}
+                            initialBookmarked={notice.isBookmarkedByCurrentUser}
+                            className="ml-1"
+                          />
+                        )}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-center text-xs text-graphite/80 font-normal">
@@ -424,6 +434,14 @@ export function NoticeBoard({
                 </a>
               )}
               <div className="border-t border-stone-surface pt-4 space-y-3">
+                {isLoggedIn && activeViewNotice.isReal && (
+                  <PersonalBookmarkButton
+                    title={activeViewNotice.title}
+                    targetType="COOP_NEWS"
+                    targetId={activeViewNotice.id}
+                    initialBookmarked={activeViewNotice.isBookmarkedByCurrentUser}
+                  />
+                )}
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black text-charcoal-primary">
                     댓글 {getNewsComments(activeViewNotice).length}개
