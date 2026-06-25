@@ -70,6 +70,8 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showSignupPasswordConfirm, setShowSignupPasswordConfirm] = useState(false);
   const userAgent = useSyncExternalStore(subscribeUserAgent, getClientUserAgent, getServerUserAgent);
   const browserOAuth = useMemo<BrowserOAuthState>(() => {
     if (!userAgent || typeof window === "undefined") {
@@ -164,29 +166,53 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                 <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupPassword">
                   비밀번호
                 </label>
-                <input
-                  id="signupPassword"
-                  name="signupPassword"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  placeholder="8자 이상, 영문과 숫자 포함"
-                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                />
+                <div className="relative">
+                  <input
+                    id="signupPassword"
+                    name="signupPassword"
+                    type={showSignupPassword ? "text" : "password"}
+                    required
+                    autoComplete="new-password"
+                    placeholder="8자 이상, 영문과 숫자 포함"
+                    className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showSignupPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                    aria-pressed={showSignupPassword}
+                    title={showSignupPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                    onClick={() => setShowSignupPassword((current) => !current)}
+                    className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-graphite transition hover:bg-[#f8f7f4] hover:text-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                  >
+                    {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupPasswordConfirm">
                   비밀번호 확인
                 </label>
-                <input
-                  id="signupPasswordConfirm"
-                  name="signupPasswordConfirm"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  placeholder="비밀번호를 한 번 더 입력하세요"
-                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
-                />
+                <div className="relative">
+                  <input
+                    id="signupPasswordConfirm"
+                    name="signupPasswordConfirm"
+                    type={showSignupPasswordConfirm ? "text" : "password"}
+                    required
+                    autoComplete="new-password"
+                    placeholder="비밀번호를 한 번 더 입력하세요"
+                    className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showSignupPasswordConfirm ? "비밀번호 확인 숨기기" : "비밀번호 확인 보기"}
+                    aria-pressed={showSignupPasswordConfirm}
+                    title={showSignupPasswordConfirm ? "비밀번호 확인 숨기기" : "비밀번호 확인 보기"}
+                    onClick={() => setShowSignupPasswordConfirm((current) => !current)}
+                    className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-graphite transition hover:bg-[#f8f7f4] hover:text-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                  >
+                    {showSignupPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="rounded-xl bg-white px-3 py-3 text-[11px] leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
                 <p>비밀번호는 8자 이상으로 입력해 주세요.</p>

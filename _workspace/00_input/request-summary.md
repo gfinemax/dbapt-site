@@ -1,6 +1,6 @@
 # Request Summary
 
-- requested feature slice: 로그인한 사용자가 본인 비밀번호를 변경할 수 있게 한다. 운영자 계정도 본인 비밀번호 변경을 같은 흐름으로 지원한다.
-- explicitly excluded scope: 관리자가 다른 사용자의 비밀번호를 웹 UI에서 강제 초기화하는 기능, 이메일/SMS 비밀번호 재설정, Google 계정 비밀번호 변경, 계정 감사 로그 신규 테이블.
-- candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- requested feature slice: 신규가입 신청 화면의 `비밀번호`와 `비밀번호 확인` 입력칸에 보기/숨기기 토글을 추가한다.
+- explicitly excluded scope: 비밀번호 정책 변경, 가입 승인 흐름 변경, 로그인 비밀번호 토글 변경, 서버 액션 변경.
+- candidate governing specification: current user-approved login/signup UI direction and `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
 - unanswered decision: none

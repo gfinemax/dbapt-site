@@ -1,22 +1,22 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: Logged-in account password change form in the portal profile menu.
+- Feature: Signup password and password confirmation show/hide toggles.
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-06-25-account-password-change.md`
-- Files or pages reviewed: `src/components/portal/portal-shell.tsx`, `/login`, `/portal/admin`
+- Implementation plan: `docs/superpowers/plans/2026-06-25-signup-password-toggle.md`
+- Files or pages reviewed: `src/app/login/login-client.tsx`, `/login`
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: The new form is only rendered inside the logged-in portal profile dropdown. Public navigation and logged-out pages do not expose password mutation controls. The server action updates only the current session user's `passwordHash`.
+- Evidence: The change is limited to the signup form presentation. It does not expose new public data, change signup submission fields, change password policy, or alter approval behavior.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: The UI says `비밀번호 변경` and requires the current password. Passwordless Google accounts return a message directing users to manage the Google password externally. Operator-managed password reset for other users remains documented as CLI-only.
+- Evidence: The controls only reveal or hide the text already typed by the applicant. Labels distinguish `비밀번호 보기` and `비밀번호 확인 보기`, and no new account capability is implied.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: The form uses labeled password inputs, rounded card/pill controls, warm stone surfaces, visible focus styles, and existing Pretendard typography. CDP browser verification on `http://localhost:3000/portal/admin` confirmed the profile menu renders on desktop and mobile with no horizontal overflow.
+- Evidence: The toggles reuse the existing login password `Eye` / `EyeOff` pattern, preserve labels and autocomplete values, keep focus-visible rings, and use the same rounded warm form styling. CDP verification on `/login` confirmed independent toggle behavior and no horizontal overflow at 1366x900 and 390x844.
 
 ## Outcome
 - Result: PASS

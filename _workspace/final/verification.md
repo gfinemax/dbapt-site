@@ -2,38 +2,30 @@
 
 ## Implemented Feature
 
-- Added `changePasswordAction` for logged-in password-based accounts.
-- Added a compact `비밀번호 변경` form inside the portal profile dropdown.
-- Supported administrators changing their own password through the same profile menu.
-- Kept operator reset of other users on the documented CLI path.
-- Documented the behavior in user and operations docs, and updated the auth/permission PRD.
+- Added show/hide toggles to the signup `비밀번호` field.
+- Added an independent show/hide toggle to the signup `비밀번호 확인` field.
+- Reused the existing login password `Eye` / `EyeOff` visual pattern and accessibility labels.
 
 ## Changed Files
 
-- `src/lib/auth.ts`
-- `src/components/portal/portal-shell.tsx`
-- `src/__tests__/phone-signup-auth.test.ts`
-- `src/__tests__/portal-shell.test.tsx`
-- `docs/operations/user-manual.md`
-- `docs/operations/account-management.md`
-- `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
-- `docs/superpowers/plans/2026-06-25-account-password-change.md`
+- `src/app/login/login-client.tsx`
+- `src/__tests__/portal-preview-pages.test.tsx`
+- `docs/superpowers/plans/2026-06-25-signup-password-toggle.md`
 
 ## Checks
 
-- `pnpm test -- src/__tests__/phone-signup-auth.test.ts -t "changes the current password"`: FAIL before implementation because `changePasswordAction` was missing.
-- `pnpm test -- src/__tests__/phone-signup-auth.test.ts -t "password"`: PASS.
-- `pnpm test -- src/__tests__/portal-shell.test.tsx -t "changes the logged-in user's password"`: FAIL before UI implementation because the form was missing.
-- `pnpm test -- src/__tests__/portal-shell.test.tsx -t "changes the logged-in user's password"`: PASS.
+- `pnpm test -- src/__tests__/portal-preview-pages.test.tsx -t "signup password fields"`: FAIL before implementation because toggle buttons were missing.
+- `pnpm test -- src/__tests__/portal-preview-pages.test.tsx -t "signup password fields"`: PASS after implementation.
+- `pnpm test -- src/__tests__/portal-preview-pages.test.tsx`: PASS, 8 tests.
 - `pnpm lint`: PASS.
-- `pnpm test`: PASS, 72 files and 426 tests.
+- `pnpm test`: PASS, 72 files and 427 tests.
 - `pnpm build`: PASS.
-- `node _workspace/password-change-cdp-verify.mjs`: PASS.
+- `node _workspace/signup-toggle-cdp-verify.mjs`: PASS before temporary script cleanup.
 
 ## Browser Checks
 
-- Desktop portal profile menu: password form visible, wrong-current-password error visible, no horizontal overflow.
-- Mobile portal profile menu at 390x844: password form visible, no horizontal overflow.
+- Desktop `/login` signup form at 1366x900: both toggles visible, independent type changes verified, no horizontal overflow.
+- Mobile `/login` signup form at 390x844: both toggles visible, independent type changes verified, no horizontal overflow.
 
 ## Risks Or Follow-up
 

@@ -186,6 +186,36 @@ describe("role-specific portal preview pages", () => {
     expect(passwordInput).toHaveAttribute("type", "password");
   });
 
+  it("lets applicants show and hide signup password fields independently", async () => {
+    const Page = findPage("../app/login/page.tsx");
+    if (!Page) return;
+
+    render(await Page({ searchParams: Promise.resolve({}) }));
+
+    fireEvent.click(screen.getByRole("button", { name: "신규 가입 신청" }));
+
+    const signupPasswordInput = screen.getByLabelText("비밀번호", { selector: 'input[name="signupPassword"]' });
+    const signupPasswordConfirmInput = screen.getByLabelText("비밀번호 확인");
+
+    expect(signupPasswordInput).toHaveAttribute("type", "password");
+    expect(signupPasswordConfirmInput).toHaveAttribute("type", "password");
+
+    fireEvent.click(screen.getByRole("button", { name: "비밀번호 보기" }));
+    expect(signupPasswordInput).toHaveAttribute("type", "text");
+    expect(signupPasswordConfirmInput).toHaveAttribute("type", "password");
+
+    fireEvent.click(screen.getByRole("button", { name: "비밀번호 확인 보기" }));
+    expect(signupPasswordInput).toHaveAttribute("type", "text");
+    expect(signupPasswordConfirmInput).toHaveAttribute("type", "text");
+
+    fireEvent.click(screen.getByRole("button", { name: "비밀번호 숨기기" }));
+    expect(signupPasswordInput).toHaveAttribute("type", "password");
+    expect(signupPasswordConfirmInput).toHaveAttribute("type", "text");
+
+    fireEvent.click(screen.getByRole("button", { name: "비밀번호 확인 숨기기" }));
+    expect(signupPasswordConfirmInput).toHaveAttribute("type", "password");
+  });
+
   it("warns mobile embedded browser users before Google OAuth", async () => {
     vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
       "Mozilla/5.0 (Linux; Android 14; SM-S928N Build/UP1A) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/125.0.0.0 Mobile Safari/537.36 wv",
