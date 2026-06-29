@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { DEVELOPMENT_LOG_CATEGORIES } from "@/lib/news/development-log";
+import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 
 function hasCreatedAtInput(body: Record<string, unknown>) {
   return Object.prototype.hasOwnProperty.call(body, "createdAt");
@@ -16,6 +17,7 @@ function parseRegisteredAtInput(value: unknown) {
 
 // 1. GET: 공지사항 및 조합뉴스 조회 (Public)
 export async function GET(request: Request) {
+  const session = (await getSession()) as { id: string; role: string } | null;
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category"); // NOTICE or WEEKLY_MONTHLY
 
@@ -46,6 +48,12 @@ export async function GET(request: Request) {
                 role: true,
               },
             },
+            reactions: {
+              select: {
+                emoji: true,
+                userId: true,
+              },
+            },
           },
           orderBy: { createdAt: "asc" },
         },
@@ -53,7 +61,15 @@ export async function GET(request: Request) {
       orderBy: { registeredAt: "desc" },
     });
 
-    return NextResponse.json({ newsList });
+    return NextResponse.json({
+      newsList: newsList.map((news) => ({
+        ...news,
+        comments: news.comments.map((comment) => ({
+          ...comment,
+          reactionSummary: summarizeCommentReactions(comment.reactions, session?.id),
+        })),
+      })),
+    });
   } catch (e) {
     console.error("GET news error:", e);
     return NextResponse.json({ error: "조합소식을 가져오는 데 실패했습니다." }, { status: 500 });
@@ -225,13 +241,28 @@ export async function PATCH(request: Request) {
                 role: true,
               },
             },
+            reactions: {
+              select: {
+                emoji: true,
+                userId: true,
+              },
+            },
           },
           orderBy: { createdAt: "asc" },
         },
       },
     });
 
-    return NextResponse.json({ success: true, news });
+    return NextResponse.json({
+      success: true,
+      news: {
+        ...news,
+        comments: news.comments.map((comment) => ({
+          ...comment,
+          reactionSummary: summarizeCommentReactions(comment.reactions, session.id),
+        })),
+      },
+    });
   } catch (e) {
     console.error("PATCH news error:", e);
     return NextResponse.json({ error: "조합소식을 수정하는 데 실패했습니다." }, { status: 500 });

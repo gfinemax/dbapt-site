@@ -58,6 +58,7 @@ import {
 } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
 import { NoticeBoard } from "./notice-board";
+import { CommentReactionBar } from "./comment-reaction-bar";
 import { FreeBoard } from "./free-board";
 import { FaqAccordion } from "./faq-accordion";
 import { CoopNewsletter } from "./coop-newsletter";
@@ -215,6 +216,23 @@ export function NewsClient({
   const removeNoticeComment = (commentId: string) => {
     setNewsList((prev) => removeNoticeCommentFromList(prev, commentId));
     setActiveViewNotice((prev) => removeNoticeCommentFromNotice(prev, commentId));
+  };
+
+  const updateNoticeCommentReactionSummary = (
+    commentId: string,
+    reactionSummary: NewsCommentView["reactionSummary"],
+  ) => {
+    const updateComments = (comments: NewsCommentView[]) => comments.map((comment) => (
+      comment.id === commentId ? { ...comment, reactionSummary } : comment
+    ));
+    setNewsList((prev) => prev.map((notice) => ({
+      ...notice,
+      comments: updateComments(getNewsComments(notice)),
+    })));
+    setActiveViewNotice((prev) => prev ? {
+      ...prev,
+      comments: updateComments(getNewsComments(prev)),
+    } : prev);
   };
 
   const refreshNoticeList = async () => {
@@ -548,7 +566,7 @@ export function NewsClient({
                   </h4>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-[11px] font-medium text-graphite">
-                      <span>이번 주 누적 토론글</span>
+                      <span>이번 주 누적 의견나눔</span>
                       <span className="font-bold text-meadow-green font-mono">+{freePostsCount}건</span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] font-medium text-graphite">
@@ -1037,7 +1055,7 @@ export function NewsClient({
                     ) : (
                       <div className="space-y-3">
                         {buildShallowCommentTree(getNewsComments(activeViewNotice)).map((comment) => {
-                          const repliesExpanded = expandedNoticeReplies[comment.id] || false;
+                          const repliesExpanded = expandedNoticeReplies[comment.id] ?? getNewsComments(activeViewNotice).length <= 5;
                           return (
                           <article key={comment.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3.5">
                             <div className="flex items-center justify-between gap-3">
@@ -1132,6 +1150,13 @@ export function NewsClient({
                                 {comment.content}
                               </p>
                             )}
+                            <CommentReactionBar
+                              targetType="COOP_NEWS_COMMENT"
+                              targetId={comment.id}
+                              reactionSummary={comment.reactionSummary}
+                              canReact={isLoggedIn}
+                              onReactionSummaryChange={updateNoticeCommentReactionSummary}
+                            />
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                               {canCommentOnNotice && isLoggedIn && (
                                 <button
@@ -1221,6 +1246,13 @@ export function NewsClient({
                                         {reply.content}
                                       </p>
                                     )}
+                                    <CommentReactionBar
+                                      targetType="COOP_NEWS_COMMENT"
+                                      targetId={reply.id}
+                                      reactionSummary={reply.reactionSummary}
+                                      canReact={isLoggedIn}
+                                      onReactionSummaryChange={updateNoticeCommentReactionSummary}
+                                    />
                                   </div>
                                 ))}
                               </div>

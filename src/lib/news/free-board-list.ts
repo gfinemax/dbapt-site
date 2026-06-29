@@ -1,4 +1,5 @@
 import { normalizeFreePostType, type FreePostType } from "@/lib/free-post-type";
+import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
 import { buildShallowCommentTree, type ShallowCommentTreeNode } from "@/lib/news/comment-tree";
 import { getPlainNoticeText } from "@/lib/news/rich-text";
 import type { FreePostView, NewsCommentView, NewsUserView } from "@/lib/news/types";
@@ -12,6 +13,7 @@ export type FreeBoardComment = {
   author: NewsUserView;
   parentId: string | null;
   isReal: boolean;
+  reactionSummary: CommentReactionSummaryItem[];
 };
 
 export type FreeBoardCommentView = ShallowCommentTreeNode<FreeBoardComment>;
@@ -61,6 +63,7 @@ export function buildFreeBoardCommentTree(comments: readonly NewsCommentView[]):
     author: { ...comment.author, displayAuthorName: comment.displayAuthorName },
     parentId: comment.parentId || null,
     isReal: comment.isReal ?? true,
+    reactionSummary: comment.reactionSummary || [],
   }));
 
   return buildShallowCommentTree(commentViews);

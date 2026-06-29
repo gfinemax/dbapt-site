@@ -9,6 +9,7 @@ import {
 import { NewsClient } from "@/components/news/news-client";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 import { getUserDisplayName } from "@/lib/user-display-name";
+import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 import type { CoopNewsView, FAQView, FreePostView } from "@/lib/news/types";
 
 type NewsPageProps = {
@@ -57,6 +58,12 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
                 role: true,
               },
             },
+            reactions: {
+              select: {
+                emoji: true,
+                userId: true,
+              },
+            },
           },
           orderBy: { createdAt: "asc" },
         },
@@ -79,14 +86,15 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
       comments: item.comments.map((comment) => ({
         ...comment,
         createdAt: comment.createdAt.toISOString(),
-        author: {
-          id: comment.author.id,
-          name: getUserDisplayName(comment.author),
-          signupName: comment.author.signupName,
-          loginId: comment.author.loginId || "social",
-          role: comment.author.role,
-        },
-      })),
+          author: {
+            id: comment.author.id,
+            name: getUserDisplayName(comment.author),
+            signupName: comment.author.signupName,
+            loginId: comment.author.loginId || "social",
+            role: comment.author.role,
+          },
+          reactionSummary: summarizeCommentReactions(comment.reactions, session?.id),
+        })),
       attachmentPath: item.attachmentPath,
       attachmentName: item.attachmentName,
       attachmentSize: item.attachmentSize,
@@ -114,6 +122,12 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
                   signupName: true,
                   loginId: true,
                   role: true,
+                },
+              },
+              reactions: {
+                select: {
+                  emoji: true,
+                  userId: true,
                 },
               },
             },
@@ -148,6 +162,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
             role: c.author.role,
             displayAuthorName: c.displayAuthorName,
           },
+          reactionSummary: summarizeCommentReactions(c.reactions, session.id),
         })),
         isPublicShareEnabled: post.isPublicShareEnabled,
         publicShareEnabledAt: post.publicShareEnabledAt?.toISOString() ?? null,

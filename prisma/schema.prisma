@@ -50,6 +50,7 @@ model User {
   coopNews                         CoopNews[]
   freePosts                        FreePost[]
   freeComments                     FreeComment[]
+  commentReactions                 CommentReaction[]
   notificationGroupMembers         NotificationGroupMember[]
   disclosureNotificationRecipients DisclosureNotificationRecipient[]
   coopNewsComments                 CoopNewsComment[]
@@ -575,6 +576,7 @@ model CoopNewsComment {
   replies           CoopNewsComment[] @relation("CoopNewsCommentReplies")
   authorId          String
   author            User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions         CommentReaction[]
 
   @@index([newsId, createdAt])
   @@index([newsId, parentId])
@@ -619,8 +621,30 @@ model FreeComment {
   replies           FreeComment[] @relation("FreeCommentReplies")
   authorId          String
   author            User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions         CommentReaction[]
 
   @@index([postId, parentId])
+}
+
+// 8.1. 댓글/답글 이모지 리액션
+model CommentReaction {
+  id                String           @id @default(uuid())
+  emoji             String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  userId            String
+  coopNewsCommentId String?
+  freeCommentId     String?
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coopNewsComment CoopNewsComment? @relation(fields: [coopNewsCommentId], references: [id], onDelete: Cascade)
+  freeComment     FreeComment?     @relation(fields: [freeCommentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, coopNewsCommentId])
+  @@unique([userId, freeCommentId])
+  @@index([coopNewsCommentId])
+  @@index([freeCommentId])
+  @@index([userId])
 }
 
 // 9. FAQ 자주 묻는 질문

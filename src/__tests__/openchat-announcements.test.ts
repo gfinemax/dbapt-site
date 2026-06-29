@@ -188,7 +188,7 @@ describe("openchat announcements", () => {
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
     expect(message).toContain("[대방동 지역주택조합 자유게시판 안내]");
-    expect(message).toContain("- 유형: 운영안내");
+    expect(message).toContain("- 유형: 법령·운영안내");
     expect(message).toContain("https://dbapt.example/news?tab=free&post=free-1");
     expect(message).not.toContain("자유게시판 운영 방침입니다.");
   });

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { normalizeFreePostType } from "@/lib/free-post-type";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
+import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 
 function normalizeFreePostAttachment(body: {
   attachmentPath?: unknown;
@@ -79,6 +80,12 @@ export async function GET() {
                 role: true,
               },
             },
+            reactions: {
+              select: {
+                emoji: true,
+                userId: true,
+              },
+            },
           },
           orderBy: { createdAt: "asc" },
         },
@@ -89,7 +96,15 @@ export async function GET() {
       ],
     });
 
-    return NextResponse.json({ posts });
+    return NextResponse.json({
+      posts: posts.map((post) => ({
+        ...post,
+        comments: post.comments.map((comment) => ({
+          ...comment,
+          reactionSummary: summarizeCommentReactions(comment.reactions, session.id),
+        })),
+      })),
+    });
   } catch (e) {
     console.error("GET free posts error:", e);
     return NextResponse.json({ error: "자유게시판 목록을 가져오는 데 실패했습니다." }, { status: 500 });
@@ -170,7 +185,7 @@ export async function POST(request: Request) {
         },
       });
 
-      return NextResponse.json({ success: true, comment });
+      return NextResponse.json({ success: true, comment: { ...comment, reactionSummary: [] } });
     } else {
       // 게시글 등록
       if (!title || !content) {

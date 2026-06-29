@@ -21,7 +21,9 @@ import {
 import { buildNoticeCommentEditDraft } from "@/lib/news/notice-access";
 import { getNoticeCommentAuthorName } from "@/lib/news/comment-author";
 import type { CoopNewsView, NewsCommentView, NewsSessionView } from "@/lib/news/types";
+import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
 import { cn } from "@/lib/utils";
+import { CommentReactionBar } from "./comment-reaction-bar";
 
 type DevelopmentLogProps = {
   isAdmin: boolean;
@@ -62,6 +64,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
   const [replyContents, setReplyContents] = useState<Record<string, string>>({});
   const [replyingCommentId, setReplyingCommentId] = useState<string | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const [reactionSummaryOverrides, setReactionSummaryOverrides] = useState<Record<string, CommentReactionSummaryItem[]>>({});
   const [commentDisplayAuthorName, setCommentDisplayAuthorName] =
     useState<NewsDisplayAuthorName>("운영자");
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -292,6 +295,10 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
     } finally {
       setMutatingId(null);
     }
+  };
+
+  const updateReactionSummary = (commentId: string, reactionSummary: CommentReactionSummaryItem[]) => {
+    setReactionSummaryOverrides((prev) => ({ ...prev, [commentId]: reactionSummary }));
   };
 
   const canMutateComment = (comment: NewsCommentView) => {
@@ -739,7 +746,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                     {comments.length > 0 && (
                       <div className="space-y-2">
                         {comments.map((comment) => {
-                          const repliesExpanded = expandedReplies[comment.id] ?? false;
+                          const repliesExpanded = expandedReplies[comment.id] ?? (selectedLog.comments?.length || 0) <= 5;
                           return (
                             <div key={comment.id} className="rounded-xl border border-stone-surface bg-[#fbfaf9] p-3">
                               <div className="flex items-center justify-between gap-2">
@@ -815,6 +822,13 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                                   {comment.content}
                                 </p>
                               )}
+                              <CommentReactionBar
+                                targetType="COOP_NEWS_COMMENT"
+                                targetId={comment.id}
+                                reactionSummary={reactionSummaryOverrides[comment.id] ?? comment.reactionSummary}
+                                canReact={isLoggedIn}
+                                onReactionSummaryChange={updateReactionSummary}
+                              />
 
                               <div className="mt-2 flex flex-wrap items-center gap-2">
                                 {isLoggedIn && (
@@ -860,6 +874,13 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                                       <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-graphite/90">
                                         {reply.content}
                                       </p>
+                                      <CommentReactionBar
+                                        targetType="COOP_NEWS_COMMENT"
+                                        targetId={reply.id}
+                                        reactionSummary={reactionSummaryOverrides[reply.id] ?? reply.reactionSummary}
+                                        canReact={isLoggedIn}
+                                        onReactionSummaryChange={updateReactionSummary}
+                                      />
                                     </div>
                                   ))}
                                 </div>

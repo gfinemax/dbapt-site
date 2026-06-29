@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { isDevelopmentLogCategory } from "@/lib/news/development-log";
+import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 
 function isAdminSession(session: { role: string } | null) {
   return session?.role === "ADMIN";
@@ -87,10 +88,16 @@ export async function POST(request: Request) {
             role: true,
           },
         },
+        reactions: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json({ success: true, comment });
+    return NextResponse.json({ success: true, comment: { ...comment, reactionSummary: [] } });
   } catch (e) {
     console.error("POST notice comment error:", e);
     return NextResponse.json({ error: "공지사항 댓글 등록에 실패했습니다." }, { status: 500 });
@@ -157,10 +164,22 @@ export async function PATCH(request: Request) {
             role: true,
           },
         },
+        reactions: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json({ success: true, comment: updated });
+    return NextResponse.json({
+      success: true,
+      comment: {
+        ...updated,
+        reactionSummary: summarizeCommentReactions(updated.reactions, session.id),
+      },
+    });
   } catch (e) {
     console.error("PATCH notice comment error:", e);
     return NextResponse.json({ error: "공지사항 댓글 수정에 실패했습니다." }, { status: 500 });

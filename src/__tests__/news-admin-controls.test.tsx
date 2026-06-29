@@ -1712,8 +1712,11 @@ describe("news admin visible controls", () => {
     const drawer = screen.getByLabelText("공지사항 상세 드로어");
 
     expect(within(drawer).getByText("확인했습니다.")).toBeInTheDocument();
-    expect(within(drawer).queryByText("확인 답글입니다.")).not.toBeInTheDocument();
+    expect(within(drawer).getByText("확인 답글입니다.")).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "답글 1개 숨기기" })).toBeInTheDocument();
 
+    fireEvent.click(within(drawer).getByRole("button", { name: "답글 1개 숨기기" }));
+    expect(within(drawer).queryByText("확인 답글입니다.")).not.toBeInTheDocument();
     fireEvent.click(within(drawer).getByRole("button", { name: "답글 1개 보기" }));
     expect(within(drawer).getByText("확인 답글입니다.")).toBeInTheDocument();
 
@@ -1730,6 +1733,107 @@ describe("news admin visible controls", () => {
         body: expect.stringContaining("\"parentCommentId\":\"notice-comment-1\""),
       }),
     ));
+  });
+
+  it("renders and toggles emoji reactions on notice comments", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        targetType: "COOP_NEWS_COMMENT",
+        targetId: "notice-comment-1",
+        reactionSummary: [
+          { emoji: "👏", count: 1, selectedByCurrentUser: true },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <NewsClient
+        session={{ id: "member-2", name: "조합원", loginId: "member2", role: "MEMBER" }}
+        initialNewsList={[{
+          ...realNotice,
+          comments: [{
+            ...noticeComment,
+            reactionSummary: [
+              { emoji: "👍", count: 2, selectedByCurrentUser: true },
+            ],
+          }],
+        }]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
+    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+
+    expect(within(drawer).getByRole("button", { name: "👍 리액션 2개 선택됨" })).toBeInTheDocument();
+    fireEvent.click(within(drawer).getByRole("button", { name: "👏 리액션 추가" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news/comment-reactions",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          targetType: "COOP_NEWS_COMMENT",
+          targetId: "notice-comment-1",
+          emoji: "👏",
+        }),
+      }),
+    ));
+    expect(await within(drawer).findByRole("button", { name: "👏 리액션 1개 선택됨" })).toBeInTheDocument();
+  });
+
+  it("keeps notice replies collapsed by default when a notice has more than five comments including replies", () => {
+    const comments = Array.from({ length: 4 }, (_, index) => ({
+      ...noticeComment,
+      id: `notice-comment-${index + 1}`,
+      content: index === 0 ? "확인했습니다." : `확인 의견 ${index + 1}입니다.`,
+      parentId: null,
+      author: {
+        id: `member-${index + 1}`,
+        name: `조합원 ${index + 1}`,
+        loginId: `member${index + 1}`,
+        role: "MEMBER",
+      },
+    }));
+
+    render(
+      <NewsClient
+        session={{ id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" }}
+        initialNewsList={[{
+          ...realNotice,
+          comments: [
+            ...comments,
+            {
+              ...noticeComment,
+              id: "notice-reply-1",
+              content: "댓글과 답글 합계가 많을 때 숨겨질 공지 답글입니다.",
+              parentId: "notice-comment-1",
+              author: { id: "member-3", name: "참여자", loginId: "member3", role: "MEMBER" },
+            },
+            {
+              ...noticeComment,
+              id: "notice-reply-2",
+              content: "두 번째 숨겨질 공지 답글입니다.",
+              parentId: "notice-comment-1",
+              author: { id: "member-4", name: "참여자2", loginId: "member4", role: "MEMBER" },
+            },
+          ],
+        }]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
+    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+
+    expect(within(drawer).getByText("확인했습니다.")).toBeInTheDocument();
+    expect(within(drawer).queryByText("댓글과 답글 합계가 많을 때 숨겨질 공지 답글입니다.")).not.toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "답글 2개 보기" })).toBeInTheDocument();
   });
 
   it("shows the permit milestone only through the completed district plan stage", () => {
@@ -2035,10 +2139,13 @@ describe("news admin visible controls", () => {
       },
     });
     await waitFor(() => expect(screen.getByAltText("본문 이미지")).toBeInTheDocument());
-    expect(screen.getByLabelText("이미지 크기")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("이미지 크기"), {
-      target: { value: "55" },
-    });
+    expect(screen.getByRole("group", { name: "이미지 객체" })).toBeInTheDocument();
+    expect(screen.getByRole("toolbar", { name: "이미지 레이아웃 도구" })).toBeInTheDocument();
+    expect(screen.queryByRole("slider", { name: "이미지 노드 크기" })).not.toBeInTheDocument();
+    const resizeHandle = screen.getByRole("button", { name: "이미지 크기 조절 오른쪽 아래" });
+    fireEvent.mouseDown(resizeHandle, { clientX: 0, clientY: 0 });
+    fireEvent.mouseMove(document, { clientX: -180, clientY: 0 });
+    fireEvent.mouseUp(document);
     fireEvent.change(screen.getByLabelText("첨부파일 (선택)"), {
       target: { files: [new File(["agenda"], "agenda.pdf", { type: "application/pdf" })] },
     });
@@ -2066,7 +2173,21 @@ describe("news admin visible controls", () => {
       3,
       "/api/news",
       expect.objectContaining({
-        body: expect.stringMatching(/width:\s*55%/),
+        body: expect.stringContaining('data-pixel-width=\\"220\\"'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        body: expect.stringContaining('data-pixel-height=\\"165\\"'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        body: expect.stringContaining("object-fit: fill"),
       }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -2212,23 +2333,23 @@ describe("news admin visible controls", () => {
         session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
         posts={[
           { ...realFreePost, id: "free-1", title: "자유글 제목", postType: "FREE" },
-          { ...realFreePost, id: "discussion-1", title: "토론글 제목", postType: "DISCUSSION" },
-          { ...realFreePost, id: "notice-1", title: "운영안내 제목", postType: "NOTICE" },
+          { ...realFreePost, id: "discussion-1", title: "의견나눔 제목", postType: "DISCUSSION" },
+          { ...realFreePost, id: "notice-1", title: "법령·운영안내 제목", postType: "NOTICE" },
         ]}
         onRefresh={vi.fn()}
       />,
     );
 
     expect(screen.getAllByText("자유글").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("토론글").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("운영안내").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("의견나눔").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("법령·운영안내").length).toBeGreaterThan(0);
     expect(screen.queryByText("정식 토론")).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("글 유형 필터"), { target: { value: "DISCUSSION" } });
 
-    expect(screen.getByText("토론글 제목")).toBeInTheDocument();
+    expect(screen.getByText("의견나눔 제목")).toBeInTheDocument();
     expect(screen.queryByText("자유글 제목")).not.toBeInTheDocument();
-    expect(screen.queryByText("운영안내 제목")).not.toBeInTheDocument();
+    expect(screen.queryByText("법령·운영안내 제목")).not.toBeInTheDocument();
   });
 
   it("lets only administrators select operation notice as a free-board post type", () => {
@@ -2241,7 +2362,7 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
-    expect(within(screen.getByLabelText("글 유형")).queryByRole("option", { name: "운영안내" })).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText("글 유형")).queryByRole("option", { name: "법령·운영안내" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "닫기" }));
 
     rerender(
@@ -2253,7 +2374,10 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
-    expect(within(screen.getByLabelText("글 유형")).getByRole("option", { name: "운영안내" })).toBeInTheDocument();
+    const adminTypeSelect = screen.getByLabelText("글 유형");
+    expect(within(adminTypeSelect).getByRole("option", { name: "법령·운영안내" })).toBeInTheDocument();
+    fireEvent.change(adminTypeSelect, { target: { value: "NOTICE" } });
+    expect(screen.getByText("사무국의 공식 법령 해설, 절차 안내, 운영 공지에 사용합니다.")).toBeInTheDocument();
   });
 
   it("opens another free-board post from a link inside the focused post body", () => {
@@ -2593,7 +2717,7 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(within(panel).getByRole("button", { name: "게시글 수정" }));
-    const drawer = screen.getByLabelText("게시글 수정 드로어");
+    const drawer = screen.getByRole("dialog", { name: "게시글 수정 편집 모달" });
     expect(screen.getByLabelText("등록일")).toHaveValue("2026-06-02T09:30");
     expect(screen.queryByLabelText("작성일")).not.toBeInTheDocument();
     expect(within(drawer).getByText("free-agenda.pdf")).toBeInTheDocument();
@@ -2640,7 +2764,13 @@ describe("news admin visible controls", () => {
               id: "comment-2",
               content: "첫 번째 답글입니다.",
               parentId: "comment-1",
-              author: { id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" },
+              displayAuthorName: "운영자",
+              author: {
+                id: "admin-1",
+                name: "관리자",
+                loginId: "admin",
+                role: "ADMIN",
+              },
             },
             {
               ...freeComment,
@@ -2659,6 +2789,11 @@ describe("news admin visible controls", () => {
     const panel = screen.getByLabelText("토론 집중 패널");
 
     expect(within(panel).getByText("원댓글입니다.")).toBeInTheDocument();
+    expect(within(panel).getByText("첫 번째 답글입니다.")).toBeInTheDocument();
+    expect(within(panel).getByText("작성자: 운영자")).toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: "답글 2개 숨기기" })).toBeInTheDocument();
+
+    fireEvent.click(within(panel).getByRole("button", { name: "답글 2개 숨기기" }));
     expect(within(panel).queryByText("첫 번째 답글입니다.")).not.toBeInTheDocument();
 
     fireEvent.click(within(panel).getByRole("button", { name: "답글 2개 보기" }));
@@ -2679,6 +2814,79 @@ describe("news admin visible controls", () => {
       }),
     ));
     expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("renders emoji reactions on free-board comments", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-2", name: "조합원", loginId: "member2", role: "MEMBER" }}
+        posts={[{
+          ...realFreePost,
+          comments: [{
+            ...freeComment,
+            reactionSummary: [
+              { emoji: "❤️", count: 3, selectedByCurrentUser: false },
+            ],
+          }],
+        }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+
+    expect(within(panel).getByRole("button", { name: "❤️ 리액션 3개" })).toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: "👍 리액션 추가" })).toBeInTheDocument();
+  });
+
+  it("keeps free-board replies collapsed by default when a post has more than five comments including replies", () => {
+    const comments = Array.from({ length: 4 }, (_, index) => ({
+      ...freeComment,
+      id: `comment-${index + 1}`,
+      content: index === 0 ? "원댓글입니다." : `원댓글 ${index + 1}입니다.`,
+      parentId: null,
+      author: {
+        id: `member-${index + 1}`,
+        name: `조합원 ${index + 1}`,
+        loginId: `member${index + 1}`,
+        role: "MEMBER",
+      },
+    }));
+
+    render(
+      <FreeBoard
+        session={{ id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" }}
+        posts={[{
+          ...realFreePost,
+          comments: [
+            ...comments,
+            {
+              ...freeComment,
+              id: "reply-1",
+              content: "댓글과 답글 합계가 많을 때 숨겨질 답글입니다.",
+              parentId: "comment-1",
+              author: { id: "member-3", name: "참여자", loginId: "member3", role: "MEMBER" },
+            },
+            {
+              ...freeComment,
+              id: "reply-2",
+              content: "두 번째 숨겨질 답글입니다.",
+              parentId: "comment-1",
+              author: { id: "member-4", name: "참여자2", loginId: "member4", role: "MEMBER" },
+            },
+          ],
+        }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+
+    expect(within(panel).getByText("원댓글입니다.")).toBeInTheDocument();
+    expect(within(panel).queryByText("댓글과 답글 합계가 많을 때 숨겨질 답글입니다.")).not.toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: "답글 2개 보기" })).toBeInTheDocument();
   });
 
   it("allows post editing in the focus panel and calls PATCH API", async () => {
@@ -2708,7 +2916,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(editBtn);
 
     // Drawer should open and inputs pre-filled
-    const drawer = screen.getByLabelText("게시글 수정 드로어");
+    const drawer = screen.getByRole("dialog", { name: "게시글 수정 편집 모달" });
     expect(drawer).toBeInTheDocument();
     expect(screen.getByText("게시글 수정")).toBeInTheDocument();
 
@@ -2727,5 +2935,62 @@ describe("news admin visible controls", () => {
       }),
     ));
     expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("opens free-board post editing in a narrow document workspace", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    fireEvent.click(within(screen.getByLabelText("토론 집중 패널")).getByRole("button", { name: "게시글 수정" }));
+
+    const dialog = screen.getByRole("dialog", { name: "게시글 수정 편집 모달" });
+
+    expect(dialog).toHaveClass("max-w-[920px]");
+    expect(dialog).toHaveStyle({ maxWidth: "920px" });
+    expect(dialog).not.toHaveClass("max-w-[1040px]");
+    expect(within(dialog).getByLabelText("게시글 설정")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("게시글 본문 편집 영역")).toBeInTheDocument();
+    expect(within(dialog).getByRole("textbox", { name: "자유게시판 본문 편집창" })).toHaveClass(
+      "min-h-[360px]",
+      "sm:min-h-[420px]",
+    );
+  });
+
+  it("opens free-board post writing in a fixed-width document workspace with writing first", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
+
+    const dialog = screen.getByRole("dialog", { name: "새 게시글 작성 편집 모달" });
+    const titleInput = within(dialog).getByPlaceholderText("의견을 명확하게 요약한 제목을 입력해 주십시오.");
+    const bodyRegion = within(dialog).getByLabelText("게시글 본문 편집 영역");
+    const settingsRegion = within(dialog).getByLabelText("게시글 설정");
+
+    const documentColumn = dialog.querySelector('[class*="max-w-[820px]"]');
+
+    expect(dialog).toHaveClass("max-w-[920px]");
+    expect(dialog).toHaveStyle({ maxWidth: "920px" });
+    expect(dialog).not.toHaveClass("max-w-[1040px]");
+    expect(documentColumn).not.toBeNull();
+    expect(within(dialog).queryByText("긴 본문과 이미지를 넓은 편집 영역에서 정리할 수 있습니다.")).not.toBeInTheDocument();
+    expect(titleInput.compareDocumentPosition(bodyRegion) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(bodyRegion.compareDocumentPosition(settingsRegion) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(settingsRegion).toHaveClass("rounded-2xl");
+    expect(within(dialog).getByRole("textbox", { name: "자유게시판 본문 편집창" })).toHaveClass(
+      "min-h-[360px]",
+      "sm:min-h-[420px]",
+    );
   });
 });

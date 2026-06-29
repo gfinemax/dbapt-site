@@ -1,3 +1,5 @@
+import { getFreePostTypeLabel } from "@/lib/free-post-type";
+
 type OpenChatAnnouncementDocument = {
   id: string;
   title: string;
@@ -126,11 +128,7 @@ function getCooperativeNewsAnnouncementMeta(news: OpenChatAnnouncementNews) {
 }
 
 function getFreePostAnnouncementLabel(postType?: string | null) {
-  if (postType === "DISCUSSION") return "토론글";
-  if (postType === "QUESTION") return "질문";
-  if (postType === "PROPOSAL") return "제안";
-  if (postType === "NOTICE") return "운영안내";
-  return "자유글";
+  return getFreePostTypeLabel(postType);
 }
 
 function normalizeOneLine(value: string) {

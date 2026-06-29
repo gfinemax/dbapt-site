@@ -79,6 +79,118 @@ describe("DevelopmentLog", () => {
     expect(screen.queryByRole("complementary", { name: "개발일지 상세 패널" })).not.toBeInTheDocument();
   });
 
+  it("expands development-log replies by default only when total comments are five or fewer", () => {
+    const baseComment = {
+      id: "comment-1",
+      content: "확인 의견입니다.",
+      newsId: "log-1",
+      parentId: null,
+      createdAt: "2026-06-21T01:00:00.000Z",
+      author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
+    };
+
+    const { rerender } = render(
+      <DevelopmentLog
+        isAdmin={false}
+        session={{ id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" }}
+        logs={[log({
+          comments: [
+            baseComment,
+            {
+              ...baseComment,
+              id: "reply-1",
+              content: "기본으로 보이는 개발일지 답글입니다.",
+              parentId: "comment-1",
+              author: { id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" },
+            },
+          ],
+        })]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "사업현황 향후 추진절차 개선" }));
+    let detailPanel = screen.getByRole("complementary", { name: "개발일지 상세 패널" });
+    expect(within(detailPanel).getByText("기본으로 보이는 개발일지 답글입니다.")).toBeInTheDocument();
+    expect(within(detailPanel).getByRole("button", { name: "답글 1개 숨기기" })).toBeInTheDocument();
+
+    fireEvent.click(within(detailPanel).getByRole("button", { name: "목록으로" }));
+
+    const manyComments = Array.from({ length: 4 }, (_, index) => ({
+      ...baseComment,
+      id: `many-comment-${index + 1}`,
+      content: index === 0 ? "확인 의견입니다." : `확인 의견 ${index + 1}입니다.`,
+      parentId: null,
+      author: {
+        id: `member-${index + 1}`,
+        name: `조합원 ${index + 1}`,
+        loginId: `member${index + 1}`,
+        role: "MEMBER",
+      },
+    }));
+
+    rerender(
+      <DevelopmentLog
+        isAdmin={false}
+        session={{ id: "member-2", name: "답글러", loginId: "member2", role: "MEMBER" }}
+        logs={[log({
+          comments: [
+            ...manyComments,
+            {
+              ...baseComment,
+              id: "many-reply-1",
+              content: "댓글과 답글 합계가 많을 때 숨겨질 개발일지 답글입니다.",
+              parentId: "many-comment-1",
+              author: { id: "member-5", name: "참여자", loginId: "member5", role: "MEMBER" },
+            },
+            {
+              ...baseComment,
+              id: "many-reply-2",
+              content: "두 번째 숨겨질 개발일지 답글입니다.",
+              parentId: "many-comment-1",
+              author: { id: "member-6", name: "참여자2", loginId: "member6", role: "MEMBER" },
+            },
+          ],
+        })]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "사업현황 향후 추진절차 개선" }));
+    detailPanel = screen.getByRole("complementary", { name: "개발일지 상세 패널" });
+    expect(within(detailPanel).queryByText("댓글과 답글 합계가 많을 때 숨겨질 개발일지 답글입니다.")).not.toBeInTheDocument();
+    expect(within(detailPanel).getByRole("button", { name: "답글 2개 보기" })).toBeInTheDocument();
+  });
+
+  it("renders emoji reactions on development-log comments", () => {
+    render(
+      <DevelopmentLog
+        isAdmin={false}
+        session={{ id: "member-2", name: "조합원", loginId: "member2", role: "MEMBER" }}
+        logs={[log({
+          comments: [{
+            id: "comment-1",
+            content: "확인 의견입니다.",
+            newsId: "log-1",
+            parentId: null,
+            createdAt: "2026-06-21T01:00:00.000Z",
+            reactionSummary: [
+              { emoji: "✅", count: 4, selectedByCurrentUser: false },
+            ],
+            author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
+          }],
+        })]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "사업현황 향후 추진절차 개선" }));
+    const detailPanel = screen.getByRole("complementary", { name: "개발일지 상세 패널" });
+
+    expect(within(detailPanel).getByRole("button", { name: "✅ 리액션 4개" })).toBeInTheDocument();
+    expect(within(detailPanel).getByRole("button", { name: "리액션 더보기" })).toBeInTheDocument();
+  });
+
   it("shows and submits registered dates for development log edits", async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const fetchMock = vi.fn().mockResolvedValue({

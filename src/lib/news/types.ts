@@ -1,4 +1,5 @@
 import type { FreePostType } from "@/lib/free-post-type";
+import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
 
 export type NewsUserView = {
   id: string;
@@ -26,6 +27,7 @@ export type NewsCommentView = {
   parentId: string | null;
   displayAuthorName?: string | null;
   author: NewsUserView;
+  reactionSummary?: CommentReactionSummaryItem[];
   isReal?: boolean;
 };
 
