@@ -1,3 +1,242 @@
+# Verification - Rich Content View Top Gap Tightening
+
+## Implemented Feature
+
+- Changed notice detail read mode from `space-y-6` to `space-y-0`.
+- Changed notice-board read modal from `space-y-4` to `space-y-0`.
+- Changed free-board focused read mode from `space-y-6` to `space-y-0`.
+- Preserved edit-mode form spacing and shared body typography/padding.
+
+## Changed Files
+
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-02-rich-content-view-top-gap-tightening.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|shared article width|left focus panel"`: FAIL before implementation because read columns still used `space-y-6` or `space-y-4`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|shared article width|left focus panel"`: PASS, 3 tests.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx src/__tests__/news-rich-content-links.test.tsx`: PASS, 148 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 74 files and 504 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Authenticated Chrome headless `/news` desktop 1440px:
+  - Notice read column class: `mx-auto mt-6 w-full flex-1 space-y-0 max-w-[680px]`.
+  - Measured gap between the header/meta block and rich body component: `0px`.
+  - No horizontal overflow.
+- Authenticated Chrome headless `/news?tab=free` desktop 1440px:
+  - Free-board focused read column class: `mx-auto mt-6 w-full flex-1 space-y-0 max-w-[680px]`.
+  - Measured gap between the header/meta block and rich body component: `0px`.
+  - No horizontal overflow.
+- Chrome headless `/news` mobile 390px: `clientWidth=390`, `scrollWidth=390`, no horizontal overflow.
+
+## Risks Or Follow-up
+
+- The rich body itself still keeps its shared `py-6` top padding, so edit/view body padding remains consistent. This change removes only the extra view-mode section gap above that body surface.
+
+---
+
+# Verification - Rich Content View Spacing Parity
+
+## Implemented Feature
+
+- Removed view-only rich-content wrapper spacing from notice detail drawer, notice-board dialog, and free-board focused panel.
+- Preserved empty editor paragraphs as visible blank lines by sanitizing empty `<p></p>` blocks to `<p><br /></p>`.
+- Kept existing safe paragraph line-height attributes/styles in view HTML.
+- Left `NoticeRichContent` as the single source for body padding, font size, line-height, and paragraph margin.
+
+## Changed Files
+
+- `src/components/news/notice-rich-editor.tsx`
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/__tests__/news-rich-content-links.test.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-02-rich-content-view-spacing-parity.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm vitest run src/__tests__/news-rich-content-links.test.tsx -t "empty editor paragraphs"`: FAIL before implementation because sanitized empty paragraphs stayed as `<p></p>`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|left focus panel"`: FAIL before implementation because notice/free-board rich content wrappers still had extra `pt-2` and notice had `leading-8`.
+- `pnpm vitest run src/__tests__/news-rich-content-links.test.tsx -t "empty editor paragraphs"`: PASS.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|left focus panel"`: PASS, 2 tests.
+- `pnpm vitest run src/__tests__/news-rich-content-links.test.tsx src/__tests__/news-admin-controls.test.tsx`: PASS, 148 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 74 files and 504 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing local server responded at `http://localhost:3000/news` and `http://localhost:3000/news?tab=free`.
+- Authenticated Chrome headless `/news` desktop 1440px:
+  - Notice rich-content parent class was empty, so no extra `pt-2` or legacy `leading-8` wrapper was present.
+  - Existing notice content rendered 7 empty paragraphs with `<br />`, preserving visible blank lines.
+  - No horizontal overflow.
+- Authenticated Chrome headless `/news?tab=free` desktop 1440px:
+  - Free-board focused rich-content parent class was empty, so no extra `pt-2` wrapper was present.
+  - No horizontal overflow.
+- Chrome headless `/news` mobile 390px: `clientWidth=390`, `scrollWidth=390`, no horizontal overflow.
+
+## Risks Or Follow-up
+
+- Existing posts without explicit saved `data-line-height` still use the shared default `leading-relaxed` view surface. Explicit saved paragraph line-height values are preserved by the sanitizer.
+
+---
+
+# Verification - Free Board Side Edit
+
+## Implemented Feature
+
+- Changed existing free-board post editing from a separate centered edit modal into an inline edit state inside the left `토론 집중 패널`.
+- Kept the focused panel at the shared `780px` shell and `680px` document column.
+- Changed new free-board post writing to a right-side drawer labeled `새 게시글 작성 드로어`.
+- Preserved the shared rich editor body surface: `px-6`, `py-6`, `text-xs`, `leading-relaxed`, and paragraph margin classes.
+- Reset edit draft state when closing the focused post panel.
+
+## Changed Files
+
+- `src/components/news/free-board.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-02-free-board-side-edit.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "free-board post editing|free-board post writing|allows post editing|replace attachments"`: FAIL before implementation, because edit still opened `게시글 수정 편집 모달` and create mode still used `새 게시글 작성 편집 모달`.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "free-board post editing|free-board post writing|allows post editing|replace attachments"`: PASS, 4 tests.
+- `pnpm lint`: PASS.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx src/__tests__/news-rich-content-links.test.tsx`: PASS, 147 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm test`: PASS, 74 files and 503 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing local server responded at `http://localhost:3000/news?tab=free` with HTTP 200.
+- Authenticated Chrome headless `/news?tab=free` desktop 1440px:
+  - New post drawer found: `right-0`, `slide-in-from-right`, `maxWidth=780px`, document column `680px`, no horizontal overflow.
+  - Existing post focus panel found: `left-0`, `slide-in-from-left`, `maxWidth=780px`, document column `680px`, no horizontal overflow.
+  - Existing post edit mode found inside the focus panel; `게시글 수정 편집 모달` was not present; editor/settings/body region were present; no horizontal overflow.
+- Authenticated Chrome headless `/news?tab=free` mobile 390px:
+  - New post drawer width was `390px`, right aligned, editor visible, and no horizontal overflow.
+
+## Risks Or Follow-up
+
+- The edit toolbar still adds vertical chrome inside the same side panel. Text canvas width and body styling are matched, but edit mode will naturally feel more tool-heavy than read mode.
+
+---
+
+# Verification - Shared Article Body Surface
+
+## Implemented Feature
+
+- Kept shared article content width at `680px`.
+- Added shared article body constants for `px-6`, `py-6`, `text-xs`, `leading-relaxed`, and paragraph spacing.
+- Applied the shared body surface to `NoticeRichContent`.
+- Applied the same shared body surface to the Tiptap editor body.
+- Applied shared shell/content widths and read/edit body surface classes to development-log detail and edit surfaces.
+- Preserved bottom reserve space for placed layer images while keeping the new common bottom padding.
+
+## Changed Files
+
+- `src/lib/news/content-layout.ts`
+- `src/components/news/notice-rich-editor.tsx`
+- `src/components/news/rich-text-editor-v2.tsx`
+- `src/components/news/development-log.tsx`
+- `src/__tests__/news-rich-content-links.test.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `src/__tests__/news-development-log-component.test.tsx`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm exec vitest run src/__tests__/news-rich-content-links.test.tsx -t "professional V2 editor toolbar"`: PASS, 1 test.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "editor-matched body typography"`: PASS, 1 test.
+- `pnpm exec vitest run src/__tests__/news-development-log-component.test.tsx -t "opens development log details|shows and submits registered dates"`: PASS, 2 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: initially failed one expected layer-image padding assertion after the shared bottom padding change; focused regression passed after updating the expected `calc(1.5rem + 270px)`.
+- `pnpm test`: PASS on rerun, 74 files and 503 tests.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing local server responded at `http://127.0.0.1:3000/news?tab=free` with HTTP 200.
+- Chrome headless `/news?tab=free` desktop 1440px: `clientWidth=1440`, `scrollWidth=1440`, `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+- Chrome headless `/news?tab=free` mobile 390px: `clientWidth=390`, `scrollWidth=390`, `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+
+## Risks Or Follow-up
+
+- The edit toolbar still adds vertical chrome above the same text canvas. The text line width is matched, but edit mode can still feel visually heavier because of the toolbar and editor border.
+
+---
+
+# Verification - News Read/Edit Typography And Width Tightening
+
+## Implemented Feature
+
+- Reduced the shared news article shell from `860px` to `780px`.
+- Reduced the shared news article body canvas from `760px` to `680px`.
+- Kept notice and free-board read/write surfaces on the same shared width constants.
+- Changed the rich editor default body from `text-sm` to `text-xs` so edit mode matches published read mode.
+- Changed the editor default toolbar values from `14px / 1.5` to `12px / 1.625`, matching the read-mode `text-xs leading-relaxed` baseline.
+- Allowed persisted `data-line-height="1.625"` through the rich-content sanitizer.
+
+## Changed Files
+
+- `src/lib/news/content-layout.ts`
+- `src/components/news/rich-text-editor-v2.tsx`
+- `src/components/news/notice-rich-editor.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `src/__tests__/news-rich-content-links.test.tsx`
+- `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- `docs/superpowers/plans/2026-07-01-news-content-width-unification.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|selected notice display author|shared article width|left focus panel|fixed-width document"`: PASS, 6 tests.
+- `pnpm exec vitest run src/__tests__/news-rich-content-links.test.tsx -t "toolbar|글자 크기|does not add layer reserve spacing|two-column galleries"`: PASS, 9 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: first run had one unrelated `portal-shell.test.tsx` timing failure; the failing test passed in isolation.
+- `pnpm test`: PASS on rerun, 74 files and 503 tests.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing local server responded at `http://127.0.0.1:3000/news?tab=free` with HTTP 200.
+- Chrome headless `/news?tab=free` desktop 1440px: `clientWidth=1440`, `scrollWidth=1440`, `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+- Chrome headless `/news?tab=free` mobile 390px: `clientWidth=390`, `scrollWidth=390`, `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+- Local DB did not expose a focused free-board article in this environment, so focused panel internals are covered by component tests rather than live-data browser interaction.
+
+## Risks Or Follow-up
+
+- DB table unification was discussed separately and was not implemented in this UI slice.
+
+---
+
 # Verification - News Content Width Inline Fix
 
 ## Implemented Feature

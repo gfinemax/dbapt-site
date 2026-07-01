@@ -6,8 +6,8 @@ Make notice and free-board article writing and reading use a consistent article 
 
 ## Approved Scope
 
-- Use a shared article body canvas width of `max-w-[760px]`.
-- Use a shared article shell width of `max-w-[860px]` where the shell must contain the article body plus padding and controls.
+- Use a shared article body canvas width of `max-w-[680px]`.
+- Use a shared article shell width of `max-w-[780px]` where the shell must contain the article body plus padding and controls.
 - Apply the shared widths to:
   - public notice detail drawer in `NewsClient`
   - notice read modal and notice write drawer in `NoticeBoard`
@@ -28,9 +28,9 @@ Make notice and free-board article writing and reading use a consistent article 
 
 ## Acceptance Criteria
 
-- Notice read and write surfaces expose a `max-w-[760px]` article content container.
-- Free-board read and write surfaces expose the same `max-w-[760px]` article content container.
-- Free-board shell width is reduced from `max-w-[920px]` to `max-w-[860px]`.
-- Notice shells that contain article body content use `max-w-[860px]` rather than the narrower legacy drawer/modal widths.
+- Notice read and write surfaces expose a `max-w-[680px]` article content container.
+- Free-board read and write surfaces expose the same `max-w-[680px]` article content container.
+- Free-board shell width is reduced from `max-w-[920px]` to `max-w-[780px]`.
+- Notice shells that contain article body content use `max-w-[780px]` rather than the narrower legacy drawer/modal widths.
 - Focused component tests fail before the width change and pass after implementation.
 - Desktop and mobile browser checks show no horizontal overflow on `/news?tab=free`.

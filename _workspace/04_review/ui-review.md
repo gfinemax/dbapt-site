@@ -1,3 +1,211 @@
+# UI Review - Rich Content View Top Gap Tightening
+
+## Reviewed Change
+- Feature: reduce notice/free-board view-mode gap between the meta/header area and rich body content.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-02-rich-content-view-top-gap-tightening.md`
+- Files or pages reviewed: `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`, authenticated `/news`, authenticated `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only reduces read-mode layout spacing on existing rich-content columns. No public navigation, route, API behavior, database schema, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, or public-share behavior changed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing controls and content keep their previous meaning. No new operational capability or private-data presentation was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Notice read, notice-board read, and free-board focused read columns now use `space-y-0`, removing the extra section gap above `NoticeRichContent` while keeping the shared body `px-6 py-6 text-xs leading-relaxed` surface. Browser checks showed no horizontal overflow at desktop 1440px or mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Rich Content View Spacing Parity
+
+## Reviewed Change
+- Feature: align notice/free-board rich-content view spacing with edit mode by removing view-only body wrappers and preserving empty paragraphs as visible blank lines.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-02-rich-content-view-spacing-parity.md`
+- Files or pages reviewed: `src/components/news/notice-rich-editor.tsx`, `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, authenticated `/news`, authenticated `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to rich-content sanitized HTML and view-mode body wrapper classes. It does not change public navigation, routes, API behavior, database schema, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, or public-share behavior.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing notice/free-board controls keep their previous meaning. No new operational capability, private data presentation, or fabricated state was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: `NoticeRichContent` remains the single body typography surface with `px-6 py-6 text-xs leading-relaxed`. Empty editor paragraphs now sanitize to visible `<br />` paragraphs, preserving blank-line rhythm in view mode. The notice drawer and free-board focused panel no longer add extra `pt-2`, `leading-8`, or `leading-7` wrapper classes around rich content. Browser checks showed no horizontal overflow at desktop 1440px or mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Free Board Side Edit
+
+## Reviewed Change
+- Feature: move existing free-board post editing into the left focused post panel and keep new post writing as a right-side drawer.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-02-free-board-side-edit.md`
+- Files or pages reviewed: `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`, authenticated `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only affects free-board presentation state. Existing post editing now reuses the focused side panel, and create mode uses a right drawer. No public navigation, route, API, database schema, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, or public-share behavior changed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing free-board controls keep their previous meaning. The edit button still edits the same post and the create button still creates a new post; only the container changed. No fabricated operational data or new private-data claim was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Existing post edit mode no longer opens `게시글 수정 편집 모달`; it stays inside `토론 집중 패널` with `max-w-[780px]` shell and `680px` document column. New post writing is exposed as `role="dialog"` with `aria-label="새 게시글 작성 드로어"`, `right-0`, and `slide-in-from-right`. The editor body keeps `px-6 py-6 text-xs leading-relaxed` and paragraph spacing. Authenticated Chrome checks of `/news?tab=free` reported no horizontal overflow at desktop 1440px and mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Shared Article Body Surface
+
+## Reviewed Change
+- Feature: keep `680px` article content width and unify inner body padding, typography, and paragraph spacing across notice, free-board, and development-log read/edit surfaces.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-01-news-content-width-unification.md`
+- Files or pages reviewed: `src/lib/news/content-layout.ts`, `src/components/news/notice-rich-editor.tsx`, `src/components/news/rich-text-editor-v2.tsx`, `src/components/news/development-log.tsx`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change adds shared body surface/input class constants and applies them to existing read/edit surfaces. It does not change navigation, routes, APIs, database schema, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or rich-editor capabilities.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing notice, free-board, and development-log controls keep their previous meaning. No new operational state or private data presentation was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Article content width remains `680px`; read and edit body surfaces now share `px-6 py-6 text-xs leading-relaxed` and paragraph spacing via `[&_p]:mb-3`. Development-log detail panel now uses the same shared shell/content width constants, and its read/edit text areas use the shared body surface/input classes. Focused tests cover all touched surfaces. Chrome headless checks of `/news?tab=free` reported no horizontal overflow at desktop 1440px or mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - News Read/Edit Typography And Width Tightening
+
+## Reviewed Change
+- Feature: align notice/free-board read and edit rich body typography, and tighten the shared article width.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-01-news-content-width-unification.md`
+- Files or pages reviewed: `src/lib/news/content-layout.ts`, `src/components/news/notice-rich-editor.tsx`, `src/components/news/rich-text-editor-v2.tsx`, `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to shared width constants, rich body typography defaults, sanitizer-safe line-height values, and focused regression expectations. No navigation, routes, APIs, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or database schema changed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing notice and free-board writing/reading controls keep their prior meaning. No new operational capability or private data presentation was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Notice and free-board article surfaces now share `max-w-[780px]` shells and `max-w-[680px]` body canvases. Published rich content remains `text-xs leading-relaxed`, and the editor default body now uses the same `text-xs leading-relaxed` baseline with default toolbar values `12px` and `1.625`. Focused tests cover width and typography parity. Chrome headless checks of `/news?tab=free` reported no horizontal overflow at desktop 1440px or mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Rich Editor Double Click Crop Entry
+
+## Reviewed Change
+- Feature: make image double-click crop entry reliable after image node selection.
+- Governing spec: `docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-27-news-rich-editor-v2.md`
+- Files or pages reviewed: `src/components/news/rich-text-editor-v2.tsx`, `src/__tests__/news-rich-content-links.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to the rich-editor image NodeView click handling and focused tests. It does not change uploads, APIs, storage schema, permissions, comments, public navigation, or posting workflows.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing image crop controls keep their current meaning. The fix makes the existing inline crop mode reachable by native double-click or two quick normal clicks; it does not introduce a new editing capability.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The crop mode still exposes `role="toolbar"` with `aria-label="이미지 자르기 도구"` and existing reset/cancel/save controls. Regression coverage now verifies both native double-click and browser-like two-click sequences enter crop mode.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Rich Editor Crop Empty Src Regression
+
+## Reviewed Change
+- Feature: prevent cropped/updated editor images from rendering with an empty `src`.
+- Governing spec: `docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-27-news-rich-editor-v2.md`
+- Files or pages reviewed: `src/components/news/rich-text-editor-v2.tsx`, `src/__tests__/news-rich-content-links.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to rich-editor image node parsing, rendering, and metadata update helpers. It does not change uploads, APIs, storage schema, permissions, comments, public navigation, or posting workflows.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing crop/resize/rotate controls keep their current meaning. The fix preserves authored image source metadata and avoids rendering broken empty-src images instead of adding or claiming new capabilities.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Crop save regression coverage now verifies the saved HTML still contains the original image `src`. Empty-src image nodes are filtered or hidden before rendering an `<img>`, preventing the Next/React empty `src` warning and the broken image placeholder shown in edit mode. Focused rich-editor tests pass.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Published Two-Column Gallery Display
+
+## Reviewed Change
+- Feature: keep saved rich-editor `2열` image galleries as two columns in published/read mode.
+- Governing spec: `docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-27-news-rich-editor-v2.md`
+- Files or pages reviewed: `src/components/news/notice-rich-editor.tsx`, `src/components/news/rich-text-editor-v2.tsx`, `src/__tests__/news-rich-content-links.test.tsx`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to the rich editor gallery HTML style constant, published rich-content sanitizer output, and regression tests. It does not change uploads, APIs, schema, permissions, routes, comments, public navigation, or normal body text flow.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The existing `2열` and `대표+2열` controls continue to mean image gallery layout only. Published content now preserves that authored gallery layout instead of implying a different read-mode layout.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Saved gallery blocks remain `role="group"` with `aria-label="이미지 묶음"`. Tests verify read-mode two-column galleries use `display:grid`, `grid-template-columns:repeat(2,minmax(0,1fr))`, `width:100%`, and `max-width:820px`, with both images staying on the same row. `/news?tab=free` returned HTTP 200. Browser-style verification was limited because the MCP browser was unavailable and local Chrome CLI delegated to an existing GUI session, so component DOM/style tests cover the gallery parity.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review - News Content Width Inline Fix
 
 ## Reviewed Change

@@ -72,8 +72,12 @@ describe("DevelopmentLog", () => {
     fireEvent.click(within(list).getByRole("button", { name: "댓글 알림 요구사항" }));
 
     const detailPanel = screen.getByRole("complementary", { name: "개발일지 상세 패널" });
+    expect(detailPanel).toHaveClass("max-w-[780px]");
+    expect(detailPanel).toHaveStyle({ maxWidth: "780px" });
     expect(within(detailPanel).getByRole("heading", { name: "댓글 알림 요구사항" })).toBeInTheDocument();
-    expect(within(detailPanel).getByText("댓글 알림이 필요합니다.")).toBeInTheDocument();
+    const readBody = within(detailPanel).getByText("댓글 알림이 필요합니다.");
+    expect(readBody).toBeInTheDocument();
+    expect(readBody).toHaveClass("px-6", "py-6", "text-xs", "leading-relaxed", "[&_p]:mb-3");
 
     fireEvent.click(within(detailPanel).getByRole("button", { name: "목록으로" }));
     expect(screen.queryByRole("complementary", { name: "개발일지 상세 패널" })).not.toBeInTheDocument();
@@ -226,6 +230,12 @@ describe("DevelopmentLog", () => {
 
     fireEvent.click(within(detailPanel).getByRole("button", { name: "수정" }));
     expect(within(detailPanel).getByLabelText("개발일지 등록일 수정")).toHaveValue("2026-06-21T09:30");
+    expect(within(detailPanel).getByLabelText("개발일지 내용 수정")).toHaveClass(
+      "px-6",
+      "py-6",
+      "text-xs",
+      "leading-relaxed",
+    );
     fireEvent.change(within(detailPanel).getByLabelText("개발일지 등록일 수정"), {
       target: { value: "2026-06-22T10:15" },
     });

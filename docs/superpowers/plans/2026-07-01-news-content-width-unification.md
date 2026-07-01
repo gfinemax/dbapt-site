@@ -17,11 +17,11 @@
 
 - [ ] **Step 1: Update notice detail and notice write assertions**
 
-Assert that the public notice detail drawer, notice detail body, and notice write drawer use the shared shell/content width classes.
+Assert that the public notice detail drawer, notice detail body, and notice write drawer use the tightened shared shell/content width classes.
 
 - [ ] **Step 2: Update free-board read and write assertions**
 
-Change existing free-board expectations from `max-w-[920px]` and `max-w-[820px]` to `max-w-[860px]` and `max-w-[760px]`.
+Change existing free-board expectations from `max-w-[920px]` and `max-w-[820px]` to `max-w-[780px]` and `max-w-[680px]`.
 
 - [ ] **Step 3: Verify RED**
 
@@ -40,7 +40,7 @@ Create constants for `NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS`, `NEWS_ARTICLE_SHELL_M
 
 - [ ] **Step 2: Use static Tailwind class strings**
 
-Keep literal `max-w-[860px]` and `max-w-[760px]` strings in the file so Tailwind can scan them.
+Keep literal `max-w-[780px]` and `max-w-[680px]` strings in the file so Tailwind can scan them.
 
 ### Task 3: Apply Widths To Notice Surfaces
 

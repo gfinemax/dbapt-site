@@ -283,6 +283,26 @@ export function FreeBoard({
     resetWriteForm();
   };
 
+  const handleStartPostEdit = (post: FreeBoardPostListItem) => {
+    const displayAuthorName = post.author.displayAuthorName;
+    setShowWriteModal(false);
+    setEditingPost(post);
+    setWriteTitle(post.title);
+    setWriteContent(post.content);
+    setWritePostType(normalizeFreePostType(post.postType, isAdmin));
+    setWriteIsStarred(!!post.isStarred);
+    setWriteIsPublicShareEnabled(!!post.isPublicShareEnabled);
+    setWriteAttachmentPath(post.attachmentPath);
+    setWriteAttachmentName(post.attachmentName);
+    setWriteAttachmentSize(post.attachmentSize);
+    setWriteRegisteredAt(toKoreaDateTimeLocalValue(post.registeredAtRaw));
+    setWriteDisplayAuthorName(
+      displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
+        ? displayAuthorName as NewsDisplayAuthorName
+        : "운영자",
+    );
+  };
+
   const handleAttachmentChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -342,6 +362,7 @@ export function FreeBoard({
   };
 
   const closeFocusedPost = () => {
+    resetWriteForm();
     setFocusedPostId(null);
     updateFocusedPostUrl(null);
   };
@@ -552,6 +573,196 @@ export function FreeBoard({
     }
   };
 
+  const isEditingFocusedPost = Boolean(focusedPost && editingPost?.id === focusedPost.id && !showWriteModal);
+
+  const renderPostFormFields = () => (
+    <div
+      className={cn("mx-auto flex w-full flex-col gap-5", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+      style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
+    >
+      <div className="space-y-1.5">
+        <label className="block text-[11px] font-bold text-charcoal-primary font-mono">
+          게시글 제목 *
+        </label>
+        <input
+          type="text"
+          required
+          placeholder="의견을 명확하게 요약한 제목을 입력해 주십시오."
+          value={writeTitle}
+          onChange={(e) => setWriteTitle(e.target.value)}
+          className="w-full rounded-xl border border-stone-surface bg-white px-4 py-3 text-sm text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+        />
+      </div>
+
+      <section aria-label="게시글 본문 편집 영역" className="space-y-1.5">
+        <label className="block text-[11px] font-bold text-charcoal-primary font-mono">
+          게시글 본문 내용 *
+        </label>
+        <NoticeRichEditor
+          value={writeContent}
+          onChange={setWriteContent}
+          onUploadImage={(file) => uploadPublicFile(file, "image")}
+          ariaLabel="자유게시판 본문 편집창"
+          placeholder="조합원님들과 공유하고 싶은 소통과 상생 의견을 자유롭게 기록해 주십시오."
+        />
+        <p className="text-[10px] font-medium text-ash">
+          이미지 버튼 또는 Ctrl+V로 본문에 이미지를 바로 넣고, 선택한 이미지는 크기를 조절할 수 있습니다.
+        </p>
+      </section>
+
+      <section
+        aria-label="게시글 설정"
+        className="rounded-2xl border border-stone-surface bg-[#f8f7f4] p-4"
+      >
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h4 className="text-xs font-extrabold text-charcoal-primary">게시글 설정</h4>
+          <span className="text-[10px] font-medium text-ash">필요한 경우만 조정해 주세요.</span>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          {isAdmin && (
+            <div className="space-y-1.5">
+              <label htmlFor="free-post-display-author" className="block text-[11px] font-bold text-charcoal-primary font-mono">
+                게시글 작성자
+              </label>
+              <select
+                id="free-post-display-author"
+                aria-label="게시글 작성자"
+                value={writeDisplayAuthorName}
+                onChange={(event) => setWriteDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+                className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+              >
+                {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label htmlFor="free-post-type" className="block text-[11px] font-bold text-charcoal-primary font-mono">
+              글 유형
+            </label>
+            <select
+              id="free-post-type"
+              aria-label="글 유형"
+              value={writePostType}
+              onChange={(event) => setWritePostType(normalizeFreePostType(event.target.value, isAdmin))}
+              className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+            >
+              {getFreePostTypeOptions(isAdmin).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] font-medium leading-relaxed text-ash">
+              {writePostTypeMeta.description}
+            </p>
+          </div>
+
+          {isAdmin && (
+            <div className="space-y-1.5">
+              <label htmlFor="free-post-registered-at" className="block text-[11px] font-bold text-charcoal-primary font-mono">
+                등록일
+              </label>
+              <input
+                id="free-post-registered-at"
+                aria-label="등록일"
+                type="datetime-local"
+                value={writeRegisteredAt}
+                onChange={(event) => setWriteRegisteredAt(event.target.value)}
+                className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+              />
+            </div>
+          )}
+
+          <div className="space-y-2 md:col-span-2">
+            <label htmlFor="free-post-attachment" className="block text-[11px] font-bold text-charcoal-primary font-mono">
+              첨부파일
+            </label>
+            <div className="rounded-xl border border-dashed border-stone-surface bg-white px-3 py-2">
+              <input
+                id="free-post-attachment"
+                aria-label="첨부파일"
+                type="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.hwp,.hwpx,.zip"
+                onChange={handleAttachmentChange}
+                disabled={isUploadingAttachment}
+                className="block w-full text-xs text-graphite file:mr-3 file:rounded-full file:border-0 file:bg-midnight file:px-3 file:py-1.5 file:text-[11px] file:font-bold file:text-white disabled:opacity-60"
+              />
+            </div>
+            {writeAttachmentName ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-white px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-extrabold text-charcoal-primary">
+                    {writeAttachmentName}
+                  </p>
+                  {writeAttachmentSize ? (
+                    <p className="mt-0.5 text-[10px] font-bold text-ash font-mono">
+                      {formatAttachmentSize(writeAttachmentSize)}
+                    </p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWriteAttachmentPath(null);
+                    setWriteAttachmentName(null);
+                    setWriteAttachmentSize(null);
+                  }}
+                  className="shrink-0 rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
+                >
+                  삭제
+                </button>
+              </div>
+            ) : (
+              <p className="text-[10px] font-medium text-ash">
+                PDF, 한글, 오피스 문서, ZIP 파일을 20MB 이하로 첨부할 수 있습니다.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {isAdmin && (
+          <div className="mt-3 grid gap-2 rounded-xl border border-stone-surface bg-white px-3 py-3 sm:grid-cols-2">
+            <div className="flex items-center gap-2.5 select-none">
+              <input
+                type="checkbox"
+                id="write-star-checkbox"
+                checked={writeIsStarred}
+                onChange={(e) => setWriteIsStarred(e.target.checked)}
+                className="size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
+              />
+              <label htmlFor="write-star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
+                중요 게시글로 상단 고정 표시 (★)
+              </label>
+            </div>
+            <div className="flex items-start gap-2.5 select-none">
+              <input
+                type="checkbox"
+                id="write-public-share-checkbox"
+                checked={writeIsPublicShareEnabled}
+                onChange={(e) => setWriteIsPublicShareEnabled(e.target.checked)}
+                className="mt-0.5 size-4.5 border border-stone-surface rounded focus:ring-sky-blue/30 text-midnight cursor-pointer bg-white"
+              />
+              <label htmlFor="write-public-share-checkbox" className="cursor-pointer">
+                <span className="block text-[11.5px] font-extrabold text-graphite/95 font-mono">
+                  카톡 공유 허용
+                </span>
+                <span className="mt-0.5 block text-[10px] font-medium leading-relaxed text-ash">
+                  체크하면 로그인하지 않아도 이 게시글 본문을 읽을 수 있습니다.
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="border-b border-[#f2f0ed] pb-3">
@@ -721,9 +932,40 @@ export function FreeBoard({
 
             <div
               data-free-board-document="focused-post"
-              className={cn("mx-auto mt-6 w-full flex-1 space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+              className={cn(
+                "mx-auto mt-6 w-full flex-1",
+                isEditingFocusedPost ? "space-y-6" : "space-y-0",
+                NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+              )}
               style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
+              {isEditingFocusedPost ? (
+                <form onSubmit={handleCreatePost} className="space-y-5">
+                  <div className="flex items-center justify-between gap-3 border-b border-stone-surface pb-3">
+                    <h3 className="text-sm font-black text-charcoal-primary">게시글 수정</h3>
+                    <button
+                      type="button"
+                      onClick={resetWriteForm}
+                      className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                    >
+                      수정 취소
+                    </button>
+                  </div>
+
+                  {renderPostFormFields()}
+
+                  <div className="flex justify-end border-t border-stone-surface pt-4">
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-6 h-10 cursor-pointer disabled:opacity-50 transition-all duration-200 active:scale-95"
+                    >
+                      {isSubmitting ? "저장 중…" : "수정 완료"}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+              <>
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
@@ -747,25 +989,7 @@ export function FreeBoard({
                       <button
                         type="button"
                         aria-label="게시글 수정"
-                        onClick={() => {
-                          const displayAuthorName = focusedPost.author.displayAuthorName;
-                          setEditingPost(focusedPost);
-                          setWriteTitle(focusedPost.title);
-                          setWriteContent(focusedPost.content);
-                          setWritePostType(normalizeFreePostType(focusedPost.postType, isAdmin));
-                          setWriteIsStarred(!!focusedPost.isStarred);
-                          setWriteIsPublicShareEnabled(!!focusedPost.isPublicShareEnabled);
-                          setWriteAttachmentPath(focusedPost.attachmentPath);
-                          setWriteAttachmentName(focusedPost.attachmentName);
-                          setWriteAttachmentSize(focusedPost.attachmentSize);
-                          setWriteRegisteredAt(toKoreaDateTimeLocalValue(focusedPost.registeredAtRaw));
-                          setWriteDisplayAuthorName(
-                            displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
-                              ? displayAuthorName as NewsDisplayAuthorName
-                              : "운영자",
-                          );
-                          setShowWriteModal(true);
-                        }}
+                        onClick={() => handleStartPostEdit(focusedPost)}
                         className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
                       >
                         수정
@@ -814,7 +1038,7 @@ export function FreeBoard({
                 )}
               </div>
 
-              <div className="pt-2">
+              <div>
                 <NoticeRichContent
                   content={focusedPost.content}
                   onInternalLinkClick={openFocusedPostFromLink}
@@ -1063,28 +1287,28 @@ export function FreeBoard({
                 </form>
               </section>
               )}
+              </>
+              )}
             </div>
           </aside>
         </>,
         document.body,
       )}
 
-      {/* 새 글 작성/수정 편집 모달 */}
+      {/* 새 글 작성 사이드 드로어 */}
       {mounted && showWriteModal && createPortal(
         <>
           <div
             onClick={handleCloseWriteModal}
             className="fixed inset-0 z-[120] bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
           />
-          <div
-            className="fixed inset-0 z-[130] flex items-stretch justify-center p-0 sm:p-4 lg:p-6"
-          >
-            <div
+          <div className="fixed inset-0 z-[130] pointer-events-none">
+            <aside
               role="dialog"
               aria-modal="true"
-              aria-label={editingPost ? "게시글 수정 편집 모달" : "새 게시글 작성 편집 모달"}
+              aria-label="새 게시글 작성 드로어"
               className={cn(
-                "flex h-full w-full flex-col overflow-hidden bg-warm-canvas shadow-2xl animate-in zoom-in-95 duration-200 sm:h-[calc(100vh-2rem)] sm:rounded-3xl sm:border sm:border-stone-surface lg:h-[calc(100vh-3rem)]",
+                "pointer-events-auto fixed inset-y-0 right-0 flex h-full w-full flex-col overflow-hidden border-l border-stone-surface bg-warm-canvas shadow-2xl animate-in slide-in-from-right duration-300 ease-out",
                 NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
               )}
               style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
@@ -1092,7 +1316,7 @@ export function FreeBoard({
               <div className="flex items-center justify-between gap-4 border-b border-stone-surface px-5 py-3.5 sm:px-6">
                 <div>
                   <h3 className="flex items-center gap-1.5 text-base font-black text-charcoal-primary">
-                    <span>✍️</span> {editingPost ? "게시글 수정" : "새 게시글 작성"}
+                    <span>✍️</span> 새 게시글 작성
                   </h3>
                 </div>
                 <button
@@ -1303,12 +1527,12 @@ export function FreeBoard({
                       disabled={isSubmitting}
                       className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-6 h-10 cursor-pointer disabled:opacity-50 transition-all duration-200 active:scale-95"
                     >
-                      {isSubmitting ? "작성 중…" : editingPost ? "수정 완료" : "게시글 작성 완료"}
+                      {isSubmitting ? "작성 중…" : "게시글 작성 완료"}
                     </Button>
                   </div>
                 </div>
               </form>
-            </div>
+            </aside>
           </div>
         </>,
         document.body

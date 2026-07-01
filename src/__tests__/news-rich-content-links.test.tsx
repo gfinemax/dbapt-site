@@ -15,7 +15,8 @@ describe("notice rich content links", () => {
     );
 
     expect(html).toContain('data-notice-gallery="two-column"');
-    expect(html).toContain("grid-template-columns:repeat(auto-fit,minmax(min(100%,407px),1fr))");
+    expect(html).toContain("grid-template-columns:repeat(2,minmax(0,1fr))");
+    expect(html).toContain("max-width:820px");
     expect(html).toContain('data-fit="contain"');
     expect(html).toContain("object-fit:contain");
     expect(html).toContain('src="/uploads/a.png"');
@@ -23,6 +24,24 @@ describe("notice rich content links", () => {
     expect(html).toContain('alt="첫 번째"');
     expect(html).not.toContain("javascript:");
     expect(html.match(/<img/g)).toHaveLength(2);
+  });
+
+  it("renders saved two-column galleries as two visible grid columns", () => {
+    render(
+      <NoticeRichContent content='<div data-notice-gallery="two-column"><img src="/uploads/gallery-left.png" alt="왼쪽 이미지" /><img src="/uploads/gallery-right.png" alt="오른쪽 이미지" /></div>' />,
+    );
+
+    const gallery = document.querySelector('[data-notice-gallery="two-column"]') as HTMLElement;
+
+    expect(gallery).toBeInTheDocument();
+    expect(gallery).toHaveStyle({
+      display: "grid",
+      gridTemplateColumns: "repeat(2,minmax(0,1fr))",
+      width: "100%",
+      maxWidth: "820px",
+    });
+    expect(screen.getByAltText("왼쪽 이미지")).toHaveStyle({ width: "100%" });
+    expect(screen.getByAltText("오른쪽 이미지")).toHaveStyle({ width: "100%" });
   });
 
   it("does not add layer reserve spacing for images rendered inside a gallery", () => {
@@ -92,7 +111,7 @@ describe("notice rich content links", () => {
     const image = screen.getByAltText("본문 이미지");
 
     expect(contentRoot).toHaveStyle({
-      paddingBottom: "270px",
+      paddingBottom: "calc(1.5rem + 270px)",
     });
     expect(layerNode).toHaveAttribute("data-notice-image-layer", "front");
     expect(layerNode).toHaveStyle({
@@ -134,6 +153,24 @@ describe("notice rich content links", () => {
     expect(html).not.toContain("BadFont");
     expect(html).not.toContain("99px");
     expect(html).not.toContain("line-height:999");
+  });
+
+  it("preserves empty editor paragraphs as visible blank lines in published content", () => {
+    const html = sanitizeNoticeContentHtml(
+      '<p data-line-height="1.625" style="line-height:1.625;">윗줄</p><p></p><p data-line-height="1.8" style="line-height:1.8;"></p><p>아랫줄</p>',
+    );
+
+    expect(html).toContain('<p data-line-height="1.625" style="line-height:1.625;">윗줄</p>');
+    expect(html).toContain("<p><br /></p>");
+    expect(html).toContain('<p data-line-height="1.8" style="line-height:1.8;"><br /></p>');
+
+    render(<NoticeRichContent content={html} />);
+
+    const paragraphs = document.querySelectorAll(".notice-rich-content p");
+    expect(paragraphs[0]).toHaveStyle({ lineHeight: "1.625" });
+    expect(paragraphs[1].querySelector("br")).toBeInTheDocument();
+    expect(paragraphs[2]).toHaveStyle({ lineHeight: "1.8" });
+    expect(paragraphs[2].querySelector("br")).toBeInTheDocument();
   });
 
   it("inserts multiple selected images as normal body images by default", async () => {
@@ -182,8 +219,16 @@ describe("notice rich content links", () => {
     );
 
     expect(screen.getByLabelText("글꼴")).toHaveValue("Pretendard");
-    expect(screen.getByLabelText("글자 크기")).toHaveValue("14px");
-    expect(screen.getByLabelText("줄간격")).toHaveValue("1.5");
+    expect(screen.getByLabelText("글자 크기")).toHaveValue("12px");
+    expect(screen.getByLabelText("줄간격")).toHaveValue("1.625");
+    expect(screen.getByRole("textbox", { name: "본문 편집창" })).toHaveClass(
+      "px-6",
+      "py-6",
+      "text-xs",
+      "leading-relaxed",
+      "[&_p]:mb-3",
+    );
+    expect(screen.getByRole("textbox", { name: "본문 편집창" })).not.toHaveClass("text-sm", "px-7");
     expect(screen.getByRole("button", { name: "굵게" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "밑줄" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "취소선" })).toBeInTheDocument();
@@ -467,6 +512,29 @@ describe("notice rich content links", () => {
     expect(screen.queryByRole("dialog", { name: "이미지 편집" })).not.toBeInTheDocument();
   });
 
+  it("enters inline crop mode when the image receives two normal clicks", async () => {
+    render(
+      <NoticeRichEditor
+        value='<p><img src="/uploads/two-click-crop.png" alt="본문 이미지" data-width="100" data-fit="contain" style="width:100%;max-width:100%;height:auto;object-fit:contain;object-position:center center;" /></p>'
+        onChange={vi.fn()}
+        onUploadImage={async () => ({ url: "/uploads/image.png" })}
+        ariaLabel="본문 편집창"
+        placeholder="본문"
+      />,
+    );
+
+    const image = await screen.findByAltText("본문 이미지");
+    fireEvent.pointerDown(image);
+    fireEvent.mouseDown(image);
+    fireEvent.click(image);
+    fireEvent.pointerDown(image);
+    fireEvent.mouseDown(image);
+    fireEvent.click(image);
+
+    expect(screen.getByRole("toolbar", { name: "이미지 자르기 도구" })).toBeInTheDocument();
+    expect(document.querySelector("[data-notice-image-crop-overlay]")).not.toBeNull();
+  });
+
   it("saves an inline crop from internal crop handles", async () => {
     const onChange = vi.fn();
 
@@ -501,12 +569,30 @@ describe("notice rich content links", () => {
     fireEvent.click(screen.getByRole("button", { name: "자르기 저장" }));
 
     const savedHtml = String(onChange.mock.lastCall?.[0] || "");
+    expect(savedHtml).toContain('src="/uploads/crop-save.png"');
     expect(savedHtml).toContain('data-fit="cover"');
     expect(savedHtml).toContain('data-crop-x="left"');
     expect(savedHtml).toContain('data-crop-y="top"');
     expect(savedHtml).toMatch(/data-zoom="1[1-9]\d"/);
     expect(screen.queryByRole("toolbar", { name: "이미지 자르기 도구" })).not.toBeInTheDocument();
     rectSpy.mockRestore();
+  });
+
+  it("does not render an empty image src after image metadata updates", async () => {
+    render(
+      <NoticeRichEditor
+        value='<p><img src="" alt="본문 이미지" data-width="100" data-fit="cover" data-crop-x="left" data-crop-y="top" data-zoom="120" style="width:100%;max-width:100%;height:auto;object-fit:cover;object-position:left top;" /></p>'
+        onChange={vi.fn()}
+        onUploadImage={async () => ({ url: "/uploads/image.png" })}
+        ariaLabel="본문 편집창"
+        placeholder="본문"
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "본문 편집창" })).toBeInTheDocument());
+
+    expect(document.querySelector('img[src=""]')).toBeNull();
+    expect(screen.queryByAltText("본문 이미지")).not.toBeInTheDocument();
   });
 
   it("cancels inline crop mode without changing the selected image", async () => {

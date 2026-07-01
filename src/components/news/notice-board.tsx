@@ -448,7 +448,7 @@ export function NoticeBoard({
 
             <div
               data-news-article-content="notice-board-read"
-              className={cn("mx-auto w-full flex-1 overflow-y-auto space-y-4 pr-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+              className={cn("mx-auto w-full flex-1 overflow-y-auto space-y-0 pr-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
               style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
               <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
@@ -468,7 +468,7 @@ export function NoticeBoard({
                 <span>등록일: {activeViewNotice.createdAt}</span>
               </div>
 
-              <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal pt-2">
+              <div>
                 {activeViewNotice.imagePath && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

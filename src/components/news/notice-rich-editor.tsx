@@ -2,6 +2,7 @@
 
 import { LinkIcon, Maximize2, RotateCw, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { NEWS_ARTICLE_BODY_SURFACE_CLASS } from "@/lib/news/content-layout";
 import { cn } from "@/lib/utils";
 import { RichTextEditorV2 } from "./rich-text-editor-v2";
 export { getPlainNoticeText } from "@/lib/news/rich-text";
@@ -48,10 +49,8 @@ const EDITOR_BUTTON_CLASS =
   "rounded-full border border-stone-surface bg-[#f8f7f4] px-2.5 py-1 text-[10px] font-bold text-graphite hover:bg-stone-surface focus:outline-none focus:ring-2 focus:ring-sky-blue/30";
 const EDITOR_BUTTON_ACTIVE_CLASS =
   "border-sky-blue bg-sky-blue text-white hover:bg-sky-blue";
-const NOTICE_RICH_BODY_CLASS =
-  "text-xs leading-relaxed text-charcoal-primary [&_a]:text-sky-blue [&_a]:underline [&_img]:my-1 [&_img]:max-w-full [&_img]:rounded-none [&_img]:border [&_img]:border-stone-surface [&_li]:ml-4 [&_ol]:list-decimal [&_ul]:list-disc";
 const GALLERY_GRID_STYLE =
-  "display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,407px),1fr));gap:6px;max-width:100%;";
+  "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;max-width:820px;";
 const IMAGE_FIT_LABELS: Record<ImageFit, string> = {
   contain: "원본비율",
   cover: "채우기",
@@ -63,7 +62,7 @@ const CROP_PRESETS: Array<{ label: string; x: CropX; y: CropY }> = [
 ];
 const SAFE_FONT_FAMILIES = new Set(["Pretendard", "Gulim", "Malgun Gothic"]);
 const SAFE_FONT_SIZES = new Set(["12px", "14px", "16px", "18px", "20px", "24px"]);
-const SAFE_LINE_HEIGHTS = new Set(["1.2", "1.5", "1.8", "2"]);
+const SAFE_LINE_HEIGHTS = new Set(["1.2", "1.5", "1.625", "1.8", "2"]);
 const SAFE_TEXT_ALIGNS = new Set<TextAlign>(["left", "center", "right", "justify"]);
 
 function escapeAttr(value: string) {
@@ -549,7 +548,8 @@ export function sanitizeNoticeContentHtml(content: string) {
     .replace(/<\/span\b[^>]*>/gi, "</span>")
     .replace(/<(?!\/?(p|br|span|strong|b|em|i|u|ul|ol|li|a)\b)[^>]*>/gi, "");
 
-  const withImages = images.reduce((html, image, index) => html.replace(`__NOTICE_IMAGE_${index}__`, image), sanitized);
+  const withVisibleEmptyParagraphs = sanitized.replace(/<p([^>]*)>\s*<\/p>/gi, "<p$1><br /></p>");
+  const withImages = images.reduce((html, image, index) => html.replace(`__NOTICE_IMAGE_${index}__`, image), withVisibleEmptyParagraphs);
   return galleries.reduce((html, gallery, index) => html.replace(`__NOTICE_GALLERY_${index}__`, gallery), withImages);
 }
 
@@ -569,10 +569,10 @@ export function NoticeRichContent({
     <div
       className={cn(
         "notice-rich-content whitespace-normal break-words",
-        NOTICE_RICH_BODY_CLASS,
+        NEWS_ARTICLE_BODY_SURFACE_CLASS,
         className,
       )}
-      style={layerReserveHeight > 0 ? { paddingBottom: `${layerReserveHeight}px` } : undefined}
+      style={layerReserveHeight > 0 ? { paddingBottom: `calc(1.5rem + ${layerReserveHeight}px)` } : undefined}
       onClick={(event) => {
         if (!onInternalLinkClick) return;
         const target = event.target as HTMLElement;
@@ -1151,7 +1151,7 @@ export function LegacyNoticeRichEditor({
         }}
         className={cn(
           "min-h-52 w-full px-4 py-3 outline-none empty:before:text-ash empty:before:content-[attr(data-placeholder)]",
-          NOTICE_RICH_BODY_CLASS,
+          NEWS_ARTICLE_BODY_SURFACE_CLASS,
         )}
       />
 

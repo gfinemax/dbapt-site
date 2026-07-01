@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { NEWS_ARTICLE_BODY_SURFACE_CLASS } from "@/lib/news/content-layout";
 import { cn } from "@/lib/utils";
 
 type UploadImage = (file: File) => Promise<{ url: string }>;
@@ -135,9 +136,9 @@ const FONT_OPTIONS = [
   { label: "맑은 고딕", value: "Malgun Gothic" },
 ];
 const FONT_SIZE_OPTIONS = ["12px", "14px", "16px", "18px", "20px", "24px"];
-const LINE_HEIGHT_OPTIONS = ["1.2", "1.5", "1.8", "2"];
+const LINE_HEIGHT_OPTIONS = ["1.2", "1.5", "1.625", "1.8", "2"];
 const GALLERY_GRID_STYLE =
-  "display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,407px),1fr));gap:6px;max-width:100%;";
+  "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;max-width:820px;";
 const DEFAULT_CROP_BOX: CropBox = { top: 0, right: 0, bottom: 0, left: 0 };
 const MAX_CROP_INSET = 45;
 const MAX_CROP_PAIR_TOTAL = 75;
@@ -706,6 +707,7 @@ function NoticeImageNodeView({
   updateAttributes,
 }: NodeViewProps) {
   const attrs = node.attrs;
+  const imageSrc = typeof attrs.src === "string" ? attrs.src.trim() : "";
   const width = Number(attrs.width || 100);
   const fit = normalizeImageFit(String(attrs.fit || ""));
   const cropX = normalizeCropX(String(attrs.cropX || ""));
@@ -724,6 +726,7 @@ function NoticeImageNodeView({
   const rotateDragRef = useRef<ImageRotateDrag | null>(null);
   const cropDragRef = useRef<ImageCropDrag | null>(null);
   const layerDragRef = useRef<ImageLayerDrag | null>(null);
+  const imageClickRef = useRef<{ time: number } | null>(null);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [isImageObjectActive, setIsImageObjectActive] = useState(false);
   const [isCropMode, setIsCropMode] = useState(false);
@@ -766,7 +769,27 @@ function NoticeImageNodeView({
   const applyImageLayoutMode = (nextLayout: ImageLayout) => {
     setIsImageObjectActive(true);
     setIsCropMode(false);
+    imageClickRef.current = null;
     updateImageAttrs({ layout: nextLayout });
+  };
+
+  const enterCropModeFromImageClick = () => {
+    setIsImageObjectActive(true);
+    setIsImageEditorOpen(false);
+    setCropDraft(DEFAULT_CROP_BOX);
+    setIsCropMode(true);
+    imageClickRef.current = null;
+  };
+
+  const shouldEnterCropModeFromRepeatedClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (event.type !== "click") return false;
+    if (!(event.target instanceof HTMLElement)) return false;
+    if (!event.target.closest("[data-notice-image-frame]")) return false;
+
+    const now = Number.isFinite(event.timeStamp) ? event.timeStamp : 0;
+    const previous = imageClickRef.current;
+    imageClickRef.current = { time: now };
+    return Boolean(previous && now - previous.time <= 500);
   };
 
   const isImageEditorOpenTarget = (target: EventTarget | null) => (
@@ -848,7 +871,17 @@ function NoticeImageNodeView({
     if (isActive && event.target instanceof HTMLElement && event.target.tagName === "IMG") {
       event.preventDefault();
       event.stopPropagation();
+      if (shouldEnterCropModeFromRepeatedClick(event)) {
+        enterCropModeFromImageClick();
+        return;
+      }
       selectNode();
+      return;
+    }
+    if (shouldEnterCropModeFromRepeatedClick(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      enterCropModeFromImageClick();
       return;
     }
     event.preventDefault();
@@ -876,6 +909,9 @@ function NoticeImageNodeView({
   }, [isActive]);
 
   function updateImageAttrs(updates: {
+    src?: string | null;
+    alt?: string | null;
+    title?: string | null;
     width?: number;
     fit?: ImageFit;
     cropX?: CropX;
@@ -890,6 +926,9 @@ function NoticeImageNodeView({
     offsetY?: number;
   }) {
     updateAttributes({
+      src: imageSrc || null,
+      alt: typeof attrs.alt === "string" ? attrs.alt : "본문 이미지",
+      title: typeof attrs.title === "string" ? attrs.title : null,
       width,
       fit,
       cropX,
@@ -955,19 +994,10 @@ function NoticeImageNodeView({
         nextPixelHeight = Math.max(40, Math.round((drag.startHeight || 40) + deltaY));
       }
 
-      updateAttributes({
+      updateImageAttrs({
         width: nextWidth,
-        fit,
-        cropX,
-        cropY,
-        rotate,
-        align,
-        layout,
-        zoom,
         pixelWidth: nextPixelWidth,
         pixelHeight: nextPixelHeight,
-        offsetX,
-        offsetY,
       });
     };
     const handleMove = (moveEvent: MouseEvent | PointerEvent) => {
@@ -1047,19 +1077,8 @@ function NoticeImageNodeView({
       const pointerAngle = getPointerAngle(drag.centerX, drag.centerY, clientX, clientY);
       const delta = pointerAngle - drag.startPointerAngle;
       const nextRotate = normalizeRotate(Math.round((drag.startRotate + delta) / 5) * 5);
-      updateAttributes({
-        width,
-        fit,
-        cropX,
-        cropY,
+      updateImageAttrs({
         rotate: nextRotate,
-        align,
-        layout,
-        zoom,
-        pixelWidth,
-        pixelHeight,
-        offsetX,
-        offsetY,
       });
     };
     const handleMove = (moveEvent: MouseEvent | PointerEvent) => {
@@ -1165,15 +1184,13 @@ function NoticeImageNodeView({
     if (isImageControlTarget(event.target)) return;
     event.preventDefault();
     event.stopPropagation();
-    setIsImageObjectActive(true);
-    setIsImageEditorOpen(false);
-    setCropDraft(DEFAULT_CROP_BOX);
-    setIsCropMode(true);
+    enterCropModeFromImageClick();
   };
 
   function cancelInlineCrop() {
     setCropDraft(DEFAULT_CROP_BOX);
     setIsCropMode(false);
+    imageClickRef.current = null;
   }
 
   function applyInlineCrop() {
@@ -1319,7 +1336,7 @@ function NoticeImageNodeView({
   const imageEditorDialog = isImageEditorOpen ? (
     <ImageEditorDialog
       draft={imageEditDraft}
-      imageSrc={String(attrs.src || "")}
+      imageSrc={imageSrc}
       imageAlt={String(attrs.alt || "본문 이미지")}
       layout={layout}
       onDraftChange={(updates) => setImageEditDraft((draft) => ({ ...draft, ...updates }))}
@@ -1372,6 +1389,17 @@ function NoticeImageNodeView({
       transformOrigin: "center",
     };
 
+  if (!imageSrc) {
+    return (
+      <NodeViewWrapper
+        as="span"
+        data-notice-image-node=""
+        data-notice-image-missing-src=""
+        style={{ display: "none" }}
+      />
+    );
+  }
+
   return (
     <NodeViewWrapper
       ref={wrapperRef}
@@ -1417,7 +1445,7 @@ function NoticeImageNodeView({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={String(attrs.src || "")}
+            src={imageSrc}
             alt={String(attrs.alt || "본문 이미지")}
             data-width={width}
             data-fit={fit}
@@ -1737,9 +1765,14 @@ const LineHeightExtension = Extension.create({
 
 const NoticeImage = Image.extend({
   parseHTML() {
+    const keepOnlyImagesWithSrc = (element: HTMLElement | string) => {
+      if (typeof element === "string") return false;
+      return element.getAttribute("src")?.trim() ? null : false;
+    };
+
     return [
-      { tag: "img[src]" },
-      { tag: "p img[src]" },
+      { tag: "img[src]", getAttrs: keepOnlyImagesWithSrc },
+      { tag: "p img[src]", getAttrs: keepOnlyImagesWithSrc },
     ];
   },
   addAttributes() {
@@ -1917,8 +1950,10 @@ export function RichTextEditorV2({
         role: "textbox",
         "aria-label": ariaLabel,
         "data-placeholder": placeholder,
-        class:
-          "min-h-[360px] w-full px-7 py-6 text-sm leading-relaxed text-charcoal-primary outline-none empty:before:text-ash empty:before:content-[attr(data-placeholder)] sm:min-h-[420px] [&_a]:text-sky-blue [&_a]:underline [&_img]:my-1 [&_img]:max-w-full [&_img]:rounded-none [&_img]:border [&_img]:border-stone-surface [&_li]:ml-5 [&_ol]:list-decimal [&_ul]:list-disc",
+        class: cn(
+          "min-h-[360px] w-full outline-none empty:before:text-ash empty:before:content-[attr(data-placeholder)] sm:min-h-[420px]",
+          NEWS_ARTICLE_BODY_SURFACE_CLASS,
+        ),
       },
       handleDOMEvents: {
         input: (view) => {
@@ -2100,7 +2135,7 @@ export function RichTextEditorV2({
           id="rich-editor-font-size"
           aria-label="글자 크기"
           className={cn(FIELD_CLASS, "w-28")}
-          value={editor?.getAttributes("textStyle").fontSize || "14px"}
+          value={editor?.getAttributes("textStyle").fontSize || "12px"}
           onChange={(event) => run(() => editor?.chain().focus().setFontSize(event.target.value).run())}
         >
           {FONT_SIZE_OPTIONS.map((size) => (
@@ -2144,7 +2179,7 @@ export function RichTextEditorV2({
           id="rich-editor-line-height"
           aria-label="줄간격"
           className={cn(FIELD_CLASS, "w-24")}
-          value={editor?.getAttributes("paragraph").lineHeight || "1.5"}
+          value={editor?.getAttributes("paragraph").lineHeight || "1.625"}
           onChange={(event) => run(() => editor?.chain().focus().setLineHeight(event.target.value).run())}
         >
           {LINE_HEIGHT_OPTIONS.map((lineHeight) => (

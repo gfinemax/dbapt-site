@@ -861,7 +861,11 @@ export function NewsClient({
 
             <div
               data-news-article-content={isEditingNotice ? "notice-edit" : "notice-read"}
-              className={cn("mx-auto mt-6 w-full flex-1 space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+              className={cn(
+                "mx-auto mt-6 w-full flex-1",
+                isEditingNotice ? "space-y-6" : "space-y-0",
+                NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+              )}
               style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
               {isEditingNotice ? (
@@ -1027,7 +1031,7 @@ export function NewsClient({
                     </div>
                   </div>
 
-                  <div className="text-sm text-graphite/95 leading-8 font-normal pt-2">
+                  <div>
                     {activeViewNotice.imagePath && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img

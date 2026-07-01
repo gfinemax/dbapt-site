@@ -1,3 +1,192 @@
+# Request Summary - Rich Content View Top Gap Tightening
+
+## Requested Feature Slice
+
+- Reduce unnecessary vertical space between the notice/free-board view-mode top meta/menu area and the rich body content.
+- Improve readability by bringing the body closer to the header/meta row.
+- Keep edit-mode form spacing and shared body typography intact.
+
+## Explicitly Excluded Scope
+
+- No database table unification, schema migration, API behavior, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or rich-editor replacement.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - Rich Content View Spacing Parity
+
+## Requested Feature Slice
+
+- Notice view mode header/body spacing should match the edit screen more closely.
+- View mode currently loses one visible line of vertical space compared with edit mode around blank paragraphs.
+- Previously authored line-height formatting that appears in edit mode must also be honored in view mode.
+- Apply the behavior to notice and free-board rich content surfaces that share the editor/view renderer.
+
+## Explicitly Excluded Scope
+
+- No database table unification, schema migration, API behavior, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or rich-editor replacement.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - Free Board Side Edit
+
+## Requested Feature Slice
+
+- Make the free-board edit mode behave like the notice edit mode.
+- Existing free-board post editing should happen inside the opened side/focus view instead of a separate centered modal.
+- Apply the same shared edit/view width, padding, font, line-height, and paragraph spacing behavior already used for notices.
+- Keep notices and free-board behavior aligned without merging DB tables.
+
+## Explicitly Excluded Scope
+
+- No database table unification, schema migration, API behavior, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, or public-share behavior changes.
+- No replacement of the rich editor.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - Shared Article Body Surface
+
+## Requested Feature Slice
+
+- Keep the shared notice/free-board/development-log article width at `680px`.
+- Do not only match outer width; apply common internal padding, font size, line-height, and paragraph margin between read and edit modes.
+- Apply the common body surface to notices, free-board posts, and development logs.
+- Explain whether the edit toolbar makes edit mode visually feel more constrained even when the text canvas is matched.
+
+## Explicitly Excluded Scope
+
+- No database table unification, schema migration, API behavior, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, or public-share behavior changes.
+- No replacement of the rich editor.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - News Read/Edit Typography And Width Tightening
+
+## Requested Feature Slice
+
+- In notice and free-board rich posts, read mode and edit mode should use the same body font size and line-height.
+- Keep the read-mode body font size as the visual target, then make edit mode match it.
+- Reduce the shared article body width so read mode shows fewer characters per line.
+- Apply the same width and typography rules to both notices and the free board.
+
+## Explicitly Excluded Scope
+
+- No posting permission, comment, reaction, bookmark, copy, open-chat, route, API, schema, or database migration changes.
+- No replacement of the rich editor or image-editing behavior.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Unanswered Decision
+
+- Whether to later merge notice and free-board storage into one DB table is a product/data-model decision, not part of this UI tightening slice.
+
+---
+
+# Request Summary - Rich Editor Double Click Crop Entry
+
+## Requested Bug Fix Slice
+
+- Double-clicking an image in the post create/edit rich editor does not reliably enter crop mode.
+- A normal browser double-click can be interrupted by image node selection and re-rendering after the first click.
+- Two quick normal clicks on the image should enter the same inline crop mode as a native double-click.
+
+## Explicitly Excluded Scope
+
+- No upload API, storage, schema, permission, comment, or posting workflow changes.
+- No destructive bitmap crop pipeline or editor replacement.
+- No redesign of notice/free-board page layout.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - Rich Editor Crop Empty Src Regression
+
+## Requested Bug Fix Slice
+
+- When a user crops an image while creating or editing a post, the editor can render the image as a broken/strange object.
+- The browser reports that an empty string was passed to the image `src` attribute from `NoticeImageNodeView`.
+- Crop, resize, and rotate metadata updates must preserve the existing image source and must never render `<img src="">`.
+
+## Explicitly Excluded Scope
+
+- No upload API, storage, schema, permission, comment, or posting workflow changes.
+- No replacement of the rich editor or destructive bitmap crop pipeline.
+- No redesign of notice/free-board page layout.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - Published Two-Column Gallery Display
+
+## Requested Bug Fix Slice
+
+- In edit mode, a rich body gallery authored with the `2열` image option appears as two columns.
+- In read mode, the same saved content appears as a one-column, full-width image stack.
+- Published/read-mode rich content should preserve the editor's two-column gallery layout.
+
+## Explicitly Excluded Scope
+
+- No upload, schema, route, permission, comment, or posting workflow changes.
+- No general redesign of the free-board or notice detail pages.
+- No body-text multi-column layout; only image gallery blocks authored with `2열`/`대표+2열` are in scope.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
 # Request Summary - News Content Width Unification
 
 ## Requested Feature Slice

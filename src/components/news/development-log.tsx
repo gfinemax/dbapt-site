@@ -8,6 +8,14 @@ import {
   NEWS_DISPLAY_AUTHOR_NAMES,
   type NewsDisplayAuthorName,
 } from "@/lib/news-display-author";
+import {
+  NEWS_ARTICLE_BODY_INPUT_CLASS,
+  NEWS_ARTICLE_BODY_SURFACE_CLASS,
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE,
+} from "@/lib/news/content-layout";
 import { buildShallowCommentTree } from "@/lib/news/comment-tree";
 import {
   DEVELOPMENT_LOG_CATEGORIES,
@@ -464,7 +472,10 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
               value={composeContent}
               onChange={(event) => setComposeContent(event.target.value)}
               rows={5}
-              className="w-full resize-none rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs leading-relaxed text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+              className={cn(
+                "w-full resize-none rounded-xl border border-stone-surface bg-[#fbfaf9] outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30",
+                NEWS_ARTICLE_BODY_INPUT_CLASS,
+              )}
               placeholder={composeMode === "log" ? "반영 내용과 이용자 변경점을 적어 주세요." : "필요한 기능이나 수정 요청을 구체적으로 적어 주세요."}
             />
           </div>
@@ -617,7 +628,11 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                 />
                 <aside
                   aria-label="개발일지 상세 패널"
-                  className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-2xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out motion-reduce:animate-none sm:p-8"
+                  className={cn(
+                    "fixed inset-y-0 left-0 z-[130] flex w-full flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out motion-reduce:animate-none sm:p-8",
+                    NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+                  )}
+                  style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
                 >
                 <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-6">
                   <div className="flex items-center gap-2">
@@ -644,7 +659,10 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                     목록으로
                   </button>
                 </div>
-                <div className="mt-6 flex-1 space-y-4">
+                <div
+                  className={cn("mx-auto mt-6 w-full flex-1 space-y-4", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+                  style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
+                >
                   <section aria-label="개발일지 상세" className="space-y-3">
                     <div className="flex flex-col gap-3 border-b border-stone-surface pb-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
@@ -695,7 +713,10 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                             value={editLogContent}
                             onChange={(event) => setEditLogContent(event.target.value)}
                             rows={14}
-                            className="w-full resize-y rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs leading-relaxed text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+                            className={cn(
+                              "w-full resize-y rounded-xl border border-stone-surface bg-[#fbfaf9] outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30",
+                              NEWS_ARTICLE_BODY_INPUT_CLASS,
+                            )}
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -729,7 +750,7 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                         </div>
                       </form>
                     ) : (
-                      <div className="whitespace-pre-wrap rounded-xl bg-[#fbfaf9] p-4 text-[12px] leading-7 text-graphite">
+                      <div className={cn("whitespace-pre-wrap rounded-xl bg-[#fbfaf9]", NEWS_ARTICLE_BODY_SURFACE_CLASS)}>
                         {selectedLog.content}
                       </div>
                     )}

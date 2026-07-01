@@ -1,3 +1,163 @@
+# Spec Selection - Rich Content View Top Gap Tightening
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Implementation Boundary
+
+Refine only the notice/free-board rich-content read-mode section gap by removing the extra column `space-y` gap between the meta/header block and `NoticeRichContent`. Keep edit-mode form spacing and all existing shared body surface rules intact. The implementation may add focused regression tests. It must not change database schema, APIs, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or rich-editor capabilities.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Rich Content View Spacing Parity
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Implementation Boundary
+
+Refine only the notice/free-board rich-content view presentation so it uses the same body surface as edit mode without extra view-only wrapper padding or typography, and preserve empty editor paragraphs as visible blank lines in sanitized view HTML. The implementation may add focused regression tests. It must not change database schema, APIs, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or rich-editor capabilities.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Free Board Side Edit
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Implementation Boundary
+
+Use the approved shared news article width/body surface rules while changing only the free-board editing presentation: existing post editing moves into the left focused post panel, and new post writing remains a right-side drawer. The implementation may add tests for the side-edit workflow and drawer positioning. It must not change database schema, APIs, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or rich-editor capabilities.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Shared Article Body Surface
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Implementation Boundary
+
+Keep the existing `680px` article content width and unify the inner article body surface across notice/free-board rich view and edit modes, plus development-log read/edit text surfaces. The implementation may add shared CSS class constants and regression tests for padding, font size, line-height, and paragraph margin. It must not change database schema, APIs, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, or rich-editor features.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - News Read/Edit Typography And Width Tightening
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Implementation Boundary
+
+Tighten only the shared notice/free-board article shell and body canvas widths, and align the rich editor's default body typography with the published rich-content typography. Keep notice and free-board interaction models, routes, APIs, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, and database schema unchanged.
+
+## Conflicts Between Request And Spec
+
+The previous spec used a `860px` shell and `760px` content canvas. The current user request asks for a narrower reading line length, so the same spec is updated to `780px` shell and `680px` content canvas.
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Rich Editor Double Click Crop Entry
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Implementation Boundary
+
+Refine only the existing rich-editor image NodeView click handling so a native double-click or two quick normal clicks on an image enters inline crop mode. Keep the existing crop toolbar, crop metadata, upload flow, APIs, permissions, schema, comments, and public navigation unchanged.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Rich Editor Crop Empty Src Regression
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Implementation Boundary
+
+Refine only the existing rich-editor image node parsing, rendering, and image metadata update path. Crop/resize/rotate updates must keep existing image source attributes, and the editor must not render image elements with an empty `src`. Do not change uploads, APIs, storage schema, permissions, comments, public navigation, or posting workflows.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Published Two-Column Gallery Display
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Implementation Boundary
+
+Refine only the existing rich-editor gallery HTML generation and published rich-content sanitization/display contract so saved `data-notice-gallery="two-column"` and `featured-grid` image galleries render with the editor's intended two-column grid. Do not change uploads, APIs, permissions, routes, comments, schema, public navigation, or normal body text flow.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection - News Content Width Unification
 
 ## Selected Approved Spec Path
