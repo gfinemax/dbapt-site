@@ -1,0 +1,33 @@
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env
+✓ Ready in 1547ms
+Creating turbopack project { dir: 'C:\\workspace\\antigravity\\dbapt-site', testMode: true }
+
+ GET /news?tab=free 200 in 1628ms (next.js: 524ms, application-code: 1104ms)
+ GET /news?tab=free 200 in 420ms (next.js: 15ms, application-code: 405ms)
+ GET /news?tab=free 200 in 830ms (next.js: 17ms, application-code: 813ms)
+ GET /news?tab=free 200 in 864ms (next.js: 100ms, application-code: 764ms)
+ GET /news?tab=free 200 in 593ms (next.js: 13ms, application-code: 580ms)
+ GET /news?tab=free 200 in 658ms (next.js: 11ms, application-code: 647ms)
+ GET /news?tab=free 200 in 230ms (next.js: 10ms, application-code: 219ms)
+ GET /news?tab=free 200 in 128ms (next.js: 9ms, application-code: 119ms)
+ GET / 200 in 1798ms (next.js: 570ms, application-code: 1228ms)
+ GET /news 200 in 322ms (next.js: 7ms, application-code: 315ms)
+ GET /news?tab=free 200 in 316ms (next.js: 5ms, application-code: 311ms)
+ PATCH /api/news/free 200 in 304ms (next.js: 214ms, application-code: 91ms)
+ GET /api/news/free 200 in 89ms (next.js: 3ms, application-code: 86ms)
+ GET /news?tab=free&post=8a78b5a6-2903-4667-9bee-c1f843a65601 200 in 395ms (next.js: 6ms, application-code: 389ms)
+○ Compiling /about ...
+ GET /about 200 in 3.6s (next.js: 3.3s, application-code: 275ms)
+ GET /disclosure 200 in 468ms (next.js: 187ms, application-code: 281ms)
+ GET /news 200 in 329ms (next.js: 5ms, application-code: 323ms)
+ GET / 200 in 232ms (next.js: 7ms, application-code: 224ms)
+ GET /news 200 in 347ms (next.js: 6ms, application-code: 340ms)
+✓ Compiled in 248ms
+ GET /news 200 in 694ms (next.js: 7ms, application-code: 687ms)
+ GET /news 200 in 1074ms (next.js: 205ms, application-code: 869ms)
+ GET / 200 in 847ms (next.js: 449ms, application-code: 399ms)
+ GET / 200 in 320ms (next.js: 6ms, application-code: 314ms)
+[?25h
