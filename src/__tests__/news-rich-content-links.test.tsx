@@ -15,6 +15,7 @@ describe("notice rich content links", () => {
     );
 
     expect(html).toContain('data-notice-gallery="two-column"');
+    expect(html).toContain("grid-template-columns:repeat(auto-fit,minmax(min(100%,407px),1fr))");
     expect(html).toContain('data-fit="contain"');
     expect(html).toContain("object-fit:contain");
     expect(html).toContain('src="/uploads/a.png"');
@@ -22,6 +23,16 @@ describe("notice rich content links", () => {
     expect(html).toContain('alt="첫 번째"');
     expect(html).not.toContain("javascript:");
     expect(html.match(/<img/g)).toHaveLength(2);
+  });
+
+  it("does not add layer reserve spacing for images rendered inside a gallery", () => {
+    render(
+      <NoticeRichContent content='<div data-notice-gallery="two-column"><img src="/uploads/gallery-layer-1.png" alt="첫 번째" data-layout="front" data-pixel-width="407" data-pixel-height="640" data-offset-y="0" /><img src="/uploads/gallery-layer-2.png" alt="두 번째" data-layout="front" data-pixel-width="407" data-pixel-height="640" data-offset-y="0" /></div>' />,
+    );
+
+    const contentRoot = document.querySelector(".notice-rich-content") as HTMLElement;
+
+    expect(contentRoot.style.paddingBottom).toBe("");
   });
 
   it("sanitizes image fitting, crop focus, and rotation metadata", () => {

@@ -1,3 +1,43 @@
+# Spec Selection - Footer Credit Date
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Update only the shared public footer credit text in `src/components/landing/site-footer.tsx` and its exact-copy regression test. The public landing/footer remains a public information surface; no authenticated or private functionality is introduced.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Free Board Gallery Blank Space
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Implementation Boundary
+
+Refine only `NoticeRichContent` published rich-content spacing. Gallery images are rendered as normal document-flow gallery content, so their saved image-layer metadata must not contribute extra root `padding-bottom`. True standalone `front`/`behind` layer images should continue to reserve bottom space so comments do not overlap.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection
 
 ## Selected Approved Spec Path - Published Layer Image Text Flow Regression

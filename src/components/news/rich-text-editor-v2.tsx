@@ -136,7 +136,8 @@ const FONT_OPTIONS = [
 ];
 const FONT_SIZE_OPTIONS = ["12px", "14px", "16px", "18px", "20px", "24px"];
 const LINE_HEIGHT_OPTIONS = ["1.2", "1.5", "1.8", "2"];
-const GALLERY_GRID_STYLE = "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-width:100%;";
+const GALLERY_GRID_STYLE =
+  "display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,407px),1fr));gap:6px;max-width:100%;";
 const DEFAULT_CROP_BOX: CropBox = { top: 0, right: 0, bottom: 0, left: 0 };
 const MAX_CROP_INSET = 45;
 const MAX_CROP_PAIR_TOTAL = 75;

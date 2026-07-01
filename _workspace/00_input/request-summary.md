@@ -1,3 +1,49 @@
+# Request Summary - Footer Credit Date
+
+## Requested Bug Fix Slice
+
+- Change the shared footer credit text from `Website created & maintained by 오학동 · 2026` to `Website created & maintained by 오학동 · 2026.6.17`.
+- Keep footer layout, links, address, and contact number unchanged.
+
+## Explicitly Excluded Scope
+
+- No navigation, access boundary, footer layout, styling, or route changes.
+- No unrelated date/copy changes elsewhere in the site.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - Free Board Gallery Blank Space
+
+## Requested Bug Fix Slice
+
+- In the free-board focused post view, a rich-content image gallery can leave a large blank area before the comment section.
+- Optimize the empty space below the post body while preserving the existing comment overlap protection for true `front`/`behind` layer images.
+- Fix only the published rich-content display spacing calculation.
+
+## Explicitly Excluded Scope
+
+- No comment workflow, schema, route, upload, permission, or post save API changes.
+- No redesign of the free-board focused post panel beyond the blank-space behavior.
+- No destructive bitmap crop/export pipeline.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
 # Request Summary
 
 ## Requested Bug Fix Slice - Published Layer Image Text Flow Regression

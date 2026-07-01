@@ -2614,9 +2614,10 @@ describe("news admin visible controls", () => {
     const panel = screen.getByLabelText("토론 집중 패널");
     expect(panel).toBeInTheDocument();
     expect(panel).toHaveClass("left-0");
-    expect(panel).toHaveClass("max-w-2xl");
+    expect(panel).toHaveClass("max-w-[920px]");
     expect(panel).toHaveClass("slide-in-from-left");
     expect(panel).not.toHaveClass("right-0");
+    expect(panel).not.toHaveClass("max-w-2xl");
     expect(panel).not.toHaveClass("max-w-3xl");
     expect(within(panel).getByRole("heading", { name: "자유게시판 글 열람" })).toBeInTheDocument();
     expect(within(panel).getByRole("heading", { name: "실제 자유게시글" })).toBeInTheDocument();
@@ -2626,6 +2627,8 @@ describe("news admin visible controls", () => {
     expect(richContent).toHaveClass("leading-relaxed");
     expect(richContent).not.toHaveClass("text-sm");
     expect(richContent).not.toHaveClass("leading-8");
+    const documentFlow = richContent?.closest('[data-free-board-document="focused-post"]');
+    expect(documentFlow).toHaveClass("mx-auto", "w-full", "max-w-[820px]");
     expect(window.location.search).toContain("post=free-1");
 
     fireEvent.click(screen.getByRole("button", { name: "목록으로" }));

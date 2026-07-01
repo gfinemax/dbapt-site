@@ -50,7 +50,8 @@ const EDITOR_BUTTON_ACTIVE_CLASS =
   "border-sky-blue bg-sky-blue text-white hover:bg-sky-blue";
 const NOTICE_RICH_BODY_CLASS =
   "text-xs leading-relaxed text-charcoal-primary [&_a]:text-sky-blue [&_a]:underline [&_img]:my-1 [&_img]:max-w-full [&_img]:rounded-none [&_img]:border [&_img]:border-stone-surface [&_li]:ml-4 [&_ol]:list-decimal [&_ul]:list-disc";
-const GALLERY_GRID_STYLE = "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-width:100%;";
+const GALLERY_GRID_STYLE =
+  "display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,407px),1fr));gap:6px;max-width:100%;";
 const IMAGE_FIT_LABELS: Record<ImageFit, string> = {
   contain: "원본비율",
   cover: "채우기",
@@ -317,8 +318,12 @@ function getNoticeLayerReservedHeight({
 
 function getNoticeContentLayerReserveHeight(content: string) {
   let reserveHeight = 0;
+  const contentOutsideGalleries = content.replace(
+    /<div\b([^>]*)data-notice-gallery=(["'])(.*?)\2([^>]*)>([\s\S]*?)<\/div>/gi,
+    "",
+  );
 
-  content.replace(/<img\b([^>]*)>/gi, (_match, attrs: string) => {
+  contentOutsideGalleries.replace(/<img\b([^>]*)>/gi, (_match, attrs: string) => {
     const src = readHtmlAttr(attrs, "src");
     if (!isTrustedNoticeImageSrc(src)) return "";
 

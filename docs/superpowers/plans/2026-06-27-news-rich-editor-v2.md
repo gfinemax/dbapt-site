@@ -284,3 +284,27 @@ Keep the image layer wrapper at `height:0px`, preserve the absolutely positioned
 - [x] **Step 3: Verify**
 
 Run focused rich editor tests, full validation commands, and desktop/mobile browser checks for `/news?tab=free`; record review and verification evidence.
+
+---
+
+### Follow-up Task: Free Board Gallery Blank Space
+
+**Goal:** Remove duplicated blank space below rich-content galleries in the free-board focused post view while preserving comment overlap protection for true layer images.
+
+**Files:**
+- Modify: `src/components/news/notice-rich-editor.tsx`
+- Test: `src/__tests__/news-rich-content-links.test.tsx`
+- Modify: `_workspace/04_review/ui-review.md`
+- Modify: `_workspace/final/verification.md`
+
+- [x] **Step 1: Add failing coverage**
+
+Add focused rich-content coverage proving gallery images that still carry old `front` layer metadata do not add root `padding-bottom`, because gallery images render in normal document flow.
+
+- [x] **Step 2: Exclude galleries from layer reserve scanning**
+
+Update `NoticeRichContent` layer reserve calculation to scan only images outside `data-notice-gallery` blocks, leaving standalone `front`/`behind` images unchanged.
+
+- [x] **Step 3: Verify**
+
+Run focused rich-content and free-board panel tests, required repository validation commands, and visible desktop/mobile checks for `/news?tab=free`; record review and verification evidence.

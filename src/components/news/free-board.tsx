@@ -634,7 +634,7 @@ export function FreeBoard({
           />
           <aside
             aria-label="토론 집중 패널"
-            className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-2xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8"
+            className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-[920px] flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8"
           >
             <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-6">
               <div className="flex items-center gap-2">
@@ -662,7 +662,10 @@ export function FreeBoard({
               </button>
             </div>
 
-            <div className="mt-6 flex-1 space-y-6">
+            <div
+              data-free-board-document="focused-post"
+              className="mx-auto mt-6 w-full max-w-[820px] flex-1 space-y-6"
+            >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">

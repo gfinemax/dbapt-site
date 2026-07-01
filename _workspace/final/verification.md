@@ -1,5 +1,107 @@
 # Verification
 
+# Verification - Publish Finalization 2026-07-01
+
+## Implemented Scope
+
+- Finalized the footer credit date update and the free-board gallery blank-space follow-up for publication.
+- Kept untracked local dev logs and screenshots out of the commit scope.
+
+## Checks
+
+- `git diff --check`: PASS; only CRLF conversion warnings were printed.
+- `pnpm lint`: PASS.
+- `pnpm test`: first full run had two timing-related failures outside the touched files (`document-upload-api` timeout and `portal-shell` message assertion); both focused reruns passed, and the second full run passed with 73 files and 489 tests.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Started local dev server at `http://127.0.0.1:3000`.
+- Chrome headless `/news?tab=free` desktop 1440px: rendered, `scrollWidth=1440`, `innerWidth=1440`, `hasOverflow=false`.
+- Chrome headless `/news?tab=free` mobile 390px: rendered, `scrollWidth=390`, `innerWidth=390`, `hasOverflow=false`.
+- Chrome hydrated DOM check for `/`: footer contains `Website created & maintained by 오학동 · 2026.6.17`.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
+# Verification - Footer Credit Date
+
+## Implemented Fix
+
+- Changed the shared footer credit text to `Website created & maintained by 오학동 · 2026.6.17`.
+- Updated the focused footer regression test expectation.
+
+## Changed Files
+
+- `src/components/landing/site-footer.tsx`
+- `src/__tests__/site-footer.test.tsx`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm test -- site-footer`: PASS, 1 test.
+- `pnpm lint`: PASS.
+- `pnpm build`: PASS.
+- `pnpm test`: PASS, 73 files and 489 tests. jsdom printed existing `window.scrollTo()` not implemented warnings.
+
+## Browser Checks
+
+- Existing local dev server at `http://127.0.0.1:3000`.
+- Home page HTML contained `Website created & maintained by 오학동 · 2026.6.17`.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
+# Verification - Free Board Gallery Blank Space
+
+## Implemented Fix
+
+- Removed duplicated blank space below free-board rich-content galleries by excluding `data-notice-gallery` blocks from standalone layer image reserve-height scanning.
+- Preserved root bottom spacing for true standalone `front`/`behind` layer images so comments do not overlap positioned layer images.
+
+## Changed Files
+
+- `src/components/news/notice-rich-editor.tsx`
+- `src/__tests__/news-rich-content-links.test.tsx`
+- `docs/superpowers/plans/2026-06-27-news-rich-editor-v2.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm exec vitest run src/__tests__/news-rich-content-links.test.tsx -t "does not add layer reserve spacing"`: FAIL before implementation, expected `640px` vs empty padding.
+- `pnpm exec vitest run src/__tests__/news-rich-content-links.test.tsx -t "does not add layer reserve spacing|reserves published layer image space"`: PASS, 2 tests.
+- `pnpm exec vitest run src/__tests__/news-rich-content-links.test.tsx`: PASS, 53 tests.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "opens a left focus panel|opens free-board post editing|opens free-board post writing"`: PASS, 3 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 73 files and 489 tests. jsdom printed existing `window.scrollTo()` not implemented warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Started local dev server at `http://127.0.0.1:3000`.
+- Browser plugin connection failed with MCP sandbox metadata error, so Chrome headless/CDP was used as fallback.
+- `/news?tab=free` desktop 1440px: rendered, `overflowX=false`, screenshot `_workspace/free-board-blank-space-desktop.png`.
+- `/news?tab=free` mobile 390px: rendered, `overflowX=false`, screenshot `_workspace/free-board-blank-space-mobile.png`.
+- The live unauthenticated page had no visible free-board post detail available (`initialFreePosts` empty), so the focused-post gallery spacing behavior is covered by component regression tests.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
 # Verification - Published Layer Image Text Flow Regression
 
 ## Implemented Fix

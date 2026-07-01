@@ -14,7 +14,7 @@ export function SiteFooter() {
             </span>
             <span>연락처 02-822-1508</span>
           </address>
-          <p className="mt-3 text-xs text-ash">Website created & maintained by 오학동 · 2026</p>
+          <p className="mt-3 text-xs text-ash">Website created & maintained by 오학동 · 2026.6.17</p>
         </div>
         <div className="flex gap-5 font-medium text-graphite">
           <Link href="/terms">이용약관</Link>

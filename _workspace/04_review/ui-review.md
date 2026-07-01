@@ -1,5 +1,31 @@
 # UI Review
 
+# UI Review - Publish Final Check 2026-07-01
+
+## Reviewed Change
+- Feature: footer credit date and free-board rich-content gallery spacing publication check.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, `docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-27-news-rich-editor-v2.md`
+- Files or pages reviewed: `src/components/landing/site-footer.tsx`, `src/components/news/free-board.tsx`, `src/components/news/notice-rich-editor.tsx`, `/`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The final publish scope stays within static footer copy, free-board focused-post layout width, and published rich-content gallery spacing. No public navigation, permissions, routes, APIs, storage schema, authentication, document access, accounting, voting, or notification behavior changed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing labels and access-gated presentation remain unchanged. The footer shows the requested exact credit date after hydration, and no new service claim or unavailable action was introduced.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Chrome headless checks of `/news?tab=free` reported no body-level horizontal overflow at desktop 1440px or mobile 390px. The home page hydrated DOM contains `Website created & maintained by 오학동 · 2026.6.17`.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review - Published Layer Image Text Flow Regression
 
 ## Reviewed Change
@@ -538,6 +564,58 @@
 - Required action: none
 
 ---
+# UI Review - Footer Credit Date
+
+## Reviewed Change
+- Feature: footer credit date copy update.
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-05-25-daebang-landing-page.md`
+- Files or pages reviewed: `src/components/landing/site-footer.tsx`, `src/__tests__/site-footer.test.tsx`, home page HTML at `http://127.0.0.1:3000/`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only updates a static footer credit date. It does not change public navigation, login-gated presentation, document access, accounting, voting, notifications, permissions, routes, or data mutation.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The footer now states the exact requested visible credit text `Website created & maintained by 오학동 · 2026.6.17`. No new service claim or operational status is introduced.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Typography, layout classes, address/contact wrapping, and footer links are unchanged. `pnpm test -- site-footer` verifies the exact text and retained footer links; local home page HTML contains the updated footer text.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Free Board Gallery Blank Space
+
+## Reviewed Change
+- Feature: remove duplicated blank space below rich-content galleries in the free-board focused post view.
+- Governing spec: `docs/superpowers/specs/2026-06-27-news-rich-editor-v2-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-06-27-news-rich-editor-v2.md`
+- Files or pages reviewed: `src/components/news/notice-rich-editor.tsx`, `src/__tests__/news-rich-content-links.test.tsx`, `/news?tab=free` desktop/mobile screenshots.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to published rich-content spacing calculation. It does not change public navigation, permissions, routes, APIs, storage schema, comments, posting, authentication, document access, accounting, voting, or notifications.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing free-board and rich-content labels remain unchanged. The change removes duplicated spacing for gallery-rendered images and does not introduce or imply a new working service.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Gallery images remain normal document-flow content. Standalone `front`/`behind` layer images still reserve root bottom space to avoid comment overlap. Focused tests verify both behaviors. Chrome headless checks of `/news?tab=free` at 1440px and 390px reported `overflowX=false`; screenshots are `_workspace/free-board-blank-space-desktop.png` and `_workspace/free-board-blank-space-mobile.png`.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review
 
 ## Reviewed Change
