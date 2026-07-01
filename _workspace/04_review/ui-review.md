@@ -1,5 +1,31 @@
 # UI Review
 
+# UI Review - News Board Copy Tool
+
+## Reviewed Change
+- Feature: administrator-only copy actions between notices and free-board posts.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-board-copy-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-01-news-board-copy.md`
+- Files or pages reviewed: `src/app/api/news/board-copy/route.ts`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The controls are shown only for administrators on real posts. The API rejects unauthenticated and non-admin sessions. The source post is not deleted or moved. Public navigation, login-gated free-board access, document access, accounting, voting, and notifications are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Button labels say `복사`, not `이동`, and browser confirmation states that the source post and comments remain unchanged. The API copies only scalar post fields and does not copy comments, replies, reactions, bookmarks, open-chat announcements, view counts, or public-share state.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The new actions reuse existing compact rounded management-button styling, have explicit accessible names that include the source title and target board, and remain inside existing admin management areas. Focused component tests cover admin visibility, non-admin hiding, cancellation, request payloads, refresh, and success alerts. Chrome headless checks of `/news?tab=free` reported no body-level horizontal overflow at desktop 1440px or mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review - Publish Final Check 2026-07-01
 
 ## Reviewed Change

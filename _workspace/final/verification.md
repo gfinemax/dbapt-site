@@ -1,5 +1,54 @@
 # Verification
 
+# Verification - News Board Copy Tool
+
+## Implemented Feature
+
+- Added `POST /api/news/board-copy` as an administrator-only copy endpoint.
+- Added notice-to-free-board copy behavior that creates a `FreePost` with `postType: NOTICE`.
+- Added free-board-to-notice copy behavior that creates a `CoopNews` with `category: NOTICE`.
+- Added administrator-only copy buttons to notice management controls and free-board management controls.
+- Kept source posts unchanged and excluded comments, replies, reactions, bookmarks, open-chat announcements, view counts, and public-share settings from copying.
+
+## Changed Files
+
+- `src/app/api/news/board-copy/route.ts`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/__tests__/news-board-copy-api.test.ts`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/specs/2026-07-01-news-board-copy-design.md`
+- `docs/superpowers/plans/2026-07-01-news-board-copy.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm exec vitest run src/__tests__/news-board-copy-api.test.ts`: FAIL before implementation because `@/app/api/news/board-copy/route` did not exist.
+- `pnpm exec vitest run src/__tests__/news-board-copy-api.test.ts`: PASS, 5 tests.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "board copy|copies a notice|copies a free-board|does not copy a notice"`: FAIL before UI implementation because copy controls were missing.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "board copy|copies a notice|copies a free-board|does not copy a notice"`: PASS, 5 tests.
+- `pnpm exec vitest run src/__tests__/news-board-copy-api.test.ts src/__tests__/news-admin-controls.test.tsx`: PASS, 95 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 74 files and 499 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm build`: PASS.
+- `git diff --check`: PASS; only CRLF conversion warnings were printed.
+
+## Browser Checks
+
+- Started local dev server at `http://127.0.0.1:3000`; `/news?tab=free` returned HTTP 200.
+- Chrome headless `/news?tab=free` desktop 1440px: rendered, `scrollWidth=1440`, `innerWidth=1440`, `hasOverflow=false`.
+- Chrome headless `/news?tab=free` mobile 390px: rendered, `scrollWidth=390`, `innerWidth=390`, `hasOverflow=false`.
+- The visible copy controls are admin/session gated, so the exact button visibility and click behavior are covered by focused component tests.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
 # Verification - Publish Finalization 2026-07-01
 
 ## Implemented Scope

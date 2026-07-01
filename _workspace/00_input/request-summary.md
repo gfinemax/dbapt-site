@@ -1,3 +1,27 @@
+# Request Summary - News Board Copy Tool
+
+## Requested Feature Slice
+
+- Add an administrator convenience tool to copy an existing notice into the free board or an existing free-board post into notices.
+- Keep the first implementation low risk: copy the post body and attachment metadata only, keep the source post unchanged, and do not copy comments/reactions/bookmarks/open-chat announcements.
+
+## Explicitly Excluded Scope
+
+- No destructive move/delete behavior.
+- No comment, reply, reaction, bookmark, open-chat, view-count, or public-share migration.
+- No schema migration or cross-board relationship tracking.
+- No public navigation or access-boundary expansion.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-07-01-news-board-copy-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
 # Request Summary - Footer Credit Date
 
 ## Requested Bug Fix Slice

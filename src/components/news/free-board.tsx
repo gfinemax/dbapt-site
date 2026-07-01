@@ -75,22 +75,26 @@ function FreeBoardPostRows({
   authorLabel,
   showDeletePost,
   showOpenChatCopy,
+  showCopyToNotice,
   showBookmark,
   openChatCopyStatus,
   onOpen,
   onDelete,
   onOpenChatCopy,
+  onCopyToNotice,
 }: {
   post: FreeBoardPostListItem;
   index: number;
   authorLabel: string;
   showDeletePost: boolean;
   showOpenChatCopy: boolean;
+  showCopyToNotice: boolean;
   showBookmark: boolean;
   openChatCopyStatus?: "copying" | "copied" | "error";
   onOpen: () => void;
   onDelete: (params: { postId?: string; commentId?: string }) => void;
   onOpenChatCopy: (post: FreeBoardPostListItem) => void;
+  onCopyToNotice: (post: FreeBoardPostListItem) => void;
 }) {
   const typeMeta = getFreePostTypeMeta(post.postType);
 
@@ -144,7 +148,7 @@ function FreeBoardPostRows({
         </button>
       </td>
       <td className="px-5 py-4 text-center">
-        {(showBookmark || showOpenChatCopy || showDeletePost) && (
+        {(showBookmark || showOpenChatCopy || showCopyToNotice || showDeletePost) && (
           <div className="flex flex-wrap items-center justify-center gap-1.5">
             {showBookmark && (
               <PersonalBookmarkButton
@@ -173,6 +177,19 @@ function FreeBoardPostRows({
             )}
             {showOpenChatCopy && openChatCopyStatus === "error" && (
               <span className="text-[9px] font-bold text-ember-orange">실패</span>
+            )}
+            {showCopyToNotice && (
+              <button
+                type="button"
+                aria-label={`${post.title} 공지사항으로 복사`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onCopyToNotice(post);
+                }}
+                className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/15"
+              >
+                공지사항 복사
+              </button>
             )}
             {showDeletePost && (
               <button
@@ -502,6 +519,33 @@ export function FreeBoard({
     }
   };
 
+  const handleCopyPostToNotice = async (post: FreeBoardPostListItem) => {
+    if (!post.isReal) return;
+    if (!confirm(`"${post.title}" 자유게시글을 공지사항으로 복사하시겠습니까?\n\n원본 자유게시글과 댓글은 그대로 유지됩니다.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/news/board-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceType: "FREE_POST", sourceId: post.id }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "공지사항 복사에 실패했습니다.");
+        return;
+      }
+
+      await onRefresh();
+      alert("공지사항으로 복사했습니다.");
+    } catch (err) {
+      console.error(err);
+      alert("공지사항 복사 중 오류가 발생했습니다.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-b border-[#f2f0ed] pb-3">
@@ -601,6 +645,7 @@ export function FreeBoard({
                   const authorLabel = getFreeBoardAuthorLabel(post.author, currentUserId);
                   const showDeletePost = post.isReal && (post.author.id === currentUserId || isAdmin);
                   const showOpenChatCopy = post.isReal && isAdmin;
+                  const showCopyToNotice = post.isReal && isAdmin;
                   const showBookmark = !!session && post.isReal && !isReadOnlyPublicShare;
 
                   return (
@@ -611,11 +656,13 @@ export function FreeBoard({
                       authorLabel={authorLabel}
                       showDeletePost={showDeletePost}
                       showOpenChatCopy={showOpenChatCopy}
+                      showCopyToNotice={showCopyToNotice}
                       showBookmark={showBookmark}
                       openChatCopyStatus={openChatCopyStatus[post.id]}
                       onOpen={() => openFocusedPost(post.id)}
                       onDelete={handleDeletePostOrComment}
                       onOpenChatCopy={handleOpenChatCopy}
+                      onCopyToNotice={handleCopyPostToNotice}
                     />
                   );
                 })
@@ -711,6 +758,16 @@ export function FreeBoard({
                         className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
                       >
                         수정
+                      </button>
+                    )}
+                    {focusedPost.isReal && isAdmin && (
+                      <button
+                        type="button"
+                        aria-label={`${focusedPost.title} 공지사항으로 복사`}
+                        onClick={() => void handleCopyPostToNotice(focusedPost)}
+                        className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-3 py-1.5 text-[11px] font-bold text-sky-blue hover:bg-sky-blue/15"
+                      >
+                        공지사항으로 복사
                       </button>
                     )}
                   </div>

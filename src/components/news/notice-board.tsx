@@ -170,6 +170,33 @@ export function NoticeBoard({
     }
   };
 
+  const handleCopyNoticeToFreeBoard = async (notice: NoticeBoardListItem) => {
+    if (!notice.isReal) return;
+    if (!confirm(`"${notice.title}" 공지사항을 자유게시판으로 복사하시겠습니까?\n\n원본 공지와 댓글은 그대로 유지됩니다.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/news/board-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceType: "COOP_NEWS", sourceId: notice.id }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        alert(errData.error || "자유게시판 복사에 실패했습니다.");
+        return;
+      }
+
+      await onRefresh();
+      alert("자유게시판으로 복사했습니다.");
+    } catch (err) {
+      console.error(err);
+      alert("자유게시판 복사 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleOpenChatCopy = async (notice: NoticeBoardListItem) => {
     if (!notice.isReal) return;
 
@@ -355,6 +382,17 @@ export function NoticeBoard({
                             )}
                             <button
                               type="button"
+                              aria-label={`${notice.title} 자유게시판으로 복사`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleCopyNoticeToFreeBoard(notice);
+                              }}
+                              className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/15"
+                            >
+                              자유게시판 복사
+                            </button>
+                            <button
+                              type="button"
                               aria-label="공지 삭제"
                               onClick={(event) => {
                                 event.stopPropagation();
@@ -478,14 +516,24 @@ export function NoticeBoard({
               </div>
               {isAdmin && activeViewNotice.isReal && (
                 <div className="pt-4 border-t border-stone-surface">
-                  <button
-                    type="button"
-                    aria-label="공지 삭제"
-                    onClick={() => void handleDeleteNotice(activeViewNotice)}
-                    className="rounded-full border border-coral-red/20 bg-coral-red/10 px-3 py-1.5 text-[11px] font-bold text-coral-red hover:bg-coral-red/15"
-                  >
-                    공지 삭제
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label={`${activeViewNotice.title} 자유게시판으로 복사`}
+                      onClick={() => void handleCopyNoticeToFreeBoard(activeViewNotice)}
+                      className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-3 py-1.5 text-[11px] font-bold text-sky-blue hover:bg-sky-blue/15"
+                    >
+                      자유게시판으로 복사
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="공지 삭제"
+                      onClick={() => void handleDeleteNotice(activeViewNotice)}
+                      className="rounded-full border border-coral-red/20 bg-coral-red/10 px-3 py-1.5 text-[11px] font-bold text-coral-red hover:bg-coral-red/15"
+                    >
+                      공지 삭제
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

@@ -1,3 +1,23 @@
+# Spec Selection - News Board Copy Tool
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-07-01-news-board-copy-design.md`
+
+## Implementation Boundary
+
+Implement administrator-only copy actions between `CoopNews` notices and `FreePost` free-board posts. The copy creates a new target row and leaves the source unchanged. Only title, rich content, attachment metadata, important/starred state, display author label, and registered date are copied. Comments, reactions, bookmarks, open-chat announcements, view counts, public-share settings, destructive movement, schema changes, and access-boundary changes are out of scope.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection - Footer Credit Date
 
 ## Selected Approved Spec Path

@@ -9,6 +9,7 @@ import { FreeBoard } from "@/components/news/free-board";
 import { NewsClient } from "@/components/news/news-client";
 import { NoticeRichContent } from "@/components/news/notice-rich-editor";
 import * as newsRoute from "@/app/api/news/route";
+import * as boardCopyRoute from "@/app/api/news/board-copy/route";
 import * as noticeCommentsRoute from "@/app/api/news/comments/route";
 import * as freeRoute from "@/app/api/news/free/route";
 import * as uploadRoute from "@/app/api/upload/route";
@@ -201,6 +202,75 @@ describe("news admin API controls", () => {
     expect(mockPrisma.coopNews.update).not.toHaveBeenCalled();
   });
 
+  it("copies notices into the free board through an administrator-only board copy API", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNews.findUnique.mockResolvedValue({
+      ...realNotice,
+      displayAuthorName: "사무국",
+      registeredAt: new Date("2026-06-30T09:30:00.000Z"),
+    });
+    mockPrisma.freePost.create.mockResolvedValue({ id: "free-copy-1" });
+
+    const response = await boardCopyRoute.POST(
+      new Request("http://localhost/api/news/board-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceType: "COOP_NEWS", sourceId: "notice-1" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: realNotice.title,
+        content: realNotice.content,
+        attachmentPath: realNotice.attachmentPath,
+        attachmentName: realNotice.attachmentName,
+        attachmentSize: realNotice.attachmentSize,
+        postType: "NOTICE",
+        authorId: "admin-1",
+        isPublicShareEnabled: false,
+        publicShareEnabledAt: null,
+      }),
+    }));
+  });
+
+  it("copies free-board posts into notices through the board copy API", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({
+      ...realFreePost,
+      displayAuthorName: "운영자",
+      attachmentPath: "/uploads/free.pdf",
+      attachmentName: "free.pdf",
+      attachmentSize: 4096,
+      registeredAt: new Date("2026-06-30T09:30:00.000Z"),
+      isPublicShareEnabled: true,
+    });
+    mockPrisma.coopNews.create.mockResolvedValue({ id: "notice-copy-1" });
+
+    const response = await boardCopyRoute.POST(
+      new Request("http://localhost/api/news/board-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceType: "FREE_POST", sourceId: "free-1" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNews.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: realFreePost.title,
+        content: realFreePost.content,
+        category: "NOTICE",
+        imagePath: null,
+        attachmentPath: "/uploads/free.pdf",
+        attachmentName: "free.pdf",
+        attachmentSize: 4096,
+        authorId: "admin-1",
+      }),
+    }));
+  });
+
   it("places the development-log tab immediately after cooperative newsletter", () => {
     render(
       <NewsClient
@@ -284,6 +354,109 @@ describe("news admin API controls", () => {
         body: JSON.stringify({ targetType: "FREE_POST", targetId: "free-1" }),
       }),
     ));
+  });
+
+  it("shows board copy controls only to administrators and copies a notice into the free board", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, targetType: "FREE_POST", target: { id: "free-copy-1" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+    vi.stubGlobal("alert", vi.fn());
+
+    const { rerender } = render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[realNotice]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "실제 공지 자유게시판으로 복사" })).not.toBeInTheDocument();
+
+    rerender(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[realNotice]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 자유게시판으로 복사" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news/board-copy",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ sourceType: "COOP_NEWS", sourceId: "notice-1" }),
+      }),
+    ));
+    expect(onRefresh).toHaveBeenCalled();
+    expect(alert).toHaveBeenCalledWith("자유게시판으로 복사했습니다.");
+  });
+
+  it("does not copy a notice when the administrator cancels board copy confirmation", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
+
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[realNotice]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 자유게시판으로 복사" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("shows board copy controls only to administrators and copies a free-board post into notices", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, targetType: "COOP_NEWS", target: { id: "notice-copy-1" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+    vi.stubGlobal("alert", vi.fn());
+
+    const { rerender } = render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "실제 자유게시글 공지사항으로 복사" })).not.toBeInTheDocument();
+
+    rerender(
+      <FreeBoard
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        posts={[realFreePost]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 공지사항으로 복사" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news/board-copy",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ sourceType: "FREE_POST", sourceId: "free-1" }),
+      }),
+    ));
+    expect(onRefresh).toHaveBeenCalled();
+    expect(alert).toHaveBeenCalledWith("공지사항으로 복사했습니다.");
   });
 
   it("updates notice content and attachment metadata for admins", async () => {
