@@ -24,6 +24,7 @@ import {
 } from "@/lib/news/free-board-list";
 import {
   NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE,
   NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
   NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE,
 } from "@/lib/news/content-layout";
@@ -690,6 +691,7 @@ export function FreeBoard({
               "fixed inset-y-0 left-0 z-[130] flex w-full flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8",
               NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
             )}
+            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
           >
             <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-6">
               <div className="flex items-center gap-2">
@@ -720,6 +722,7 @@ export function FreeBoard({
             <div
               data-free-board-document="focused-post"
               className={cn("mx-auto mt-6 w-full flex-1 space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+              style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -1103,7 +1106,10 @@ export function FreeBoard({
 
               <form onSubmit={handleCreatePost} className="flex min-h-0 flex-1 flex-col">
                 <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 lg:px-8">
-                  <div className={cn("mx-auto flex w-full flex-col gap-5", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}>
+                  <div
+                    className={cn("mx-auto flex w-full flex-col gap-5", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+                    style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
+                  >
                     <div className="space-y-1.5">
                       <label className="block text-[11px] font-bold text-charcoal-primary font-mono">
                         게시글 제목 *
@@ -1288,7 +1294,10 @@ export function FreeBoard({
                 </div>
 
                 <div className="border-t border-stone-surface bg-white px-5 py-3.5 sm:px-6">
-                  <div className={cn("mx-auto flex w-full justify-end", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}>
+                  <div
+                    className={cn("mx-auto flex w-full justify-end", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+                    style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
+                  >
                     <Button
                       type="submit"
                       disabled={isSubmitting}

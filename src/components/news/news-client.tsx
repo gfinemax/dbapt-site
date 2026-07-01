@@ -39,7 +39,9 @@ import {
 } from "@/lib/news/notice-comment-payload";
 import {
   NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE,
   NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE,
 } from "@/lib/news/content-layout";
 import {
   buildActiveEditedNoticeView,
@@ -828,6 +830,7 @@ export function NewsClient({
               "fixed inset-y-0 left-0 z-[130] w-full bg-warm-canvas border-r border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out",
               NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
             )}
+            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
             aria-label="공지사항 상세 드로어"
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
@@ -859,6 +862,7 @@ export function NewsClient({
             <div
               data-news-article-content={isEditingNotice ? "notice-edit" : "notice-read"}
               className={cn("mx-auto mt-6 w-full flex-1 space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+              style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
               {isEditingNotice ? (
                 <form onSubmit={saveNoticeEdit} className="space-y-5">

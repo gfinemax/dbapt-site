@@ -1709,6 +1709,7 @@ describe("news admin visible controls", () => {
     expect(drawer).toHaveClass("left-0");
     expect(drawer).toHaveClass("border-r");
     expect(drawer).toHaveClass("max-w-[860px]");
+    expect(drawer).toHaveStyle({ maxWidth: "860px" });
     expect(drawer).toHaveClass("slide-in-from-left");
     expect(drawer).not.toHaveClass("right-0");
     expect(drawer).not.toHaveClass("max-w-2xl");
@@ -1716,6 +1717,7 @@ describe("news admin visible controls", () => {
 
     const contentColumn = drawer.querySelector('[data-news-article-content="notice-read"]');
     expect(contentColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
+    expect(contentColumn).toHaveStyle({ maxWidth: "760px" });
   });
 
   it("submits the selected notice display author from the edit drawer", async () => {
@@ -1749,10 +1751,12 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
     const drawer = screen.getByLabelText("공지사항 상세 드로어");
     expect(drawer).toHaveClass("max-w-[860px]");
+    expect(drawer).toHaveStyle({ maxWidth: "860px" });
     fireEvent.click(within(drawer).getByRole("button", { name: "수정" }));
 
     const editColumn = drawer.querySelector('[data-news-article-content="notice-edit"]');
     expect(editColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
+    expect(editColumn).toHaveStyle({ maxWidth: "760px" });
     const authorSelect = within(drawer).getByLabelText("공지 작성자");
     expect(authorSelect).toHaveValue("운영자");
     fireEvent.change(authorSelect, { target: { value: "사무국" } });
@@ -2408,8 +2412,10 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "+ 신규 공지사항 등록" }));
     const drawer = screen.getByLabelText("신규 공지 작성 드로어");
     expect(drawer).toHaveClass("max-w-[860px]");
+    expect(drawer).toHaveStyle({ maxWidth: "860px" });
     const writeColumn = drawer.querySelector('[data-news-article-content="notice-write"]');
     expect(writeColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
+    expect(writeColumn).toHaveStyle({ maxWidth: "760px" });
     fireEvent.change(screen.getByLabelText("공지 작성자"), {
       target: { value: "사무국" },
     });
@@ -2446,10 +2452,12 @@ describe("news admin visible controls", () => {
 
     const dialog = screen.getByRole("dialog", { name: "공지사항 상세 열람" });
     expect(dialog).toHaveClass("max-w-[860px]");
+    expect(dialog).toHaveStyle({ maxWidth: "860px" });
     expect(dialog).not.toHaveClass("max-w-xl");
 
     const contentColumn = dialog.querySelector('[data-news-article-content="notice-board-read"]');
     expect(contentColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
+    expect(contentColumn).toHaveStyle({ maxWidth: "760px" });
   });
 
   it("shows free board posts as a notice-style list and writes body images in the editor", async () => {
@@ -2820,6 +2828,7 @@ describe("news admin visible controls", () => {
     expect(panel).toBeInTheDocument();
     expect(panel).toHaveClass("left-0");
     expect(panel).toHaveClass("max-w-[860px]");
+    expect(panel).toHaveStyle({ maxWidth: "860px" });
     expect(panel).toHaveClass("slide-in-from-left");
     expect(panel).not.toHaveClass("right-0");
     expect(panel).not.toHaveClass("max-w-[920px]");
@@ -2835,6 +2844,7 @@ describe("news admin visible controls", () => {
     expect(richContent).not.toHaveClass("leading-8");
     const documentFlow = richContent?.closest('[data-free-board-document="focused-post"]');
     expect(documentFlow).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
+    expect(documentFlow).toHaveStyle({ maxWidth: "760px" });
     expect(documentFlow).not.toHaveClass("max-w-[820px]");
     expect(window.location.search).toContain("post=free-1");
 
@@ -3196,6 +3206,7 @@ describe("news admin visible controls", () => {
     expect(dialog).not.toHaveClass("max-w-[920px]");
     expect(dialog).not.toHaveClass("max-w-[1040px]");
     expect(documentColumn).not.toBeNull();
+    expect(documentColumn).toHaveStyle({ maxWidth: "760px" });
     expect(within(dialog).queryByText("긴 본문과 이미지를 넓은 편집 영역에서 정리할 수 있습니다.")).not.toBeInTheDocument();
     expect(titleInput.compareDocumentPosition(bodyRegion) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(bodyRegion.compareDocumentPosition(settingsRegion) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

@@ -14,7 +14,9 @@ import {
 import { getNoticeCommentAuthorName } from "@/lib/news/comment-author";
 import {
   NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE,
   NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE,
 } from "@/lib/news/content-layout";
 import { buildNoticeBoardList, type NoticeBoardListItem } from "@/lib/news/notice-board-list";
 import { uploadPublicFile } from "@/lib/news/public-upload";
@@ -430,6 +432,7 @@ export function NoticeBoard({
               "relative w-full rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]",
               NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
             )}
+            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
           >
             <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
               <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold text-sky-blue uppercase tracking-wider">
@@ -446,6 +449,7 @@ export function NoticeBoard({
             <div
               data-news-article-content="notice-board-read"
               className={cn("mx-auto w-full flex-1 overflow-y-auto space-y-4 pr-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+              style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
               <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
                 {activeViewNotice.isStarred && (
@@ -568,6 +572,7 @@ export function NoticeBoard({
               "fixed inset-y-0 right-0 z-[130] w-full bg-warm-canvas border-l border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 ease-out",
               NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
             )}
+            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
             aria-label="신규 공지 작성 드로어"
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface mb-6">
@@ -586,6 +591,7 @@ export function NoticeBoard({
               data-news-article-content="notice-write"
               onSubmit={handleUploadSubmit}
               className={cn("mx-auto w-full space-y-5 flex-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+              style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
               <div className="space-y-1.5">
                 <label htmlFor="notice-display-author" className="text-[11px] font-bold text-charcoal-primary font-mono block">

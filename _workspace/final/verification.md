@@ -1,3 +1,44 @@
+# Verification - News Content Width Inline Fix
+
+## Implemented Feature
+
+- Added `NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE = "760px"`.
+- Applied inline `maxWidth` to notice detail/read/edit/write shells and article content columns.
+- Applied inline `maxWidth` to free-board focus panel, focused article body, and write-modal content/footer columns.
+- Kept the existing shared width classes so tests and class-based styling remain explicit.
+
+## Changed Files
+
+- `src/lib/news/content-layout.ts`
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|selected notice display author|shared article width|left focus panel|fixed-width document"`: FAIL before implementation because only the free-board writing modal had inline `maxWidth`; the other shells/content columns had no inline width.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|selected notice display author|shared article width|left focus panel|fixed-width document"`: PASS, 6 tests.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 91 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 74 files and 500 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing local server responded at `http://127.0.0.1:3000/news` with HTTP 200.
+- Local API had `freePostCount=0`, so the actual free-board focused read panel could not be opened from live data in this environment; component tests verify its inline `maxWidth`.
+- Chrome headless `/news` desktop 1440px and mobile 390px: `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+- Chrome headless `/news?tab=free` desktop 1440px and mobile 390px: `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
 # Verification - News Content Width Unification
 
 ## Implemented Feature

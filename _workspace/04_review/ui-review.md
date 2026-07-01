@@ -1,3 +1,29 @@
+# UI Review - News Content Width Inline Fix
+
+## Reviewed Change
+- Feature: enforce shared article shell/content widths with inline `maxWidth` styles in addition to Tailwind classes.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-01-news-content-width-unification.md`
+- Files or pages reviewed: `src/lib/news/content-layout.ts`, `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `/news`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The correction only adds inline max-width enforcement to existing notice/free-board article shells and content columns. No permissions, routes, API behavior, comments, reactions, bookmarks, copy tools, or public-share behavior changed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: No user-facing copy or operational claim changed. The existing writing and reading controls keep their prior meaning.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Regression tests now assert both the intended width classes and inline `maxWidth` values, covering the browser symptom where class-only width did not constrain several panels. Chrome headless checks of `/news` and `/news?tab=free` reported no horizontal overflow at desktop 1440px or mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review - News Content Width Unification
 
 ## Reviewed Change
