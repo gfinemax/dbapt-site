@@ -1708,9 +1708,14 @@ describe("news admin visible controls", () => {
     const drawer = screen.getByLabelText("공지사항 상세 드로어");
     expect(drawer).toHaveClass("left-0");
     expect(drawer).toHaveClass("border-r");
+    expect(drawer).toHaveClass("max-w-[860px]");
     expect(drawer).toHaveClass("slide-in-from-left");
     expect(drawer).not.toHaveClass("right-0");
+    expect(drawer).not.toHaveClass("max-w-2xl");
     expect(drawer).not.toHaveClass("slide-in-from-right");
+
+    const contentColumn = drawer.querySelector('[data-news-article-content="notice-read"]');
+    expect(contentColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
   });
 
   it("submits the selected notice display author from the edit drawer", async () => {
@@ -1743,8 +1748,11 @@ describe("news admin visible controls", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
     const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    expect(drawer).toHaveClass("max-w-[860px]");
     fireEvent.click(within(drawer).getByRole("button", { name: "수정" }));
 
+    const editColumn = drawer.querySelector('[data-news-article-content="notice-edit"]');
+    expect(editColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
     const authorSelect = within(drawer).getByLabelText("공지 작성자");
     expect(authorSelect).toHaveValue("운영자");
     fireEvent.change(authorSelect, { target: { value: "사무국" } });
@@ -2398,6 +2406,10 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "+ 신규 공지사항 등록" }));
+    const drawer = screen.getByLabelText("신규 공지 작성 드로어");
+    expect(drawer).toHaveClass("max-w-[860px]");
+    const writeColumn = drawer.querySelector('[data-news-article-content="notice-write"]');
+    expect(writeColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
     fireEvent.change(screen.getByLabelText("공지 작성자"), {
       target: { value: "사무국" },
     });
@@ -2418,6 +2430,26 @@ describe("news admin visible controls", () => {
       }),
     );
     expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("uses the shared article width in the notice-board read modal", () => {
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[realNotice]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 공지"));
+
+    const dialog = screen.getByRole("dialog", { name: "공지사항 상세 열람" });
+    expect(dialog).toHaveClass("max-w-[860px]");
+    expect(dialog).not.toHaveClass("max-w-xl");
+
+    const contentColumn = dialog.querySelector('[data-news-article-content="notice-board-read"]');
+    expect(contentColumn).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
   });
 
   it("shows free board posts as a notice-style list and writes body images in the editor", async () => {
@@ -2787,9 +2819,10 @@ describe("news admin visible controls", () => {
     const panel = screen.getByLabelText("토론 집중 패널");
     expect(panel).toBeInTheDocument();
     expect(panel).toHaveClass("left-0");
-    expect(panel).toHaveClass("max-w-[920px]");
+    expect(panel).toHaveClass("max-w-[860px]");
     expect(panel).toHaveClass("slide-in-from-left");
     expect(panel).not.toHaveClass("right-0");
+    expect(panel).not.toHaveClass("max-w-[920px]");
     expect(panel).not.toHaveClass("max-w-2xl");
     expect(panel).not.toHaveClass("max-w-3xl");
     expect(within(panel).getByRole("heading", { name: "자유게시판 글 열람" })).toBeInTheDocument();
@@ -2801,7 +2834,8 @@ describe("news admin visible controls", () => {
     expect(richContent).not.toHaveClass("text-sm");
     expect(richContent).not.toHaveClass("leading-8");
     const documentFlow = richContent?.closest('[data-free-board-document="focused-post"]');
-    expect(documentFlow).toHaveClass("mx-auto", "w-full", "max-w-[820px]");
+    expect(documentFlow).toHaveClass("mx-auto", "w-full", "max-w-[760px]");
+    expect(documentFlow).not.toHaveClass("max-w-[820px]");
     expect(window.location.search).toContain("post=free-1");
 
     fireEvent.click(screen.getByRole("button", { name: "목록으로" }));
@@ -3127,8 +3161,9 @@ describe("news admin visible controls", () => {
 
     const dialog = screen.getByRole("dialog", { name: "게시글 수정 편집 모달" });
 
-    expect(dialog).toHaveClass("max-w-[920px]");
-    expect(dialog).toHaveStyle({ maxWidth: "920px" });
+    expect(dialog).toHaveClass("max-w-[860px]");
+    expect(dialog).toHaveStyle({ maxWidth: "860px" });
+    expect(dialog).not.toHaveClass("max-w-[920px]");
     expect(dialog).not.toHaveClass("max-w-[1040px]");
     expect(within(dialog).getByLabelText("게시글 설정")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("게시글 본문 편집 영역")).toBeInTheDocument();
@@ -3154,10 +3189,11 @@ describe("news admin visible controls", () => {
     const bodyRegion = within(dialog).getByLabelText("게시글 본문 편집 영역");
     const settingsRegion = within(dialog).getByLabelText("게시글 설정");
 
-    const documentColumn = dialog.querySelector('[class*="max-w-[820px]"]');
+    const documentColumn = dialog.querySelector('[class*="max-w-[760px]"]');
 
-    expect(dialog).toHaveClass("max-w-[920px]");
-    expect(dialog).toHaveStyle({ maxWidth: "920px" });
+    expect(dialog).toHaveClass("max-w-[860px]");
+    expect(dialog).toHaveStyle({ maxWidth: "860px" });
+    expect(dialog).not.toHaveClass("max-w-[920px]");
     expect(dialog).not.toHaveClass("max-w-[1040px]");
     expect(documentColumn).not.toBeNull();
     expect(within(dialog).queryByText("긴 본문과 이미지를 넓은 편집 영역에서 정리할 수 있습니다.")).not.toBeInTheDocument();

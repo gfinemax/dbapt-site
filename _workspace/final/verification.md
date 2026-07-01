@@ -1,3 +1,48 @@
+# Verification - News Content Width Unification
+
+## Implemented Feature
+
+- Added shared news article layout width constants in `src/lib/news/content-layout.ts`.
+- Applied a shared `max-w-[860px]` shell width to notice and free-board article writing/reading surfaces.
+- Applied a shared `max-w-[760px]` body canvas width to notice read/edit/write and free-board read/write content columns.
+- Reduced free-board reading and writing widths from the previous `920px` shell and `820px` body column.
+- Kept notice writing as a right-side drawer, free-board writing as a modal, and free-board reading as a left focus panel.
+
+## Changed Files
+
+- `src/lib/news/content-layout.ts`
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- `docs/superpowers/plans/2026-07-01-news-content-width-unification.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+- `_workspace/final/verification.md`
+
+## Checks
+
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|selected notice display author|shared article width|left focus panel|fixed-width document|post editing in the focus panel"`: FAIL before implementation due legacy width classes and missing `NoticeBoard` dialog semantics.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|selected notice display author|shared article width|left focus panel|fixed-width document|post editing in the focus panel"`: PASS, 7 tests.
+- `pnpm exec vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 91 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 74 files and 500 tests. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing local server responded at `http://127.0.0.1:3000/news?tab=free` with HTTP 200.
+- Chrome headless `/news?tab=free` desktop 1440px: `clientWidth=1440`, `scrollWidth=1440`, `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+- Chrome headless `/news?tab=free` mobile 390px: `clientWidth=390`, `scrollWidth=390`, `hasHorizontalOverflow=false`, `hasNewsSurface=true`.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
 # Verification
 
 # Verification - News Board Copy Tool

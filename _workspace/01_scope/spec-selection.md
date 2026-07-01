@@ -1,3 +1,23 @@
+# Spec Selection - News Content Width Unification
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Implementation Boundary
+
+Apply one shared article body canvas width to notice read/edit/write surfaces and free-board read/edit/write surfaces. The free-board width is intentionally reduced from the existing wide layout, while notice surfaces are widened only enough to share the same content canvas. The implementation changes visual layout classes and regression tests only; it does not change board permissions, data mutations, rich-editor behavior, comments, or routes.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection - News Board Copy Tool
 
 ## Selected Approved Spec Path

@@ -1,3 +1,29 @@
+# UI Review - News Content Width Unification
+
+## Reviewed Change
+- Feature: shared article shell and content widths for notice and free-board writing/reading surfaces.
+- Governing spec: `docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-01-news-content-width-unification.md`
+- Files or pages reviewed: `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/lib/news/content-layout.ts`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only adjusts article shell/content width classes and adds content-width markers for regression tests. It does not change navigation, routes, permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, public-share behavior, APIs, or database schema.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: No user-facing claims, feature labels, or operational states were added. Existing notice/free-board writing and reading controls keep their previous meaning.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Notice and free-board article surfaces now share `max-w-[860px]` shells and `max-w-[760px]` body canvases. The `NoticeBoard` read modal now exposes `role="dialog"` with `aria-label="공지사항 상세 열람"`. Focused component tests verify notice read/edit/write and free-board read/write widths. Chrome headless checks of `/news?tab=free` reported no horizontal overflow at desktop 1440px or mobile 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review
 
 # UI Review - News Board Copy Tool

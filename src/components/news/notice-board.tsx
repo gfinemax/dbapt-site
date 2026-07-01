@@ -12,6 +12,10 @@ import {
   type NewsDisplayAuthorName,
 } from "@/lib/news-display-author";
 import { getNoticeCommentAuthorName } from "@/lib/news/comment-author";
+import {
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+} from "@/lib/news/content-layout";
 import { buildNoticeBoardList, type NoticeBoardListItem } from "@/lib/news/notice-board-list";
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
@@ -418,7 +422,15 @@ export function NoticeBoard({
       {activeViewNotice && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0" onClick={() => setActiveViewNotice(null)} />
-          <div className="relative w-full max-w-xl rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="공지사항 상세 열람"
+            className={cn(
+              "relative w-full rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]",
+              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+            )}
+          >
             <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
               <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold text-sky-blue uppercase tracking-wider">
                 Official Notice
@@ -431,7 +443,10 @@ export function NoticeBoard({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            <div
+              data-news-article-content="notice-board-read"
+              className={cn("mx-auto w-full flex-1 overflow-y-auto space-y-4 pr-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+            >
               <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
                 {activeViewNotice.isStarred && (
                   <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
@@ -549,7 +564,10 @@ export function NoticeBoard({
             className="fixed inset-0 z-[120] bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
           />
           <div
-            className="fixed inset-y-0 right-0 z-[130] w-full max-w-lg bg-warm-canvas border-l border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 ease-out"
+            className={cn(
+              "fixed inset-y-0 right-0 z-[130] w-full bg-warm-canvas border-l border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300 ease-out",
+              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+            )}
             aria-label="신규 공지 작성 드로어"
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface mb-6">
@@ -564,7 +582,11 @@ export function NoticeBoard({
               </button>
             </div>
 
-            <form onSubmit={handleUploadSubmit} className="space-y-5 flex-1">
+            <form
+              data-news-article-content="notice-write"
+              onSubmit={handleUploadSubmit}
+              className={cn("mx-auto w-full space-y-5 flex-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+            >
               <div className="space-y-1.5">
                 <label htmlFor="notice-display-author" className="text-[11px] font-bold text-charcoal-primary font-mono block">
                   공지 작성자

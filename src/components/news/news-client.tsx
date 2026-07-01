@@ -38,6 +38,10 @@ import {
   buildNoticeCommentUpdatePayload,
 } from "@/lib/news/notice-comment-payload";
 import {
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+} from "@/lib/news/content-layout";
+import {
   buildActiveEditedNoticeView,
   buildEditedNoticeView,
   mergeNoticeRefresh,
@@ -820,7 +824,10 @@ export function NewsClient({
           />
 
           <div
-            className="fixed inset-y-0 left-0 z-[130] w-full max-w-2xl bg-warm-canvas border-r border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out"
+            className={cn(
+              "fixed inset-y-0 left-0 z-[130] w-full bg-warm-canvas border-r border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out",
+              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+            )}
             aria-label="공지사항 상세 드로어"
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
@@ -849,7 +856,10 @@ export function NewsClient({
               </button>
             </div>
 
-            <div className="flex-1 mt-6 space-y-6">
+            <div
+              data-news-article-content={isEditingNotice ? "notice-edit" : "notice-read"}
+              className={cn("mx-auto mt-6 w-full flex-1 space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
+            >
               {isEditingNotice ? (
                 <form onSubmit={saveNoticeEdit} className="space-y-5">
                   <div className="flex items-center justify-between gap-3 border-b border-stone-surface pb-3">

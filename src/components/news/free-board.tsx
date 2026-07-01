@@ -22,6 +22,11 @@ import {
   type FreeBoardPostListItem,
   type FreeBoardTypeFilter,
 } from "@/lib/news/free-board-list";
+import {
+  NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+  NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE,
+} from "@/lib/news/content-layout";
 import { getFreeBoardAuthorLabel } from "@/lib/news/free-board-author";
 import {
   buildFreeBoardFocusedPostUrl,
@@ -681,7 +686,10 @@ export function FreeBoard({
           />
           <aside
             aria-label="토론 집중 패널"
-            className="fixed inset-y-0 left-0 z-[130] flex w-full max-w-[920px] flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8"
+            className={cn(
+              "fixed inset-y-0 left-0 z-[130] flex w-full flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8",
+              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+            )}
           >
             <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-6">
               <div className="flex items-center gap-2">
@@ -711,7 +719,7 @@ export function FreeBoard({
 
             <div
               data-free-board-document="focused-post"
-              className="mx-auto mt-6 w-full max-w-[820px] flex-1 space-y-6"
+              className={cn("mx-auto mt-6 w-full flex-1 space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -1072,8 +1080,11 @@ export function FreeBoard({
               role="dialog"
               aria-modal="true"
               aria-label={editingPost ? "게시글 수정 편집 모달" : "새 게시글 작성 편집 모달"}
-              className="flex h-full w-full max-w-[920px] flex-col overflow-hidden bg-warm-canvas shadow-2xl animate-in zoom-in-95 duration-200 sm:h-[calc(100vh-2rem)] sm:rounded-3xl sm:border sm:border-stone-surface lg:h-[calc(100vh-3rem)]"
-              style={{ maxWidth: "920px" }}
+              className={cn(
+                "flex h-full w-full flex-col overflow-hidden bg-warm-canvas shadow-2xl animate-in zoom-in-95 duration-200 sm:h-[calc(100vh-2rem)] sm:rounded-3xl sm:border sm:border-stone-surface lg:h-[calc(100vh-3rem)]",
+                NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+              )}
+              style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
             >
               <div className="flex items-center justify-between gap-4 border-b border-stone-surface px-5 py-3.5 sm:px-6">
                 <div>
@@ -1092,7 +1103,7 @@ export function FreeBoard({
 
               <form onSubmit={handleCreatePost} className="flex min-h-0 flex-1 flex-col">
                 <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 lg:px-8">
-                  <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5">
+                  <div className={cn("mx-auto flex w-full flex-col gap-5", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}>
                     <div className="space-y-1.5">
                       <label className="block text-[11px] font-bold text-charcoal-primary font-mono">
                         게시글 제목 *
@@ -1277,7 +1288,7 @@ export function FreeBoard({
                 </div>
 
                 <div className="border-t border-stone-surface bg-white px-5 py-3.5 sm:px-6">
-                  <div className="mx-auto flex w-full max-w-[820px] justify-end">
+                  <div className={cn("mx-auto flex w-full justify-end", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}>
                     <Button
                       type="submit"
                       disabled={isSubmitting}

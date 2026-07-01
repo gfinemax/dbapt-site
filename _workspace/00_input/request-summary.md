@@ -1,3 +1,27 @@
+# Request Summary - News Content Width Unification
+
+## Requested Feature Slice
+
+- Unify notice and free-board article content widths so writing mode and read mode render on the same content canvas.
+- Reduce the free-board article width from the current wide layout while applying the same content-width condition to notice writing and notice reading.
+- Keep shell types intact where useful: notice writing can remain a right-side drawer and free-board writing can remain a modal, but their article body canvas should share the same width rule.
+
+## Explicitly Excluded Scope
+
+- No changes to posting permissions, comments, reactions, bookmarks, copy tools, open-chat announcements, or public-share behavior.
+- No editor feature changes beyond layout width classes.
+- No navigation, route, schema, or API behavior changes.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-07-01-news-content-width-unification-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
 # Request Summary - News Board Copy Tool
 
 ## Requested Feature Slice

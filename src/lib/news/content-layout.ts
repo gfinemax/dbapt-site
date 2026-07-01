@@ -1,0 +1,3 @@
+export const NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS = "max-w-[860px]";
+export const NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE = "860px";
+export const NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS = "max-w-[760px]";
