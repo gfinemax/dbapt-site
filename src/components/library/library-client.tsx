@@ -2,7 +2,7 @@
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FileText, FolderOpen, LockKeyhole, Pencil, Search, Trash2, X } from "lucide-react";
+import { ArrowLeft, FileText, FolderOpen, LockKeyhole, Pencil, Search, Trash2, X } from "lucide-react";
 import { SiteFooter } from "@/components/landing/site-footer";
 import {
   featuredLibraryItemIds,
@@ -11,6 +11,7 @@ import {
   type LibraryAccess,
   type LibrarySourceKind,
 } from "@/content/library";
+import { DocumentBookmarkButton } from "@/components/portal/document-bookmark-button";
 import { type Document } from "@/components/portal/document-table";
 import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 import { cn } from "@/lib/utils";
@@ -598,6 +599,7 @@ function LibraryMaterialPanel({
   onClose: () => void;
 }) {
   const [activeViewDocument, setActiveViewDocument] = useState<Document | null>(null);
+  const [materialSearchQuery, setMaterialSearchQuery] = useState("");
   const activeViewDocumentRelation = activeViewDocument ? getPdfRelatedDocument(activeViewDocument, documents) : null;
   const realEntries = getRealMaterialEntries(item.id, documents);
   const disclosureUploadHref = disclosureUploadHrefByItemId[item.id];
@@ -605,7 +607,6 @@ function LibraryMaterialPanel({
   const materialPanelDescription = isPublicReference
     ? "자료실 안에서 바로 확인하는 공개 참고 색인입니다."
     : "자료실 안에서 바로 확인하는 조합원 전용 색인입니다.";
-  const locationPrefix = sourceKindLocationPrefix[item.sourceKind];
   const fallbackEntries = fallbackMaterialEntries[item.id] || [
     {
       title: item.title,
@@ -614,6 +615,16 @@ function LibraryMaterialPanel({
     },
   ];
   const entries = realEntries.length > 0 ? realEntries : fallbackEntries;
+  const filteredEntries = useMemo(() => {
+    const terms = getSearchQueryTerms(materialSearchQuery);
+    if (terms.length === 0) return entries;
+    return entries.filter((entry) =>
+      searchTextMatchesQuery(
+        [entry.title, entry.description, entry.meta, entry.document?.subCategory, entry.document?.category].filter(Boolean).join(" "),
+        materialSearchQuery,
+      ),
+    );
+  }, [entries, materialSearchQuery]);
   const listLabel =
     item.id === "meeting-minutes"
       ? "의사록 리스트"
@@ -633,82 +644,84 @@ function LibraryMaterialPanel({
         role="dialog"
         aria-modal="true"
         aria-label={`${item.title} 자료 목록`}
-        className="absolute inset-y-0 left-0 flex w-full max-w-xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl sm:p-8"
+        className="absolute inset-y-0 left-0 flex w-full max-w-6xl flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl sm:p-10"
+        style={{ maxWidth: "68rem" }}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-stone-surface pb-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-ember-orange">
-              Library Material
-            </p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-charcoal-primary">
-              {item.title} 자료 목록
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-graphite">
-              {materialPanelDescription}
-            </p>
+        <div className="flex items-start justify-between gap-4 border-b border-stone-surface pb-9">
+          <div className="flex min-w-0 items-start gap-4">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-midnight text-sunburst-yellow">
+              <FolderOpen className="size-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-2xl font-extrabold tracking-tight text-charcoal-primary">
+                {item.title} 문서함
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-graphite">
+                {materialPanelDescription}
+              </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border border-stone-surface bg-white text-graphite transition hover:bg-stone-surface cursor-pointer"
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-stone-surface bg-white px-5 text-sm font-bold text-graphite transition hover:bg-stone-surface cursor-pointer"
             aria-label="닫기"
           >
             <X className="size-4" aria-hidden="true" />
+            닫기
           </button>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-stone-surface bg-white p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-sky-blue">
-                {listLabel}
-              </p>
-              <h3 className="mt-1 text-lg font-extrabold tracking-tight text-charcoal-primary">
-                {entries.length}개 자료
-              </h3>
-            </div>
-            <span className={cn("rounded-full px-3 py-1 text-[10px] font-bold", accessClassName[item.access])}>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-10 inline-flex h-12 w-fit items-center gap-2 rounded-full border border-stone-surface bg-white px-6 text-sm font-extrabold text-graphite shadow-sm transition hover:bg-stone-surface"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          폴더 카드로 보기
+        </button>
+
+        <div className="mt-7 flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="inline-flex min-h-12 items-center justify-between rounded-2xl border border-stone-surface bg-white px-4 text-sm font-extrabold text-charcoal-primary shadow-sm lg:w-64">
+            <span className="sr-only">{listLabel}</span>
+            <span className="truncate">{item.title}</span>
+            <span className={cn("ml-3 rounded-full px-2.5 py-1 text-[10px] font-bold", accessClassName[item.access])}>
               {accessLabel[item.access]}
             </span>
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-graphite">
-            {locationPrefix}는 {item.source}이지만, 현재 화면은 자료실 페이지 안에서 유지됩니다.
-          </p>
-        </div>
-
-        {isAdmin && disclosureUploadHref && (
-          <div className="mt-4 rounded-2xl border border-sky-blue/15 bg-sky-blue/5 p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-bold text-charcoal-primary">
-                  자료 등록은 공개자료에서 진행합니다.
-                </p>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-graphite">
-                  해당 문서함에서 + 신규 문서 등록을 누르면 이 자료실 색인에도 함께 반영됩니다.
-                </p>
-              </div>
-              <Link
-                href={disclosureUploadHref}
-                className="inline-flex shrink-0 items-center justify-center rounded-full bg-midnight px-4 py-2 text-xs font-bold text-white transition hover:bg-charcoal-primary"
-              >
-                공개자료에서 신규 등록
-              </Link>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-5 space-y-3">
-          {entries.map((entry, index) => (
-            <MaterialEntryCard
-              key={`${entry.title}-${index}`}
-              entry={entry}
-              isAdmin={isAdmin}
-              onOpenDocument={(document) => setActiveViewDocument(document)}
-              onUpdateDocument={onDocumentUpdated}
-              onDeleteDocument={onDocumentDeleted}
+          <label className="relative min-w-0 flex-1">
+            <span className="sr-only">문서 제목 검색</span>
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ash" aria-hidden="true" />
+            <input
+              type="search"
+              aria-label="문서 제목 검색"
+              value={materialSearchQuery}
+              onChange={(event) => setMaterialSearchQuery(event.target.value)}
+              placeholder="문서 제목 검색..."
+              className="h-12 w-full rounded-2xl border border-stone-surface bg-white pl-11 pr-4 text-sm font-semibold text-charcoal-primary shadow-sm outline-none transition placeholder:text-ash focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20"
             />
-          ))}
+          </label>
+          {isAdmin && disclosureUploadHref && (
+            <Link
+              href={disclosureUploadHref}
+              className="inline-flex h-12 shrink-0 items-center justify-center rounded-full bg-midnight px-5 text-sm font-extrabold text-white transition hover:bg-charcoal-primary"
+            >
+              공개자료에서 신규 등록
+            </Link>
+          )}
+          <span className="shrink-0 text-sm font-semibold text-graphite lg:pl-2">
+            총 {filteredEntries.length}건
+          </span>
         </div>
+
+        <MaterialEntryTable
+          item={item}
+          entries={filteredEntries}
+          isAdmin={isAdmin}
+          onOpenDocument={(document) => setActiveViewDocument(document)}
+          onUpdateDocument={onDocumentUpdated}
+          onDeleteDocument={onDocumentDeleted}
+        />
 
         {activeViewDocument && (
           <PdfViewerModal
@@ -738,7 +751,107 @@ function LibraryMaterialPanel({
   );
 }
 
-function MaterialEntryCard({
+function getMaterialEntryDateLabel(entry: MaterialEntry) {
+  const document = entry.document;
+  if (document) {
+    return formatDate(document.documentDate || document.publishedAt || document.createdAt);
+  }
+  const dateMatch = entry.meta.match(/\d{4}\.\d{2}\.\d{2}/);
+  return dateMatch?.[0] || "-";
+}
+
+function getMaterialEntryCategoryLabel(entry: MaterialEntry) {
+  if (entry.document) {
+    return entry.document.subCategory || entry.document.category;
+  }
+  return entry.meta.split("·")[0]?.trim() || "자료실";
+}
+
+function MaterialEntryTable({
+  item,
+  entries,
+  isAdmin,
+  onOpenDocument,
+  onUpdateDocument,
+  onDeleteDocument,
+}: {
+  item: (typeof libraryItems)[number];
+  entries: MaterialEntry[];
+  isAdmin: boolean;
+  onOpenDocument: (document: Document) => void;
+  onUpdateDocument: (document: Document) => void;
+  onDeleteDocument: (id: string) => void;
+}) {
+  return (
+    <section
+      role="table"
+      aria-label={`${item.title} 자료 테이블`}
+      className="mt-6 overflow-x-auto rounded-2xl border border-stone-surface bg-white shadow-sm"
+    >
+      <div
+        role="row"
+        className="grid border-b border-stone-surface bg-[#f7f6f3] text-xs font-bold text-ash"
+        style={{ minWidth: "48rem", gridTemplateColumns: "7rem minmax(0, 1fr) 6rem 7rem 6rem" }}
+      >
+        <span role="columnheader" className="px-4 py-3.5 text-center">
+          발생일
+        </span>
+        <span role="columnheader" className="px-4 py-3.5">
+          문서 제목
+        </span>
+        <span role="columnheader" className="px-3 py-3.5 text-center">
+          회신기한
+        </span>
+        <span role="columnheader" className="px-3 py-3.5 text-center">
+          보관
+        </span>
+        <span role="columnheader" className="px-3 py-3.5 text-center">
+          관리
+        </span>
+      </div>
+      <div role="rowgroup" className="divide-y divide-stone-surface/60">
+        {entries.map((entry, index) => (
+          <MaterialEntryRow
+            key={`${entry.title}-${index}`}
+            entry={entry}
+            isAdmin={isAdmin}
+            onOpenDocument={onOpenDocument}
+            onUpdateDocument={onUpdateDocument}
+            onDeleteDocument={onDeleteDocument}
+          />
+        ))}
+      </div>
+      <div className="flex items-center justify-between border-t border-stone-surface bg-[#fdfcfa] px-5 py-4 text-xs font-semibold text-graphite">
+        <span>
+          {entries.length > 0 ? `1-${entries.length}` : "0-0"} / {entries.length}건
+        </span>
+        <div className="flex items-center gap-2" aria-label="자료 목록 페이지">
+          <button
+            type="button"
+            disabled
+            className="flex size-9 items-center justify-center rounded-full bg-white text-sm font-bold text-ash shadow-[inset_0_0_0_1px_var(--stone-surface)] disabled:opacity-60"
+            aria-label="이전 페이지"
+          >
+            &lt;
+          </button>
+          <span className="flex size-9 items-center justify-center rounded-full bg-charcoal-primary text-sm font-extrabold text-white">
+            1
+          </span>
+          <button
+            type="button"
+            disabled
+            className="flex size-9 items-center justify-center rounded-full bg-white text-sm font-bold text-ash shadow-[inset_0_0_0_1px_var(--stone-surface)] disabled:opacity-60"
+            aria-label="다음 페이지"
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MaterialEntryRow({
   entry,
   isAdmin,
   onOpenDocument,
@@ -820,48 +933,16 @@ function MaterialEntryCard({
     }
   };
 
-  const content = (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f8f7f4] text-charcoal-primary">
-        <FileText className="size-4" aria-hidden="true" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-stone-surface/70 px-2 py-0.5 text-[9px] font-bold text-graphite">
-            {entry.isReal ? "실제 업로드" : "자료실 색인"}
-          </span>
-          <span className="text-[10px] font-semibold text-ash">
-            {entry.meta}
-          </span>
-        </div>
-        <h4 className="mt-2 text-sm font-bold leading-snug text-charcoal-primary">
-          {entry.title}
-        </h4>
-        <p className="mt-1.5 text-xs leading-relaxed text-graphite">
-          {entry.description}
-        </p>
-        {entry.actionHref && entry.actionLabel && (
-          <Link
-            href={entry.actionHref}
-            target={entry.actionExternal ? "_blank" : undefined}
-            rel={entry.actionExternal ? "noopener noreferrer" : undefined}
-            className="mt-3 inline-flex items-center rounded-full bg-midnight px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-charcoal-primary"
-          >
-            {entry.actionLabel}
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-
   if (document) {
     return (
-      <article
+      <div
+        role="row"
         aria-label={`${entry.title} 관리`}
-        className="rounded-2xl border border-stone-surface bg-white p-4 shadow-sm transition hover:border-ember-orange/50 hover:bg-[#fffdfb]"
+        className="grid items-center px-4 py-5 transition hover:bg-sky-blue/[0.04]"
+        style={{ minWidth: "48rem", gridTemplateColumns: "7rem minmax(0, 1fr) 6rem 7rem 6rem" }}
       >
         {isEditing ? (
-          <form onSubmit={handleSave} className="space-y-3">
+          <form onSubmit={handleSave} className="space-y-3 md:col-span-5">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-[10px] font-bold text-charcoal-primary">
                 문서 제목
@@ -954,33 +1035,62 @@ function MaterialEntryCard({
           </form>
         ) : (
           <>
-            {content}
-            <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-stone-surface pt-3">
+            <div role="cell" className="text-center text-sm">
+              <span className="hidden text-xs font-bold text-ash">발생일</span>
+              <span className="font-mono text-xs font-semibold text-graphite">
+                {getMaterialEntryDateLabel(entry)}
+              </span>
+            </div>
+            <div role="cell" className="min-w-0">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="mt-0.5 shrink-0 text-2xl leading-none text-charcoal-primary/80" aria-hidden="true">
+                  {document.isStarred ? "★" : "☆"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <span className="sr-only">실제 업로드</span>
+                  <span className="sr-only">{getMaterialEntryCategoryLabel(entry)}</span>
+                  <span className="sr-only">{entry.meta}</span>
+                  <p className="truncate text-sm font-extrabold leading-snug text-charcoal-primary">
+                    {entry.title}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div role="cell" className="text-center text-sm">
+              <span className="hidden text-xs font-bold text-ash">회신기한</span>
+              <span className="font-mono text-xs font-semibold text-ash">-</span>
+            </div>
+            <div role="cell" className="flex items-center justify-center">
+              <span className="hidden text-xs font-bold text-ash">보관</span>
+              <DocumentBookmarkButton document={document} includeDocumentTitleInLabel />
+            </div>
+            <div role="cell" className="flex items-center justify-center gap-2">
               <button
                 type="button"
+                aria-label="자료 열람"
                 onClick={() => onOpenDocument(document)}
-                className="inline-flex items-center gap-1.5 rounded-full bg-midnight px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/35"
+                className="inline-flex size-8 items-center justify-center rounded-full bg-midnight text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/35"
               >
-                자료 열람
+                <FileText className="size-3.5" aria-hidden="true" />
               </button>
               {isAdmin && (
                 <>
                 <button
                   type="button"
+                  aria-label="수정"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
+                  className="inline-flex size-8 items-center justify-center rounded-full border border-stone-surface bg-white text-graphite hover:bg-stone-surface"
                 >
                   <Pencil className="size-3" aria-hidden="true" />
-                  수정
                 </button>
                 <button
                   type="button"
+                  aria-label="삭제"
                   onClick={() => setIsDeleteModalOpen(true)}
                   disabled={isDeleting}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-ember-orange/20 bg-ember-orange/10 px-3 py-1.5 text-[11px] font-bold text-ember-orange hover:bg-ember-orange/15 disabled:opacity-50"
+                  className="inline-flex size-8 items-center justify-center rounded-full border border-ember-orange/20 bg-ember-orange/10 text-ember-orange hover:bg-ember-orange/15 disabled:opacity-50"
                 >
                   <Trash2 className="size-3" aria-hidden="true" />
-                  {isDeleting ? "삭제 중" : "삭제"}
                 </button>
                 </>
               )}
@@ -1040,13 +1150,59 @@ function MaterialEntryCard({
             )}
           </>
         )}
-      </article>
+      </div>
     );
   }
 
   return (
-    <article className="rounded-2xl border border-stone-surface bg-white p-4 shadow-sm">
-      {content}
-    </article>
+    <div
+      role="row"
+      aria-label={`${entry.title} 관리`}
+      className="grid items-center px-4 py-5 transition hover:bg-sky-blue/[0.04]"
+      style={{ minWidth: "48rem", gridTemplateColumns: "7rem minmax(0, 1fr) 6rem 7rem 6rem" }}
+    >
+      <div role="cell" className="text-center text-sm">
+        <span className="hidden text-xs font-bold text-ash">발생일</span>
+        <span className="font-mono text-xs font-semibold text-graphite">
+          {getMaterialEntryDateLabel(entry)}
+        </span>
+      </div>
+      <div role="cell" className="min-w-0">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 shrink-0 text-2xl leading-none text-charcoal-primary/80" aria-hidden="true">
+            ☆
+          </span>
+          <div className="min-w-0 flex-1">
+            <span className="sr-only">{entry.isReal ? "실제 업로드" : "자료실 색인"}</span>
+            <span className="sr-only">{entry.meta}</span>
+            <p className="truncate text-sm font-extrabold leading-snug text-charcoal-primary">
+              {entry.title}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div role="cell" className="text-center text-sm">
+        <span className="hidden text-xs font-bold text-ash">회신기한</span>
+        <span className="font-mono text-xs font-semibold text-ash">-</span>
+      </div>
+      <div role="cell" className="text-center text-sm">
+        <span className="hidden text-xs font-bold text-ash">보관</span>
+        <span className="text-[11px] font-semibold text-ash">-</span>
+      </div>
+      <div role="cell" className="flex items-center justify-center gap-2">
+        {entry.actionHref && entry.actionLabel ? (
+          <Link
+            href={entry.actionHref}
+            target={entry.actionExternal ? "_blank" : undefined}
+            rel={entry.actionExternal ? "noopener noreferrer" : undefined}
+            className="inline-flex items-center rounded-full bg-midnight px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-charcoal-primary"
+          >
+            {entry.actionLabel}
+          </Link>
+        ) : (
+          <span className="text-[11px] font-semibold text-ash">-</span>
+        )}
+      </div>
+    </div>
   );
 }

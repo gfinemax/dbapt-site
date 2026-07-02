@@ -198,6 +198,30 @@ describe("library page", () => {
     expect(screen.queryByRole("dialog", { name: "의사록 자료 목록" })).not.toBeInTheDocument();
   });
 
+  it("presents material entries in a compact table-style list with document actions", () => {
+    render(<LibraryClient isLoggedIn documents={uploadedRuleDocuments} />);
+
+    const ruleCard = screen.getAllByTestId("library-item-cooperative-rules")[0];
+    fireEvent.click(within(ruleCard).getByRole("button", { name: "자료 확인" }));
+
+    expect(screen.getByRole("searchbox", { name: "문서 제목 검색" })).toBeInTheDocument();
+    expect(screen.getByText("총 1건")).toBeInTheDocument();
+    const materialTable = screen.getByRole("table", { name: "조합규약 자료 테이블" });
+    expect(within(materialTable).getByRole("columnheader", { name: "발생일" })).toBeInTheDocument();
+    expect(within(materialTable).getByRole("columnheader", { name: "문서 제목" })).toBeInTheDocument();
+    expect(within(materialTable).getByRole("columnheader", { name: "회신기한" })).toBeInTheDocument();
+    expect(within(materialTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
+    expect(within(materialTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
+
+    const uploadedEntry = within(materialTable).getByLabelText("조합규약(260418 1차개정) 관리");
+    expect(within(uploadedEntry).getByText("2026.06.04")).toBeInTheDocument();
+    expect(within(uploadedEntry).getByText("실제 업로드")).toBeInTheDocument();
+    expect(within(uploadedEntry).getByText("정관 및 조합규약")).toBeInTheDocument();
+    expect(within(uploadedEntry).getByRole("button", { name: "조합규약(260418 1차개정) 개인자료실 보관" })).toBeInTheDocument();
+    expect(within(uploadedEntry).getByRole("button", { name: "자료 열람" })).toBeInTheDocument();
+    expect(within(materialTable).queryByText("2026년 정기총회에서 조합규약 개정됨")).not.toBeInTheDocument();
+  });
+
   it("opens uploaded material details from the material list", () => {
     render(<LibraryClient isLoggedIn documents={uploadedMeetingDocuments} />);
 
@@ -323,10 +347,10 @@ describe("library page", () => {
     const meetingCard = screen.getAllByTestId("library-item-meeting-minutes")[0];
     fireEvent.click(within(meetingCard).getByRole("button", { name: "자료 확인" }));
 
-    expect(screen.getByText("자료 등록은 공개자료에서 진행합니다.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "공개자료에서 신규 등록" })).toHaveAttribute(
       "href",
       "/disclosure?tab=meetings",
     );
+    expect(screen.queryByText("자료 등록은 공개자료에서 진행합니다.")).not.toBeInTheDocument();
   });
 });
