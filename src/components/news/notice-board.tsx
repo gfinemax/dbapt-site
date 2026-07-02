@@ -278,6 +278,15 @@ export function NoticeBoard({
             style={{ minWidth: isAdmin ? "820px" : "760px" }}
             aria-label="공지사항 목록"
           >
+            <colgroup>
+              <col style={{ width: "52px" }} />
+              <col />
+              <col style={{ width: "92px" }} />
+              <col style={{ width: "116px" }} />
+              <col style={{ width: "92px" }} />
+              <col style={{ width: "88px" }} />
+              {isAdmin && <col style={{ width: "136px" }} />}
+            </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
                 <th className="w-10 px-3 py-3 text-center">No.</th>
@@ -316,20 +325,19 @@ export function NoticeBoard({
                       {idx + 1}
                     </td>
                     <td className="px-3 py-3.5">
-                      <div className="flex min-w-0 flex-col gap-1.5">
-                        <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        {(notice.isStarred || notice.isReal || notice.attachmentPath) && (
+                          <div
+                            data-notice-list-badges="true"
+                            data-notice-title-meta="true"
+                            className="flex w-[76px] shrink-0 flex-col items-start gap-1"
+                          >
                           {notice.isStarred && (
                             <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
                               <ImportantNoticeStar />
                               <span>중요</span>
                             </span>
                           )}
-                          <span className={cn("min-w-0 text-[13.5px] leading-snug", notice.isStarred ? "font-bold text-charcoal-primary" : "font-semibold text-charcoal-primary/90")}>
-                            {notice.title}
-                          </span>
-                        </div>
-                        {(notice.isReal || notice.attachmentPath) && (
-                          <div data-notice-title-meta="true" className="flex min-w-0 flex-wrap items-center gap-1.5">
                             {notice.isReal && (
                               <span className="rounded border border-sky-blue/15 bg-sky-blue/10 px-1.5 py-0.5 text-[9px] font-black text-sky-blue select-none">실제자료</span>
                             )}
@@ -338,6 +346,15 @@ export function NoticeBoard({
                             )}
                           </div>
                         )}
+                        <span
+                          data-notice-list-title="true"
+                          className={cn(
+                            "block min-w-0 flex-1 truncate whitespace-nowrap text-[13.5px] leading-snug",
+                            notice.isStarred ? "font-bold text-charcoal-primary" : "font-semibold text-charcoal-primary/90",
+                          )}
+                        >
+                          {notice.title}
+                        </span>
                       </div>
                     </td>
                     <td className="px-3 py-3.5 text-center text-xs text-graphite/75 font-normal whitespace-nowrap">
@@ -370,7 +387,7 @@ export function NoticeBoard({
                           targetType="COOP_NEWS"
                           targetId={notice.id}
                           initialBookmarked={notice.isBookmarkedByCurrentUser}
-                          className="h-6 px-2 py-0 text-[10px]"
+                          className="h-6 px-2 py-0 text-[10px] whitespace-nowrap"
                         />
                       ) : (
                         <span className="text-[10px] text-ash/50">-</span>

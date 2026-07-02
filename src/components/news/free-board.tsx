@@ -118,26 +118,33 @@ function FreeBoardPostRows({
         {index + 1}
       </td>
       <td className="px-3 py-3.5">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            data-free-board-list-badges="true"
+            data-free-board-title-meta="true"
+            className="flex w-[92px] shrink-0 flex-col items-start gap-1"
+          >
             {post.isStarred && (
               <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
                 <span>★</span>
                 <span>중요</span>
               </span>
             )}
-            <span className="min-w-0 text-[13.5px] font-bold leading-snug text-charcoal-primary">
-              {post.title}
-            </span>
-          </div>
-          <div data-free-board-title-meta="true" className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-extrabold", typeMeta.badgeClassName)}>
               {typeMeta.label}
             </span>
             {post.attachmentPath && (
               <span className="rounded bg-stone-surface/80 px-1.5 py-0.5 text-[9px] font-black text-graphite select-none">첨부</span>
             )}
-            <span className="line-clamp-1 min-w-0 text-[11px] font-normal text-graphite/75">
+          </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <span
+              data-free-board-list-title="true"
+              className="block min-w-0 truncate whitespace-nowrap text-[13.5px] font-bold leading-snug text-charcoal-primary"
+            >
+              {post.title}
+            </span>
+            <span className="block min-w-0 truncate whitespace-nowrap text-[11px] font-normal text-graphite/75">
               {getPlainNoticeText(post.content)}
             </span>
           </div>
@@ -169,7 +176,7 @@ function FreeBoardPostRows({
             targetType="FREE_POST"
             targetId={post.id}
             initialBookmarked={post.isBookmarkedByCurrentUser}
-            className="h-6 px-2 py-0 text-[10px]"
+            className="h-6 px-2 py-0 text-[10px] whitespace-nowrap"
           />
         ) : (
           <span className="text-[10px] text-ash/50">-</span>
@@ -860,6 +867,15 @@ export function FreeBoard({
             className="w-full table-fixed text-left text-sm border-collapse"
             style={{ minWidth: isAdmin ? "820px" : "760px" }}
           >
+            <colgroup>
+              <col style={{ width: "52px" }} />
+              <col />
+              <col style={{ width: "92px" }} />
+              <col style={{ width: "116px" }} />
+              <col style={{ width: "92px" }} />
+              <col style={{ width: "88px" }} />
+              {isAdmin && <col style={{ width: "136px" }} />}
+            </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
                 <th className="w-10 px-3 py-3 text-center">No.</th>

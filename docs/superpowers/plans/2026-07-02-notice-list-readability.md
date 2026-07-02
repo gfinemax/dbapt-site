@@ -20,6 +20,7 @@
 - [x] Assert each list has a separate `보관` column.
 - [x] Assert the free-board `관리` column is only shown to admins.
 - [x] Assert comment actions keep the accessible name `댓글 N개 보기` while showing `댓글 N`.
+- [x] Assert list titles are rendered as one-line truncated text beside a fixed badge block.
 - [x] Assert the notice important badge has no ring or border.
 - [x] Assert the free-board important badge has no border.
 - [x] Assert title metadata rows do not contain bookmark controls.
@@ -32,6 +33,7 @@
 - [x] Set the member list table minimum width to `760px` and admin width to `820px`.
 - [x] Keep `중요` beside the title, but remove the badge edge/ring.
 - [x] Move `실제자료` and `첨부` into a smaller metadata row.
+- [x] Split badge and title areas so the title truncates on one line instead of wrapping vertically.
 - [x] Move bookmark controls into a dedicated `보관` column.
 - [x] Replace the large blue comment button with a compact bordered pill.
 - [x] Preserve row click, comment click, bookmark click, and admin controls.
@@ -46,6 +48,7 @@
 - [x] Render the `관리` column only for admins.
 - [x] Keep `중요` beside the title, but remove the badge edge.
 - [x] Move post type, attachment, and excerpt into a smaller metadata row.
+- [x] Split badge and title areas so the title truncates on one line instead of wrapping vertically.
 - [x] Move bookmark controls into a dedicated `보관` column.
 - [x] Preserve row click, comment click, bookmark click, and admin controls.
 

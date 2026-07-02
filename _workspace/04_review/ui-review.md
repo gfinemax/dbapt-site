@@ -16,7 +16,7 @@
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: Chrome CDP verification at 1440px found the notice member table using `table-fixed` and `min-width: 760px`, and the admin free-board table using `table-fixed` and `min-width: 820px`, with `tableScrollWidth` equal to `tableClientWidth` at 862px on desktop. Verification at 390px kept internal table scrolling and 0px document horizontal overflow. Component tests cover the member `760px` table width and confirm the free-board `관리` column is hidden for members and visible for admins.
+- Evidence: Chrome CDP verification at 1440px found the notice table title rendered with `white-space: nowrap`, `overflow: hidden`, and `text-overflow: ellipsis`; title height stayed one line at 19px, author/comment cells stayed `nowrap`, and desktop table internal overflow was false. Verification at 390px kept internal table scrolling and 0px document horizontal overflow. Component tests cover the same badge/title split and one-line truncation contract for notices and the free board, plus member `760px` table width and admin-only free-board `관리` column.
 
 ## Outcome
 - Result: PASS

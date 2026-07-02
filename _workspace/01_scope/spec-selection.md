@@ -6,7 +6,7 @@
 
 ## Implementation Boundary
 
-Refine only the existing notice and free-board list table presentation: 760px member table minimum width, 820px admin table minimum width, compact row/header padding, softer important badges, dedicated bookmark column, compact comment pills, secondary title metadata rows, and admin-only free-board management column. Keep existing routes, APIs, data models, permissions, comments, bookmarks, copy tools, open-chat announcements, public-share behavior, and detail/edit surfaces unchanged.
+Refine only the existing notice and free-board list table presentation: 760px member table minimum width, 820px admin table minimum width, compact row/header padding, softer important badges, dedicated bookmark column, compact comment pills, title/badge cell separation with one-line truncated titles, no vertical lettering in utility columns, and admin-only free-board management column. Keep existing routes, APIs, data models, permissions, comments, bookmarks, copy tools, open-chat announcements, public-share behavior, and detail/edit surfaces unchanged.
 
 ## Conflicts Between Request And Spec
 

@@ -5,6 +5,7 @@
 - Adjust notice and free-board list column widths so the default desktop width does not show an internal horizontal scrollbar.
 - Keep mobile protected by internal scrolling if the table cannot fit.
 - Show the free-board `관리` column only in admin mode.
+- Keep list titles on one line with truncation so title text and column contents do not break into vertical lettering.
 
 ## Explicitly Excluded Scope
 

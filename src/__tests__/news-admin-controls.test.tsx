@@ -1551,6 +1551,8 @@ describe("news admin visible controls", () => {
     expect(within(noticeTable).getByRole("cell", { name: "관리자" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
     expect(within(noticeTable).getByRole("button", { name: "실제 공지 개인자료실 보관" })).toBeInTheDocument();
+    expect(noticeTable.querySelector("[data-notice-list-badges='true']")).toHaveClass("shrink-0");
+    expect(noticeTable.querySelector("[data-notice-list-title='true']")).toHaveClass("truncate", "whitespace-nowrap");
     const importantBadge = within(noticeTable).getByText("중요").closest("span");
     expect(importantBadge).not.toHaveClass("ring-1");
     expect(importantBadge).not.toHaveClass("border");
@@ -1579,6 +1581,8 @@ describe("news admin visible controls", () => {
     expect(commentButton).toHaveClass("px-2.5", "py-1", "text-[11px]");
     expect(commentButton).toHaveClass("whitespace-nowrap");
     expect(within(freeTable).getByRole("button", { name: "실제 자유게시글 개인자료실 보관" })).toBeInTheDocument();
+    expect(freeTable.querySelector("[data-free-board-list-badges='true']")).toHaveClass("shrink-0");
+    expect(freeTable.querySelector("[data-free-board-list-title='true']")).toHaveClass("truncate", "whitespace-nowrap");
     const importantBadge = within(freeTable).getByText("중요").closest("span");
     expect(importantBadge).not.toHaveClass("border");
     expect(within(freeTable).getByText("자유글").closest("[data-free-board-title-meta='true']")).toBeInTheDocument();
