@@ -149,7 +149,7 @@ export default async function IssuesPage({ searchParams }: IssuesPageProps = {})
                 공개자료 확인은 이 페이지에서 시작하고, 권한이 필요한 원문 열람은 로그인 후 진행합니다.
               </p>
               <p className="rounded-2xl bg-white p-4">
-                공지성 내용은 조합소식, 자유 의견은 자유게시판, 사안별 검토는 이슈 대시보드로 분리합니다.
+                공지성 내용은 소통마당, 자유 의견은 자유게시판, 사안별 검토는 이슈 대시보드로 분리합니다.
               </p>
             </div>
           </aside>

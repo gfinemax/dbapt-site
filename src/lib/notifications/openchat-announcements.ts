@@ -122,7 +122,7 @@ function getCooperativeNewsAnnouncementMeta(news: OpenChatAnnouncementNews) {
   }
 
   return {
-    label: "주/월간 조합소식",
+    label: "주/월간 소식",
     tab: "newsletter",
   };
 }
@@ -185,9 +185,9 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
   const newsUrl = `${normalizeSiteUrl(params.siteUrl)}/news?tab=${meta.tab}&news=${encodeURIComponent(news.id)}`;
 
   return [
-    "[대방동 지역주택조합 조합소식 안내]",
+    "[대방동 지역주택조합 소통마당 안내]",
     "",
-    "새 조합소식이 등록되었습니다.",
+    "새 소통마당 글이 등록되었습니다.",
     `- 분류: ${meta.label}`,
     `- 제목: ${title}`,
     `- 등록일: ${formatDate(createdAt)}`,

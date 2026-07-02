@@ -1,4 +1,64 @@
+# Spec Selection - News List Consistency
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Refine only the existing notice and free-board list table presentation: 760px member table minimum width, 820px admin table minimum width, compact row/header padding, softer important badges, dedicated bookmark column, compact comment pills, secondary title metadata rows, and admin-only free-board management column. Keep existing routes, APIs, data models, permissions, comments, bookmarks, copy tools, open-chat announcements, public-share behavior, and detail/edit surfaces unchanged.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection - Rich Content View Top Gap Tightening
+
+## Spec Selection - Notice List Readability
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Refine only the existing notice-board list table presentation: denser row padding, quieter number column, compact comment pill, and a secondary metadata row for badges/bookmark controls. Keep the same table, routes, data flow, permissions, comments, bookmarks, admin actions, and detail drawer behavior.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+## Spec Selection - Communication Menu Label
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Rename only user-facing copy for the existing public news/community section from `조합소식` to `소통마당`. Keep `/news` route, API paths, Prisma models, permissions, tabs, and data behavior unchanged. A small landing notice-card `min-w-0` fix is allowed because required mobile browser verification found horizontal overflow in the touched visible surface.
+
+## Conflicts Between Request And Spec
+
+The original approved public navigation label used `조합소식`; the current user request explicitly supersedes that display label with `소통마당` while preserving the same public navigation boundary.
+
+## Planning May Continue
+
+yes
+
+---
 
 ## Selected Approved Spec Path
 

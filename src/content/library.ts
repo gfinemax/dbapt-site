@@ -47,7 +47,7 @@ export const libraryItems: LibraryItem[] = [
     title: "총회 책자 / 안내문",
     description: "총회 안건, 의결 안내, 참석 안내문 등 조합원이 자주 찾는 총회 관련 자료입니다.",
     category: "meetings",
-    source: "조합소식",
+    source: "소통마당",
     sourceKind: "news",
     sourceHref: "/news?tab=notice",
     access: "member",

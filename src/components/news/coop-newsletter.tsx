@@ -637,7 +637,7 @@ export function CoopNewsletter({
                   </div>
 
                   <div className="flex items-center gap-3 text-[10.5px] font-bold text-ash font-mono border-y border-stone-surface/60 py-2">
-                    <span>📂 분류: 주/월간 조합소식지</span>
+                    <span>📂 분류: 주/월간 소식지</span>
                     <span>•</span>
                     <span>작성자: {activeViewNews.author.name}</span>
                     <span>•</span>

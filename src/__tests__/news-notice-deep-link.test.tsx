@@ -31,7 +31,7 @@ const newsletter = {
   ...realNotice,
   id: "newsletter-1",
   title: "대방동 2026년 7월 조합 월간 소식지",
-  content: "월간 조합소식 본문입니다.",
+  content: "월간 소식 본문입니다.",
   category: "WEEKLY_MONTHLY",
   attachmentPath: "/uploads/newsletter.pdf",
   attachmentName: "newsletter.pdf",
@@ -83,7 +83,7 @@ describe("news notice deep links", () => {
     expect(panel).toHaveClass("slide-in-from-left");
     expect(within(panel).getByRole("heading", { name: "조합뉴스 열람" })).toBeInTheDocument();
     expect(within(panel).getByText("대방동 2026년 7월 조합 월간 소식지")).toBeInTheDocument();
-    expect(within(panel).getByText("월간 조합소식 본문입니다.")).toBeInTheDocument();
+    expect(within(panel).getByText("월간 소식 본문입니다.")).toBeInTheDocument();
     expect(within(panel).getByRole("link", { name: /첨부파일: newsletter.pdf/ })).toHaveAttribute(
       "href",
       "/uploads/newsletter.pdf",

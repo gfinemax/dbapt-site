@@ -11,7 +11,7 @@ export const publicNavigation = [
   { label: "조합소개", href: "/about" },
   { label: "사업현황", href: "/business" },
   { label: "공개자료", href: "/disclosure" },
-  { label: "조합소식", href: "/news" },
+  { label: "소통마당", href: "/news" },
   { label: "자료실", href: "/library" },
 ] as const;
 
@@ -59,7 +59,7 @@ export const megaMenuNavigation = [
     ],
   },
   {
-    title: "조합소식",
+    title: "소통마당",
     href: "/news",
     subItems: [
       { label: "공지사항", href: "/news?tab=notice" },
@@ -97,7 +97,7 @@ export const featureLinks = [
     icon: "/assets/icons/progress.png",
   },
   {
-    title: "조합소식",
+    title: "소통마당",
     description: "조합의 새 공지와 일정을 전합니다.",
     href: "/news",
     icon: "/assets/icons/notices.png",

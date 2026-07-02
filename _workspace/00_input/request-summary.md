@@ -1,4 +1,100 @@
+# Request Summary - News List Default Width Tightening
+
+## Requested Feature Slice
+
+- Adjust notice and free-board list column widths so the default desktop width does not show an internal horizontal scrollbar.
+- Keep mobile protected by internal scrolling if the table cannot fit.
+- Show the free-board `관리` column only in admin mode.
+
+## Explicitly Excluded Scope
+
+- No route, API, database, permission, comment workflow, bookmark behavior, copy tool, open-chat, public-share, detail-view, or editor behavior changes.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - News List Consistency
+
+## Requested Feature Slice
+
+- Remove the visible edge from the notice `중요` badge so it matches the softer free-board important badge treatment.
+- Improve free-board list readability like the notice list.
+- Add a dedicated bookmark/storage (`보관`) column to notices.
+- Make the notice and free-board lists consistent in width, padding, metadata placement, comment action, and bookmark placement.
+
+## Explicitly Excluded Scope
+
+- No route, API, database, permission, comment workflow, bookmark behavior, copy tool, open-chat, or public-share behavior changes.
+- No schema merge between notice and free-board tables.
+- No rich-editor or detail-view redesign.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
 # Request Summary - Rich Content View Top Gap Tightening
+
+## Request Summary - Notice List Readability
+
+## Requested Feature Slice
+
+- Improve readability of the notice-board list shown in the screenshot.
+- Reduce excessive row height and visual weight.
+- Make the large comment button smaller.
+- Give the title column stronger priority and move secondary badges out of the main title reading path.
+
+## Explicitly Excluded Scope
+
+- No route, API, database, permission, comment workflow, bookmark behavior, or board behavior changes.
+- No redesign of the notice detail drawer or rich editor.
+- No changes to free-board table unless separately requested.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+## Request Summary - Communication Menu Label
+
+## Requested Feature Slice
+
+- Change the top navigation label `조합소식` to `소통마당`.
+- Update all other user-visible uses of `조합소식` to `소통마당`.
+- Keep existing routes and implementation internals stable unless they are visible copy.
+
+## Explicitly Excluded Scope
+
+- No route rename from `/news`.
+- No API path, database model, schema, permission, board behavior, or tab behavior changes.
+- No redesign beyond a small mobile overflow fix discovered during required browser verification.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
 
 ## Requested Feature Slice
 

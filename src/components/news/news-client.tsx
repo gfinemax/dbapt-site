@@ -1005,7 +1005,7 @@ export function NewsClient({
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
                         {activeViewNotice.isStarred && (
-                          <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                          <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 mr-1.5 align-middle">
                             ★ 중요
                           </span>
                         )}

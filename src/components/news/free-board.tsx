@@ -83,6 +83,7 @@ function FreeBoardPostRows({
   showOpenChatCopy,
   showCopyToNotice,
   showBookmark,
+  showManageColumn,
   openChatCopyStatus,
   onOpen,
   onDelete,
@@ -96,6 +97,7 @@ function FreeBoardPostRows({
   showOpenChatCopy: boolean;
   showCopyToNotice: boolean;
   showBookmark: boolean;
+  showManageColumn: boolean;
   openChatCopyStatus?: "copying" | "copied" | "error";
   onOpen: () => void;
   onDelete: (params: { postId?: string; commentId?: string }) => void;
@@ -112,107 +114,121 @@ function FreeBoardPostRows({
         index % 2 === 1 ? "bg-[#fdfcfa]" : "bg-white",
       )}
     >
-      <td className="px-5 py-4 text-center text-xs text-ash font-mono tabular-nums">
+      <td className="px-3 py-3.5 text-center text-xs text-ash/75 font-mono tabular-nums">
         {index + 1}
       </td>
-      <td className="px-5 py-4">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-1.5">
+      <td className="px-3 py-3.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex min-w-0 items-center gap-2">
             {post.isStarred && (
-              <span className="rounded bg-amber-500/15 text-amber-600 text-[9px] font-extrabold px-1.5 py-0.5 border border-amber-500/20 select-none">
-                ★ 중요
+              <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
+                <span>★</span>
+                <span>중요</span>
               </span>
             )}
-            <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-extrabold", typeMeta.badgeClassName)}>
-              {typeMeta.label}
-            </span>
-            <span className="text-[13px] font-bold text-charcoal-primary leading-snug">
+            <span className="min-w-0 text-[13.5px] font-bold leading-snug text-charcoal-primary">
               {post.title}
             </span>
           </div>
-          <p className="line-clamp-1 text-[11px] font-normal text-graphite/75">
-            {getPlainNoticeText(post.content)}
-          </p>
+          <div data-free-board-title-meta="true" className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-extrabold", typeMeta.badgeClassName)}>
+              {typeMeta.label}
+            </span>
+            {post.attachmentPath && (
+              <span className="rounded bg-stone-surface/80 px-1.5 py-0.5 text-[9px] font-black text-graphite select-none">첨부</span>
+            )}
+            <span className="line-clamp-1 min-w-0 text-[11px] font-normal text-graphite/75">
+              {getPlainNoticeText(post.content)}
+            </span>
+          </div>
         </div>
       </td>
-      <td className="px-5 py-4 text-center text-xs text-graphite/80 font-normal">
+      <td className="px-3 py-3.5 text-center text-xs text-graphite/75 font-normal whitespace-nowrap">
         {authorLabel}
       </td>
-      <td className="px-5 py-4 text-center text-xs text-ash font-mono">
+      <td className="px-3 py-3.5 text-center text-xs text-ash font-mono whitespace-nowrap">
         {post.registeredAt}
       </td>
-      <td className="px-5 py-4 text-center">
+      <td className="px-3 py-3.5 text-center">
         <button
           type="button"
+          aria-label={`댓글 ${post.commentCount}개 보기`}
           onClick={(event) => {
             event.stopPropagation();
             onOpen();
           }}
-          className="rounded-full bg-sky-blue/10 px-2.5 py-1 text-[10px] font-extrabold text-sky-blue hover:bg-sky-blue/15"
+          className="inline-flex min-w-16 items-center justify-center whitespace-nowrap rounded-full border border-sky-blue/15 bg-white px-2.5 py-1 text-[11px] font-bold text-sky-blue hover:bg-sky-blue/10"
         >
-          댓글 {post.commentCount}개 보기
+          댓글 {post.commentCount}
         </button>
       </td>
-      <td className="px-5 py-4 text-center">
-        {(showBookmark || showOpenChatCopy || showCopyToNotice || showDeletePost) && (
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
-            {showBookmark && (
-              <PersonalBookmarkButton
-                title={post.title}
-                targetType="FREE_POST"
-                targetId={post.id}
-                initialBookmarked={post.isBookmarkedByCurrentUser}
-              />
-            )}
-            {showOpenChatCopy && (
-              <button
-                type="button"
-                aria-label={`${post.title} 오픈채팅 공지문 복사`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenChatCopy(post);
-                }}
-                disabled={openChatCopyStatus === "copying"}
-                className="rounded-full border border-meadow-green/25 bg-meadow-green/10 px-2.5 py-1 text-[10px] font-bold text-meadow-green hover:bg-meadow-green/15 disabled:opacity-60"
-              >
-                {openChatCopyStatus === "copying" ? "복사 중" : "공지문 복사"}
-              </button>
-            )}
-            {showOpenChatCopy && openChatCopyStatus === "copied" && (
-              <span className="text-[9px] font-bold text-meadow-green">복사됨</span>
-            )}
-            {showOpenChatCopy && openChatCopyStatus === "error" && (
-              <span className="text-[9px] font-bold text-ember-orange">실패</span>
-            )}
-            {showCopyToNotice && (
-              <button
-                type="button"
-                aria-label={`${post.title} 공지사항으로 복사`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onCopyToNotice(post);
-                }}
-                className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/15"
-              >
-                공지사항 복사
-              </button>
-            )}
-            {showDeletePost && (
-              <button
-                type="button"
-                aria-label="게시글 삭제"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onDelete({ postId: post.id });
-                }}
-                className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
-              >
-                삭제
-              </button>
-            )}
-          </div>
+      <td className="px-3 py-3.5 text-center">
+        {showBookmark ? (
+          <PersonalBookmarkButton
+            title={post.title}
+            targetType="FREE_POST"
+            targetId={post.id}
+            initialBookmarked={post.isBookmarkedByCurrentUser}
+            className="h-6 px-2 py-0 text-[10px]"
+          />
+        ) : (
+          <span className="text-[10px] text-ash/50">-</span>
         )}
       </td>
+      {showManageColumn && (
+        <td className="px-3 py-3.5 text-center">
+          {(showOpenChatCopy || showCopyToNotice || showDeletePost) && (
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              {showOpenChatCopy && (
+                <button
+                  type="button"
+                  aria-label={`${post.title} 오픈채팅 공지문 복사`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onOpenChatCopy(post);
+                  }}
+                  disabled={openChatCopyStatus === "copying"}
+                  className="rounded-full border border-meadow-green/25 bg-meadow-green/10 px-2.5 py-1 text-[10px] font-bold text-meadow-green hover:bg-meadow-green/15 disabled:opacity-60"
+                >
+                  {openChatCopyStatus === "copying" ? "복사 중" : "공지문 복사"}
+                </button>
+              )}
+              {showOpenChatCopy && openChatCopyStatus === "copied" && (
+                <span className="text-[9px] font-bold text-meadow-green">복사됨</span>
+              )}
+              {showOpenChatCopy && openChatCopyStatus === "error" && (
+                <span className="text-[9px] font-bold text-ember-orange">실패</span>
+              )}
+              {showCopyToNotice && (
+                <button
+                  type="button"
+                  aria-label={`${post.title} 공지사항으로 복사`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onCopyToNotice(post);
+                  }}
+                  className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/15"
+                >
+                  공지사항 복사
+                </button>
+              )}
+              {showDeletePost && (
+                <button
+                  type="button"
+                  aria-label="게시글 삭제"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete({ postId: post.id });
+                  }}
+                  className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
+                >
+                  삭제
+                </button>
+              )}
+            </div>
+          )}
+        </td>
+      )}
     </tr>
   );
 }
@@ -839,28 +855,33 @@ export function FreeBoard({
       {/* 자유게시판 글 목록 */}
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table aria-label="자유게시판 게시글 목록" className="w-full text-left text-sm border-collapse">
-            <thead className="bg-[#f7f6f3] border-b border-stone-surface text-xs font-bold text-ash">
+          <table
+            aria-label="자유게시판 게시글 목록"
+            className="w-full table-fixed text-left text-sm border-collapse"
+            style={{ minWidth: isAdmin ? "820px" : "760px" }}
+          >
+            <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
-                <th className="px-5 py-3.5 w-14 text-center">No.</th>
-                <th className="px-5 py-3.5">제목</th>
-                <th className="px-5 py-3.5 w-36 text-center">작성자</th>
-                <th className="px-5 py-3.5 w-32 text-center">등록일</th>
-                <th className="px-5 py-3.5 w-24 text-center">댓글</th>
-                <th className="px-5 py-3.5 w-36 text-center">관리</th>
+                <th className="w-10 px-3 py-3 text-center">No.</th>
+                <th className="px-3 py-3">제목</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">작성자</th>
+                <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">댓글</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
+                {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedPosts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={isAdmin ? 7 : 6} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 자유게시판 글이 없습니다.
                   </td>
                 </tr>
               ) : (
                 combinedPosts.map((post, index) => {
                   const authorLabel = getFreeBoardAuthorLabel(post.author, currentUserId);
-                  const showDeletePost = post.isReal && (post.author.id === currentUserId || isAdmin);
+                  const showDeletePost = post.isReal && isAdmin;
                   const showOpenChatCopy = post.isReal && isAdmin;
                   const showCopyToNotice = post.isReal && isAdmin;
                   const showBookmark = !!session && post.isReal && !isReadOnlyPublicShare;
@@ -875,6 +896,7 @@ export function FreeBoard({
                       showOpenChatCopy={showOpenChatCopy}
                       showCopyToNotice={showCopyToNotice}
                       showBookmark={showBookmark}
+                      showManageColumn={isAdmin}
                       openChatCopyStatus={openChatCopyStatus[post.id]}
                       onOpen={() => openFocusedPost(post.id)}
                       onDelete={handleDeletePostOrComment}
@@ -970,7 +992,7 @@ export function FreeBoard({
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
                   {focusedPost.isStarred && (
-                    <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-extrabold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                    <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-extrabold px-1.5 py-0.5 select-none shrink-0 mr-1.5 align-middle">
                       ★ 중요
                     </span>
                   )}

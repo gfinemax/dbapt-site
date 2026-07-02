@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     const newsId = normalizeText(url.searchParams.get("newsId"));
     const freePostId = normalizeText(url.searchParams.get("freePostId"));
     if (!documentId && !newsId && !freePostId) {
-      return NextResponse.json({ error: "문서, 조합소식 또는 자유게시판 글 식별자가 필요합니다." }, { status: 400 });
+      return NextResponse.json({ error: "문서, 소통마당 글 또는 자유게시판 글 식별자가 필요합니다." }, { status: 400 });
     }
 
   if (freePostId) {
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
 
     const news = await prisma.coopNews.findUnique({ where: { id: newsId } });
     if (!news) {
-      return NextResponse.json({ error: "조합소식을 찾을 수 없습니다." }, { status: 404 });
+      return NextResponse.json({ error: "소통마당 글을 찾을 수 없습니다." }, { status: 404 });
     }
 
     const result = await upsertOpenChatAnnouncementForNews({
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
       if (announcement) {
         return NextResponse.json({ success: true, announcement });
       }
-      return NextResponse.json({ error: "오픈채팅 공지문 생성 대상 조합소식이 아닙니다." }, { status: 422 });
+      return NextResponse.json({ error: "오픈채팅 공지문 생성 대상 소통마당 글이 아닙니다." }, { status: 422 });
     }
 
     return NextResponse.json({

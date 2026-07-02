@@ -39,10 +39,10 @@ function getNoticeHref(notice: LandingNotice) {
 export function NoticesSection({ notices = [] }: { notices?: LandingNotice[] }) {
   return (
     <section id="notices" className="site-container grid gap-4 py-14 lg:grid-cols-[1.05fr_0.95fr]">
-      <div className="stone-card p-7 sm:p-9" role="region" aria-labelledby="landing-notices-title">
-        <div className="mb-7 flex items-end justify-between">
-          <div>
-            <p className="mb-2 text-sm font-medium text-ember-orange">조합소식</p>
+      <div className="stone-card min-w-0 p-7 sm:p-9" role="region" aria-labelledby="landing-notices-title">
+        <div className="mb-7 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="mb-2 text-sm font-medium text-ember-orange">소통마당</p>
             <h2 id="landing-notices-title" className="text-3xl">공지사항 및 조합원 게시글</h2>
           </div>
           <Link href="/news" className="text-sm font-medium text-graphite hover:text-ember-orange">
@@ -55,7 +55,7 @@ export function NoticesSection({ notices = [] }: { notices?: LandingNotice[] }) 
               최근 등록된 공지사항 및 조합원 게시글이 없습니다.
             </li>
           ) : notices.map((notice) => (
-            <li key={`${notice.kind}-${notice.id}`} className="flex items-center justify-between gap-4 border-b border-stone-surface py-4 text-sm">
+            <li key={`${notice.kind}-${notice.id}`} className="flex min-w-0 items-center justify-between gap-4 border-b border-stone-surface py-4 text-sm">
               <Link href={getNoticeHref(notice)} className="min-w-0 flex-1 hover:text-ember-orange">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${noticeLabelClasses[notice.kind]}`}>
@@ -69,11 +69,11 @@ export function NoticesSection({ notices = [] }: { notices?: LandingNotice[] }) 
           ))}
         </ul>
       </div>
-      <div id="library" className="soft-panel p-7 sm:p-9">
+      <div id="library" className="soft-panel min-w-0 p-7 sm:p-9">
         <p className="mb-2 text-sm font-medium text-sky-blue">자료실</p>
         <h2 className="text-3xl">필요한 자료를 한곳에서 찾습니다</h2>
         <p className="mt-4 max-w-md text-[15px] leading-7">
-          공개자료, 사업현황, 조합소식에 나뉜 문서까지 통합 자료실에서 다시 안내합니다.
+          공개자료, 사업현황, 소통마당에 나뉜 문서까지 통합 자료실에서 다시 안내합니다.
         </p>
         <div className="mt-8 flex flex-wrap gap-2 text-sm font-medium">
           {["핵심자료", "계약·협약", "법령·제도"].map((label) => (

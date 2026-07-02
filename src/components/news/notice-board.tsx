@@ -273,21 +273,26 @@ export function NoticeBoard({
       {/* 공지사항 목록 테이블 */}
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse" aria-label="공지사항 목록">
-            <thead className="bg-[#f7f6f3] border-b border-stone-surface text-xs font-bold text-ash">
+          <table
+            className="w-full table-fixed text-left text-sm border-collapse"
+            style={{ minWidth: isAdmin ? "820px" : "760px" }}
+            aria-label="공지사항 목록"
+          >
+            <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
-                <th className="px-5 py-3.5 w-14 text-center">No.</th>
-                <th className="px-5 py-3.5">제목</th>
-                <th className="px-5 py-3.5 w-24 text-center">등록자</th>
-                <th className="px-5 py-3.5 w-28 text-center">등록일</th>
-                <th className="px-5 py-3.5 w-28 text-center">댓글</th>
-                {isAdmin && <th className="px-5 py-3.5 w-36 text-center">관리</th>}
+                <th className="w-10 px-3 py-3 text-center">No.</th>
+                <th className="px-3 py-3">제목</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">등록자</th>
+                <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">댓글</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
+                {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedData.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 6 : 5} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={isAdmin ? 7 : 6} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 공지사항이 존재하지 않습니다.
                   </td>
                 </tr>
@@ -307,46 +312,44 @@ export function NoticeBoard({
                       idx % 2 === 1 ? "bg-[#fdfcfa]" : "bg-white"
                     )}
                   >
-                    <td className="px-5 py-4 text-center text-xs text-ash font-mono tabular-nums">
+                    <td className="px-3 py-3.5 text-center text-xs text-ash/75 font-mono tabular-nums">
                       {idx + 1}
                     </td>
-                    <td className="px-5 py-4">
-                      <span className="text-[13px] leading-snug flex items-center gap-1.5 flex-wrap">
-                        {notice.isStarred && (
-                          <span className="inline-flex items-center gap-1.5 rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
-                            <ImportantNoticeStar />
-                            <span>중요</span>
+                    <td className="px-3 py-3.5">
+                      <div className="flex min-w-0 flex-col gap-1.5">
+                        <div className="flex min-w-0 items-center gap-2">
+                          {notice.isStarred && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
+                              <ImportantNoticeStar />
+                              <span>중요</span>
+                            </span>
+                          )}
+                          <span className={cn("min-w-0 text-[13.5px] leading-snug", notice.isStarred ? "font-bold text-charcoal-primary" : "font-semibold text-charcoal-primary/90")}>
+                            {notice.title}
                           </span>
+                        </div>
+                        {(notice.isReal || notice.attachmentPath) && (
+                          <div data-notice-title-meta="true" className="flex min-w-0 flex-wrap items-center gap-1.5">
+                            {notice.isReal && (
+                              <span className="rounded border border-sky-blue/15 bg-sky-blue/10 px-1.5 py-0.5 text-[9px] font-black text-sky-blue select-none">실제자료</span>
+                            )}
+                            {notice.attachmentPath && (
+                              <span className="rounded bg-stone-surface/80 px-1.5 py-0.5 text-[9px] font-black text-graphite select-none">첨부</span>
+                            )}
+                          </div>
                         )}
-                        <span className={cn(notice.isStarred ? "font-bold text-charcoal-primary" : "text-charcoal-primary/90")}>
-                          {notice.title}
-                        </span>
-                        {notice.isReal && (
-                          <span className="bg-sky-blue/10 border border-sky-blue/20 text-sky-blue text-[8px] font-black scale-90 rounded px-1 shrink-0 select-none">실제자료</span>
-                        )}
-                        {notice.attachmentPath && (
-                          <span className="bg-stone-surface text-graphite text-[8px] font-black scale-90 rounded px-1 shrink-0 select-none">첨부</span>
-                        )}
-                        {isLoggedIn && notice.isReal && (
-                          <PersonalBookmarkButton
-                            title={notice.title}
-                            targetType="COOP_NEWS"
-                            targetId={notice.id}
-                            initialBookmarked={notice.isBookmarkedByCurrentUser}
-                            className="ml-1"
-                          />
-                        )}
-                      </span>
+                      </div>
                     </td>
-                    <td className="px-5 py-4 text-center text-xs text-graphite/80 font-normal">
+                    <td className="px-3 py-3.5 text-center text-xs text-graphite/75 font-normal whitespace-nowrap">
                       {notice.author.name}
                     </td>
-                    <td className="px-5 py-4 text-center text-xs text-ash font-mono">
+                    <td className="px-3 py-3.5 text-center text-xs text-ash font-mono whitespace-nowrap">
                       {notice.createdAt}
                     </td>
-                    <td className="px-5 py-4 text-center">
+                    <td className="px-3 py-3.5 text-center">
                       <button
                         type="button"
+                        aria-label={`댓글 ${getNewsComments(notice).length}개 보기`}
                         onClick={(event) => {
                           event.stopPropagation();
                           if (onViewNotice) {
@@ -355,13 +358,26 @@ export function NoticeBoard({
                             setActiveViewNotice(notice);
                           }
                         }}
-                        className="rounded-full bg-sky-blue/10 px-3 py-1.5 text-[10.5px] font-extrabold text-sky-blue hover:bg-sky-blue/15"
+                        className="inline-flex min-w-16 items-center justify-center whitespace-nowrap rounded-full border border-sky-blue/15 bg-white px-2.5 py-1 text-[11px] font-bold text-sky-blue hover:bg-sky-blue/10"
                       >
-                        댓글 {getNewsComments(notice).length}개 보기
+                        댓글 {getNewsComments(notice).length}
                       </button>
                     </td>
+                    <td className="px-3 py-3.5 text-center">
+                      {isLoggedIn && notice.isReal ? (
+                        <PersonalBookmarkButton
+                          title={notice.title}
+                          targetType="COOP_NEWS"
+                          targetId={notice.id}
+                          initialBookmarked={notice.isBookmarkedByCurrentUser}
+                          className="h-6 px-2 py-0 text-[10px]"
+                        />
+                      ) : (
+                        <span className="text-[10px] text-ash/50">-</span>
+                      )}
+                    </td>
                     {isAdmin && (
-                      <td className="px-5 py-4 text-center">
+                      <td className="px-3 py-3.5 text-center">
                         {notice.isReal && (
                           <div className="flex flex-wrap items-center justify-center gap-1.5">
                             <button
@@ -453,7 +469,7 @@ export function NoticeBoard({
             >
               <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
                 {activeViewNotice.isStarred && (
-                  <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                  <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 mr-1.5 align-middle">
                     ★ 중요
                   </span>
                 )}

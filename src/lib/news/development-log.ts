@@ -222,7 +222,7 @@ function getDominantReleaseTopic(rawChanges: string[]) {
     return "document";
   }
 
-  if (/(notice|news|comment|openchat|공지|조합소식|댓글)/.test(text)) {
+  if (/(notice|news|comment|openchat|공지|소통마당|댓글)/.test(text)) {
     return "news";
   }
 
@@ -233,7 +233,7 @@ function getReleaseTitle(topic: string) {
   if (topic === "business") return "사업현황 자료 업데이트";
   if (topic === "development") return "개발일지 소통 개선";
   if (topic === "document") return "자료 확인 기능 개선";
-  if (topic === "news") return "조합소식 소통 개선";
+  if (topic === "news") return "소통마당 소통 개선";
   return "홈페이지 개선 사항 업데이트";
 }
 

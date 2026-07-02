@@ -33,7 +33,7 @@ const sourceKindLabel: Record<LibrarySourceKind, string> = {
   disclosure: "의무공개 자료",
   "library-reference": "자료실 참고",
   "site-reference": "사이트 참고",
-  news: "조합소식",
+  news: "소통마당",
 };
 
 const sourceKindClassName: Record<LibrarySourceKind, string> = {
@@ -47,7 +47,7 @@ const sourceKindActionLabel: Record<LibrarySourceKind, string> = {
   disclosure: "자료 위치 보기",
   "library-reference": "자료실에서 보기",
   "site-reference": "관련 페이지 보기",
-  news: "조합소식 보기",
+  news: "소통마당 보기",
 };
 
 const sourceKindLocationPrefix: Record<LibrarySourceKind, string> = {
@@ -459,12 +459,12 @@ const fallbackMaterialEntries: Record<string, MaterialEntry[]> = {
     {
       title: "총회 책자",
       description: "총회 안건, 의결 설명, 참석 안내를 묶어 확인하는 조합원 안내 자료입니다.",
-      meta: "조합소식 · 총회 개최 시",
+      meta: "소통마당 · 총회 개최 시",
     },
     {
       title: "총회 참석 안내문",
       description: "참석 방식, 위임장 제출, 의결권 행사 절차를 안내하는 자료입니다.",
-      meta: "조합소식 · 안내문",
+      meta: "소통마당 · 안내문",
     },
   ],
   "meeting-minutes": [

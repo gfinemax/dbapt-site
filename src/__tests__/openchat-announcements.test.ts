@@ -122,9 +122,9 @@ describe("openchat announcements", () => {
       }),
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
-    expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
-    expect(message).toContain("새 조합소식이 등록되었습니다.");
-    expect(message).toContain("- 분류: 주/월간 조합소식");
+    expect(message).toContain("[대방동 지역주택조합 소통마당 안내]");
+    expect(message).toContain("새 소통마당 글이 등록되었습니다.");
+    expect(message).toContain("- 분류: 주/월간 소식");
     expect(message).toContain("https://dbapt.example/news?tab=newsletter&news=newsletter-1");
     expect(message).not.toContain("https://dbapt.example/uploads/newsletter.pdf");
   });
@@ -148,7 +148,7 @@ describe("openchat announcements", () => {
       }),
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
-    expect(message).toContain("[대방동 지역주택조합 조합소식 안내]");
+    expect(message).toContain("[대방동 지역주택조합 소통마당 안내]");
     expect(message).toContain("- 분류: 조합 공지사항");
     expect(message).toContain("https://dbapt.example/news?tab=notice&news=notice-1");
     expect(message).not.toContain("https://dbapt.example/uploads/notice.pdf");

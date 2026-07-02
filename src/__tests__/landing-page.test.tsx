@@ -158,7 +158,7 @@ describe("public landing page", () => {
     const newsCard = screen.getByRole("region", { name: "공지사항 및 조합원 게시글" });
 
     expect(within(newsCard).getByRole("heading", { name: "공지사항 및 조합원 게시글" })).toBeInTheDocument();
-    expect(within(newsCard).getByText("조합소식")).toBeInTheDocument();
+    expect(within(newsCard).getByText("소통마당")).toBeInTheDocument();
     expect(within(newsCard).getByText("공지")).toBeInTheDocument();
     expect(within(newsCard).getByText("게시글")).toBeInTheDocument();
     expect(within(newsCard).getByRole("link", { name: /대방동 지역주택조합 공식 홈페이지 운영 안내/ })).toHaveAttribute(

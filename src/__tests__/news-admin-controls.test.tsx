@@ -1530,6 +1530,89 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("button", { name: "댓글 1개 보기" })).toBeInTheDocument();
   });
 
+  it("uses a compact notice list row layout for readability", () => {
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin={false}
+        newsList={[{ ...realNotice, isStarred: true, comments: [noticeComment] }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const noticeTable = screen.getByRole("table", { name: "공지사항 목록" });
+    const commentButton = screen.getByRole("button", { name: "댓글 1개 보기" });
+    expect(commentButton).toHaveTextContent("댓글 1");
+    expect(noticeTable).toHaveClass("table-fixed");
+    expect(commentButton).toHaveClass("px-2.5", "py-1", "text-[11px]");
+    expect(commentButton).toHaveClass("whitespace-nowrap");
+    expect(noticeTable).toHaveStyle({ minWidth: "760px" });
+    expect(within(noticeTable).getByRole("columnheader", { name: "등록자" })).toHaveClass("whitespace-nowrap");
+    expect(within(noticeTable).getByRole("cell", { name: "관리자" })).toHaveClass("whitespace-nowrap");
+    expect(within(noticeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
+    expect(within(noticeTable).getByRole("button", { name: "실제 공지 개인자료실 보관" })).toBeInTheDocument();
+    const importantBadge = within(noticeTable).getByText("중요").closest("span");
+    expect(importantBadge).not.toHaveClass("ring-1");
+    expect(importantBadge).not.toHaveClass("border");
+    expect(screen.getByText("실제자료").closest("[data-notice-title-meta='true']")).toBeInTheDocument();
+    expect(noticeTable.querySelector('[data-notice-title-meta="true"] button[aria-label*="보관"]')).not.toBeInTheDocument();
+  });
+
+  it("uses the same compact list structure for the free board", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[{ ...realFreePost, isStarred: true, comments: [freeComment] }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const freeTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
+    expect(freeTable).toHaveClass("table-fixed");
+    expect(freeTable).toHaveStyle({ minWidth: "760px" });
+    expect(within(freeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
+    expect(within(freeTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
+    expect(within(freeTable).getByRole("columnheader", { name: "작성자" })).toHaveClass("whitespace-nowrap");
+    expect(within(freeTable).getByText("조합원 (나)")).toHaveClass("whitespace-nowrap");
+    const commentButton = within(freeTable).getByRole("button", { name: "댓글 1개 보기" });
+    expect(commentButton).toHaveTextContent("댓글 1");
+    expect(commentButton).toHaveClass("px-2.5", "py-1", "text-[11px]");
+    expect(commentButton).toHaveClass("whitespace-nowrap");
+    expect(within(freeTable).getByRole("button", { name: "실제 자유게시글 개인자료실 보관" })).toBeInTheDocument();
+    const importantBadge = within(freeTable).getByText("중요").closest("span");
+    expect(importantBadge).not.toHaveClass("border");
+    expect(within(freeTable).getByText("자유글").closest("[data-free-board-title-meta='true']")).toBeInTheDocument();
+    expect(freeTable.querySelector('[data-free-board-title-meta="true"] button[aria-label*="보관"]')).not.toBeInTheDocument();
+  });
+
+  it("shows the free board management column only to admins", () => {
+    const { rerender } = render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[{ ...realFreePost, comments: [freeComment] }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const memberTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
+    expect(memberTable).toHaveStyle({ minWidth: "760px" });
+    expect(within(memberTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
+    expect(within(memberTable).queryByRole("button", { name: "게시글 삭제" })).not.toBeInTheDocument();
+
+    rerender(
+      <FreeBoard
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        posts={[{ ...realFreePost, comments: [freeComment] }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const adminTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
+    expect(adminTable).toHaveStyle({ minWidth: "820px" });
+    expect(within(adminTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
+    expect(within(adminTable).getByRole("button", { name: "게시글 삭제" })).toBeInTheDocument();
+  });
+
   it("shows the selected display author name instead of the admin account name", () => {
     render(
       <NoticeBoard
@@ -1612,7 +1695,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-notice-1",
-            message: "[대방동 지역주택조합 조합소식 안내]\n- 분류: 조합 공지사항",
+            message: "[대방동 지역주택조합 소통마당 안내]\n- 분류: 조합 공지사항",
           },
         }),
       })
@@ -1634,7 +1717,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "실제 공지 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      "[대방동 지역주택조합 조합소식 안내]\n- 분류: 조합 공지사항",
+      "[대방동 지역주택조합 소통마당 안내]\n- 분류: 조합 공지사항",
     ));
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -1668,7 +1751,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-notice-fallback",
-            message: "[대방동 지역주택조합 조합소식 안내]\n- 분류: 조합 공지사항",
+            message: "[대방동 지역주택조합 소통마당 안내]\n- 분류: 조합 공지사항",
           },
         }),
       })
@@ -2232,7 +2315,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-news-1",
-            message: "[대방동 지역주택조합 조합소식 안내]\n새 조합소식이 등록되었습니다.",
+            message: "[대방동 지역주택조합 소통마당 안내]\n새 소통마당 글이 등록되었습니다.",
           },
         }),
       })
@@ -2255,7 +2338,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "실제 조합뉴스 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      "[대방동 지역주택조합 조합소식 안내]\n새 조합소식이 등록되었습니다.",
+      "[대방동 지역주택조합 소통마당 안내]\n새 소통마당 글이 등록되었습니다.",
     ));
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,

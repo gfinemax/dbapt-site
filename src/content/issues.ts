@@ -148,7 +148,7 @@ export const issueCategories: IssueCategory[] = [
     focus: "자유게시판이나 공지와 달리 특정 사안별 자료, 질문, 검토 상태를 한 화면에서 묶습니다.",
     materials: [
       {
-        title: "조합소식 보기",
+        title: "소통마당 보기",
         description: "공지사항과 조합뉴스를 먼저 확인합니다.",
         href: "/news",
       },

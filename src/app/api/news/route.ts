@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     });
   } catch (e) {
     console.error("GET news error:", e);
-    return NextResponse.json({ error: "조합소식을 가져오는 데 실패했습니다." }, { status: 500 });
+    return NextResponse.json({ error: "소통마당 글을 가져오는 데 실패했습니다." }, { status: 500 });
   }
 }
 
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, news });
   } catch (e) {
     console.error("POST news error:", e);
-    return NextResponse.json({ error: "조합소식을 등록하는 데 실패했습니다." }, { status: 500 });
+    return NextResponse.json({ error: "소통마당 글을 등록하는 데 실패했습니다." }, { status: 500 });
   }
 }
 
@@ -265,7 +265,7 @@ export async function PATCH(request: Request) {
     });
   } catch (e) {
     console.error("PATCH news error:", e);
-    return NextResponse.json({ error: "조합소식을 수정하는 데 실패했습니다." }, { status: 500 });
+    return NextResponse.json({ error: "소통마당 글을 수정하는 데 실패했습니다." }, { status: 500 });
   }
 }
 

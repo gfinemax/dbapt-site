@@ -1,3 +1,54 @@
+# Verification - Communication Label And News List Consistency Finalization
+
+## Implemented Feature
+
+- Renamed public/user-facing `조합소식` copy to `소통마당` while keeping `/news` and internal identifiers unchanged.
+- Made notice and free-board list tables compact and consistent with fixed table layout, `760px` member minimum width, `820px` admin minimum width, dedicated `보관` column, compact comment pills, softer important badges, and admin-only free-board `관리` column.
+- Added the missing table stability classes (`table-fixed`, key `whitespace-nowrap` cells/buttons) required by the list regression tests.
+
+## Changed Files
+
+- `src/content/landing.ts`
+- `src/content/site-search.ts`
+- `src/content/library.ts`
+- `src/content/issues.ts`
+- `src/components/landing/notices-section.tsx`
+- `src/components/library/library-client.tsx`
+- `src/app/search/page.tsx`
+- `src/app/issues/page.tsx`
+- `src/app/terms/page.tsx`
+- `docs/operations/user-manual.md`
+- `src/lib/notifications/openchat-announcements.ts`
+- `src/app/api/openchat/announcements/route.ts`
+- `src/app/api/news/route.ts`
+- `src/lib/news/development-log.ts`
+- `src/components/news/coop-newsletter.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- related tests and plan/review workspace files
+
+## Checks
+
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx -t "compact notice list row layout|same compact list structure|management column only"`: first run failed on missing `table-fixed`, then PASS after adding the table/cell stability classes, 3 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 74 files and 507 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing dev server responded at `http://127.0.0.1:3000`.
+- Chrome headless `/` desktop 1440px and mobile 390px: `소통마당` rendered, `조합소식` absent, no document horizontal overflow.
+- Chrome headless `/news?tab=notice` desktop 1440px: notice table rendered with `table-fixed`, `minWidth=760px`, `tableScrollWidth=862`, `tableClientWidth=862`, no document horizontal overflow.
+- Chrome headless `/news?tab=notice` mobile 390px: document width stayed `390px`; notice table kept internal wrapper scrolling (`wrapperClientWidth=324`, `wrapperScrollWidth=760`) without page overflow.
+- Chrome headless `/news?tab=free` with temporary admin session cookie desktop 1440px: free-board table rendered with `table-fixed`, `minWidth=820px`, `보관` and `관리` headers present, no document horizontal overflow.
+- Chrome headless `/news?tab=free` with temporary admin session cookie mobile 390px: document width stayed `390px`; free-board table kept internal wrapper scrolling (`wrapperClientWidth=324`, `wrapperScrollWidth=820`) without page overflow.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
 # Verification - Rich Content View Top Gap Tightening
 
 ## Implemented Feature

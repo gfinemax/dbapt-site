@@ -62,7 +62,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps = {})
             전체 찾기
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-graphite/90 sm:text-lg">
-            조합소개, 사업현황, 공개자료, 조합소식, 자료실의 주요 내용을 한 번에 찾습니다.
+            조합소개, 사업현황, 공개자료, 소통마당, 자료실의 주요 내용을 한 번에 찾습니다.
           </p>
         </div>
       </section>

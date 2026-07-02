@@ -108,7 +108,7 @@ describe("openchat announcements API", () => {
       id: "announcement-news-copied",
       coopNewsId: "notice-1",
       status: "COPIED",
-      message: "예전 조합소식 공지문 본문",
+      message: "예전 소통마당 공지문 본문",
       copiedAt: new Date("2026-06-18T00:00:00.000Z"),
       updatedAt: new Date("2026-06-18T00:00:00.000Z"),
       coopNews: {
@@ -126,7 +126,7 @@ describe("openchat announcements API", () => {
     mockUpsertOpenChatAnnouncementForNews.mockResolvedValue({
       status: "CREATED",
       announcementId: "announcement-news-fresh",
-      message: "최신 조합소식 공지문 본문\nhttps://dbapt-site.vercel.app/news?tab=notice&news=notice-1",
+      message: "최신 소통마당 공지문 본문\nhttps://dbapt-site.vercel.app/news?tab=notice&news=notice-1",
     });
 
     const { GET } = await import("@/app/api/openchat/announcements/route");
@@ -146,7 +146,7 @@ describe("openchat announcements API", () => {
       id: "announcement-news-fresh",
       newsId: "notice-1",
       status: "DRAFT",
-      message: "최신 조합소식 공지문 본문\nhttps://dbapt-site.vercel.app/news?tab=notice&news=notice-1",
+      message: "최신 소통마당 공지문 본문\nhttps://dbapt-site.vercel.app/news?tab=notice&news=notice-1",
     });
   });
 
@@ -196,13 +196,13 @@ describe("openchat announcements API", () => {
       id: "newsletter-old",
       title: "대방동 2026년 7월 조합 월간 소식지",
       category: "WEEKLY_MONTHLY",
-      content: "조합소식 본문",
+      content: "소통마당 본문",
       createdAt: new Date("2026-07-01T00:00:00.000Z"),
     });
     mockUpsertOpenChatAnnouncementForNews.mockResolvedValue({
       status: "CREATED",
       announcementId: "announcement-news-generated",
-      message: "생성된 조합소식 공지문 본문",
+      message: "생성된 소통마당 공지문 본문",
     });
 
     const { GET } = await import("@/app/api/openchat/announcements/route");
@@ -239,7 +239,7 @@ describe("openchat announcements API", () => {
       id: "announcement-news-generated",
       newsId: "newsletter-old",
       status: "DRAFT",
-      message: "생성된 조합소식 공지문 본문",
+      message: "생성된 소통마당 공지문 본문",
     });
   });
 

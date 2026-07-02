@@ -55,10 +55,10 @@ const staticSearchItems: SiteSearchItem[] = [
   },
   {
     id: "news-notice",
-    title: "조합소식",
+    title: "소통마당",
     description: "공지사항, 조합 소식지, 개발일지, FAQ, 자유게시판으로 이동합니다.",
     href: "/news",
-    section: "조합소식",
+    section: "소통마당",
     keywords: ["공지", "소식", "소식지", "개발일지", "구현요청", "FAQ", "자유게시판"],
   },
   {
@@ -66,7 +66,7 @@ const staticSearchItems: SiteSearchItem[] = [
     title: "개발일지",
     description: "홈페이지 기능 반영, 오류 수정, 구현요청 처리 내역을 버전별로 확인합니다.",
     href: "/news?tab=development",
-    section: "조합소식",
+    section: "소통마당",
     keywords: ["개발일지", "버전", "업데이트", "기능 반영", "오류 수정", "구현요청"],
   },
   {
@@ -160,7 +160,7 @@ function getDocumentSearchHref(document: SearchableDocument) {
 
 function getDocumentSearchSection(document: SearchableDocument) {
   if (document.category === "ACCOUNTING") return "회계자료";
-  if (document.category === "NOTICE") return "조합소식";
+  if (document.category === "NOTICE") return "소통마당";
   return "공개자료";
 }
 
