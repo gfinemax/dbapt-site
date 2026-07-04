@@ -790,7 +790,7 @@ function MaterialEntryTable({
     >
       <div
         role="row"
-        className="grid border-b border-stone-surface bg-[#f7f6f3] text-xs font-bold text-ash"
+        className="grid border-b border-sky-blue/15 bg-sky-blue/5 text-xs font-bold text-charcoal-primary"
         style={{ minWidth: "48rem", gridTemplateColumns: "7rem minmax(0, 1fr) 6rem 7rem 6rem" }}
       >
         <span role="columnheader" className="px-4 py-3.5 text-center">
