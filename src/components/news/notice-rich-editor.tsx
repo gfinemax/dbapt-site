@@ -569,6 +569,7 @@ export function NoticeRichContent({
     <div
       className={cn(
         "notice-rich-content whitespace-normal break-words",
+        "max-sm:[&_img]:!h-auto max-sm:[&_img]:!object-contain",
         NEWS_ARTICLE_BODY_SURFACE_CLASS,
         className,
       )}

@@ -74,6 +74,22 @@ describe("notice rich content links", () => {
     expect(html).not.toContain("width:1px");
   });
 
+  it("keeps saved pixel-height images proportional on mobile read views", () => {
+    render(
+      <NoticeRichContent content='<p><img src="/uploads/mobile-ratio.png" alt="본문 이미지" data-width="75" data-pixel-width="415" data-pixel-height="320" data-fit="cover" data-crop-x="left" data-crop-y="top" /></p>' />,
+    );
+
+    const contentRoot = document.querySelector(".notice-rich-content") as HTMLElement;
+    const image = screen.getByAltText("본문 이미지");
+
+    expect(image).toHaveStyle({
+      width: "415px",
+      height: "320px",
+      objectFit: "fill",
+    });
+    expect(contentRoot).toHaveClass("max-sm:[&_img]:!h-auto", "max-sm:[&_img]:!object-contain");
+  });
+
   it("renders rotated cover images without adding a crop frame", () => {
     const html = sanitizeNoticeContentHtml(
       '<p><img src="/uploads/rotated-cover.png" alt="본문 이미지" data-width="75" data-fit="cover" data-crop-x="center" data-crop-y="center" data-rotate="33" /></p>',

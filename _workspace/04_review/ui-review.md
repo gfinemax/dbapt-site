@@ -1,6 +1,30 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Mobile rich-content image aspect-ratio preservation
+- Governing spec: Existing news/free-board rich-content reading workflow and current user mobile screenshot report
+- Implementation plan: Direct rendering bug-fix slice; no separate plan file
+- Files or pages reviewed: `src/components/news/notice-rich-editor.tsx`, `src/__tests__/news-rich-content-links.test.tsx`, free-board focused post rich content on mobile
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only adds mobile CSS overrides to the read-only `NoticeRichContent` renderer so saved inline image heights and `object-fit:fill` do not distort images on small screens. Routes, APIs, permissions, posting, editing, comments, attachments, public-share gating, and stored HTML are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The page continues to show the same post body images and metadata. No new data, action capability, private content, or fabricated state is presented.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The read view now applies `max-sm:[&_img]:!h-auto max-sm:[&_img]:!object-contain`, preserving image aspect ratio on mobile while leaving desktop rendering and editor resizing behavior intact. Regression coverage verifies that saved pixel-sized images still retain their stored inline dimensions but receive the mobile proportional-display overrides.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Free-board focused post mobile reading width
 - Governing spec: Existing free-board focused-post workflow and current user mobile screenshot report
 - Implementation plan: Direct layout bug-fix slice; no separate plan file
