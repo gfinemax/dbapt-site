@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
@@ -10,6 +11,8 @@ import { NewsClient } from "@/components/news/news-client";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 import { getUserDisplayName } from "@/lib/user-display-name";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
+import { buildFreePostSocialPreview } from "@/lib/news/social-preview";
+import { siteTitle, socialPreviewImage } from "@/lib/site-metadata";
 import type { CoopNewsView, FAQView, FreePostView } from "@/lib/news/types";
 
 type NewsPageProps = {
@@ -21,6 +24,80 @@ type NewsPageProps = {
 
 function getFirstSearchParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+export async function generateMetadata({ searchParams }: NewsPageProps = {}): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
+  const requestedTab = getFirstSearchParam(resolvedSearchParams?.tab);
+  const requestedFreePostId = getFirstSearchParam(resolvedSearchParams?.post);
+
+  const defaultMetadata: Metadata = {
+    title: `소통마당 | ${siteTitle}`,
+    description: "대방동 지역주택조합 공지사항과 자유게시판",
+    openGraph: {
+      title: `소통마당 | ${siteTitle}`,
+      description: "대방동 지역주택조합 공지사항과 자유게시판",
+      url: "/news",
+      siteName: siteTitle,
+      locale: "ko_KR",
+      type: "website",
+      images: [socialPreviewImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `소통마당 | ${siteTitle}`,
+      description: "대방동 지역주택조합 공지사항과 자유게시판",
+      images: [socialPreviewImage.url],
+    },
+  };
+
+  if (requestedTab !== "free" || !requestedFreePostId) {
+    return defaultMetadata;
+  }
+
+  try {
+    const publicSharedPost = await prisma.freePost.findFirst({
+      where: {
+        id: requestedFreePostId,
+        isPublicShareEnabled: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        imagePath: true,
+      },
+    });
+
+    if (!publicSharedPost) {
+      return defaultMetadata;
+    }
+
+    const preview = buildFreePostSocialPreview(publicSharedPost);
+
+    return {
+      title: `${preview.title} | ${siteTitle}`,
+      description: preview.description,
+      openGraph: {
+        title: preview.title,
+        description: preview.description,
+        url: `/news?tab=free&post=${encodeURIComponent(publicSharedPost.id)}`,
+        siteName: siteTitle,
+        locale: "ko_KR",
+        type: "article",
+        images: [preview.image],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: preview.title,
+        description: preview.description,
+        images: [preview.image.url],
+      },
+    };
+  } catch (e) {
+    console.error("Error loading free-board social metadata:", e);
+    return defaultMetadata;
+  }
 }
 
 export default async function NewsPage({ searchParams }: NewsPageProps = {}) {

@@ -306,6 +306,24 @@ export function FreeBoard({
     resetWriteForm();
   };
 
+  const hasUnsavedWriteChanges = () =>
+    Boolean(
+      writeTitle.trim() ||
+      getPlainNoticeText(writeContent).trim() ||
+      writeAttachmentPath ||
+      writeIsStarred ||
+      writeIsPublicShareEnabled ||
+      writePostType !== "FREE" ||
+      writeDisplayAuthorName !== "운영자",
+    );
+
+  const handleRequestCloseWriteModal = () => {
+    if (hasUnsavedWriteChanges() && !window.confirm("작성 중인 내용이 사라집니다. 새 게시글 작성을 닫을까요?")) {
+      return;
+    }
+    handleCloseWriteModal();
+  };
+
   const handleStartPostEdit = (post: FreeBoardPostListItem) => {
     const displayAuthorName = post.author.displayAuthorName;
     setShowWriteModal(false);
@@ -937,7 +955,7 @@ export function FreeBoard({
           <aside
             aria-label="토론 집중 패널"
             className={cn(
-              "fixed inset-y-0 left-0 z-[130] flex w-full flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas p-6 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8",
+              "fixed inset-y-0 left-0 z-[130] flex w-full flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas px-3 py-4 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8",
               NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
             )}
             style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
@@ -1079,6 +1097,7 @@ export function FreeBoard({
               <div>
                 <NoticeRichContent
                   content={focusedPost.content}
+                  className="max-sm:px-3 max-sm:py-4"
                   onInternalLinkClick={openFocusedPostFromLink}
                 />
               </div>
@@ -1337,20 +1356,20 @@ export function FreeBoard({
       {mounted && showWriteModal && createPortal(
         <>
           <div
-            onClick={handleCloseWriteModal}
+            aria-hidden="true"
+            onClick={handleRequestCloseWriteModal}
             className="fixed inset-0 z-[120] bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
           />
-          <div className="fixed inset-0 z-[130] pointer-events-none">
-            <aside
-              role="dialog"
-              aria-modal="true"
-              aria-label="새 게시글 작성 드로어"
-              className={cn(
-                "pointer-events-auto fixed inset-y-0 right-0 flex h-full w-full flex-col overflow-hidden border-l border-stone-surface bg-warm-canvas shadow-2xl animate-in slide-in-from-right duration-300 ease-out",
-                NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
-              )}
-              style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
-            >
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="새 게시글 작성 드로어"
+            className={cn(
+              "fixed inset-y-0 right-0 z-[130] flex h-full w-full flex-col overflow-hidden border-l border-stone-surface bg-warm-canvas shadow-2xl animate-in slide-in-from-right duration-300 ease-out",
+              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
+            )}
+            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
+          >
               <div className="flex items-center justify-between gap-4 border-b border-stone-surface px-5 py-3.5 sm:px-6">
                 <div>
                   <h3 className="flex items-center gap-1.5 text-base font-black text-charcoal-primary">
@@ -1359,7 +1378,7 @@ export function FreeBoard({
                 </div>
                 <button
                   type="button"
-                  onClick={handleCloseWriteModal}
+                  onClick={handleRequestCloseWriteModal}
                   className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] px-3 py-1.5 text-xs font-medium text-graphite transition duration-200 hover:bg-stone-surface active:bg-[#e8e6e1]"
                 >
                   닫기
@@ -1570,8 +1589,7 @@ export function FreeBoard({
                   </div>
                 </div>
               </form>
-            </aside>
-          </div>
+          </aside>
         </>,
         document.body
       )}

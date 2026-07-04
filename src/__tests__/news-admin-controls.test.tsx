@@ -2923,8 +2923,10 @@ describe("news admin visible controls", () => {
     expect(panel).toBeInTheDocument();
     expect(panel).toHaveClass("left-0");
     expect(panel).toHaveClass("max-w-[780px]");
+    expect(panel).toHaveClass("px-3", "py-4", "sm:p-8");
     expect(panel).toHaveStyle({ maxWidth: "780px" });
     expect(panel).toHaveClass("slide-in-from-left");
+    expect(panel).not.toHaveClass("p-6");
     expect(panel).not.toHaveClass("right-0");
     expect(panel).not.toHaveClass("max-w-[920px]");
     expect(panel).not.toHaveClass("max-w-2xl");
@@ -2936,6 +2938,7 @@ describe("news admin visible controls", () => {
     expect(richContent?.parentElement).not.toHaveClass("pt-2");
     expect(richContent).toHaveClass("text-xs");
     expect(richContent).toHaveClass("leading-relaxed");
+    expect(richContent).toHaveClass("max-sm:px-3", "max-sm:py-4");
     expect(richContent).not.toHaveClass("text-sm");
     expect(richContent).not.toHaveClass("leading-8");
     const documentFlow = richContent?.closest('[data-free-board-document="focused-post"]');
@@ -3319,5 +3322,58 @@ describe("news admin visible controls", () => {
       "min-h-[360px]",
       "sm:min-h-[420px]",
     );
+    expect(dialog.parentElement).not.toHaveClass("pointer-events-none");
+  });
+
+  it("closes an empty free-board new-post drawer when the outside backdrop is clicked", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
+
+    expect(screen.getByRole("dialog", { name: "새 게시글 작성 드로어" })).toBeInTheDocument();
+
+    const backdrop = Array.from(document.body.querySelectorAll("div"))
+      .find((element) => element.className.includes("bg-black/35"));
+
+    expect(backdrop).toBeInstanceOf(HTMLDivElement);
+    fireEvent.click(backdrop as HTMLDivElement);
+
+    expect(screen.queryByRole("dialog", { name: "새 게시글 작성 드로어" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a dirty free-board new-post drawer open when the outside-close confirmation is cancelled", () => {
+    const confirm = vi.fn().mockReturnValue(false);
+    vi.stubGlobal("confirm", confirm);
+
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
+
+    const dialog = screen.getByRole("dialog", { name: "새 게시글 작성 드로어" });
+    fireEvent.change(within(dialog).getByPlaceholderText("의견을 명확하게 요약한 제목을 입력해 주십시오."), {
+      target: { value: "작성 중인 제목" },
+    });
+
+    const backdrop = Array.from(document.body.querySelectorAll("div"))
+      .find((element) => element.className.includes("bg-black/35"));
+
+    expect(backdrop).toBeInstanceOf(HTMLDivElement);
+    fireEvent.click(backdrop as HTMLDivElement);
+
+    expect(confirm).toHaveBeenCalledWith("작성 중인 내용이 사라집니다. 새 게시글 작성을 닫을까요?");
+    expect(screen.getByRole("dialog", { name: "새 게시글 작성 드로어" })).toBeInTheDocument();
+    expect(within(dialog).getByPlaceholderText("의견을 명확하게 요약한 제목을 입력해 주십시오.")).toHaveValue("작성 중인 제목");
   });
 });
