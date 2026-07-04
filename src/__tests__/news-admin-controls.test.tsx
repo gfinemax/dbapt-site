@@ -2688,6 +2688,20 @@ describe("news admin visible controls", () => {
     expect(screen.getByText("사무국의 공식 법령 해설, 절차 안내, 운영 공지에 사용합니다.")).toBeInTheDocument();
   });
 
+  it("does not prefill registeredAt for new administrator free-board posts", () => {
+    render(
+      <FreeBoard
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        posts={[]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
+
+    expect(screen.getByLabelText("등록일")).toHaveValue("");
+  });
+
   it("opens another free-board post from a link inside the focused post body", () => {
     render(
       <FreeBoard

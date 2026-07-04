@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { normalizeFreePostType } from "@/lib/free-post-type";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
+import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 
 function normalizeFreePostAttachment(body: {
   attachmentPath?: unknown;
@@ -41,9 +42,8 @@ function hasFreePostAttachmentPayload(body: Record<string, unknown>) {
 }
 
 function parseCreatedAt(value: unknown): Date | null {
-  if (typeof value !== "string" || !value.trim()) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+  const date = parseKoreaDateTimeLocalValue(value);
+  return date ?? null;
 }
 
 function hasCreatedAtPayload(body: Record<string, unknown>) {

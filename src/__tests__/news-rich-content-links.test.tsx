@@ -7,8 +7,35 @@ import {
   buildNoticeLinkHtml,
   sanitizeNoticeContentHtml,
 } from "@/components/news/notice-rich-editor";
+import { shouldMoveCursorToDocumentEndOnClick } from "@/components/news/rich-text-editor-v2";
 
 describe("notice rich content links", () => {
+  it("does not move the editor cursor to the end while mouse-selected text is active", () => {
+    const editorRoot = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "마우스로 선택한 문단";
+    editorRoot.append(paragraph);
+    document.body.append(editorRoot);
+
+    const textNode = paragraph.firstChild as Text;
+    const range = document.createRange();
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 4);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    expect(shouldMoveCursorToDocumentEndOnClick(editorRoot, editorRoot)).toBe(false);
+  });
+
+  it("moves the editor cursor to the end only for an empty root click", () => {
+    const editorRoot = document.createElement("div");
+    document.body.append(editorRoot);
+    window.getSelection()?.removeAllRanges();
+
+    expect(shouldMoveCursorToDocumentEndOnClick(editorRoot, editorRoot)).toBe(true);
+  });
+
   it("keeps trusted image galleries uncropped while sanitizing unsafe gallery images", () => {
     const html = sanitizeNoticeContentHtml(
       '<div data-notice-gallery="two-column"><img src="/uploads/a.png" alt="첫 번째" /><img src="javascript:alert(1)" alt="위험" /><img src="/uploads/b.png" alt="두 번째" /></div>',
@@ -288,6 +315,33 @@ describe("notice rich content links", () => {
     expect(consoleError).not.toHaveBeenCalledWith(expect.stringContaining("flushSync was called"));
 
     consoleError.mockRestore();
+  });
+
+  it("does not rewrite rich text formatting from a native input event during mouse selection", () => {
+    const onChange = vi.fn();
+
+    render(
+      <NoticeRichEditor
+        value='<p data-text-align="center" data-line-height="1.8" style="text-align:center;line-height:1.8;"><span data-font-family="Gulim" data-font-size="18px" style="font-family:Gulim;font-size:18px;color:#0090ff;background-color:#ffbb26;"><strong>서식이 있는 문장</strong></span></p>'
+        onChange={onChange}
+        onUploadImage={async () => ({ url: "/uploads/image.png" })}
+        ariaLabel="본문 편집창"
+        placeholder="본문"
+      />,
+    );
+
+    const editor = screen.getByRole("textbox", { name: "본문 편집창" });
+    const range = document.createRange();
+    const textNode = editor.querySelector("strong")?.firstChild;
+    expect(textNode).toBeInstanceOf(Text);
+    range.setStart(textNode as Text, 0);
+    range.setEnd(textNode as Text, "서식이 있는 문장".length);
+    window.getSelection()?.removeAllRanges();
+    window.getSelection()?.addRange(range);
+
+    fireEvent.input(editor);
+
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it("uploads multiple selected body images as one two-column gallery", async () => {

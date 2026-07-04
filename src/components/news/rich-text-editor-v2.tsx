@@ -200,6 +200,23 @@ function getEditorDomSelectionText(editorRoot: HTMLElement) {
   return selection.toString().trim();
 }
 
+export function shouldMoveCursorToDocumentEndOnClick(editorRoot: HTMLElement, target: EventTarget | null) {
+  if (target !== editorRoot) return false;
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return true;
+  if (!selection.toString().trim()) return true;
+
+  const anchor = selection.anchorNode;
+  const focus = selection.focusNode;
+  if ((anchor && editorRoot.contains(anchor)) || (focus && editorRoot.contains(focus))) {
+    return false;
+  }
+
+  const range = selection.getRangeAt(0);
+  return !editorRoot.contains(range.commonAncestorContainer);
+}
+
 function findLastImageNode(editor: Editor): { pos: number; attrs: Record<string, unknown> } | null {
   let found: { pos: number; attrs: Record<string, unknown> } | null = null;
   editor.state.doc.descendants((node, pos) => {
@@ -1914,6 +1931,7 @@ export function RichTextEditorV2({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedLinkRef = useRef<HTMLAnchorElement | null>(null);
   const pasteImageFilesRef = useRef<(files: File[]) => void>(() => undefined);
+  const lastEditorHtmlRef = useRef("");
   const [imageInsertMode, setImageInsertMode] = useState<ImageInsertMode>("inline");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [linkDraft, setLinkDraft] = useState<LinkDraft | null>(null);
@@ -1957,7 +1975,12 @@ export function RichTextEditorV2({
       },
       handleDOMEvents: {
         input: (view) => {
-          onChange(view.dom.innerHTML);
+          const domHtml = view.dom.innerHTML;
+          if (!lastEditorHtmlRef.current || hasEquivalentEditorHtml(domHtml, lastEditorHtmlRef.current)) {
+            return false;
+          }
+          lastEditorHtmlRef.current = domHtml;
+          onChange(domHtml);
           return false;
         },
         click: (view, event) => {
@@ -1975,7 +1998,7 @@ export function RichTextEditorV2({
             return true;
           }
 
-          if (target === view.dom) {
+          if (view.state.selection instanceof NodeSelection || shouldMoveCursorToDocumentEndOnClick(view.dom, event.target)) {
             const end = view.state.doc.content.size;
             view.dispatch(view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(end))));
           }
@@ -1991,18 +2014,24 @@ export function RichTextEditorV2({
       },
     },
     onUpdate: ({ editor: updatedEditor }) => {
-      onChange(updatedEditor.getHTML());
+      const updatedHtml = updatedEditor.getHTML();
+      lastEditorHtmlRef.current = updatedHtml;
+      onChange(updatedHtml);
     },
   });
 
   useEffect(() => {
     if (!editor || editor.isFocused) return;
+    if (!lastEditorHtmlRef.current) {
+      lastEditorHtmlRef.current = editor.getHTML();
+    }
     const normalizedValue = normalizeEditorInputHtml(value || "");
     if (!hasEquivalentEditorHtml(editor.getHTML(), normalizedValue)) {
       const timeout = window.setTimeout(() => {
         if (editor.isDestroyed || editor.isFocused) return;
         if (!hasEquivalentEditorHtml(editor.getHTML(), normalizedValue)) {
           editor.commands.setContent(normalizedValue, { emitUpdate: false });
+          lastEditorHtmlRef.current = editor.getHTML();
         }
       }, 0);
       return () => window.clearTimeout(timeout);

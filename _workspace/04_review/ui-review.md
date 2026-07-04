@@ -1,6 +1,54 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Free-board editor mouse-selection and registeredAt correction
+- Governing spec: Existing free-board rich-content editing workflow and current user report
+- Implementation plan: Direct bug-fix slice; no separate plan file
+- Files or pages reviewed: `src/components/news/rich-text-editor-v2.tsx`, `src/components/news/free-board.tsx`, `src/app/api/news/free/route.ts`, `src/app/api/news/route.ts`, `src/lib/news/korea-date-time.ts`, related regression tests
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only adjusts editor click handling and administrator `registeredAt` parsing/defaulting. Posting permissions, edit permissions, public-share gating, comments, attachments, bookmarks, and routes remain unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: New administrator free-board posts no longer submit a client-prefilled registration timestamp, so the server/database creation time remains the default unless an administrator explicitly enters a registration date. Existing edit mode still shows and can update the saved registration date.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: No layout, color, typography, imagery, or motion was changed. Regression coverage verifies that mouse-selected text is not collapsed by the editor root-click fallback, image node selection can still be cleared by clicking the editor body, native input selection events do not rewrite rich formatting, new admin free-board posts start with a blank registration date, and `datetime-local` values are parsed as Korea wall-clock time.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Rich editor mouse-selection formatting preservation
+- Governing spec: Existing notice/free-board rich-content editing workflow and current user report
+- Implementation plan: Direct editor bug-fix slice; no separate plan file
+- Files or pages reviewed: `src/components/news/rich-text-editor-v2.tsx`, `src/__tests__/news-rich-content-links.test.tsx`, free-board focused post edit mode
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only gates the rich editor's native DOM `input` fallback so selection-style input events do not rewrite saved HTML. Routes, APIs, permissions, posting, comments, attachments, public-share behavior, and editor toolbar capabilities are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The editor still exposes the same writing surface and formatting controls. It does not add or imply any new moderation, approval, storage, or private-data capability.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: No visual styling, layout, color, typography, or motion was changed. Regression coverage verifies that selecting formatted text and receiving a native input event does not call `onChange` with normalized DOM HTML, while the existing editor and notice/free-board tests continue to cover real content updates.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Mobile rich-content image aspect-ratio preservation
 - Governing spec: Existing news/free-board rich-content reading workflow and current user mobile screenshot report
 - Implementation plan: Direct rendering bug-fix slice; no separate plan file

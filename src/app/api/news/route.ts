@@ -4,15 +4,14 @@ import { prisma } from "@/lib/db";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { DEVELOPMENT_LOG_CATEGORIES } from "@/lib/news/development-log";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
+import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 
 function hasCreatedAtInput(body: Record<string, unknown>) {
   return Object.prototype.hasOwnProperty.call(body, "createdAt");
 }
 
 function parseRegisteredAtInput(value: unknown) {
-  if (value === undefined || value === null || value === "") return undefined;
-  const registeredAt = new Date(String(value));
-  return Number.isNaN(registeredAt.getTime()) ? null : registeredAt;
+  return parseKoreaDateTimeLocalValue(value);
 }
 
 // 1. GET: 공지사항 및 조합뉴스 조회 (Public)

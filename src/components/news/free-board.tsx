@@ -39,6 +39,7 @@ import {
   buildFreeBoardPostCreatePayload,
   buildFreeBoardPostUpdatePayload,
 } from "@/lib/news/free-board-api";
+import { toKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
 import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
@@ -58,21 +59,6 @@ function formatAttachmentSize(size: number | null | undefined) {
   if (!size) return "";
   if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024)).toLocaleString("ko-KR")}KB`;
   return `${(size / (1024 * 1024)).toFixed(1)}MB`;
-}
-
-function toKoreaDateTimeLocalValue(value: string | null | undefined) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date).replace(" ", "T");
 }
 
 function FreeBoardPostRows({
@@ -858,9 +844,6 @@ export function FreeBoard({
             <Button
               onClick={() => {
                 resetWriteForm();
-                if (isAdmin) {
-                  setWriteRegisteredAt(toKoreaDateTimeLocalValue(new Date().toISOString()));
-                }
                 setShowWriteModal(true);
               }}
               className="rounded-full bg-midnight hover:bg-black text-white text-xs font-bold px-5 h-9.5 active:scale-95 transition-all duration-200 cursor-pointer"
