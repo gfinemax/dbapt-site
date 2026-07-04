@@ -39,6 +39,7 @@ export type CoopNewsView = {
   viewCount?: number;
   isStarred?: boolean;
   imagePath?: string | null;
+  socialImagePath?: string | null;
   attachmentPath?: string | null;
   attachmentName?: string | null;
   attachmentSize?: number | null;
@@ -61,6 +62,8 @@ export type FreePostView = {
   isStarred?: boolean;
   isPublicShareEnabled?: boolean;
   publicShareEnabledAt?: string | null;
+  imagePath?: string | null;
+  socialImagePath?: string | null;
   attachmentPath?: string | null;
   attachmentName?: string | null;
   attachmentSize?: number | null;

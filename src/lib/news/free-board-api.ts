@@ -11,6 +11,7 @@ type FreeBoardPostPayloadInput = {
   attachmentPath?: string | null;
   attachmentName?: string | null;
   attachmentSize?: number | null;
+  socialImagePath?: string | null;
   registeredAt?: string;
   isPublicShareEnabled?: boolean;
 };
@@ -42,6 +43,7 @@ export function buildFreeBoardPostCreatePayload({
   attachmentPath,
   attachmentName,
   attachmentSize,
+  socialImagePath,
   registeredAt,
   isPublicShareEnabled,
 }: FreeBoardPostPayloadInput) {
@@ -53,6 +55,7 @@ export function buildFreeBoardPostCreatePayload({
     attachmentPath: attachmentPath ?? null,
     attachmentName: attachmentName ?? null,
     attachmentSize: attachmentSize ?? null,
+    ...(isAdmin && socialImagePath !== undefined ? { socialImagePath: socialImagePath || null } : {}),
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),
     ...(isAdmin ? { isPublicShareEnabled: !!isPublicShareEnabled } : {}),
@@ -70,6 +73,7 @@ export function buildFreeBoardPostUpdatePayload({
   attachmentPath,
   attachmentName,
   attachmentSize,
+  socialImagePath,
   registeredAt,
   isPublicShareEnabled,
 }: FreeBoardPostUpdatePayloadInput) {
@@ -82,6 +86,7 @@ export function buildFreeBoardPostUpdatePayload({
     attachmentPath: attachmentPath ?? null,
     attachmentName: attachmentName ?? null,
     attachmentSize: attachmentSize ?? null,
+    ...(isAdmin && socialImagePath !== undefined ? { socialImagePath: socialImagePath || null } : {}),
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),
     ...(isAdmin ? { isPublicShareEnabled: !!isPublicShareEnabled } : {}),

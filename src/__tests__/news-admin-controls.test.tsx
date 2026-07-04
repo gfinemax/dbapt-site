@@ -1258,6 +1258,72 @@ describe("news admin API controls", () => {
     }));
   });
 
+  it("stores dedicated Kakao preview images only for administrator free-board posts", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.create.mockResolvedValue({
+      ...realFreePost,
+      socialImagePath: "/uploads/free-kakao.png",
+    });
+
+    const response = await freeRoute.POST(
+      jsonRequest({
+        title: "카톡 이미지 자유글",
+        content: "본문",
+        socialImagePath: "/uploads/free-kakao.png",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: "카톡 이미지 자유글",
+        socialImagePath: "/uploads/free-kakao.png",
+      }),
+    }));
+
+    vi.clearAllMocks();
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+
+    const memberResponse = await freeRoute.POST(
+      jsonRequest({
+        title: "일반 글",
+        content: "본문",
+        socialImagePath: "/uploads/member-kakao.png",
+      }),
+    );
+
+    expect(memberResponse.status).toBe(403);
+    expect(await memberResponse.json()).toMatchObject({
+      error: "카톡 미리보기 이미지는 관리자만 변경할 수 있습니다.",
+    });
+    expect(mockPrisma.freePost.create).not.toHaveBeenCalled();
+  });
+
+  it("lets administrators update free-board dedicated Kakao preview images", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
+    mockPrisma.freePost.update.mockResolvedValue({
+      ...realFreePost,
+      socialImagePath: "/uploads/free-kakao-updated.png",
+    });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        postId: "free-1",
+        title: "수정제목",
+        content: "수정내용",
+        socialImagePath: "/uploads/free-kakao-updated.png",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.freePost.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        socialImagePath: "/uploads/free-kakao-updated.png",
+      }),
+    }));
+  });
+
   it("rejects invalid administrator display author names on free-board posts", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
 
@@ -1859,6 +1925,55 @@ describe("news admin visible controls", () => {
       expect.objectContaining({
         method: "PATCH",
         body: expect.stringContaining("\"displayAuthorName\":\"사무국\""),
+      }),
+    ));
+  });
+
+  it("uploads a dedicated Kakao preview image when editing a notice", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, url: "/uploads/notice-kakao.png", name: "notice-kakao.png", size: 15 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          news: {
+            ...realNotice,
+            socialImagePath: "/uploads/notice-kakao.png",
+            author: { name: "관리자", role: "ADMIN" },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ newsList: [{ ...realNotice, socialImagePath: "/uploads/notice-kakao.png" }] }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <NewsClient
+        session={{ id: "admin-1", loginId: "admin", name: "관리자", role: "ADMIN" }}
+        initialNewsList={[realNotice]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
+    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    fireEvent.click(within(drawer).getByRole("button", { name: "수정" }));
+    fireEvent.change(within(drawer).getByLabelText("카톡 미리보기 이미지 (선택)"), {
+      target: { files: [new File(["preview"], "notice-kakao.png", { type: "image/png" })] },
+    });
+    fireEvent.click(within(drawer).getByRole("button", { name: "수정사항 저장" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"socialImagePath\":\"/uploads/notice-kakao.png\""),
       }),
     ));
   });
@@ -2485,6 +2600,65 @@ describe("news admin visible controls", () => {
     expect(onRefresh).toHaveBeenCalled();
   });
 
+  it("uploads a dedicated Kakao preview image when creating a notice", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, url: "/uploads/body.png", name: "body.png", size: 11 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, url: "/uploads/kakao-preview.png", name: "kakao-preview.png", size: 12 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, news: { ...realNotice, socialImagePath: "/uploads/kakao-preview.png" } }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ 신규 공지사항 등록" }));
+    fireEvent.change(screen.getByPlaceholderText("공지사항의 제목을 입력하십시오."), {
+      target: { value: "카톡 이미지 공지" },
+    });
+    const editor = screen.getByRole("textbox", { name: "공지 내용 편집창" });
+    fireEvent.input(editor, {
+      currentTarget: { innerHTML: "<p>공지 본문</p>" },
+    });
+    fireEvent.paste(editor, {
+      clipboardData: {
+        files: [new File(["body"], "body.png", { type: "image/png" })],
+      },
+    });
+    await waitFor(() => expect(screen.getByAltText("본문 이미지")).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("카톡 미리보기 이미지 (선택)"), {
+      target: { files: [new File(["preview"], "kakao-preview.png", { type: "image/png" })] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "공지사항 즉시 등록" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    const uploadBody = fetchMock.mock.calls[1]?.[1]?.body as FormData;
+    expect(uploadBody.get("kind")).toBe("image");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/news",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"socialImagePath\":\"/uploads/kakao-preview.png\""),
+      }),
+    );
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
   it("submits the selected notice display author from the admin drawer", async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const fetchMock = vi.fn().mockResolvedValue({
@@ -2686,6 +2860,28 @@ describe("news admin visible controls", () => {
     expect(within(adminTypeSelect).getByRole("option", { name: "법령·운영안내" })).toBeInTheDocument();
     fireEvent.change(adminTypeSelect, { target: { value: "NOTICE" } });
     expect(screen.getByText("사무국의 공식 법령 해설, 절차 안내, 운영 공지에 사용합니다.")).toBeInTheDocument();
+  });
+
+  it("stores a dedicated Kakao preview image path for coop news", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.coopNews.update.mockResolvedValue({ ...realNotice, socialImagePath: "/uploads/kakao-preview.png" });
+
+    const response = await newsRoute.PATCH(
+      jsonRequest({
+        id: "notice-1",
+        title: "수정 공지",
+        content: "수정 본문",
+        category: "NOTICE",
+        socialImagePath: "/uploads/kakao-preview.png",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.coopNews.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        socialImagePath: "/uploads/kakao-preview.png",
+      }),
+    }));
   });
 
   it("does not prefill registeredAt for new administrator free-board posts", () => {
@@ -3024,7 +3220,16 @@ describe("news admin visible controls", () => {
         ok: true,
         json: async () => ({
           success: true,
-          post: { ...realFreePost, title: "첨부 수정 글" },
+          url: "/uploads/free-kakao.png",
+          name: "free-kakao.png",
+          size: 1024,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          post: { ...realFreePost, title: "첨부 수정 글", socialImagePath: "/uploads/free-kakao.png" },
         }),
       });
     vi.stubGlobal("fetch", fetchMock);
@@ -3061,18 +3266,24 @@ describe("news admin visible controls", () => {
       target: { files: [new File(["updated"], "updated-free.pdf", { type: "application/pdf" })] },
     });
     await waitFor(() => expect(screen.getByText("updated-free.pdf")).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("카톡 미리보기 이미지 (선택)"), {
+      target: { files: [new File(["preview"], "free-kakao.png", { type: "image/png" })] },
+    });
     fireEvent.change(screen.getByLabelText("등록일"), { target: { value: "2026-06-21T09:30" } });
     fireEvent.click(screen.getByRole("button", { name: "수정 완료" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
     const uploadBody = fetchMock.mock.calls[0]?.[1]?.body as FormData;
     expect(uploadBody.get("kind")).toBe("free-attachment");
-    const patchBody = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body));
+    const previewUploadBody = fetchMock.mock.calls[1]?.[1]?.body as FormData;
+    expect(previewUploadBody.get("kind")).toBe("image");
+    const patchBody = JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body));
     expect(patchBody).toMatchObject({
       postId: "free-1",
       attachmentPath: "/uploads/updated-free.pdf",
       attachmentName: "updated-free.pdf",
       attachmentSize: 8192,
+      socialImagePath: "/uploads/free-kakao.png",
       registeredAt: "2026-06-21T09:30",
     });
     expect(onRefresh).toHaveBeenCalled();

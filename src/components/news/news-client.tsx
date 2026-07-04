@@ -163,6 +163,8 @@ export function NewsClient({
   const [editAttachmentName, setEditAttachmentName] = useState<string | null>(null);
   const [editAttachmentSize, setEditAttachmentSize] = useState<number | null>(null);
   const [editAttachmentFile, setEditAttachmentFile] = useState<File | null>(null);
+  const [editSocialImagePath, setEditSocialImagePath] = useState<string | null>(null);
+  const [editSocialImageFile, setEditSocialImageFile] = useState<File | null>(null);
   const [editRegisteredAt, setEditRegisteredAt] = useState("");
   const [editIsStarred, setEditIsStarred] = useState(false);
   const [editDisplayAuthorName, setEditDisplayAuthorName] =
@@ -201,6 +203,8 @@ export function NewsClient({
       setEditingNoticeCommentId(null);
       setEditNoticeCommentContent("");
       setEditNoticeCommentDisplayAuthorName("운영자");
+      setEditSocialImagePath(null);
+      setEditSocialImageFile(null);
     }
     return () => {
       document.body.style.overflow = "";
@@ -258,6 +262,8 @@ export function NewsClient({
     setEditAttachmentName(draft.attachmentName);
     setEditAttachmentSize(draft.attachmentSize);
     setEditAttachmentFile(null);
+    setEditSocialImagePath(draft.socialImagePath);
+    setEditSocialImageFile(null);
     setEditRegisteredAt(draft.registeredAt);
     setEditIsStarred(draft.isStarred);
     setEditDisplayAuthorName(draft.displayAuthorName);
@@ -277,7 +283,12 @@ export function NewsClient({
       let attachmentPath = editAttachmentPath;
       let attachmentName = editAttachmentName;
       let attachmentSize = editAttachmentSize;
+      let socialImagePath = editSocialImagePath;
 
+      if (editSocialImageFile) {
+        const uploadData = await uploadPublicFile(editSocialImageFile, "image");
+        socialImagePath = uploadData.url;
+      }
       if (editAttachmentFile) {
         const uploadData = await uploadPublicFile(editAttachmentFile, "attachment");
         attachmentPath = uploadData.url;
@@ -295,6 +306,7 @@ export function NewsClient({
           attachmentPath,
           attachmentName,
           attachmentSize,
+          socialImagePath,
           registeredAt: editRegisteredAt,
           isStarred: editIsStarred,
           displayAuthorName: editDisplayAuthorName,
@@ -953,6 +965,39 @@ export function NewsClient({
                     <label htmlFor="edit-star-checkbox" className="text-[11.5px] font-extrabold text-graphite/95 cursor-pointer font-mono">
                       중요 공지사항으로 상단 고정 표시 (★)
                     </label>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="edit-notice-social-image-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      카톡 미리보기 이미지 (선택)
+                    </label>
+                    {editSocialImagePath && (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-white px-3 py-2 text-[11px] font-bold text-graphite">
+                        <span>현재 미리보기 이미지: {editSocialImagePath}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditSocialImagePath(null);
+                            setEditSocialImageFile(null);
+                          }}
+                          className="rounded-full bg-stone-surface px-2.5 py-1 text-[10px] font-bold text-graphite"
+                        >
+                          이미지 제거
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      id="edit-notice-social-image-file"
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      onChange={(e) => setEditSocialImageFile(e.target.files?.[0] || null)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
+                    />
+                    {editSocialImageFile && (
+                      <p className="text-[10px] font-bold text-sky-blue">
+                        새 미리보기 이미지: {editSocialImageFile.name}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">

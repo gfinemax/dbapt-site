@@ -14,6 +14,10 @@ function parseRegisteredAtInput(value: unknown) {
   return parseKoreaDateTimeLocalValue(value);
 }
 
+function hasSocialImagePathInput(body: Record<string, unknown>) {
+  return Object.prototype.hasOwnProperty.call(body, "socialImagePath");
+}
+
 // 1. GET: 공지사항 및 조합뉴스 조회 (Public)
 export async function GET(request: Request) {
   const session = (await getSession()) as { id: string; role: string } | null;
@@ -89,6 +93,7 @@ export async function POST(request: Request) {
       content,
       category,
       imagePath,
+      socialImagePath,
       isStarred,
       attachmentPath,
       attachmentName,
@@ -130,6 +135,7 @@ export async function POST(request: Request) {
         content,
         category,
         imagePath: imagePath || null,
+        socialImagePath: socialImagePath || null,
         attachmentPath: attachmentPath || null,
         attachmentName: attachmentName || null,
         attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : null,
@@ -175,6 +181,7 @@ export async function PATCH(request: Request) {
       content,
       category,
       imagePath,
+      socialImagePath,
       isStarred,
       attachmentPath,
       attachmentName,
@@ -216,6 +223,7 @@ export async function PATCH(request: Request) {
         attachmentName: attachmentName || null,
         attachmentSize: Number.isFinite(attachmentSize) ? attachmentSize : null,
         isStarred: !!isStarred,
+        ...(hasSocialImagePathInput(body) ? { socialImagePath: socialImagePath || null } : {}),
         ...(parsedRegisteredAt ? { registeredAt: parsedRegisteredAt } : {}),
         ...(displayAuthorName !== undefined
           ? { displayAuthorName: parsedDisplayAuthorName.value }

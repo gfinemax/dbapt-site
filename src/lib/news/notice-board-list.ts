@@ -27,6 +27,7 @@ export function buildNoticeBoardList(
       displayAuthorName: item.displayAuthorName,
       createdAt: formatNoticeDate(item.registeredAt ?? item.createdAt),
       imagePath: item.imagePath,
+      socialImagePath: item.socialImagePath,
       attachmentPath: item.attachmentPath,
       attachmentName: item.attachmentName,
       attachmentSize: item.attachmentSize,

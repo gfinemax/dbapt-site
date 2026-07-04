@@ -11,7 +11,7 @@ import { NewsClient } from "@/components/news/news-client";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 import { getUserDisplayName } from "@/lib/user-display-name";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
-import { buildFreePostSocialPreview } from "@/lib/news/social-preview";
+import { buildFreePostSocialPreview, buildNewsPostSocialPreview } from "@/lib/news/social-preview";
 import { siteTitle, socialPreviewImage } from "@/lib/site-metadata";
 import type { CoopNewsView, FAQView, FreePostView } from "@/lib/news/types";
 
@@ -19,6 +19,7 @@ type NewsPageProps = {
   searchParams?: Promise<{
     tab?: string | string[];
     post?: string | string[];
+    news?: string | string[];
   }>;
 };
 
@@ -30,6 +31,7 @@ export async function generateMetadata({ searchParams }: NewsPageProps = {}): Pr
   const resolvedSearchParams = await searchParams;
   const requestedTab = getFirstSearchParam(resolvedSearchParams?.tab);
   const requestedFreePostId = getFirstSearchParam(resolvedSearchParams?.post);
+  const requestedNewsId = getFirstSearchParam(resolvedSearchParams?.news);
 
   const defaultMetadata: Metadata = {
     title: `소통마당 | ${siteTitle}`,
@@ -51,6 +53,55 @@ export async function generateMetadata({ searchParams }: NewsPageProps = {}): Pr
     },
   };
 
+  if ((requestedTab === "notice" || requestedTab === "newsletter") && requestedNewsId) {
+    const category = requestedTab === "newsletter" ? "WEEKLY_MONTHLY" : "NOTICE";
+
+    try {
+      const publicNewsPost = await prisma.coopNews.findFirst({
+        where: {
+          id: requestedNewsId,
+          category,
+        },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          imagePath: true,
+          socialImagePath: true,
+        },
+      });
+
+      if (!publicNewsPost) {
+        return defaultMetadata;
+      }
+
+      const preview = buildNewsPostSocialPreview(publicNewsPost);
+
+      return {
+        title: `${preview.title} | ${siteTitle}`,
+        description: preview.description,
+        openGraph: {
+          title: preview.title,
+          description: preview.description,
+          url: `/news?tab=${requestedTab}&news=${encodeURIComponent(publicNewsPost.id)}`,
+          siteName: siteTitle,
+          locale: "ko_KR",
+          type: "article",
+          images: [preview.image],
+        },
+        twitter: {
+          card: "summary_large_image",
+          title: preview.title,
+          description: preview.description,
+          images: [preview.image.url],
+        },
+      };
+    } catch (e) {
+      console.error("Error loading news social metadata:", e);
+      return defaultMetadata;
+    }
+  }
+
   if (requestedTab !== "free" || !requestedFreePostId) {
     return defaultMetadata;
   }
@@ -66,6 +117,7 @@ export async function generateMetadata({ searchParams }: NewsPageProps = {}): Pr
         title: true,
         content: true,
         imagePath: true,
+        socialImagePath: true,
       },
     });
 

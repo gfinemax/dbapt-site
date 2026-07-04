@@ -1,11 +1,12 @@
 import { getPlainNoticeText } from "@/lib/news/rich-text";
 import { siteTitle, socialPreviewImage } from "@/lib/site-metadata";
 
-type FreePostSocialPreviewInput = {
+type NewsPostSocialPreviewInput = {
   id: string;
   title: string;
   content: string;
   imagePath?: string | null;
+  socialImagePath?: string | null;
 };
 
 type SocialPreview = {
@@ -47,8 +48,8 @@ function truncateDescription(description: string) {
   return `${description.slice(0, MAX_DESCRIPTION_LENGTH - 1).trimEnd()}…`;
 }
 
-export function buildFreePostSocialPreview(post: FreePostSocialPreviewInput): SocialPreview {
-  const imageUrl = getFirstRichTextImageSrc(post.content) || post.imagePath || socialPreviewImage.url;
+export function buildNewsPostSocialPreview(post: NewsPostSocialPreviewInput): SocialPreview {
+  const imageUrl = post.socialImagePath || getFirstRichTextImageSrc(post.content) || post.imagePath || socialPreviewImage.url;
   const safeImageUrl = isSafeSocialImageSrc(imageUrl) ? imageUrl : socialPreviewImage.url;
   const description = truncateDescription(getPlainNoticeText(post.content) || siteTitle);
 
@@ -62,4 +63,8 @@ export function buildFreePostSocialPreview(post: FreePostSocialPreviewInput): So
       alt: post.title,
     },
   };
+}
+
+export function buildFreePostSocialPreview(post: NewsPostSocialPreviewInput): SocialPreview {
+  return buildNewsPostSocialPreview(post);
 }

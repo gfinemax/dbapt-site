@@ -39,6 +39,7 @@ export function buildEditedNoticeView(
     registeredAt: String(editedNotice.registeredAt ?? fallbackNotice.registeredAt ?? fallbackNotice.createdAt),
     createdAt: String(editedNotice.createdAt ?? fallbackNotice.createdAt),
     updatedAt: editedNotice.updatedAt === undefined ? fallbackNotice.updatedAt : String(editedNotice.updatedAt),
+    socialImagePath: editedNotice.socialImagePath === undefined ? fallbackNotice.socialImagePath : editedNotice.socialImagePath,
     displayAuthorName,
     author,
     comments: editedNotice.comments ?? fallbackNotice.comments,

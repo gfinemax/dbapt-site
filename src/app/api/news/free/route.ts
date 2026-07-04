@@ -41,6 +41,14 @@ function hasFreePostAttachmentPayload(body: Record<string, unknown>) {
   return "attachmentPath" in body || "attachmentName" in body || "attachmentSize" in body;
 }
 
+function parseSocialImagePath(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function hasSocialImagePathPayload(body: Record<string, unknown>) {
+  return "socialImagePath" in body;
+}
+
 function parseCreatedAt(value: unknown): Date | null {
   const date = parseKoreaDateTimeLocalValue(value);
   return date ?? null;
@@ -130,6 +138,7 @@ export async function POST(request: Request) {
       displayAuthorName,
       registeredAt,
       isPublicShareEnabled,
+      socialImagePath,
     } = body; // 만약 postId가 존재하면 댓글 추가로 판별
     const parsedDisplayAuthorName = session.role === "ADMIN"
       ? parseNewsDisplayAuthorName(displayAuthorName)
@@ -199,6 +208,9 @@ export async function POST(request: Request) {
       if (registeredAt && session.role !== "ADMIN") {
         return NextResponse.json({ error: "등록일 변경은 관리자만 가능합니다." }, { status: 403 });
       }
+      if (hasSocialImagePathPayload(body) && session.role !== "ADMIN") {
+        return NextResponse.json({ error: "카톡 미리보기 이미지는 관리자만 변경할 수 있습니다." }, { status: 403 });
+      }
       const publicShareEnabled = session.role === "ADMIN" ? !!isPublicShareEnabled : false;
 
       const post = await prisma.freePost.create({
@@ -211,6 +223,9 @@ export async function POST(request: Request) {
           displayAuthorName: session.role === "ADMIN" ? parsedDisplayAuthorName.value : null,
           isPublicShareEnabled: publicShareEnabled,
           publicShareEnabledAt: publicShareEnabled ? new Date() : null,
+          ...(session.role === "ADMIN" && hasSocialImagePathPayload(body)
+            ? { socialImagePath: parseSocialImagePath(socialImagePath) }
+            : {}),
           ...normalizeFreePostAttachment(body),
           ...(parsedRegisteredAt && session.role === "ADMIN" ? { registeredAt: parsedRegisteredAt } : {}),
         },
@@ -279,7 +294,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { postId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled } = body;
+    const { postId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled, socialImagePath } = body;
 
     if (!postId) {
       return NextResponse.json({ error: "수정할 대상 ID가 누락되었습니다." }, { status: 400 });
@@ -305,6 +320,9 @@ export async function PATCH(request: Request) {
     if (registeredAt && session.role !== "ADMIN") {
       return NextResponse.json({ error: "등록일 변경은 관리자만 가능합니다." }, { status: 403 });
     }
+    if (hasSocialImagePathPayload(body) && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "카톡 미리보기 이미지는 관리자만 변경할 수 있습니다." }, { status: 403 });
+    }
 
     const updateData: {
       title: string;
@@ -318,6 +336,7 @@ export async function PATCH(request: Request) {
       registeredAt?: Date;
       isPublicShareEnabled?: boolean;
       publicShareEnabledAt?: Date | null;
+      socialImagePath?: string | null;
     } = {
       title,
       content,
@@ -339,6 +358,9 @@ export async function PATCH(request: Request) {
         : null;
       if (parsedRegisteredAt) {
         updateData.registeredAt = parsedRegisteredAt;
+      }
+      if (hasSocialImagePathPayload(body)) {
+        updateData.socialImagePath = parseSocialImagePath(socialImagePath);
       }
     }
 

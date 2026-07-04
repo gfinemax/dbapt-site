@@ -10,6 +10,7 @@ export type NoticeEditDraft = {
   attachmentPath: string | null;
   attachmentName: string | null;
   attachmentSize: number | null;
+  socialImagePath: string | null;
   isStarred: boolean;
   displayAuthorName: NewsDisplayAuthorName;
   registeredAt: string;
@@ -28,6 +29,7 @@ export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
     attachmentPath: notice.attachmentPath || null,
     attachmentName: notice.attachmentName || null,
     attachmentSize: notice.attachmentSize || null,
+    socialImagePath: notice.socialImagePath || null,
     isStarred: !!notice.isStarred,
     registeredAt: toDateInputValue(notice.registeredAt ?? notice.createdAt),
     displayAuthorName:

@@ -548,6 +548,7 @@ model CoopNews {
   viewCount             Int                    @default(0)
   isStarred             Boolean                @default(false)
   imagePath             String? // 주/월간소식 메인 썸네일
+  socialImagePath       String? // 카카오톡/소셜 공유 전용 대표 이미지
   attachmentPath        String? // 공지/조합뉴스 공개 첨부파일 경로
   attachmentName        String? // 공지/조합뉴스 공개 첨부파일 원본명
   attachmentSize        Int? // 공지/조합뉴스 공개 첨부파일 크기(bytes)
@@ -588,6 +589,7 @@ model FreePost {
   title                 String
   content               String
   imagePath             String? // 첨부 이미지 경로
+  socialImagePath       String? // 카카오톡/소셜 공유 전용 대표 이미지
   attachmentPath        String? // 공개 첨부파일 경로
   attachmentName        String? // 공개 첨부파일명
   attachmentSize        Int? // 공개 첨부파일 크기(byte)

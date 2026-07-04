@@ -7,6 +7,7 @@ type NoticeEditPayloadInput = {
   attachmentPath: string | null;
   attachmentName: string | null;
   attachmentSize: number | null;
+  socialImagePath: string | null;
   isStarred: boolean;
   displayAuthorName: NewsDisplayAuthorName;
   registeredAt?: string;
@@ -19,6 +20,7 @@ export function buildNoticeEditPayload({
   attachmentPath,
   attachmentName,
   attachmentSize,
+  socialImagePath,
   isStarred,
   displayAuthorName,
   registeredAt,
@@ -32,6 +34,7 @@ export function buildNoticeEditPayload({
     attachmentPath,
     attachmentName,
     attachmentSize,
+    socialImagePath,
     isStarred,
     displayAuthorName,
   };

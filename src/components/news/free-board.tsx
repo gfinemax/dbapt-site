@@ -270,6 +270,8 @@ export function FreeBoard({
   const [writeAttachmentPath, setWriteAttachmentPath] = useState<string | null>(null);
   const [writeAttachmentName, setWriteAttachmentName] = useState<string | null>(null);
   const [writeAttachmentSize, setWriteAttachmentSize] = useState<number | null>(null);
+  const [writeSocialImagePath, setWriteSocialImagePath] = useState<string | null>(null);
+  const [writeSocialImageFile, setWriteSocialImageFile] = useState<File | null>(null);
   const [writeRegisteredAt, setWriteRegisteredAt] = useState("");
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
 
@@ -284,6 +286,8 @@ export function FreeBoard({
     setWriteAttachmentPath(null);
     setWriteAttachmentName(null);
     setWriteAttachmentSize(null);
+    setWriteSocialImagePath(null);
+    setWriteSocialImageFile(null);
     setWriteRegisteredAt("");
   };
 
@@ -297,6 +301,8 @@ export function FreeBoard({
       writeTitle.trim() ||
       getPlainNoticeText(writeContent).trim() ||
       writeAttachmentPath ||
+      writeSocialImagePath ||
+      writeSocialImageFile ||
       writeIsStarred ||
       writeIsPublicShareEnabled ||
       writePostType !== "FREE" ||
@@ -322,6 +328,8 @@ export function FreeBoard({
     setWriteAttachmentPath(post.attachmentPath);
     setWriteAttachmentName(post.attachmentName);
     setWriteAttachmentSize(post.attachmentSize);
+    setWriteSocialImagePath(post.socialImagePath);
+    setWriteSocialImageFile(null);
     setWriteRegisteredAt(toKoreaDateTimeLocalValue(post.registeredAtRaw));
     setWriteDisplayAuthorName(
       displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
@@ -346,6 +354,14 @@ export function FreeBoard({
     } finally {
       setIsUploadingAttachment(false);
     }
+  };
+
+  const handleSocialImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    event.target.value = "";
+    if (!file) return;
+
+    setWriteSocialImageFile(file);
   };
 
 
@@ -413,6 +429,13 @@ export function FreeBoard({
 
     setIsSubmitting(true);
     try {
+      let socialImagePath = writeSocialImagePath;
+      if (isAdmin && writeSocialImageFile) {
+        const uploadData = await uploadPublicFile(writeSocialImageFile, "image");
+        socialImagePath = uploadData.url;
+        setWriteSocialImagePath(uploadData.url);
+      }
+
       if (editingPost) {
         const res = await fetch("/api/news/free", {
           method: "PATCH",
@@ -428,6 +451,7 @@ export function FreeBoard({
             attachmentPath: writeAttachmentPath,
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
+            socialImagePath,
             registeredAt: writeRegisteredAt,
             isPublicShareEnabled: writeIsPublicShareEnabled,
           })),
@@ -456,6 +480,7 @@ export function FreeBoard({
             attachmentPath: writeAttachmentPath,
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
+            socialImagePath,
             registeredAt: writeRegisteredAt,
             isPublicShareEnabled: writeIsPublicShareEnabled,
           })),
@@ -751,6 +776,50 @@ export function FreeBoard({
               </p>
             )}
           </div>
+
+          {isAdmin && (
+            <div className="space-y-2 md:col-span-2">
+              <label htmlFor="free-post-social-image" className="block text-[11px] font-bold text-charcoal-primary font-mono">
+                카톡 미리보기 이미지 (선택)
+              </label>
+              <div className="rounded-xl border border-dashed border-stone-surface bg-white px-3 py-2">
+                <input
+                  id="free-post-social-image"
+                  aria-label="카톡 미리보기 이미지 (선택)"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleSocialImageChange}
+                  className="block w-full text-xs text-graphite file:mr-3 file:rounded-full file:border-0 file:bg-midnight file:px-3 file:py-1.5 file:text-[11px] file:font-bold file:text-white"
+                />
+              </div>
+              {writeSocialImagePath || writeSocialImageFile ? (
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-white px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-extrabold text-charcoal-primary">
+                      {writeSocialImageFile?.name || writeSocialImagePath}
+                    </p>
+                    <p className="mt-0.5 text-[10px] font-bold text-ash font-mono">
+                      카톡 공유 링크 대표 이미지로 사용됩니다.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWriteSocialImagePath(null);
+                      setWriteSocialImageFile(null);
+                    }}
+                    className="shrink-0 rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
+                  >
+                    삭제
+                  </button>
+                </div>
+              ) : (
+                <p className="text-[10px] font-medium text-ash">
+                  지정하면 본문 첫 이미지보다 우선해 카톡 미리보기 이미지로 표시됩니다.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {isAdmin && (

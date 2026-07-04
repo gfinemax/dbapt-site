@@ -1,6 +1,78 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Dedicated Kakao/social preview image for free-board posts
+- Governing spec: Existing `/news?tab=free&post=...` public social preview behavior and current user request to also support free-board posts
+- Implementation plan: Direct admin editing slice; no separate plan file
+- Files or pages reviewed: `src/components/news/free-board.tsx`, `src/app/api/news/free/route.ts`, `src/lib/news/free-board-api.ts`, `src/lib/news/free-board-list.ts`, `src/lib/news/social-preview.ts`, related regression tests
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change adds an administrator-only `socialImagePath` create/update path for free-board posts. General member posting, private comments, document data, member data, payments, voting, and public mutation permissions are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Admins can now choose a `카톡 미리보기 이미지 (선택)` for free-board posts. Public social metadata uses that explicit image first, then the public body image, then the existing image/hero fallback.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The visible UI change is limited to a labeled optional image file input inside the existing free-board post settings panel, using the same rounded dashed file-input styling as adjacent controls. Regression coverage verifies API persistence, edit upload payloads, and social-preview priority.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Dedicated Kakao/social preview image for news posts
+- Governing spec: Existing `/news` public social preview behavior and current user request to choose the Kakao preview image
+- Implementation plan: Direct metadata and admin editing slice; no separate plan file
+- Files or pages reviewed: `src/components/news/notice-board.tsx`, `src/components/news/news-client.tsx`, `src/app/news/page.tsx`, `src/lib/news/social-preview.ts`, `src/app/api/news/route.ts`, `prisma/schema.prisma`, related migration and tests
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change adds an admin-controlled `socialImagePath` field for news/free-board posts and uses it only for public social metadata. It does not expose private comments, documents, member data, payments, voting, or any new public mutation capability.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Admins can now upload a separate `카톡 미리보기 이미지` when creating or editing notices. Kakao/Open Graph metadata uses that explicit image first, then the public post body image, then the existing card image or hero fallback.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The visible UI change is limited to a labeled optional file input in existing notice create/edit forms, using the same rounded input and file-button styling as adjacent attachment controls. Regression coverage verifies create/edit upload payloads, API persistence, metadata priority, and existing board-copy behavior.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Notice/newsletter social preview body-image fallback
+- Governing spec: Existing `/news` public social preview behavior and current user Kakao preview request
+- Implementation plan: Direct metadata bug-fix slice; no separate plan file
+- Files or pages reviewed: `src/app/news/page.tsx`, `src/lib/news/social-preview.ts`, `src/__tests__/news-page-metadata.test.ts`, `src/__tests__/news-social-preview.test.ts`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only expands public `/news?tab=notice&news=...` and `/news?tab=newsletter&news=...` metadata generation to use the already public post content and image fields. It does not expose private free-board posts, comments, documents, member data, payment data, or any mutation capability.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The social preview image now reflects the first safe image embedded in the shared public post body, then the post image field, then the existing community hero fallback. The preview title and description still come from the same public post content.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: No rendered page layout, typography, navigation, motion, or interactive UI was changed. Regression coverage verifies that notice metadata looks up the requested public notice and uses the first body image for Open Graph and Twitter images; the shared preview helper continues to reject unsafe image sources.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Free-board editor mouse-selection and registeredAt correction
 - Governing spec: Existing free-board rich-content editing workflow and current user report
 - Implementation plan: Direct bug-fix slice; no separate plan file

@@ -82,6 +82,7 @@ export function NoticeBoard({
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadContent, setUploadContent] = useState("");
   const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
+  const [uploadSocialImageFile, setUploadSocialImageFile] = useState<File | null>(null);
   const [uploadRegisteredAt, setUploadRegisteredAt] = useState(() => toDateInputValue());
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
   const [uploadDisplayAuthorName, setUploadDisplayAuthorName] =
@@ -105,7 +106,12 @@ export function NoticeBoard({
       let attachmentPath: string | null = null;
       let attachmentName: string | null = null;
       let attachmentSize: number | null = null;
+      let socialImagePath: string | null = null;
 
+      if (uploadSocialImageFile) {
+        const uploadData = await uploadPublicFile(uploadSocialImageFile, "image");
+        socialImagePath = uploadData.url;
+      }
       if (uploadAttachmentFile) {
         const uploadData = await uploadPublicFile(uploadAttachmentFile, "attachment");
         attachmentPath = uploadData.url;
@@ -121,6 +127,7 @@ export function NoticeBoard({
           content: uploadContent,
           category: "NOTICE",
           registeredAt: uploadRegisteredAt,
+          socialImagePath,
           attachmentPath,
           attachmentName,
           attachmentSize,
@@ -138,6 +145,7 @@ export function NoticeBoard({
       setUploadTitle("");
       setUploadContent("");
       setUploadAttachmentFile(null);
+      setUploadSocialImageFile(null);
       setUploadRegisteredAt(toDateInputValue());
       setUploadIsStarred(false);
       setUploadDisplayAuthorName("운영자");
@@ -699,6 +707,24 @@ export function NoticeBoard({
                   onChange={(e) => setUploadRegisteredAt(e.target.value)}
                   className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="notice-social-image-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  카톡 미리보기 이미지 (선택)
+                </label>
+                <input
+                  id="notice-social-image-file"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  onChange={(e) => setUploadSocialImageFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
+                />
+                {uploadSocialImageFile && (
+                  <p className="text-[10px] font-bold text-sky-blue">
+                    선택된 미리보기 이미지: {uploadSocialImageFile.name}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">
