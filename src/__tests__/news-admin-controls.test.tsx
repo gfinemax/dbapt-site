@@ -1789,7 +1789,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-notice-1",
-            message: "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n제목: 실제 공지\n등록일: 2026. 06. 17.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
+            message: "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n🎁실제 공지(등록일: 2026. 06. 17.)\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
           },
         }),
       })
@@ -1811,7 +1811,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "실제 공지 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n제목: 실제 공지\n등록일: 2026. 06. 17.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
+      "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n🎁실제 공지(등록일: 2026. 06. 17.)\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
     ));
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -1845,7 +1845,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-notice-fallback",
-            message: "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n제목: 실제 공지\n등록일: 2026. 06. 17.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
+            message: "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n🎁실제 공지(등록일: 2026. 06. 17.)\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
           },
         }),
       })
@@ -3031,7 +3031,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-free-1",
-            message: "[홈페이지 자유게시판 안내]\n\n새 게시글이 등록되었습니다.\n\n제목: 실제 자유게시글\n등록일: 2026. 06. 18.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/free/free-1",
+            message: "[홈페이지 자유게시판 안내]\n\n새 게시글이 등록되었습니다.\n\n🎁실제 자유게시글(등록일: 2026. 06. 18.)\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/free/free-1",
           },
         }),
       })
@@ -3052,7 +3052,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      "[홈페이지 자유게시판 안내]\n\n새 게시글이 등록되었습니다.\n\n제목: 실제 자유게시글\n등록일: 2026. 06. 18.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/free/free-1",
+      "[홈페이지 자유게시판 안내]\n\n새 게시글이 등록되었습니다.\n\n🎁실제 자유게시글(등록일: 2026. 06. 18.)\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/free/free-1",
     ));
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,

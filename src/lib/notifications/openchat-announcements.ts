@@ -144,6 +144,10 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
+function formatAnnouncementTitleLine(title: string, date: Date) {
+  return `🎁${title}(등록일: ${formatDate(date)})`;
+}
+
 export function buildOpenChatAnnouncementMessage(params: {
   document: OpenChatAnnouncementDocument;
   siteUrl?: string;
@@ -159,8 +163,7 @@ export function buildOpenChatAnnouncementMessage(params: {
     "",
     "새 공개자료가 등록되었습니다.",
     "",
-    `제목: ${title}`,
-    `등록일: ${formatDate(publishedAt)}`,
+    formatAnnouncementTitleLine(title, publishedAt),
     "",
     "아래 링크로 확인해 주세요.",
     disclosureUrl,
@@ -183,8 +186,7 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
     "",
     meta.body,
     "",
-    `제목: ${title}`,
-    `등록일: ${formatDate(createdAt)}`,
+    formatAnnouncementTitleLine(title, createdAt),
     "",
     "아래 링크로 확인해 주세요.",
     newsUrl,
@@ -206,8 +208,7 @@ export function buildOpenChatFreePostAnnouncementMessage(params: {
     "",
     "새 게시글이 등록되었습니다.",
     "",
-    `제목: ${title}`,
-    `등록일: ${formatDate(createdAt)}`,
+    formatAnnouncementTitleLine(title, createdAt),
     "",
     "아래 링크로 확인해 주세요.",
     freeBoardUrl,
