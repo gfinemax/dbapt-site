@@ -78,6 +78,7 @@ model Document {
   attachmentName           String? // 추가 첨부파일 원본 파일명
   attachmentSize           Int? // 추가 첨부파일 용량 (bytes)
   socialImagePath          String? // 카카오톡/소셜 공유 전용 대표 이미지
+  viewCount                Int       @default(0) // 공개자료 열람 수
   isStarred                Boolean   @default(false) // 중요 문서 별표 마킹
   status                   String    @default("PENDING") // PENDING, APPROVED
   publishedAt              DateTime? // 실제 조합원 대상 공개 일시
@@ -589,6 +590,7 @@ model FreePost {
   id                    String                 @id @default(uuid())
   title                 String
   content               String
+  viewCount             Int                    @default(0)
   imagePath             String? // 첨부 이미지 경로
   socialImagePath       String? // 카카오톡/소셜 공유 전용 대표 이미지
   attachmentPath        String? // 공개 첨부파일 경로

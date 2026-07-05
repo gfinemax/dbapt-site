@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PdfViewerModal } from "./pdf-viewer-modal";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
+import { formatViewCount } from "@/lib/view-count";
 
 export type Attachment = {
   id: string;
@@ -34,6 +35,7 @@ export type Document = {
   storedFileSize?: number | null;
   fileOptimized?: boolean;
   fileSizeReductionPercent?: number | null;
+  viewCount?: number;
   status: string;
   isStarred?: boolean;
   publishedAt: string | null;
@@ -335,6 +337,9 @@ export function DocumentTable({
           <span className="text-[9px] text-[#848281] font-mono">
             {formatSize(doc.fileSize)}
           </span>
+          <span className="text-[9px] text-ash font-mono">
+            {formatViewCount(doc.viewCount, "열람")}
+          </span>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -422,7 +427,7 @@ export function DocumentTable({
                   <th className="px-5 py-4">파일명</th>
                   <th className="px-5 py-4">크기</th>
                   {isAdmin && <th className="px-5 py-4">상태</th>}
-                  <th className="px-5 py-4 text-right">조회</th>
+                  <th className="px-5 py-4 text-right">작업</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f2f0ed] text-graphite">
@@ -480,6 +485,9 @@ export function DocumentTable({
                     </td>
                     <td className="px-5 py-4 font-mono text-xs">
                       {doc.fileName}
+                      <div className="mt-1 text-[10px] font-mono text-ash">
+                        {formatViewCount(doc.viewCount, "열람")}
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4">
                       {formatSize(doc.fileSize)}

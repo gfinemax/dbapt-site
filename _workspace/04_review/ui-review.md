@@ -1,6 +1,54 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Very short Kakao share URLs
+- Governing spec: Current user-approved follow-up to shorten copied Kakao/OpenChat URLs beyond `/share/...`
+- Implementation plan: `docs/superpowers/plans/2026-07-05-short-share-url-code.md`
+- Files or pages reviewed: `src/lib/short-share-url.ts`, `src/app/s/[code]/page.tsx`, `src/lib/notifications/openchat-announcements.ts`, `src/app/share/free/[id]/page.tsx`, `src/app/share/notice/[id]/page.tsx`, `src/app/share/newsletter/[id]/page.tsx`, `src/app/share/document/[id]/page.tsx`, related regression tests
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The new `/s/[code]` route resolves only to the same four already-approved public share kinds: free-board, notice, newsletter, and approved disclosure document. Free-board metadata still requires `isPublicShareEnabled: true`, disclosure metadata still requires `category: DISCLOSURE` and `status: APPROVED`, and visitors are redirected to the same canonical `/news?...` or `/disclosure?document=...` pages. No private member/payment data, document file delivery, voting, comments, or public mutation capability is exposed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Generated OpenChat/Kakao messages now contain `/s/[code]` links, while existing `/share/...` routes remain available for previously copied links. The route still emits Open Graph/Twitter metadata from the same content title, description, and cropped/social preview image priority, so the Kakao card remains tied to the actual post or public document.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: No new visual styling was introduced. `/s/[code]` reuses the existing `ShareRedirectPage` fallback screen with clear destination copy and a `바로 이동` link. The implementation adds no navigation, decorative motion, new controls, or layout changes.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Content view/read counts for notices, free-board posts, and public disclosure documents
+- Governing spec: Current user-approved request to show how many times homepage notices/posts/public materials were viewed
+- Implementation plan: `docs/superpowers/plans/2026-07-05-content-view-counts.md`
+- Files or pages reviewed: `src/components/news/notice-board.tsx`, `src/components/news/news-client.tsx`, `src/components/news/free-board.tsx`, `src/components/portal/document-table.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/app/api/news/[id]/view/route.ts`, `src/app/api/news/free/[id]/view/route.ts`, `src/app/api/documents/[id]/view/route.ts`, `src/app/api/documents/[id]/merged-view/route.ts`, Prisma migration
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change adds counters to already existing notice, free-board, and disclosure document surfaces. Free-board count increments respect the existing login/public-share boundary, and document file access still uses the existing approved disclosure/session checks. No member data, payment data, comments, votes, private documents, or new public mutation capability is exposed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Labels use `조회 N회` for notice/free-board posts and `열람 N회` for documents. Notice/free-board/disclosure list surfaces also state that counts are collected from `2026.07.05`. The numbers come from persisted database counters and increment only on the existing detail/file viewing flows. Document viewing remains successful even if the optional counter update fails.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The new labels are small muted metadata text placed in dedicated list columns and existing detail/file metadata, using existing typography and neutral colors. The notice list now uses the list column for `조회수` instead of a comment button, free-board keeps `댓글` and adds `조회수`, and disclosure adds `열람수`. They do not add new cards, decorative motion, or action controls, and they preserve existing mobile table/card layouts. Codex browser was unavailable in this environment (`agent.browsers.list()` returned `[]`), so visible layout confidence is from component tests, production build, and local server HTTP checks.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Admin 1.91:1 Kakao/social preview cropper for notices, free-board posts, and public disclosure documents
 - Governing spec: Current user request to let administrators crop Kakao preview images; existing `/news` and `/disclosure?document=...` public social-preview behavior
 - Implementation plan: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`

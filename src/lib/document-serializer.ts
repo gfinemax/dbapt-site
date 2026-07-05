@@ -23,6 +23,7 @@ export function serializeDocuments(docs: PrismaDocWithAttachments[]): Document[]
     storedFileSize: doc.storedFileSize,
     fileOptimized: doc.fileOptimized,
     fileSizeReductionPercent: doc.fileSizeReductionPercent,
+    viewCount: (doc as PrismaDocument & { viewCount?: number }).viewCount ?? 0,
     status: doc.status,
     isStarred: doc.isStarred,
     publishedAt: doc.publishedAt ? doc.publishedAt.toISOString() : null,

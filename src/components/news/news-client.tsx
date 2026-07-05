@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,7 @@ import {
   type NewsSessionView,
 } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
+import { formatViewCount } from "@/lib/view-count";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeBoard } from "./notice-board";
 import { CommentReactionBar } from "./comment-reaction-bar";
@@ -155,6 +156,7 @@ export function NewsClient({
   const [newsList, setNewsList] = useState<CoopNewsView[]>(initialNewsList);
   const [freePosts, setFreePosts] = useState<FreePostView[]>(initialFreePosts);
   const [faqs, setFaqs] = useState<FAQView[]>(initialFaqs);
+  const viewedNoticeIdsRef = useRef<Set<string>>(new Set());
 
   const [activeViewNotice, setActiveViewNotice] = useState<CoopNewsView | null>(initialNoticeFromUrl);
   const [isEditingNotice, setIsEditingNotice] = useState(false);
@@ -218,6 +220,36 @@ export function NewsClient({
 
   const isEditableNotice = canEditNotice(activeViewNotice, isAdmin);
   const canCommentOnNotice = canCommentOnNoticeItem(activeViewNotice);
+
+  const updateNoticeViewCount = useCallback((noticeId: string, viewCount: number) => {
+    setNewsList((prev) => prev.map((item) => item.id === noticeId ? { ...item, viewCount } : item));
+    setActiveViewNotice((prev) => prev?.id === noticeId ? { ...prev, viewCount } : prev);
+  }, []);
+
+  const openNoticeForViewing = useCallback((notice: CoopNewsView) => {
+    setActiveViewNotice(notice);
+    if (viewedNoticeIdsRef.current.has(notice.id)) return;
+
+    viewedNoticeIdsRef.current.add(notice.id);
+    const viewRequest = fetch(
+      `/api/news/${encodeURIComponent(notice.id)}/view`,
+      { method: "POST" },
+    ) as Promise<Response> | undefined;
+
+    if (!viewRequest || typeof viewRequest.then !== "function") return;
+
+    void viewRequest
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json() as { viewCount?: number };
+        if (typeof data.viewCount === "number") {
+          updateNoticeViewCount(notice.id, data.viewCount);
+        }
+      })
+      .catch((error) => {
+        console.error("Notice view count update failed:", error);
+      });
+  }, [updateNoticeViewCount]);
 
   const canMutateNoticeComment = (comment: NewsCommentView) => {
     return canMutateNoticeCommentItem(comment, session);
@@ -485,8 +517,8 @@ export function NewsClient({
     if (!requestedNotice) return;
 
     setActiveTab("notice");
-    setActiveViewNotice(requestedNotice);
-  }, [newsList, searchParams]);
+    openNoticeForViewing(requestedNotice);
+  }, [newsList, openNoticeForViewing, searchParams]);
 
   useEffect(() => {
     const requestedNewsletter = findNewsletterFromSearchParams(newsList, searchParams);
@@ -569,7 +601,7 @@ export function NewsClient({
                   <span className="text-[10px] text-ash font-mono font-medium">등록일: {formatNoticeDate(latestStarredNotice.registeredAt ?? latestStarredNotice.createdAt)}</span>
                   <button
                     onClick={() => {
-                      setActiveViewNotice(latestStarredNotice);
+                      openNoticeForViewing(latestStarredNotice);
                     }}
                     className="text-[10.5px] font-bold text-ember-orange hover:underline cursor-pointer select-none"
                   >
@@ -698,7 +730,7 @@ export function NewsClient({
               isLoggedIn={isLoggedIn}
               isAdmin={isAdmin}
               newsList={noticeItems}
-              onViewNotice={setActiveViewNotice}
+              onViewNotice={openNoticeForViewing}
               onRefresh={async () => {
                 const res = await fetch("/api/news?category=NOTICE");
                 const data = await res.json();
@@ -1098,6 +1130,8 @@ export function NewsClient({
                       <span>작성자: {activeViewNotice.author?.name || "조합 사무국"}</span>
                       <span>•</span>
                       <span>등록일: {formatNoticeDate(activeViewNotice.registeredAt ?? activeViewNotice.createdAt)}</span>
+                      <span>•</span>
+                      <span>{formatViewCount(activeViewNotice.viewCount)}</span>
                     </div>
                   </div>
 

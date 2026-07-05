@@ -1599,7 +1599,7 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("button", { name: "공지 삭제" })).toBeInTheDocument();
   });
 
-  it("removes the notice intro panel while keeping the existing search row and comment counts", () => {
+  it("removes the notice intro panel while keeping the existing search row and view counts", () => {
     render(
       <NoticeBoard
         isLoggedIn
@@ -1613,8 +1613,9 @@ describe("news admin visible controls", () => {
     expect(screen.queryByText("공식 안내 현황")).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText("공지사항 제목 검색…")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "공지사항 목록" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "댓글" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "댓글 1개 보기" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "댓글" })).not.toBeInTheDocument();
+    expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
   });
 
   it("uses a compact notice list row layout for readability", () => {
@@ -1628,11 +1629,10 @@ describe("news admin visible controls", () => {
     );
 
     const noticeTable = screen.getByRole("table", { name: "공지사항 목록" });
-    const commentButton = screen.getByRole("button", { name: "댓글 1개 보기" });
-    expect(commentButton).toHaveTextContent("댓글 1");
     expect(noticeTable).toHaveClass("table-fixed");
-    expect(commentButton).toHaveClass("px-2.5", "py-1", "text-[11px]");
-    expect(commentButton).toHaveClass("whitespace-nowrap");
+    expect(within(noticeTable).getByRole("columnheader", { name: "조회수" })).toHaveClass("whitespace-nowrap");
+    expect(within(noticeTable).queryByRole("button", { name: "댓글 1개 보기" })).not.toBeInTheDocument();
+    expect(within(noticeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
     expect(noticeTable).toHaveStyle({ minWidth: "760px" });
     expect(within(noticeTable).getByRole("columnheader", { name: "등록자" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).getByRole("cell", { name: "관리자" })).toHaveClass("whitespace-nowrap");
@@ -1658,8 +1658,9 @@ describe("news admin visible controls", () => {
 
     const freeTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
     expect(freeTable).toHaveClass("table-fixed");
-    expect(freeTable).toHaveStyle({ minWidth: "760px" });
+    expect(freeTable).toHaveStyle({ minWidth: "840px" });
     expect(within(freeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
+    expect(within(freeTable).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
     expect(within(freeTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
     expect(within(freeTable).getByRole("columnheader", { name: "작성자" })).toHaveClass("whitespace-nowrap");
     expect(within(freeTable).getByText("조합원 (나)")).toHaveClass("whitespace-nowrap");
@@ -1667,6 +1668,8 @@ describe("news admin visible controls", () => {
     expect(commentButton).toHaveTextContent("댓글 1");
     expect(commentButton).toHaveClass("px-2.5", "py-1", "text-[11px]");
     expect(commentButton).toHaveClass("whitespace-nowrap");
+    expect(within(freeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
+    expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
     expect(within(freeTable).getByRole("button", { name: "실제 자유게시글 개인자료실 보관" })).toBeInTheDocument();
     expect(freeTable.querySelector("[data-free-board-list-badges='true']")).toHaveClass("shrink-0");
     expect(freeTable.querySelector("[data-free-board-list-title='true']")).toHaveClass("truncate", "whitespace-nowrap");
@@ -1686,7 +1689,7 @@ describe("news admin visible controls", () => {
     );
 
     const memberTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
-    expect(memberTable).toHaveStyle({ minWidth: "760px" });
+    expect(memberTable).toHaveStyle({ minWidth: "840px" });
     expect(within(memberTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
     expect(within(memberTable).queryByRole("button", { name: "게시글 삭제" })).not.toBeInTheDocument();
 
@@ -1699,7 +1702,7 @@ describe("news admin visible controls", () => {
     );
 
     const adminTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
-    expect(adminTable).toHaveStyle({ minWidth: "820px" });
+    expect(adminTable).toHaveStyle({ minWidth: "900px" });
     expect(within(adminTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
     expect(within(adminTable).getByRole("button", { name: "게시글 삭제" })).toBeInTheDocument();
   });
@@ -1954,6 +1957,10 @@ describe("news admin visible controls", () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
+        json: async () => ({ id: "notice-1", viewCount: 1 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
         json: async () => ({ success: true, url: "/uploads/notice-kakao.png", name: "notice-kakao.png", size: 15 }),
       })
       .mockResolvedValueOnce({
@@ -2002,6 +2009,10 @@ describe("news admin visible controls", () => {
 
   it("lets administrators choose notice comment authors and edit or delete comments", async () => {
     const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: "notice-1", viewCount: 1 }),
+      })
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -2061,7 +2072,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(within(drawer).getByRole("button", { name: "댓글 등록" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
+      2,
       "/api/news/comments",
       expect.objectContaining({
         method: "POST",
@@ -2077,7 +2088,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(within(drawer).getByRole("button", { name: "수정 완료" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
+      3,
       "/api/news/comments",
       expect.objectContaining({
         method: "PATCH",
@@ -2088,7 +2099,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(within(drawer).getAllByRole("button", { name: "댓글 삭제" })[0]);
 
     await waitFor(() => expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
+      4,
       "/api/news/comments?commentId=notice-comment-1",
       expect.objectContaining({ method: "DELETE" }),
     ));
@@ -3232,6 +3243,10 @@ describe("news admin visible controls", () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
+        json: async () => ({ id: "free-1", viewCount: 1 }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
         json: async () => ({
           success: true,
           url: "/uploads/updated-free.pdf",
@@ -3296,12 +3311,12 @@ describe("news admin visible controls", () => {
     fireEvent.change(screen.getByLabelText("등록일"), { target: { value: "2026-06-21T09:30" } });
     fireEvent.click(screen.getByRole("button", { name: "수정 완료" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
-    const uploadBody = fetchMock.mock.calls[0]?.[1]?.body as FormData;
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
+    const uploadBody = fetchMock.mock.calls[1]?.[1]?.body as FormData;
     expect(uploadBody.get("kind")).toBe("free-attachment");
-    const previewUploadBody = fetchMock.mock.calls[1]?.[1]?.body as FormData;
+    const previewUploadBody = fetchMock.mock.calls[2]?.[1]?.body as FormData;
     expect(previewUploadBody.get("kind")).toBe("image");
-    const patchBody = JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body));
+    const patchBody = JSON.parse(String(fetchMock.mock.calls[3]?.[1]?.body));
     expect(patchBody).toMatchObject({
       postId: "free-1",
       attachmentPath: "/uploads/updated-free.pdf",

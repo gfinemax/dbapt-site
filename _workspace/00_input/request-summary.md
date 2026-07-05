@@ -800,9 +800,19 @@ none
 
 # Request Summary - Short Kakao Share URLs
 
-- Requested feature slice: replace long OpenChat/Kakao announcement URLs with short `/share/...` URLs that preserve Kakao thumbnail metadata and then move visitors to the canonical content page.
-- Explicitly excluded scope: new database fields, new admin controls, permission changes, Kakao API integration, URL shortener service integration, and hiding the URL completely inside Kakao.
+- Requested feature slice: replace OpenChat/Kakao announcement URLs with very short `/s/[code]` URLs for free-board posts, notices, newsletters, and public disclosure documents. The short URL must preserve Kakao thumbnail metadata and then move visitors to the canonical content page.
+- Explicitly excluded scope: new database fields, new admin controls, permission changes, Kakao API integration, external URL shortener service integration, and hiding the URL completely inside Kakao.
 - Candidate governing specification: current user-approved Kakao share URL follow-up under `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`.
+- Unanswered decision: none.
+
+---
+
+# Request Summary - Content View Counts
+
+- Requested feature slice: show how many times notices, free-board posts, and public disclosure documents have been viewed/read.
+- Follow-up slice: show the collection baseline date, replace the notice-list comment column with a view-count column, keep free-board comment counts while adding a view-count column, and add a disclosure-list read-count column.
+- Explicitly excluded scope: download counts, Kakao/share attribution analytics, per-user analytics dashboards, bot filtering, uniqueness windows, and public exposure of private user audit details.
+- Candidate governing plan: `docs/superpowers/plans/2026-07-05-content-view-counts.md`.
 - Unanswered decision: none.
 
 ---

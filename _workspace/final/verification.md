@@ -1,3 +1,112 @@
+# Verification - Very Short Kakao Share URLs
+
+## Implemented Feature
+
+- Added deterministic very short share URLs at `/s/[code]` for:
+  - free-board posts
+  - notices
+  - newsletters
+  - approved public disclosure documents
+- Added `src/lib/short-share-url.ts` to encode UUID ids into compact typed base62 codes such as `/s/f...`, with a reversible fallback for non-UUID legacy/test ids.
+- Added `src/app/s/[code]/page.tsx` so Kakao can read Open Graph/Twitter metadata from the short URL and visitors are then moved to the canonical content page.
+- Updated generated OpenChat/Kakao announcement messages to use `/s/[code]` instead of `/share/<kind>/<id>`.
+- Kept existing `/share/...` routes available for already copied links and Kakao cache continuity.
+
+## Changed Files
+
+- `src/lib/short-share-url.ts`
+- `src/app/s/[code]/page.tsx`
+- `src/lib/notifications/openchat-announcements.ts`
+- `src/__tests__/short-share-url.test.ts`
+- `src/__tests__/share-routes.test.ts`
+- `src/__tests__/openchat-announcements.test.ts`
+- `docs/superpowers/plans/2026-07-05-short-share-url-code.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+
+## Checks
+
+- `pnpm vitest run src/__tests__/short-share-url.test.ts src/__tests__/share-routes.test.ts src/__tests__/openchat-announcements.test.ts`: FAIL before implementation because `@/lib/short-share-url` and `/s/[code]` did not exist.
+- `pnpm vitest run src/__tests__/short-share-url.test.ts src/__tests__/share-routes.test.ts src/__tests__/openchat-announcements.test.ts`: PASS, 3 files and 22 tests.
+- `pnpm vitest run src/__tests__/openchat-announcements-api.test.ts src/__tests__/disclosure-notifications.test.ts`: PASS, 2 files and 12 tests.
+- `pnpm vitest run src/__tests__/disclosure-page.test.tsx --testNamePattern "OpenChat|오픈채팅|공지문"`: PASS, 1 test, 35 skipped by filter.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 82 files and 561 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS. Build output includes `/s/[code]` plus existing `/share/document/[id]`, `/share/free/[id]`, `/share/newsletter/[id]`, and `/share/notice/[id]`.
+
+## Browser Checks
+
+- Not run separately. This change adds a metadata/redirect route and reuses the existing `ShareRedirectPage` UI without new styling. Route generation and metadata behavior are covered by tests and production build output.
+
+## Risks Or Follow-up
+
+- Already-copied OpenChat announcement rows can still contain older `/share/...` messages until they are regenerated or forced. Newly generated announcement messages use `/s/[code]`.
+- Kakao can still display the raw URL text in a normal chat bubble; this change shortens the URL, it does not hide it.
+
+---
+
+# Verification - Content View Counts
+
+## Implemented Feature
+
+- Added persisted `viewCount` counters for free-board posts and documents, while using the existing `CoopNews.viewCount` field for notices.
+- Added notice and free-board view-count increment APIs.
+- Incremented document `viewCount` when public/session-approved PDF view and merged-view endpoints are opened.
+- Displayed `조회 N회` in notice/free-board lists and detail surfaces.
+- Replaced the notice-list `댓글` column with a dedicated `조회수` column.
+- Kept the free-board `댓글` column and added a dedicated `조회수` column.
+- Displayed `열람 N회` in document cards, document table rows, and a dedicated public disclosure `열람수` column.
+- Added the visible baseline notice that counts are collected from `2026.07.05`.
+- Kept document file delivery resilient: PDF viewing still succeeds if the optional view-count update fails.
+
+## Changed Files
+
+- `prisma/schema.prisma`
+- `prisma/migrations/20260705161000_add_content_view_counts/migration.sql`
+- `src/lib/view-count.ts`
+- `src/app/api/news/[id]/view/route.ts`
+- `src/app/api/news/free/[id]/view/route.ts`
+- `src/app/api/documents/[id]/view/route.ts`
+- `src/app/api/documents/[id]/merged-view/route.ts`
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/components/portal/document-table.tsx`
+- `src/components/disclosure/meetings-table.tsx`
+- `src/lib/document-serializer.ts`
+- `src/lib/news/free-board-list.ts`
+- `src/lib/news/types.ts`
+- `src/__tests__/content-view-counts.test.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+
+## Checks
+
+- `pnpm prisma generate`: PASS.
+- `pnpm prisma migrate deploy`: PASS, applied `20260705161000_add_content_view_counts` to the configured Supabase Postgres database.
+- `pnpm vitest run src/__tests__/content-view-counts.test.tsx`: PASS, 9 tests. The new column/baseline tests failed first before implementation, then passed after the UI changes.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx`: PASS, 102 tests.
+- `pnpm vitest run src/__tests__/content-view-counts.test.tsx src/__tests__/disclosure-page.test.tsx src/__tests__/library-page.test.tsx`: PASS, 60 tests.
+- `pnpm vitest run src/__tests__/disclosure-page.test.tsx src/__tests__/library-page.test.tsx src/__tests__/document-serializer.test.ts src/__tests__/document-upload-api.test.ts`: PASS, 71 tests.
+- `pnpm vitest run src/__tests__/document-merged-view-api.test.ts src/__tests__/document-public-view-api.test.ts`: PASS, 6 tests.
+- `pnpm vitest run src/__tests__/portal-auth-flow.test.tsx`: PASS, 8 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 81 files and 557 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Local dev server started at `http://localhost:3000`.
+- HTTP check for `http://127.0.0.1:3000/news`: PASS, 200.
+- HTTP check for `http://127.0.0.1:3000/disclosure`: PASS, 200.
+- Codex in-app browser was unavailable in this environment: `agent.browsers.list()` returned `[]`. Visible layout is covered by focused component tests and production build type/layout compilation.
+
+## Risks Or Follow-up
+
+- Counts are simple total counters, not unique visitors. A future slice can add daily/unique analytics if 운영 통계가 필요해진다.
+
+---
+
 # Verification - Communication Label And News List Consistency Finalization
 
 ## Implemented Feature

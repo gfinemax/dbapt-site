@@ -58,6 +58,7 @@ export type FreePostView = {
   title: string;
   content: string;
   postType: FreePostType | string;
+  viewCount?: number;
   displayAuthorName?: string | null;
   isStarred?: boolean;
   isPublicShareEnabled?: boolean;

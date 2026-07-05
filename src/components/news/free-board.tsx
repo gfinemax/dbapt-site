@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ import { uploadPublicFile } from "@/lib/news/public-upload";
 import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
 import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
 import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
+import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
@@ -155,6 +156,9 @@ function FreeBoardPostRows({
         >
           댓글 {post.commentCount}
         </button>
+      </td>
+      <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
+        {formatViewCount(post.viewCount)}
       </td>
       <td className="px-3 py-3.5 text-center">
         {showBookmark ? (
@@ -381,10 +385,21 @@ export function FreeBoard({
   const [reactionSummaryOverrides, setReactionSummaryOverrides] = useState<Record<string, CommentReactionSummaryItem[]>>({});
   const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
   const [commentDisplayAuthorName, setCommentDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
+  const [viewCountOverrides, setViewCountOverrides] = useState<Record<string, number>>({});
+  const viewedPostIdsRef = useRef<Set<string>>(new Set());
+
+  const postsWithViewCounts = useMemo(
+    () => posts.map((post) => (
+      Object.prototype.hasOwnProperty.call(viewCountOverrides, post.id)
+        ? { ...post, viewCount: viewCountOverrides[post.id] }
+        : post
+    )),
+    [posts, viewCountOverrides],
+  );
 
   const combinedPosts = useMemo(
-    () => buildFreeBoardPostList(posts, typeFilter, searchQuery),
-    [posts, searchQuery, typeFilter],
+    () => buildFreeBoardPostList(postsWithViewCounts, typeFilter, searchQuery),
+    [postsWithViewCounts, searchQuery, typeFilter],
   );
 
   const focusedPost = useMemo(
@@ -399,9 +414,35 @@ export function FreeBoard({
     window.history.pushState({}, "", buildFreeBoardFocusedPostUrl(window.location.href, postId));
   };
 
+  const requestPostViewCount = useCallback((postId: string) => {
+    if (viewedPostIdsRef.current.has(postId)) return;
+
+    viewedPostIdsRef.current.add(postId);
+    const viewRequest = fetch(
+      `/api/news/free/${encodeURIComponent(postId)}/view`,
+      { method: "POST" },
+    ) as Promise<Response> | undefined;
+
+    if (!viewRequest || typeof viewRequest.then !== "function") return;
+
+    void viewRequest
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json() as { viewCount?: number };
+        const nextViewCount = data.viewCount;
+        if (typeof nextViewCount === "number") {
+          setViewCountOverrides((prev) => ({ ...prev, [postId]: nextViewCount }));
+        }
+      })
+      .catch((error) => {
+        console.error("Free-board view count update failed:", error);
+      });
+  }, []);
+
   const openFocusedPost = (postId: string) => {
     setFocusedPostId(postId);
     updateFocusedPostUrl(postId);
+    requestPostViewCount(postId);
   };
 
   const openFocusedPostFromLink = (href: string) => {
@@ -420,13 +461,16 @@ export function FreeBoard({
 
   useEffect(() => {
     const syncFocusedPostFromUrl = () => {
-      setFocusedPostId(findFocusedFreePostId(new URLSearchParams(window.location.search), combinedPosts));
+      const nextPostId = findFocusedFreePostId(new URLSearchParams(window.location.search), combinedPosts);
+      setFocusedPostId(nextPostId);
+      if (!nextPostId) return;
+      requestPostViewCount(nextPostId);
     };
 
     syncFocusedPostFromUrl();
     window.addEventListener("popstate", syncFocusedPostFromUrl);
     return () => window.removeEventListener("popstate", syncFocusedPostFromUrl);
-  }, [combinedPosts]);
+  }, [combinedPosts, requestPostViewCount]);
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -946,6 +990,9 @@ export function FreeBoard({
             </span>
           )}
         </div>
+        <p className="mt-2 text-[10.5px] font-medium text-ash">
+          {formatViewCountBaseline("조회수")}
+        </p>
       </div>
 
       {/* 자유게시판 글 목록 */}
@@ -954,13 +1001,14 @@ export function FreeBoard({
           <table
             aria-label="자유게시판 게시글 목록"
             className="w-full table-fixed text-left text-sm border-collapse"
-            style={{ minWidth: isAdmin ? "820px" : "760px" }}
+            style={{ minWidth: isAdmin ? "900px" : "840px" }}
           >
             <colgroup>
               <col style={{ width: "52px" }} />
               <col />
               <col style={{ width: "92px" }} />
               <col style={{ width: "116px" }} />
+              <col style={{ width: "92px" }} />
               <col style={{ width: "92px" }} />
               <col style={{ width: "88px" }} />
               {isAdmin && <col style={{ width: "136px" }} />}
@@ -972,6 +1020,7 @@ export function FreeBoard({
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">작성자</th>
                 <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">댓글</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">조회수</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
                 {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
               </tr>
@@ -979,7 +1028,7 @@ export function FreeBoard({
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedPosts.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={isAdmin ? 8 : 7} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 자유게시판 글이 없습니다.
                   </td>
                 </tr>
@@ -1143,6 +1192,8 @@ export function FreeBoard({
                   <span>작성자: {getFreeBoardAuthorLabel(focusedPost.author, currentUserId)}</span>
                   <span>•</span>
                   <span>{focusedPost.registeredAt}</span>
+                  <span>•</span>
+                  <span>{formatViewCount(focusedPost.viewCount)}</span>
                   <span>•</span>
                   <span>댓글 {focusedPost.commentCount}개</span>
                 </div>

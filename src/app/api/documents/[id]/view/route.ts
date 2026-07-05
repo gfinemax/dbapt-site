@@ -65,6 +65,16 @@ export async function GET(
     const file = await downloadDocumentFile(document.filePath);
     const fileBuffer = await file.arrayBuffer();
 
+    try {
+      await prisma.document.update({
+        where: { id: document.id },
+        data: { viewCount: { increment: 1 } },
+        select: { id: true, viewCount: true },
+      });
+    } catch (viewCountError) {
+      console.error("Document view count update failed:", viewCountError);
+    }
+
     return new Response(fileBuffer, {
       headers: getInlinePdfResponseHeaders(document.fileName),
     });

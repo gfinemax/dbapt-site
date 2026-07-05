@@ -11,6 +11,7 @@ import {
   prepareDocumentUploadFile,
   type PdfUploadOptimizationMode,
 } from "@/lib/pdf-upload-optimization";
+import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
 
 // ── 공개자료 문서함 분류 타입 ──
 export type MeetingCategory =
@@ -158,6 +159,7 @@ export type RowDocType = {
   isReal?: boolean;
   fileName?: string;
   fileSize?: number;
+  viewCount?: number;
   sourceDocument?: Document;
 };
 
@@ -572,6 +574,7 @@ export function MeetingsTable({
           isReal: true,
           fileName: d.fileName,
           fileSize: d.fileSize,
+          viewCount: d.viewCount,
           sourceDocument: d,
         }))
         .map((d) => ({
@@ -824,6 +827,9 @@ export function MeetingsTable({
           총 <strong className="text-charcoal-primary">{filtered.length}</strong>건
         </span>
       </div>
+      <p className="-mt-1 text-[10.5px] font-medium text-ash">
+        {formatViewCountBaseline("열람수")}
+      </p>
 
       {/* ── 데이터 테이블 ── */}
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-sm">
@@ -834,6 +840,7 @@ export function MeetingsTable({
               <col className="w-24" />
               <col />
               <col className="w-24" />
+              <col className="w-24" />
               {showBookmarkColumn && <col className="w-28" />}
               {isAdmin && <col className="w-16" />}
             </colgroup>
@@ -842,6 +849,7 @@ export function MeetingsTable({
                 <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">발생일</th>
                 <th className="px-3 py-3.5 font-semibold text-ash text-xs">문서 제목</th>
                 <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">회신기한</th>
+                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">열람수</th>
                 {showBookmarkColumn && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">보관</th>}
                 {isAdmin && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">관리</th>}
               </tr>
@@ -849,7 +857,7 @@ export function MeetingsTable({
             <tbody className="divide-y divide-stone-surface/50">
               {paged.length === 0 ? (
                 <tr>
-                  <td colSpan={3 + (showBookmarkColumn ? 1 : 0) + (isAdmin ? 1 : 0)} className="px-5 py-16 text-center text-sm text-graphite">
+                  <td colSpan={4 + (showBookmarkColumn ? 1 : 0) + (isAdmin ? 1 : 0)} className="px-5 py-16 text-center text-sm text-graphite">
                     검색 조건에 맞는 문서가 없습니다.
                   </td>
                 </tr>
@@ -905,6 +913,9 @@ export function MeetingsTable({
                     </td>
                     <td className="px-3 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">
                       {renderReplyDueCell(doc)}
+                    </td>
+                    <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
+                      {formatViewCount(doc.viewCount, "열람")}
                     </td>
                     {showBookmarkColumn && (
                       <td className="px-3 py-3.5 text-center">
@@ -1034,6 +1045,9 @@ export function MeetingsTable({
                         회신 완료
                       </span>
                     )) || null}
+                    <span className="ml-2 text-graphite/60">
+                      {formatViewCount(doc.viewCount, "열람")}
+                    </span>
                   </span>
                   <div className="flex items-center gap-1.5">
                     {doc.sourceDocument && (

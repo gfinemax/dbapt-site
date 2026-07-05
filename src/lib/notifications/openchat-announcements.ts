@@ -114,7 +114,7 @@ function isCooperativeNews(news: OpenChatAnnouncementNews) {
 function getCooperativeNewsAnnouncementMeta(news: OpenChatAnnouncementNews): {
   heading: string;
   body: string;
-  shareKind: ShareRouteKind;
+  shareKind: ShortShareKind;
 } {
   if (news.category === "NOTICE") {
     return {
@@ -152,7 +152,7 @@ export function buildOpenChatAnnouncementMessage(params: {
   const { document } = params;
   const title = normalizeOneLine(document.title);
   const publishedAt = document.publishedAt ?? document.createdAt ?? params.now ?? new Date();
-  const disclosureUrl = buildAbsoluteShareUrl("document", document.id, params.siteUrl);
+  const disclosureUrl = buildAbsoluteShortShareUrl("document", document.id, params.siteUrl);
 
   return [
     "[홈페이지 공개자료 안내]",
@@ -176,7 +176,7 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
   const title = normalizeOneLine(news.title);
   const createdAt = news.createdAt ?? params.now ?? new Date();
   const meta = getCooperativeNewsAnnouncementMeta(news);
-  const newsUrl = buildAbsoluteShareUrl(meta.shareKind, news.id, params.siteUrl);
+  const newsUrl = buildAbsoluteShortShareUrl(meta.shareKind, news.id, params.siteUrl);
 
   return [
     meta.heading,
@@ -199,7 +199,7 @@ export function buildOpenChatFreePostAnnouncementMessage(params: {
   const { post } = params;
   const title = normalizeOneLine(post.title);
   const createdAt = post.createdAt ?? params.now ?? new Date();
-  const freeBoardUrl = buildAbsoluteShareUrl("free", post.id, params.siteUrl);
+  const freeBoardUrl = buildAbsoluteShortShareUrl("free", post.id, params.siteUrl);
 
   return [
     "[홈페이지 자유게시판 안내]",
@@ -415,4 +415,4 @@ export function formatOpenChatAnnouncement(announcement: FormattedOpenChatAnnoun
   const copiedAt = announcement.copiedAt ? announcement.copiedAt.toISOString() : "none";
   return `OPENCHAT ${announcement.id} status=${announcement.status} document=${announcement.document.id} title="${announcement.document.title}" copiedAt=${copiedAt} updatedAt=${announcement.updatedAt.toISOString()}`;
 }
-import { buildAbsoluteShareUrl, type ShareRouteKind } from "@/lib/share-url";
+import { buildAbsoluteShortShareUrl, type ShortShareKind } from "@/lib/short-share-url";

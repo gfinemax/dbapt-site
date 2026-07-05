@@ -597,7 +597,16 @@ yes
 # Spec Selection - Short Kakao Share URLs
 
 - Selected approved plan path: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`.
-- Implementation boundary: add short public share routes for free-board, notice, newsletter, and approved disclosure document links; reuse existing social preview image builders and redirect visitors to the canonical pages. Update generated OpenChat/Kakao copy to use the short URLs.
+- Implementation boundary: add very short public `/s/[code]` share routes for free-board, notice, newsletter, and approved disclosure document links; reuse existing social preview image builders and redirect visitors to the canonical pages. Update generated OpenChat/Kakao copy to use the shortest URLs.
+- Conflicts between request and plan: none.
+- Planning may continue: yes.
+
+---
+
+# Spec Selection - Content View Counts
+
+- Selected approved plan path: `docs/superpowers/plans/2026-07-05-content-view-counts.md`.
+- Implementation boundary: show and increment simple aggregate counts for notice/newsletter views, free-board post views, and disclosure document PDF reads. Show the baseline date for aggregate counts, use dedicated list columns for notice/free-board/disclosure counts, and preserve free-board comment-count visibility. Use existing public/access boundaries and do not add download analytics or source attribution.
 - Conflicts between request and plan: none.
 - Planning may continue: yes.
 

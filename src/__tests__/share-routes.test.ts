@@ -22,8 +22,10 @@ describe("short share routes", () => {
   });
 
   it("uses free-board social preview metadata on a short public share URL", async () => {
+    const { buildShortSharePath } = await import("@/lib/short-share-url");
+    const id = "b472f16e-3e90-40c6-889a-06375fa56b05";
     mockPrisma.freePost.findFirst.mockResolvedValue({
-      id: "free-1",
+      id,
       title: "설명회 후기",
       content: "<p>조합원 만남</p>",
       imagePath: null,
@@ -32,12 +34,12 @@ describe("short share routes", () => {
 
     const { generateMetadata } = await import("@/app/share/free/[id]/page");
     const metadata = await generateMetadata({
-      params: Promise.resolve({ id: "free-1" }),
+      params: Promise.resolve({ id }),
     });
 
     expect(mockPrisma.freePost.findFirst).toHaveBeenCalledWith({
       where: {
-        id: "free-1",
+        id,
         isPublicShareEnabled: true,
       },
       select: {
@@ -48,7 +50,7 @@ describe("short share routes", () => {
         socialImagePath: true,
       },
     });
-    expect(metadata.openGraph?.url).toBe("/share/free/free-1");
+    expect(metadata.openGraph?.url).toBe("/share/free/b472f16e-3e90-40c6-889a-06375fa56b05");
     expect(metadata.openGraph?.images).toEqual([
       {
         url: "/uploads/social-preview-free.png",
@@ -58,6 +60,14 @@ describe("short share routes", () => {
       },
     ]);
     expect(metadata.twitter?.images).toEqual(["/uploads/social-preview-free.png"]);
+
+    const { generateMetadata: generateShortMetadata } = await import("@/app/s/[code]/page");
+    const shortMetadata = await generateShortMetadata({
+      params: Promise.resolve({ code: buildShortSharePath("free", id).replace("/s/", "") }),
+    });
+
+    expect(shortMetadata.openGraph?.url).toBe(buildShortSharePath("free", id));
+    expect(shortMetadata.openGraph?.images).toEqual(metadata.openGraph?.images);
   });
 
   it("keeps default metadata when a free-board post is not public shared", async () => {
@@ -79,8 +89,10 @@ describe("short share routes", () => {
   });
 
   it("uses notice social preview metadata on a short public share URL", async () => {
+    const { buildShortSharePath } = await import("@/lib/short-share-url");
+    const id = "11111111-2222-4333-8444-555555555555";
     mockPrisma.coopNews.findFirst.mockResolvedValue({
-      id: "notice-1",
+      id,
       title: "공지사항",
       content: "<p>공지 본문</p>",
       imagePath: null,
@@ -89,12 +101,12 @@ describe("short share routes", () => {
 
     const { generateMetadata } = await import("@/app/share/notice/[id]/page");
     const metadata = await generateMetadata({
-      params: Promise.resolve({ id: "notice-1" }),
+      params: Promise.resolve({ id }),
     });
 
     expect(mockPrisma.coopNews.findFirst).toHaveBeenCalledWith({
       where: {
-        id: "notice-1",
+        id,
         category: "NOTICE",
       },
       select: {
@@ -105,7 +117,7 @@ describe("short share routes", () => {
         socialImagePath: true,
       },
     });
-    expect(metadata.openGraph?.url).toBe("/share/notice/notice-1");
+    expect(metadata.openGraph?.url).toBe("/share/notice/11111111-2222-4333-8444-555555555555");
     expect(metadata.openGraph?.images).toEqual([
       {
         url: "/uploads/social-preview-notice.png",
@@ -114,11 +126,21 @@ describe("short share routes", () => {
         alt: "공지사항",
       },
     ]);
+
+    const { generateMetadata: generateShortMetadata } = await import("@/app/s/[code]/page");
+    const shortMetadata = await generateShortMetadata({
+      params: Promise.resolve({ code: buildShortSharePath("notice", id).replace("/s/", "") }),
+    });
+
+    expect(shortMetadata.openGraph?.url).toBe(buildShortSharePath("notice", id));
+    expect(shortMetadata.openGraph?.images).toEqual(metadata.openGraph?.images);
   });
 
   it("uses newsletter social preview metadata on a short public share URL", async () => {
+    const { buildShortSharePath } = await import("@/lib/short-share-url");
+    const id = "22222222-3333-4444-8555-666666666666";
     mockPrisma.coopNews.findFirst.mockResolvedValue({
-      id: "newsletter-1",
+      id,
       title: "조합소식",
       content: "<p>소식 본문</p>",
       imagePath: null,
@@ -127,12 +149,12 @@ describe("short share routes", () => {
 
     const { generateMetadata } = await import("@/app/share/newsletter/[id]/page");
     const metadata = await generateMetadata({
-      params: Promise.resolve({ id: "newsletter-1" }),
+      params: Promise.resolve({ id }),
     });
 
     expect(mockPrisma.coopNews.findFirst).toHaveBeenCalledWith({
       where: {
-        id: "newsletter-1",
+        id,
         category: "WEEKLY_MONTHLY",
       },
       select: {
@@ -143,7 +165,7 @@ describe("short share routes", () => {
         socialImagePath: true,
       },
     });
-    expect(metadata.openGraph?.url).toBe("/share/newsletter/newsletter-1");
+    expect(metadata.openGraph?.url).toBe("/share/newsletter/22222222-3333-4444-8555-666666666666");
     expect(metadata.openGraph?.images).toEqual([
       {
         url: "/uploads/social-preview-newsletter.png",
@@ -152,11 +174,21 @@ describe("short share routes", () => {
         alt: "조합소식",
       },
     ]);
+
+    const { generateMetadata: generateShortMetadata } = await import("@/app/s/[code]/page");
+    const shortMetadata = await generateShortMetadata({
+      params: Promise.resolve({ code: buildShortSharePath("newsletter", id).replace("/s/", "") }),
+    });
+
+    expect(shortMetadata.openGraph?.url).toBe(buildShortSharePath("newsletter", id));
+    expect(shortMetadata.openGraph?.images).toEqual(metadata.openGraph?.images);
   });
 
   it("uses approved disclosure document metadata on a short public share URL", async () => {
+    const { buildShortSharePath } = await import("@/lib/short-share-url");
+    const id = "33333333-4444-4555-8666-777777777777";
     mockPrisma.document.findFirst.mockResolvedValue({
-      id: "doc-1",
+      id,
       title: "대의원 회의록",
       description: "7월 회의자료",
       socialImagePath: "/uploads/social-preview-document.png",
@@ -164,12 +196,12 @@ describe("short share routes", () => {
 
     const { generateMetadata } = await import("@/app/share/document/[id]/page");
     const metadata = await generateMetadata({
-      params: Promise.resolve({ id: "doc-1" }),
+      params: Promise.resolve({ id }),
     });
 
     expect(mockPrisma.document.findFirst).toHaveBeenCalledWith({
       where: {
-        id: "doc-1",
+        id,
         category: "DISCLOSURE",
         status: "APPROVED",
       },
@@ -180,7 +212,7 @@ describe("short share routes", () => {
         socialImagePath: true,
       },
     });
-    expect(metadata.openGraph?.url).toBe("/share/document/doc-1");
+    expect(metadata.openGraph?.url).toBe("/share/document/33333333-4444-4555-8666-777777777777");
     expect(metadata.openGraph?.images).toEqual([
       {
         url: "/uploads/social-preview-document.png",
@@ -189,5 +221,13 @@ describe("short share routes", () => {
         alt: "대의원 회의록",
       },
     ]);
+
+    const { generateMetadata: generateShortMetadata } = await import("@/app/s/[code]/page");
+    const shortMetadata = await generateShortMetadata({
+      params: Promise.resolve({ code: buildShortSharePath("document", id).replace("/s/", "") }),
+    });
+
+    expect(shortMetadata.openGraph?.url).toBe(buildShortSharePath("document", id));
+    expect(shortMetadata.openGraph?.images).toEqual(metadata.openGraph?.images);
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 const approvedDisclosure = {
-  id: "doc-1",
+  id: "33333333-4444-4555-8666-777777777777",
   title: "  대의원   회의록  ",
   category: "DISCLOSURE",
   subCategory: "대의원 회의록",
@@ -12,7 +12,7 @@ const approvedDisclosure = {
 };
 
 const newsletter = {
-  id: "newsletter-1",
+  id: "22222222-3333-4444-8555-666666666666",
   title: "  대방동   2026년 7월 조합 월간 소식지  ",
   category: "WEEKLY_MONTHLY",
   content: "월간 소식지 본문",
@@ -21,7 +21,7 @@ const newsletter = {
 };
 
 const noticeNews = {
-  id: "notice-1",
+  id: "11111111-2222-4333-8444-555555555555",
   title: "  대방동 지역주택조합 공식 홈페이지 오픈 안내  ",
   category: "NOTICE",
   content: "공지 본문",
@@ -30,7 +30,7 @@ const noticeNews = {
 };
 
 const freePostAnnouncementSource = {
-  id: "free-1",
+  id: "b472f16e-3e90-40c6-889a-06375fa56b05",
   title: "  자유게시판 운영 방침 안내  ",
   content: "자유게시판 운영 방침입니다.",
   postType: "NOTICE",
@@ -60,6 +60,13 @@ function createMockPrisma(params?: {
 }
 
 describe("openchat announcements", () => {
+  async function expectShortUrl(message: string, kind: "document" | "free" | "newsletter" | "notice", id: string) {
+    const { buildAbsoluteShortShareUrl } = await import("@/lib/short-share-url");
+
+    expect(message).toContain(buildAbsoluteShortShareUrl(kind, id, "https://dbapt.example"));
+    expect(message).not.toContain(`/share/${kind}/`);
+  }
+
   it("skips documents that are not approved disclosure documents", async () => {
     const { upsertOpenChatAnnouncementForDocument } = await import("@/lib/notifications/openchat-announcements");
     const prisma = createMockPrisma();
@@ -91,7 +98,7 @@ describe("openchat announcements", () => {
     expect(result.status).toBe("CREATED");
     expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        documentId: "doc-1",
+        documentId: "33333333-4444-4555-8666-777777777777",
         status: "DRAFT",
         message: expect.stringContaining("대의원 회의록"),
       }),
@@ -101,7 +108,7 @@ describe("openchat announcements", () => {
     expect(message).toContain("새 공개자료가 등록되었습니다.");
     expect(message).toContain("제목: 대의원 회의록");
     expect(message).toContain("아래 링크로 확인해 주세요.");
-    expect(message).toContain("https://dbapt.example/share/document/doc-1");
+    await expectShortUrl(message, "document", approvedDisclosure.id);
     expect(message).not.toContain("분류:");
     expect(message).not.toContain("documents/2026/private.pdf");
   });
@@ -119,7 +126,7 @@ describe("openchat announcements", () => {
     expect(result.status).toBe("CREATED");
     expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        coopNewsId: "newsletter-1",
+        coopNewsId: "22222222-3333-4444-8555-666666666666",
         status: "DRAFT",
         message: expect.stringContaining("대방동 2026년 7월 조합 월간 소식지"),
       }),
@@ -129,7 +136,7 @@ describe("openchat announcements", () => {
     expect(message).toContain("새 조합소식이 등록되었습니다.");
     expect(message).toContain("제목: 대방동 2026년 7월 조합 월간 소식지");
     expect(message).toContain("아래 링크로 확인해 주세요.");
-    expect(message).toContain("https://dbapt.example/share/newsletter/newsletter-1");
+    await expectShortUrl(message, "newsletter", newsletter.id);
     expect(message).not.toContain("분류:");
     expect(message).not.toContain("https://dbapt.example/uploads/newsletter.pdf");
   });
@@ -147,7 +154,7 @@ describe("openchat announcements", () => {
     expect(result.status).toBe("CREATED");
     expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        coopNewsId: "notice-1",
+        coopNewsId: "11111111-2222-4333-8444-555555555555",
         status: "DRAFT",
         message: expect.stringContaining("대방동 지역주택조합 공식 홈페이지 오픈 안내"),
       }),
@@ -157,7 +164,7 @@ describe("openchat announcements", () => {
     expect(message).toContain("새 공지사항이 등록되었습니다.");
     expect(message).toContain("제목: 대방동 지역주택조합 공식 홈페이지 오픈 안내");
     expect(message).toContain("아래 링크로 확인해 주세요.");
-    expect(message).toContain("https://dbapt.example/share/notice/notice-1");
+    await expectShortUrl(message, "notice", noticeNews.id);
     expect(message).not.toContain("분류:");
     expect(message).not.toContain("https://dbapt.example/uploads/notice.pdf");
   });
@@ -173,7 +180,7 @@ describe("openchat announcements", () => {
       siteUrl: "https://dbapt.example",
     });
 
-    expect(message).toContain("https://dbapt.example/share/notice/notice-1");
+    await expectShortUrl(message, "notice", noticeNews.id);
   });
 
   it("creates an announcement message for free-board posts without body content", async () => {
@@ -189,7 +196,7 @@ describe("openchat announcements", () => {
     expect(result.status).toBe("CREATED");
     expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        freePostId: "free-1",
+        freePostId: "b472f16e-3e90-40c6-889a-06375fa56b05",
         status: "DRAFT",
         message: expect.stringContaining("자유게시판 운영 방침 안내"),
       }),
@@ -199,7 +206,7 @@ describe("openchat announcements", () => {
     expect(message).toContain("새 게시글이 등록되었습니다.");
     expect(message).toContain("제목: 자유게시판 운영 방침 안내");
     expect(message).toContain("아래 링크로 확인해 주세요.");
-    expect(message).toContain("https://dbapt.example/share/free/free-1");
+    await expectShortUrl(message, "free", freePostAnnouncementSource.id);
     expect(message).not.toContain("유형:");
     expect(message).not.toContain("자유게시판 운영 방침입니다.");
   });
@@ -211,7 +218,8 @@ describe("openchat announcements", () => {
       document: approvedDisclosure,
     });
 
-    expect(message).toContain("https://dbapt-site.vercel.app/share/document/doc-1");
+    const { buildAbsoluteShortShareUrl } = await import("@/lib/short-share-url");
+    expect(message).toContain(buildAbsoluteShortShareUrl("document", approvedDisclosure.id));
     expect(message).not.toContain("https://www.dbapt.com/disclosure");
   });
 
@@ -225,7 +233,8 @@ describe("openchat announcements", () => {
         document: approvedDisclosure,
       });
 
-      expect(message).toContain("https://dbapt-site.vercel.app/share/document/doc-1");
+      const { buildAbsoluteShortShareUrl } = await import("@/lib/short-share-url");
+      expect(message).toContain(buildAbsoluteShortShareUrl("document", approvedDisclosure.id));
       expect(message).not.toContain("https://www.dbapt.com/disclosure");
     } finally {
       if (previousSiteUrl === undefined) {
@@ -305,7 +314,7 @@ describe("openchat announcements", () => {
     expect(result.status).toBe("CREATED");
     expect(prisma.openChatAnnouncement.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        documentId: "doc-1",
+        documentId: "33333333-4444-4555-8666-777777777777",
         status: "DRAFT",
       }),
     });
@@ -342,9 +351,9 @@ describe("openchat announcements", () => {
       createdAt: new Date("2026-06-13T00:00:00.000Z"),
       updatedAt: new Date("2026-06-13T00:00:00.000Z"),
       document: {
-        id: "doc-1",
+        id: "33333333-4444-4555-8666-777777777777",
         title: "대의원 회의록",
       },
-    })).toContain("OPENCHAT announcement-1 status=DRAFT document=doc-1 title=\"대의원 회의록\"");
+    })).toContain("OPENCHAT announcement-1 status=DRAFT document=33333333-4444-4555-8666-777777777777 title=\"대의원 회의록\"");
   });
 });

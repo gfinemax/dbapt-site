@@ -89,6 +89,16 @@ export async function GET(
     const mergedBuffer = new ArrayBuffer(mergedBytes.byteLength);
     new Uint8Array(mergedBuffer).set(mergedBytes);
 
+    try {
+      await prisma.document.update({
+        where: { id: document.id },
+        data: { viewCount: { increment: 1 } },
+        select: { id: true, viewCount: true },
+      });
+    } catch (viewCountError) {
+      console.error("Document view count update failed:", viewCountError);
+    }
+
     return new Response(mergedBuffer, {
       headers: {
         ...getInlinePdfResponseHeaders(document.fileName),

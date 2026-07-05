@@ -22,6 +22,7 @@ import { buildNoticeBoardList, type NoticeBoardListItem } from "@/lib/news/notic
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
+import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
@@ -281,6 +282,9 @@ export function NoticeBoard({
             )}
           </div>
         </div>
+        <p className="mt-2 text-[10.5px] font-medium text-ash">
+          {formatViewCountBaseline("조회수")}
+        </p>
       </div>
 
       {/* 공지사항 목록 테이블 */}
@@ -306,7 +310,7 @@ export function NoticeBoard({
                 <th className="px-3 py-3">제목</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">등록자</th>
                 <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">댓글</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">조회수</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
                 {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
               </tr>
@@ -376,22 +380,8 @@ export function NoticeBoard({
                     <td className="px-3 py-3.5 text-center text-xs text-ash font-mono whitespace-nowrap">
                       {notice.createdAt}
                     </td>
-                    <td className="px-3 py-3.5 text-center">
-                      <button
-                        type="button"
-                        aria-label={`댓글 ${getNewsComments(notice).length}개 보기`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (onViewNotice) {
-                            onViewNotice(notice);
-                          } else {
-                            setActiveViewNotice(notice);
-                          }
-                        }}
-                        className="inline-flex min-w-16 items-center justify-center whitespace-nowrap rounded-full border border-sky-blue/15 bg-white px-2.5 py-1 text-[11px] font-bold text-sky-blue hover:bg-sky-blue/10"
-                      >
-                        댓글 {getNewsComments(notice).length}
-                      </button>
+                    <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
+                      {formatViewCount(notice.viewCount)}
                     </td>
                     <td className="px-3 py-3.5 text-center">
                       {isLoggedIn && notice.isReal ? (
@@ -512,6 +502,8 @@ export function NoticeBoard({
                 <span>작성자: {activeViewNotice.author.name}</span>
                 <span>•</span>
                 <span>등록일: {activeViewNotice.createdAt}</span>
+                <span>•</span>
+                <span>{formatViewCount(activeViewNotice.viewCount)}</span>
               </div>
 
               <div>
