@@ -97,9 +97,12 @@ describe("openchat announcements", () => {
       }),
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
-    expect(message).toContain("[대방동 지역주택조합 공개자료 안내]");
-    expect(message).toContain("홈페이지에서 해당 공개자료를 확인해 주세요.");
-    expect(message).toContain("https://dbapt.example/disclosure?document=doc-1");
+    expect(message).toContain("[홈페이지 공개자료 안내]");
+    expect(message).toContain("새 공개자료가 등록되었습니다.");
+    expect(message).toContain("제목: 대의원 회의록");
+    expect(message).toContain("아래 링크로 확인해 주세요.");
+    expect(message).toContain("https://dbapt.example/share/document/doc-1");
+    expect(message).not.toContain("분류:");
     expect(message).not.toContain("documents/2026/private.pdf");
   });
 
@@ -122,10 +125,12 @@ describe("openchat announcements", () => {
       }),
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
-    expect(message).toContain("[대방동 지역주택조합 소통마당 안내]");
-    expect(message).toContain("새 소통마당 글이 등록되었습니다.");
-    expect(message).toContain("- 분류: 주/월간 소식");
-    expect(message).toContain("https://dbapt.example/news?tab=newsletter&news=newsletter-1");
+    expect(message).toContain("[홈페이지 조합소식 안내]");
+    expect(message).toContain("새 조합소식이 등록되었습니다.");
+    expect(message).toContain("제목: 대방동 2026년 7월 조합 월간 소식지");
+    expect(message).toContain("아래 링크로 확인해 주세요.");
+    expect(message).toContain("https://dbapt.example/share/newsletter/newsletter-1");
+    expect(message).not.toContain("분류:");
     expect(message).not.toContain("https://dbapt.example/uploads/newsletter.pdf");
   });
 
@@ -148,9 +153,12 @@ describe("openchat announcements", () => {
       }),
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
-    expect(message).toContain("[대방동 지역주택조합 소통마당 안내]");
-    expect(message).toContain("- 분류: 조합 공지사항");
-    expect(message).toContain("https://dbapt.example/news?tab=notice&news=notice-1");
+    expect(message).toContain("[홈페이지 공지사항 안내]");
+    expect(message).toContain("새 공지사항이 등록되었습니다.");
+    expect(message).toContain("제목: 대방동 지역주택조합 공식 홈페이지 오픈 안내");
+    expect(message).toContain("아래 링크로 확인해 주세요.");
+    expect(message).toContain("https://dbapt.example/share/notice/notice-1");
+    expect(message).not.toContain("분류:");
     expect(message).not.toContain("https://dbapt.example/uploads/notice.pdf");
   });
 
@@ -165,7 +173,7 @@ describe("openchat announcements", () => {
       siteUrl: "https://dbapt.example",
     });
 
-    expect(message).toContain("https://dbapt.example/news?tab=notice&news=notice-1");
+    expect(message).toContain("https://dbapt.example/share/notice/notice-1");
   });
 
   it("creates an announcement message for free-board posts without body content", async () => {
@@ -187,9 +195,12 @@ describe("openchat announcements", () => {
       }),
     });
     const message = prisma.openChatAnnouncement.create.mock.calls[0][0].data.message as string;
-    expect(message).toContain("[대방동 지역주택조합 자유게시판 안내]");
-    expect(message).toContain("- 유형: 법령·운영안내");
-    expect(message).toContain("https://dbapt.example/news?tab=free&post=free-1");
+    expect(message).toContain("[홈페이지 자유게시판 안내]");
+    expect(message).toContain("새 게시글이 등록되었습니다.");
+    expect(message).toContain("제목: 자유게시판 운영 방침 안내");
+    expect(message).toContain("아래 링크로 확인해 주세요.");
+    expect(message).toContain("https://dbapt.example/share/free/free-1");
+    expect(message).not.toContain("유형:");
     expect(message).not.toContain("자유게시판 운영 방침입니다.");
   });
 
@@ -200,7 +211,7 @@ describe("openchat announcements", () => {
       document: approvedDisclosure,
     });
 
-    expect(message).toContain("https://dbapt-site.vercel.app/disclosure?document=doc-1");
+    expect(message).toContain("https://dbapt-site.vercel.app/share/document/doc-1");
     expect(message).not.toContain("https://www.dbapt.com/disclosure");
   });
 
@@ -214,7 +225,7 @@ describe("openchat announcements", () => {
         document: approvedDisclosure,
       });
 
-      expect(message).toContain("https://dbapt-site.vercel.app/disclosure?document=doc-1");
+      expect(message).toContain("https://dbapt-site.vercel.app/share/document/doc-1");
       expect(message).not.toContain("https://www.dbapt.com/disclosure");
     } finally {
       if (previousSiteUrl === undefined) {

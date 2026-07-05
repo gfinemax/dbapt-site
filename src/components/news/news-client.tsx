@@ -63,6 +63,7 @@ import {
   type NewsSessionView,
 } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
+import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeBoard } from "./notice-board";
 import { CommentReactionBar } from "./comment-reaction-bar";
 import { FreeBoard } from "./free-board";
@@ -165,6 +166,8 @@ export function NewsClient({
   const [editAttachmentFile, setEditAttachmentFile] = useState<File | null>(null);
   const [editSocialImagePath, setEditSocialImagePath] = useState<string | null>(null);
   const [editSocialImageFile, setEditSocialImageFile] = useState<File | null>(null);
+  const [editSocialImageSourceFile, setEditSocialImageSourceFile] = useState<File | null>(null);
+  const [isEditSocialImageCropperOpen, setIsEditSocialImageCropperOpen] = useState(false);
   const [editRegisteredAt, setEditRegisteredAt] = useState("");
   const [editIsStarred, setEditIsStarred] = useState(false);
   const [editDisplayAuthorName, setEditDisplayAuthorName] =
@@ -205,6 +208,8 @@ export function NewsClient({
       setEditNoticeCommentDisplayAuthorName("운영자");
       setEditSocialImagePath(null);
       setEditSocialImageFile(null);
+      setEditSocialImageSourceFile(null);
+      setIsEditSocialImageCropperOpen(false);
     }
     return () => {
       document.body.style.overflow = "";
@@ -264,6 +269,8 @@ export function NewsClient({
     setEditAttachmentFile(null);
     setEditSocialImagePath(draft.socialImagePath);
     setEditSocialImageFile(null);
+    setEditSocialImageSourceFile(null);
+    setIsEditSocialImageCropperOpen(false);
     setEditRegisteredAt(draft.registeredAt);
     setEditIsStarred(draft.isStarred);
     setEditDisplayAuthorName(draft.displayAuthorName);
@@ -976,10 +983,11 @@ export function NewsClient({
                         <span>현재 미리보기 이미지: {editSocialImagePath}</span>
                         <button
                           type="button"
-                          onClick={() => {
-                            setEditSocialImagePath(null);
-                            setEditSocialImageFile(null);
-                          }}
+                      onClick={() => {
+                        setEditSocialImagePath(null);
+                        setEditSocialImageFile(null);
+                        setEditSocialImageSourceFile(null);
+                      }}
                           className="rounded-full bg-stone-surface px-2.5 py-1 text-[10px] font-bold text-graphite"
                         >
                           이미지 제거
@@ -990,7 +998,13 @@ export function NewsClient({
                       id="edit-notice-social-image-file"
                       type="file"
                       accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                      onChange={(e) => setEditSocialImageFile(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        e.target.value = "";
+                        if (!file) return;
+                        setEditSocialImageSourceFile(file);
+                        setIsEditSocialImageCropperOpen(true);
+                      }}
                       className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
                     />
                     {editSocialImageFile && (
@@ -999,6 +1013,17 @@ export function NewsClient({
                       </p>
                     )}
                   </div>
+
+                  <SocialPreviewCropper
+                    file={editSocialImageSourceFile}
+                    open={isEditSocialImageCropperOpen}
+                    title="공지 카톡 미리보기 이미지 자르기"
+                    onCancel={() => setIsEditSocialImageCropperOpen(false)}
+                    onConfirm={(file) => {
+                      setEditSocialImageFile(file);
+                      setIsEditSocialImageCropperOpen(false);
+                    }}
+                  />
 
                   <div className="space-y-1.5">
                     <label htmlFor="edit-notice-attachment-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">

@@ -1,0 +1,74 @@
+import type { Metadata } from "next";
+import { ShareRedirectPage } from "@/components/share/share-redirect-page";
+import { prisma } from "@/lib/db";
+import { buildNewsPostSocialPreview } from "@/lib/news/social-preview";
+import { defaultSiteMetadata, siteTitle } from "@/lib/site-metadata";
+
+type SharePageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export async function generateMetadata({ params }: SharePageProps): Promise<Metadata> {
+  const { id } = await params;
+
+  try {
+    const news = await prisma.coopNews.findFirst({
+      where: {
+        id,
+        category: "NOTICE",
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        imagePath: true,
+        socialImagePath: true,
+      },
+    });
+
+    if (!news) {
+      return defaultSiteMetadata;
+    }
+
+    const preview = buildNewsPostSocialPreview(news);
+    const sharePath = `/share/notice/${encodeURIComponent(news.id)}`;
+
+    return {
+      metadataBase: defaultSiteMetadata.metadataBase,
+      title: `${preview.title} | ${siteTitle}`,
+      description: preview.description,
+      openGraph: {
+        title: preview.title,
+        description: preview.description,
+        url: sharePath,
+        siteName: siteTitle,
+        locale: "ko_KR",
+        type: "article",
+        images: [preview.image],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: preview.title,
+        description: preview.description,
+        images: [preview.image.url],
+      },
+    };
+  } catch (error) {
+    console.error("Notice share metadata error:", error);
+    return defaultSiteMetadata;
+  }
+}
+
+export default async function NoticeSharePage({ params }: SharePageProps) {
+  const { id } = await params;
+
+  return (
+    <ShareRedirectPage
+      title="공지사항으로 이동 중입니다"
+      description="잠시 후 공지사항 화면으로 이동합니다."
+      destination={`/news?tab=notice&news=${encodeURIComponent(id)}`}
+    />
+  );
+}

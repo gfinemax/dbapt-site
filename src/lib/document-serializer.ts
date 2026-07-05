@@ -32,6 +32,7 @@ export function serializeDocuments(docs: PrismaDocWithAttachments[]): Document[]
     attachmentName: doc.attachmentName,
     attachmentPath: doc.attachmentPath,
     attachmentSize: doc.attachmentSize,
+    socialImagePath: doc.socialImagePath,
     attachments: doc.attachments ? doc.attachments.map(att => ({
       id: att.id,
       documentId: att.documentId,

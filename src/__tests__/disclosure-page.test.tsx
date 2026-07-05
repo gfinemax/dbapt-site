@@ -1300,7 +1300,7 @@ describe("disclosure page", () => {
           json: async () => ({
             announcement: {
               id: "announcement-1",
-              message: "[대방동 지역주택조합 공개자료 안내]\n대의원 회의록",
+              message: "[홈페이지 공개자료 안내]\n\n새 공개자료가 등록되었습니다.\n\n제목: 2023년 1차_대방동지주택_회의록\n등록일: 2026. 06. 14.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/document/doc-delegate-minutes",
             },
           }),
         };
@@ -1348,7 +1348,7 @@ describe("disclosure page", () => {
 
     fireEvent.click(within(delegateCard as HTMLElement).getByRole("button", { name: "2023년 1차_대방동지주택_회의록 오픈채팅 공지문 복사" }));
 
-    await waitFor(() => expect(copyText).toHaveBeenCalledWith("[대방동 지역주택조합 공개자료 안내]\n대의원 회의록"));
+    await waitFor(() => expect(copyText).toHaveBeenCalledWith("[홈페이지 공개자료 안내]\n\n새 공개자료가 등록되었습니다.\n\n제목: 2023년 1차_대방동지주택_회의록\n등록일: 2026. 06. 14.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/document/doc-delegate-minutes"));
     expect(fetchMock).toHaveBeenCalledWith("/api/openchat/announcements?documentId=doc-delegate-minutes");
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/openchat/announcements",

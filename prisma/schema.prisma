@@ -77,6 +77,7 @@ model Document {
   attachmentPath           String? // 추가 첨부파일 저장 경로
   attachmentName           String? // 추가 첨부파일 원본 파일명
   attachmentSize           Int? // 추가 첨부파일 용량 (bytes)
+  socialImagePath          String? // 카카오톡/소셜 공유 전용 대표 이미지
   isStarred                Boolean   @default(false) // 중요 문서 별표 마킹
   status                   String    @default("PENDING") // PENDING, APPROVED
   publishedAt              DateTime? // 실제 조합원 대상 공개 일시

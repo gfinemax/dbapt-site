@@ -49,6 +49,41 @@
 
 ---
 
+# Verification - Short Kakao Share URLs
+
+## Implemented Feature
+
+- Added short public share routes:
+  - `/share/free/[id]`
+  - `/share/notice/[id]`
+  - `/share/newsletter/[id]`
+  - `/share/document/[id]`
+- Each share route serves Open Graph/Twitter metadata with the existing social preview image priority, then redirects visitors to the canonical content URL.
+- Updated generated OpenChat/Kakao announcement messages to use the short share URLs.
+- Kept free-board metadata behind `isPublicShareEnabled: true` and disclosure document metadata behind approved public disclosure status.
+
+## Checks
+
+- `pnpm vitest run src/__tests__/share-routes.test.ts`: FAIL before implementation because the short share route modules did not exist.
+- `pnpm vitest run src/__tests__/openchat-announcements.test.ts`: FAIL before implementation because generated messages still used `/news?...` and `/disclosure?...` URLs.
+- `pnpm vitest run src/__tests__/share-routes.test.ts`: PASS, 5 tests passed.
+- `pnpm vitest run src/__tests__/openchat-announcements.test.ts`: PASS, 13 tests passed.
+- `pnpm vitest run src/__tests__/news-admin-controls.test.tsx src/__tests__/disclosure-page.test.tsx`: PASS, 138 tests passed. jsdom printed existing `Window.scrollTo()` not implemented warnings.
+- `pnpm vitest run src/__tests__/disclosure-page-public-document.test.tsx src/__tests__/news-page-metadata.test.ts`: PASS, 6 tests passed.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 80 files and 548 tests passed. jsdom printed existing `Window.scrollTo()` not implemented warnings.
+- `pnpm build`: PASS. Build output includes `/share/document/[id]`, `/share/free/[id]`, `/share/newsletter/[id]`, and `/share/notice/[id]`.
+
+## Browser Checks
+
+- Not run separately. This change is covered by metadata unit tests and production build route generation; the new visible screen is a minimal redirect fallback page with no authenticated interaction.
+
+## Risks Or Follow-up
+
+- Kakao may cache metadata per URL. The route preserves current unique cropped image URL behavior, but already-shared Kakao cards may require cache refresh or a newly generated image URL.
+
+---
+
 # Verification - Rich Content View Top Gap Tightening
 
 ## Implemented Feature

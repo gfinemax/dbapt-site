@@ -22,6 +22,7 @@ describe("document serializer", () => {
         attachmentPath: null,
         attachmentName: null,
         attachmentSize: null,
+        socialImagePath: "/uploads/social-preview.png",
         isStarred: false,
         status: "APPROVED",
         publishedAt: null,
@@ -34,5 +35,6 @@ describe("document serializer", () => {
     expect(document.replyToDocumentId).toBe("received-parent-1");
     expect(document.replyNotRequired).toBe(true);
     expect(document.replyDueDate).toBe("2026-06-20T00:00:00.000Z");
+    expect(document.socialImagePath).toBe("/uploads/social-preview.png");
   });
 });

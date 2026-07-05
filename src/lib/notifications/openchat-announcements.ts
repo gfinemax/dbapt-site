@@ -1,5 +1,3 @@
-import { getFreePostTypeLabel } from "@/lib/free-post-type";
-
 type OpenChatAnnouncementDocument = {
   id: string;
   title: string;
@@ -113,31 +111,28 @@ function isCooperativeNews(news: OpenChatAnnouncementNews) {
   return news.category === "WEEKLY_MONTHLY" || news.category === "NOTICE";
 }
 
-function getCooperativeNewsAnnouncementMeta(news: OpenChatAnnouncementNews) {
+function getCooperativeNewsAnnouncementMeta(news: OpenChatAnnouncementNews): {
+  heading: string;
+  body: string;
+  shareKind: ShareRouteKind;
+} {
   if (news.category === "NOTICE") {
     return {
-      label: "조합 공지사항",
-      tab: "notice",
+      heading: "[홈페이지 공지사항 안내]",
+      body: "새 공지사항이 등록되었습니다.",
+      shareKind: "notice",
     };
   }
 
   return {
-    label: "주/월간 소식",
-    tab: "newsletter",
+    heading: "[홈페이지 조합소식 안내]",
+    body: "새 조합소식이 등록되었습니다.",
+    shareKind: "newsletter",
   };
-}
-
-function getFreePostAnnouncementLabel(postType?: string | null) {
-  return getFreePostTypeLabel(postType);
 }
 
 function normalizeOneLine(value: string) {
   return value.replace(/\s+/g, " ").trim();
-}
-
-function normalizeSiteUrl(siteUrl?: string) {
-  const value = siteUrl || process.env.OPENCHAT_SITE_URL || "https://dbapt-site.vercel.app";
-  return value.replace(/\/+$/, "");
 }
 
 function formatDate(date: Date) {
@@ -155,20 +150,19 @@ export function buildOpenChatAnnouncementMessage(params: {
   now?: Date;
 }) {
   const { document } = params;
-  const subCategory = normalizeOneLine(normalizeSubCategory(document.subCategory));
   const title = normalizeOneLine(document.title);
   const publishedAt = document.publishedAt ?? document.createdAt ?? params.now ?? new Date();
-  const disclosureUrl = `${normalizeSiteUrl(params.siteUrl)}/disclosure?document=${encodeURIComponent(document.id)}`;
+  const disclosureUrl = buildAbsoluteShareUrl("document", document.id, params.siteUrl);
 
   return [
-    "[대방동 지역주택조합 공개자료 안내]",
+    "[홈페이지 공개자료 안내]",
     "",
     "새 공개자료가 등록되었습니다.",
-    `- 분류: ${subCategory}`,
-    `- 제목: ${title}`,
-    `- 등록일: ${formatDate(publishedAt)}`,
     "",
-    "홈페이지에서 해당 공개자료를 확인해 주세요.",
+    `제목: ${title}`,
+    `등록일: ${formatDate(publishedAt)}`,
+    "",
+    "아래 링크로 확인해 주세요.",
     disclosureUrl,
   ].join("\n");
 }
@@ -182,17 +176,17 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
   const title = normalizeOneLine(news.title);
   const createdAt = news.createdAt ?? params.now ?? new Date();
   const meta = getCooperativeNewsAnnouncementMeta(news);
-  const newsUrl = `${normalizeSiteUrl(params.siteUrl)}/news?tab=${meta.tab}&news=${encodeURIComponent(news.id)}`;
+  const newsUrl = buildAbsoluteShareUrl(meta.shareKind, news.id, params.siteUrl);
 
   return [
-    "[대방동 지역주택조합 소통마당 안내]",
+    meta.heading,
     "",
-    "새 소통마당 글이 등록되었습니다.",
-    `- 분류: ${meta.label}`,
-    `- 제목: ${title}`,
-    `- 등록일: ${formatDate(createdAt)}`,
+    meta.body,
     "",
-    "홈페이지에서 해당 글 내용을 확인해 주세요.",
+    `제목: ${title}`,
+    `등록일: ${formatDate(createdAt)}`,
+    "",
+    "아래 링크로 확인해 주세요.",
     newsUrl,
   ].join("\n");
 }
@@ -205,17 +199,17 @@ export function buildOpenChatFreePostAnnouncementMessage(params: {
   const { post } = params;
   const title = normalizeOneLine(post.title);
   const createdAt = post.createdAt ?? params.now ?? new Date();
-  const freeBoardUrl = `${normalizeSiteUrl(params.siteUrl)}/news?tab=free&post=${encodeURIComponent(post.id)}`;
+  const freeBoardUrl = buildAbsoluteShareUrl("free", post.id, params.siteUrl);
 
   return [
-    "[대방동 지역주택조합 자유게시판 안내]",
+    "[홈페이지 자유게시판 안내]",
     "",
-    "새 자유게시판 글이 등록되었습니다.",
-    `- 유형: ${getFreePostAnnouncementLabel(post.postType)}`,
-    `- 제목: ${title}`,
-    `- 등록일: ${formatDate(createdAt)}`,
+    "새 게시글이 등록되었습니다.",
     "",
-    "홈페이지 로그인 후 자유게시판에서 확인해 주세요.",
+    `제목: ${title}`,
+    `등록일: ${formatDate(createdAt)}`,
+    "",
+    "아래 링크로 확인해 주세요.",
     freeBoardUrl,
   ].join("\n");
 }
@@ -421,3 +415,4 @@ export function formatOpenChatAnnouncement(announcement: FormattedOpenChatAnnoun
   const copiedAt = announcement.copiedAt ? announcement.copiedAt.toISOString() : "none";
   return `OPENCHAT ${announcement.id} status=${announcement.status} document=${announcement.document.id} title="${announcement.document.title}" copiedAt=${copiedAt} updatedAt=${announcement.updatedAt.toISOString()}`;
 }
+import { buildAbsoluteShareUrl, type ShareRouteKind } from "@/lib/share-url";

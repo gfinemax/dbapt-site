@@ -59,6 +59,15 @@ function normalizeReplyDueDate(value: unknown, correspondenceType: string | null
   return Number.isNaN(replyDueDate.getTime()) ? null : replyDueDate;
 }
 
+function parseSocialImagePath(value: unknown) {
+  const socialImagePath = typeof value === "string" ? value.trim() : "";
+  if (!socialImagePath) return null;
+  if ((socialImagePath.startsWith("/") && !socialImagePath.startsWith("//")) || /^https?:\/\//i.test(socialImagePath)) {
+    return socialImagePath;
+  }
+  return null;
+}
+
 function validateUploadFile(file: File, label: string) {
   if (!file || file.size === 0) {
     return `${label}이 비어 있습니다.`;
@@ -190,6 +199,7 @@ export async function POST(request: Request) {
       const documentDateStr = typeof body.documentDate === "string" ? body.documentDate : "";
       const publishedAtStr = typeof body.publishedAt === "string" ? body.publishedAt : "";
       const isStarred = body.isStarred === true;
+      const socialImagePath = parseSocialImagePath(body.socialImagePath);
 
       if (!title || !category || !body.file) {
         return NextResponse.json({ error: "필수 입력 항목(제목, 카테고리, 파일)이 누락되었습니다." }, { status: 400 });
@@ -250,6 +260,7 @@ export async function POST(request: Request) {
           fileSizeReductionPercent: uploadedFile.reductionPercent,
           status: "APPROVED",
           isStarred,
+          socialImagePath,
           publishedAt,
           documentDate,
           attachments: {
@@ -283,6 +294,7 @@ export async function POST(request: Request) {
     const attachments = formData.getAll("attachments") as File[];
     const isStarredStr = formData.get("isStarred") as string;
     const isStarred = isStarredStr === "true";
+    const socialImagePath = parseSocialImagePath(formData.get("socialImagePath"));
 
     if (!title || !category || !file) {
       return NextResponse.json({ error: "필수 입력 항목(제목, 카테고리, 파일)이 누락되었습니다." }, { status: 400 });
@@ -338,6 +350,7 @@ export async function POST(request: Request) {
         fileSize: file.size,
         status: "APPROVED", // Auto-approved by default in this implementation slice
         isStarred,
+        socialImagePath,
         publishedAt,
         documentDate,
         attachments: {

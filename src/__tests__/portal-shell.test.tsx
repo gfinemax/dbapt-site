@@ -146,7 +146,7 @@ describe("portal shell", () => {
     expect(submittedFormData.get("currentPassword")).toBe("oldPass9081");
     expect(submittedFormData.get("newPassword")).toBe("newPass9081");
     expect(submittedFormData.get("newPasswordConfirm")).toBe("newPass9081");
-    expect(screen.getByText("비밀번호가 변경되었습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("비밀번호가 변경되었습니다.")).toBeInTheDocument();
     expect(screen.getByLabelText("현재 비밀번호")).toHaveValue("");
   });
 

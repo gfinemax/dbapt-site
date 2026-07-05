@@ -42,6 +42,7 @@ export type Document = {
   attachmentName?: string | null;
   attachmentPath?: string | null;
   attachmentSize?: number | null;
+  socialImagePath?: string | null;
   attachments?: Attachment[];
   isViewedByCurrentUser?: boolean;
   isBookmarkedByCurrentUser?: boolean;

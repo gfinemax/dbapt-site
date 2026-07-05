@@ -593,3 +593,12 @@ yes
 - Planning may continue: yes.
 
 ---
+
+# Spec Selection - Short Kakao Share URLs
+
+- Selected approved plan path: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`.
+- Implementation boundary: add short public share routes for free-board, notice, newsletter, and approved disclosure document links; reuse existing social preview image builders and redirect visitors to the canonical pages. Update generated OpenChat/Kakao copy to use the short URLs.
+- Conflicts between request and plan: none.
+- Planning may continue: yes.
+
+---

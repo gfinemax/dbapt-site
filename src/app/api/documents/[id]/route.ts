@@ -116,6 +116,7 @@ const EDITABLE_DOCUMENT_FIELDS = [
   "file",
   "attachments",
   "appendAttachments",
+  "socialImagePath",
 ] as const;
 
 const CORRESPONDENCE_TYPES = new Set(["발신", "수신", "회신", "기타"]);
@@ -149,6 +150,15 @@ function normalizeReplyDueDate(value: unknown, correspondenceType: string | null
   if (!replyDueDateStr) return null;
   const replyDueDate = new Date(replyDueDateStr);
   return Number.isNaN(replyDueDate.getTime()) ? null : replyDueDate;
+}
+
+function parseSocialImagePath(value: unknown) {
+  const socialImagePath = typeof value === "string" ? value.trim() : "";
+  if (!socialImagePath) return null;
+  if ((socialImagePath.startsWith("/") && !socialImagePath.startsWith("//")) || /^https?:\/\//i.test(socialImagePath)) {
+    return socialImagePath;
+  }
+  return null;
 }
 
 type UploadedDocumentFile = {
@@ -274,6 +284,7 @@ export async function PATCH(
       storedFileSize?: number;
       fileOptimized?: boolean;
       fileSizeReductionPercent?: number;
+      socialImagePath?: string | null;
       attachments?: {
         deleteMany?: Record<string, never>;
         create: {
@@ -380,6 +391,10 @@ export async function PATCH(
         return NextResponse.json({ error: "isStarred 필드는 boolean 이어야 합니다." }, { status: 400 });
       }
       data.isStarred = body.isStarred;
+    }
+
+    if (hasOwn(body, "socialImagePath")) {
+      data.socialImagePath = parseSocialImagePath(body.socialImagePath);
     }
 
     if (hasOwn(body, "file")) {

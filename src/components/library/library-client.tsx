@@ -14,8 +14,10 @@ import {
 import { DocumentBookmarkButton } from "@/components/portal/document-bookmark-button";
 import { type Document } from "@/components/portal/document-table";
 import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
+import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { cn } from "@/lib/utils";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
+import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getSearchQueryTerms, searchTextMatchesQuery } from "@/lib/search-normalization";
 
 const accessLabel: Record<LibraryAccess, string> = {
@@ -876,6 +878,10 @@ function MaterialEntryRow({
   const [draftDocumentDate, setDraftDocumentDate] = useState(toDateInputValue(document?.documentDate || document?.createdAt));
   const [draftPublishedAt, setDraftPublishedAt] = useState(toDateInputValue(document?.publishedAt || document?.createdAt));
   const [draftIsStarred, setDraftIsStarred] = useState(!!document?.isStarred);
+  const [draftSocialImagePath, setDraftSocialImagePath] = useState<string | null>(document?.socialImagePath || null);
+  const [draftSocialImageFile, setDraftSocialImageFile] = useState<File | null>(null);
+  const [draftSocialImageSourceFile, setDraftSocialImageSourceFile] = useState<File | null>(null);
+  const [isDraftSocialImageCropperOpen, setIsDraftSocialImageCropperOpen] = useState(false);
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -883,6 +889,12 @@ function MaterialEntryRow({
 
     setIsSaving(true);
     try {
+      let socialImagePath = draftSocialImagePath;
+      if (draftSocialImageFile) {
+        const uploadData = await uploadPublicFile(draftSocialImageFile, "image");
+        socialImagePath = uploadData.url;
+      }
+
       const body = {
         title: draftTitle,
         description: draftDescription,
@@ -891,6 +903,7 @@ function MaterialEntryRow({
         documentDate: draftDocumentDate,
         publishedAt: draftPublishedAt,
         isStarred: draftIsStarred,
+        socialImagePath,
       };
       const res = await fetch(`/api/documents/${document.id}`, {
         method: "PATCH",
@@ -1005,6 +1018,56 @@ function MaterialEntryRow({
                 />
               </label>
             </div>
+            <div className="rounded-xl border border-stone-surface bg-white px-3 py-3">
+              <label htmlFor={`material-social-image-${document.id}`} className="block text-[10px] font-bold text-charcoal-primary">
+                카톡 미리보기 이미지 (선택)
+              </label>
+              <input
+                id={`material-social-image-${document.id}`}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                onChange={(event) => {
+                  const nextFile = event.target.files?.[0] || null;
+                  event.target.value = "";
+                  if (!nextFile) return;
+                  setDraftSocialImageSourceFile(nextFile);
+                  setIsDraftSocialImageCropperOpen(true);
+                }}
+                className="mt-2 w-full text-xs text-graphite file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1.5 file:text-[10px] file:font-bold file:text-graphite"
+              />
+              {draftSocialImagePath || draftSocialImageFile ? (
+                <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-stone-surface bg-[#f8f7f4] px-3 py-2">
+                  <p className="truncate text-[11px] font-bold text-charcoal-primary">
+                    {draftSocialImageFile?.name || draftSocialImagePath}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraftSocialImagePath(null);
+                      setDraftSocialImageFile(null);
+                      setDraftSocialImageSourceFile(null);
+                    }}
+                    className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red"
+                  >
+                    삭제
+                  </button>
+                </div>
+              ) : (
+                <p className="mt-1.5 text-[10px] font-medium text-ash">
+                  지정하면 공개자료 카톡 공유 링크의 대표 이미지로 사용됩니다.
+                </p>
+              )}
+            </div>
+            <SocialPreviewCropper
+              file={draftSocialImageSourceFile}
+              open={isDraftSocialImageCropperOpen}
+              title="공개자료 카톡 미리보기 이미지 자르기"
+              onCancel={() => setIsDraftSocialImageCropperOpen(false)}
+              onConfirm={(file) => {
+                setDraftSocialImageFile(file);
+                setIsDraftSocialImageCropperOpen(false);
+              }}
+            />
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-surface pt-3">
               <label className="flex items-center gap-2 text-[11px] font-bold text-graphite">
                 <input
@@ -1078,7 +1141,20 @@ function MaterialEntryRow({
                 <button
                   type="button"
                   aria-label="수정"
-                  onClick={() => setIsEditing(true)}
+                  onClick={() => {
+                    setDraftTitle(entry.title);
+                    setDraftDescription(entry.description);
+                    setDraftCategory(document.category || "DISCLOSURE");
+                    setDraftSubCategory(document.subCategory || "");
+                    setDraftDocumentDate(toDateInputValue(document.documentDate || document.createdAt));
+                    setDraftPublishedAt(toDateInputValue(document.publishedAt || document.createdAt));
+                    setDraftIsStarred(!!document.isStarred);
+                    setDraftSocialImagePath(document.socialImagePath || null);
+                    setDraftSocialImageFile(null);
+                    setDraftSocialImageSourceFile(null);
+                    setIsDraftSocialImageCropperOpen(false);
+                    setIsEditing(true);
+                  }}
                   className="inline-flex size-8 items-center justify-center rounded-full border border-stone-surface bg-white text-graphite hover:bg-stone-surface"
                 >
                   <Pencil className="size-3" aria-hidden="true" />

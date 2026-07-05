@@ -3,7 +3,9 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { type Document } from "@/components/portal/document-table";
+import { uploadPublicFile } from "@/lib/news/public-upload";
 import {
   prepareDocumentUploadFile,
   type PdfUploadOptimizationMode,
@@ -117,6 +119,9 @@ export function DocumentUploadForm({
   const [publishedAt, setPublishedAt] = useState(getTodayString());
   const [file, setFile] = useState<File | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [socialImageFile, setSocialImageFile] = useState<File | null>(null);
+  const [socialImageSourceFile, setSocialImageSourceFile] = useState<File | null>(null);
+  const [isSocialImageCropperOpen, setIsSocialImageCropperOpen] = useState(false);
   const [pdfOptimizationMode, setPdfOptimizationMode] = useState<PdfUploadOptimizationMode>("auto");
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
@@ -194,6 +199,12 @@ export function DocumentUploadForm({
 
       await Promise.all(signedUploads.map((upload, index) => uploadToSignedUrl(upload, preparedFiles[index].file)));
 
+      let socialImagePath: string | null = null;
+      if (socialImageFile) {
+        const uploadData = await uploadPublicFile(socialImageFile, "image");
+        socialImagePath = uploadData.url;
+      }
+
       const [mainUpload, ...attachmentUploads] = signedUploads;
       const [mainPreparedFile, ...preparedAttachments] = preparedFiles;
       const res = await fetch("/api/documents", {
@@ -211,6 +222,7 @@ export function DocumentUploadForm({
           documentDate,
           publishedAt,
           isStarred,
+          socialImagePath,
           file: {
             path: mainUpload.path,
             name: file.name,
@@ -242,6 +254,9 @@ export function DocumentUploadForm({
       setPublishedAt(getTodayString());
       setFile(null);
       setAttachments([]);
+      setSocialImageFile(null);
+      setSocialImageSourceFile(null);
+      setIsSocialImageCropperOpen(false);
       setPdfOptimizationMode("auto");
       setIsStarred(false);
       setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
@@ -613,7 +628,58 @@ export function DocumentUploadForm({
               </div>
             )}
           </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="document-social-image">
+              카톡 미리보기 이미지 (선택)
+            </label>
+            <input
+              id="document-social-image"
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+              onChange={(e) => {
+                const nextFile = e.target.files?.[0] || null;
+                e.target.value = "";
+                if (!nextFile) return;
+                setSocialImageSourceFile(nextFile);
+                setIsSocialImageCropperOpen(true);
+              }}
+              className="w-full text-xs text-graphite file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#f2f0ed] file:text-charcoal-primary hover:file:bg-parchment-card"
+            />
+            {socialImageFile ? (
+              <div className="mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-stone-surface bg-[#f8f7f4] px-3 py-2">
+                <p className="truncate text-[11px] font-bold text-charcoal-primary">
+                  {socialImageFile.name}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSocialImageFile(null);
+                    setSocialImageSourceFile(null);
+                  }}
+                  className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red"
+                >
+                  삭제
+                </button>
+              </div>
+            ) : (
+              <p className="mt-1.5 text-[11px] leading-relaxed text-graphite">
+                지정하면 공개자료 카톡 공유 링크의 대표 이미지로 사용됩니다.
+              </p>
+            )}
+          </div>
         </div>
+
+        <SocialPreviewCropper
+          file={socialImageSourceFile}
+          open={isSocialImageCropperOpen}
+          title="공개자료 카톡 미리보기 이미지 자르기"
+          onCancel={() => setIsSocialImageCropperOpen(false)}
+          onConfirm={(file) => {
+            setSocialImageFile(file);
+            setIsSocialImageCropperOpen(false);
+          }}
+        />
 
         <Button
           type="submit"

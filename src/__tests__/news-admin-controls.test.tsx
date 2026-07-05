@@ -60,6 +60,27 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(mockSearchParamsValue.value),
 }));
 
+vi.mock("@/components/social-preview-cropper", async () => {
+  const React = await import("react");
+  return {
+    SocialPreviewCropper: ({ file, open, onConfirm }: {
+      file: File | null;
+      open: boolean;
+      onConfirm: (file: File) => void;
+    }) => {
+      if (!open || !file) return null;
+      return React.createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => onConfirm(new File(["cropped"], `social-preview-${file.name}`, { type: "image/png" })),
+        },
+        "대표 이미지 적용",
+      );
+    },
+  };
+});
+
 vi.mock("@/lib/db", () => ({
   prisma: mockPrisma,
 }));
@@ -1765,7 +1786,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-notice-1",
-            message: "[대방동 지역주택조합 소통마당 안내]\n- 분류: 조합 공지사항",
+            message: "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n제목: 실제 공지\n등록일: 2026. 06. 17.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
           },
         }),
       })
@@ -1787,7 +1808,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "실제 공지 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      "[대방동 지역주택조합 소통마당 안내]\n- 분류: 조합 공지사항",
+      "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n제목: 실제 공지\n등록일: 2026. 06. 17.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
     ));
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -1821,7 +1842,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-notice-fallback",
-            message: "[대방동 지역주택조합 소통마당 안내]\n- 분류: 조합 공지사항",
+            message: "[홈페이지 공지사항 안내]\n\n새 공지사항이 등록되었습니다.\n\n제목: 실제 공지\n등록일: 2026. 06. 17.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/notice/notice-1",
           },
         }),
       })
@@ -1967,6 +1988,7 @@ describe("news admin visible controls", () => {
     fireEvent.change(within(drawer).getByLabelText("카톡 미리보기 이미지 (선택)"), {
       target: { files: [new File(["preview"], "notice-kakao.png", { type: "image/png" })] },
     });
+    fireEvent.click(within(drawer).getByRole("button", { name: "대표 이미지 적용" }));
     fireEvent.click(within(drawer).getByRole("button", { name: "수정사항 저장" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
@@ -2434,7 +2456,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-news-1",
-            message: "[대방동 지역주택조합 소통마당 안내]\n새 소통마당 글이 등록되었습니다.",
+            message: "[홈페이지 조합소식 안내]\n\n새 조합소식이 등록되었습니다.",
           },
         }),
       })
@@ -2457,7 +2479,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "실제 조합뉴스 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      "[대방동 지역주택조합 소통마당 안내]\n새 소통마당 글이 등록되었습니다.",
+      "[홈페이지 조합소식 안내]\n\n새 조합소식이 등록되었습니다.",
     ));
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -2643,6 +2665,7 @@ describe("news admin visible controls", () => {
     fireEvent.change(screen.getByLabelText("카톡 미리보기 이미지 (선택)"), {
       target: { files: [new File(["preview"], "kakao-preview.png", { type: "image/png" })] },
     });
+    fireEvent.click(screen.getByRole("button", { name: "대표 이미지 적용" }));
     fireEvent.click(screen.getByRole("button", { name: "공지사항 즉시 등록" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
@@ -2997,7 +3020,7 @@ describe("news admin visible controls", () => {
           success: true,
           announcement: {
             id: "announcement-free-1",
-            message: "[대방동 지역주택조합 자유게시판 안내]\n- 유형: 자유글",
+            message: "[홈페이지 자유게시판 안내]\n\n새 게시글이 등록되었습니다.\n\n제목: 실제 자유게시글\n등록일: 2026. 06. 18.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/free/free-1",
           },
         }),
       })
@@ -3018,7 +3041,7 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      "[대방동 지역주택조합 자유게시판 안내]\n- 유형: 자유글",
+      "[홈페이지 자유게시판 안내]\n\n새 게시글이 등록되었습니다.\n\n제목: 실제 자유게시글\n등록일: 2026. 06. 18.\n\n아래 링크로 확인해 주세요.\nhttps://dbapt.example/share/free/free-1",
     ));
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -3269,6 +3292,7 @@ describe("news admin visible controls", () => {
     fireEvent.change(screen.getByLabelText("카톡 미리보기 이미지 (선택)"), {
       target: { files: [new File(["preview"], "free-kakao.png", { type: "image/png" })] },
     });
+    fireEvent.click(screen.getByRole("button", { name: "대표 이미지 적용" }));
     fireEvent.change(screen.getByLabelText("등록일"), { target: { value: "2026-06-21T09:30" } });
     fireEvent.click(screen.getByRole("button", { name: "수정 완료" }));
 

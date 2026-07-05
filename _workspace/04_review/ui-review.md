@@ -1,6 +1,54 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Admin 1.91:1 Kakao/social preview cropper for notices, free-board posts, and public disclosure documents
+- Governing spec: Current user request to let administrators crop Kakao preview images; existing `/news` and `/disclosure?document=...` public social-preview behavior
+- Implementation plan: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`
+- Files or pages reviewed: `src/components/social-preview-cropper.tsx`, `src/lib/social-preview-crop.ts`, `src/components/news/notice-board.tsx`, `src/components/news/news-client.tsx`, `src/components/news/free-board.tsx`, `src/components/portal/document-upload-form.tsx`, `src/components/library/library-client.tsx`, `src/app/disclosure/page.tsx`, `src/app/api/documents/route.ts`, `src/app/api/documents/[id]/route.ts`, Prisma migration, `/news`, `/library`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The new cropper is only attached to existing administrator create/edit surfaces for notices, free-board social preview images, and document upload/edit forms. Public visitors only receive metadata image selection for already public/shared content; no private documents, member data, payment data, comments, votes, or new public mutation capability is exposed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Labels say `카톡 미리보기 이미지 (선택)` and the crop modal states that the 1.91:1 box controls what appears in Kakao. Generated files are uploaded as public social preview images and stored in `socialImagePath`; `/disclosure?document=...` uses that image only for approved disclosure documents and falls back to the existing hero image when absent.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The cropper uses the existing warm canvas, stone borders, dark pill CTA, compact labels, and no new decorative motion. The full image preview area is a focusable drag target with an accessible label, and 크롭 크기 plus 가로/세로 위치 sliders let admins shrink the 1.91:1 box first, then move it on both axes when the source image allows. Headless Chrome checks rendered `/news` and `/library` at desktop/mobile widths without blank pages, and regression coverage verifies crop dimensions, ratio-preserving resize, bounded movement, create/edit upload flow, document metadata, and public Open Graph output.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Short Kakao share URLs
+- Governing spec: Current user-approved follow-up to `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`
+- Implementation plan: reuse existing social preview metadata builders on short `/share/...` routes
+- Files or pages reviewed: `src/app/share/free/[id]/page.tsx`, `src/app/share/notice/[id]/page.tsx`, `src/app/share/newsletter/[id]/page.tsx`, `src/app/share/document/[id]/page.tsx`, `src/components/share/share-redirect-page.tsx`, `src/lib/notifications/openchat-announcements.ts`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Free-board share metadata still requires `isPublicShareEnabled: true`. Document share metadata still requires `category: DISCLOSURE` and `status: APPROVED`. Notice/newsletter routes reuse already-public `CoopNews` data only. No private comments, member data, payment data, document file delivery, or mutation capability is exposed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The generated Kakao/OpenChat copy now links to short share URLs while the routes redirect to the same canonical `/news?...` and `/disclosure?document=...` pages. The Open Graph title, description, and image continue to come from the same public post/document metadata and existing Kakao preview image priority.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The only new visible UI is a minimal warm-canvas redirect screen with a clear title, short explanatory text, and a fallback `바로 이동` link. It uses the existing warm canvas, white card, inset stone outline, and dark pill action style. The screen is responsive and does not introduce navigation or new workflow controls.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Dedicated Kakao/social preview image for free-board posts
 - Governing spec: Existing `/news?tab=free&post=...` public social preview behavior and current user request to also support free-board posts
 - Implementation plan: Direct admin editing slice; no separate plan file

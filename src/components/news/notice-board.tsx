@@ -22,6 +22,7 @@ import { buildNoticeBoardList, type NoticeBoardListItem } from "@/lib/news/notic
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
+import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
 
@@ -83,6 +84,8 @@ export function NoticeBoard({
   const [uploadContent, setUploadContent] = useState("");
   const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
   const [uploadSocialImageFile, setUploadSocialImageFile] = useState<File | null>(null);
+  const [uploadSocialImageSourceFile, setUploadSocialImageSourceFile] = useState<File | null>(null);
+  const [isUploadSocialImageCropperOpen, setIsUploadSocialImageCropperOpen] = useState(false);
   const [uploadRegisteredAt, setUploadRegisteredAt] = useState(() => toDateInputValue());
   const [uploadIsStarred, setUploadIsStarred] = useState(false);
   const [uploadDisplayAuthorName, setUploadDisplayAuthorName] =
@@ -146,6 +149,8 @@ export function NoticeBoard({
       setUploadContent("");
       setUploadAttachmentFile(null);
       setUploadSocialImageFile(null);
+      setUploadSocialImageSourceFile(null);
+      setIsUploadSocialImageCropperOpen(false);
       setUploadRegisteredAt(toDateInputValue());
       setUploadIsStarred(false);
       setUploadDisplayAuthorName("운영자");
@@ -717,7 +722,13 @@ export function NoticeBoard({
                   id="notice-social-image-file"
                   type="file"
                   accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                  onChange={(e) => setUploadSocialImageFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    e.target.value = "";
+                    if (!file) return;
+                    setUploadSocialImageSourceFile(file);
+                    setIsUploadSocialImageCropperOpen(true);
+                  }}
                   className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary file:mr-3 file:rounded-full file:border-0 file:bg-stone-surface file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-graphite"
                 />
                 {uploadSocialImageFile && (
@@ -755,6 +766,16 @@ export function NoticeBoard({
                 </Button>
               </div>
             </form>
+            <SocialPreviewCropper
+              file={uploadSocialImageSourceFile}
+              open={isUploadSocialImageCropperOpen}
+              title="공지 카톡 미리보기 이미지 자르기"
+              onCancel={() => setIsUploadSocialImageCropperOpen(false)}
+              onConfirm={(file) => {
+                setUploadSocialImageFile(file);
+                setIsUploadSocialImageCropperOpen(false);
+              }}
+            />
           </div>
         </>,
         document.body

@@ -163,6 +163,44 @@ describe("document upload API", () => {
     expect(await response.json()).toMatchObject({ success: true });
   });
 
+  it("stores a dedicated Kakao preview image path for uploaded documents", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.create.mockResolvedValue({
+      id: "doc-social",
+      title: "카톡 대표 이미지 문서",
+      socialImagePath: "/uploads/social-preview.png",
+      attachments: [],
+    });
+
+    const { POST } = await import("@/app/api/documents/route");
+    const response = await POST(
+      new Request("http://localhost/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "카톡 대표 이미지 문서",
+          category: "DISCLOSURE",
+          subCategory: "공문서",
+          documentDate: "2026-06-05",
+          publishedAt: "2026-06-05",
+          socialImagePath: "/uploads/social-preview.png",
+          file: {
+            path: "documents/2026-06-05/main.pdf",
+            name: "main.pdf",
+            size: 1024,
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        socialImagePath: "/uploads/social-preview.png",
+      }),
+    }));
+  });
+
   it("persists upload optimization metadata for documents and attachments", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPrisma.document.create.mockResolvedValue({
@@ -532,6 +570,36 @@ describe("document upload API", () => {
       },
     }));
     expect(await response.json()).toMatchObject({ success: true });
+  });
+
+  it("updates a dedicated Kakao preview image path for public documents", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockPrisma.document.update.mockResolvedValue({
+      id: "doc-1",
+      title: "수정된 문서",
+      socialImagePath: "/uploads/social-preview-updated.png",
+      attachments: [],
+    });
+
+    const { PATCH } = await import("@/app/api/documents/[id]/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/documents/doc-1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          socialImagePath: "/uploads/social-preview-updated.png",
+        }),
+      }),
+      { params: Promise.resolve({ id: "doc-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.document.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "doc-1" },
+      data: expect.objectContaining({
+        socialImagePath: "/uploads/social-preview-updated.png",
+      }),
+    }));
   });
 
   it("triggers disclosure notification dry-run after approved disclosure metadata is updated", async () => {

@@ -62,4 +62,30 @@ describe("disclosure page public document links", () => {
     });
     expect((element as { props: { documents: unknown[] } }).props.documents).toEqual([publicDocument]);
   });
+
+  it("uses a public document Kakao preview image for disclosure metadata", async () => {
+    mockPrisma.document.findFirst.mockResolvedValue({
+      id: "doc-public",
+      title: "대의원 회의록",
+      description: "7월 회의자료",
+      category: "DISCLOSURE",
+      status: "APPROVED",
+      socialImagePath: "/uploads/social-preview.png",
+      attachments: [],
+    });
+
+    const { generateMetadata } = await import("@/app/disclosure/page");
+    const metadata = await generateMetadata({
+      searchParams: Promise.resolve({ document: "doc-public" }),
+    } as never);
+
+    expect(metadata.openGraph?.images).toEqual([
+      {
+        url: "/uploads/social-preview.png",
+        width: 1200,
+        height: 628,
+        alt: "대의원 회의록",
+      },
+    ]);
+  });
 });

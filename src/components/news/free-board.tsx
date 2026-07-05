@@ -44,6 +44,7 @@ import { uploadPublicFile } from "@/lib/news/public-upload";
 import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
 import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
 import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
+import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
 import { CommentReactionBar } from "./comment-reaction-bar";
@@ -272,6 +273,8 @@ export function FreeBoard({
   const [writeAttachmentSize, setWriteAttachmentSize] = useState<number | null>(null);
   const [writeSocialImagePath, setWriteSocialImagePath] = useState<string | null>(null);
   const [writeSocialImageFile, setWriteSocialImageFile] = useState<File | null>(null);
+  const [writeSocialImageSourceFile, setWriteSocialImageSourceFile] = useState<File | null>(null);
+  const [isWriteSocialImageCropperOpen, setIsWriteSocialImageCropperOpen] = useState(false);
   const [writeRegisteredAt, setWriteRegisteredAt] = useState("");
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
 
@@ -288,6 +291,8 @@ export function FreeBoard({
     setWriteAttachmentSize(null);
     setWriteSocialImagePath(null);
     setWriteSocialImageFile(null);
+    setWriteSocialImageSourceFile(null);
+    setIsWriteSocialImageCropperOpen(false);
     setWriteRegisteredAt("");
   };
 
@@ -330,6 +335,8 @@ export function FreeBoard({
     setWriteAttachmentSize(post.attachmentSize);
     setWriteSocialImagePath(post.socialImagePath);
     setWriteSocialImageFile(null);
+    setWriteSocialImageSourceFile(null);
+    setIsWriteSocialImageCropperOpen(false);
     setWriteRegisteredAt(toKoreaDateTimeLocalValue(post.registeredAtRaw));
     setWriteDisplayAuthorName(
       displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
@@ -361,7 +368,8 @@ export function FreeBoard({
     event.target.value = "";
     if (!file) return;
 
-    setWriteSocialImageFile(file);
+    setWriteSocialImageSourceFile(file);
+    setIsWriteSocialImageCropperOpen(true);
   };
 
 
@@ -804,10 +812,11 @@ export function FreeBoard({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setWriteSocialImagePath(null);
-                      setWriteSocialImageFile(null);
-                    }}
+                  onClick={() => {
+                    setWriteSocialImagePath(null);
+                    setWriteSocialImageFile(null);
+                    setWriteSocialImageSourceFile(null);
+                  }}
                     className="shrink-0 rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
                   >
                     삭제
@@ -856,6 +865,16 @@ export function FreeBoard({
           </div>
         )}
       </section>
+      <SocialPreviewCropper
+        file={writeSocialImageSourceFile}
+        open={isWriteSocialImageCropperOpen}
+        title="자유게시판 카톡 미리보기 이미지 자르기"
+        onCancel={() => setIsWriteSocialImageCropperOpen(false)}
+        onConfirm={(file) => {
+          setWriteSocialImageFile(file);
+          setIsWriteSocialImageCropperOpen(false);
+        }}
+      />
     </div>
   );
 

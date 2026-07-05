@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isDemoApprovedAccount } from "@/lib/demo-account-filter";
+import { buildDocumentSocialPreview } from "@/lib/document-social-preview";
 import { serializeDocuments } from "@/lib/document-serializer";
 import { normalizeMemberType } from "@/lib/member-type";
+import { defaultSiteMetadata, siteTitle } from "@/lib/site-metadata";
 import { getUserContactDisplay } from "@/lib/user-contact-display";
 import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
 import { type DisclosureCardContent, type DisclosureEmptyMessage } from "@/components/disclosure/disclosure-client";
@@ -24,6 +27,62 @@ type DisclosurePageProps = {
     document?: string;
   }>;
 };
+
+export async function generateMetadata({ searchParams }: DisclosurePageProps = {}): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
+  const requestedDocumentId =
+    typeof resolvedSearchParams?.document === "string" ? resolvedSearchParams.document : null;
+
+  if (!requestedDocumentId) {
+    return defaultSiteMetadata;
+  }
+
+  try {
+    const publicDocument = await prisma.document.findFirst({
+      where: {
+        id: requestedDocumentId,
+        category: "DISCLOSURE",
+        status: "APPROVED",
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        socialImagePath: true,
+      },
+    });
+
+    if (!publicDocument) {
+      return defaultSiteMetadata;
+    }
+
+    const preview = buildDocumentSocialPreview(publicDocument);
+
+    return {
+      metadataBase: defaultSiteMetadata.metadataBase,
+      title: `${preview.title} | ${siteTitle}`,
+      description: preview.description,
+      openGraph: {
+        title: preview.title,
+        description: preview.description,
+        url: `/disclosure?document=${encodeURIComponent(publicDocument.id)}`,
+        siteName: siteTitle,
+        locale: "ko_KR",
+        type: "article",
+        images: [preview.image],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: preview.title,
+        description: preview.description,
+        images: [preview.image.url],
+      },
+    };
+  } catch (error) {
+    console.error("Disclosure metadata error:", error);
+    return defaultSiteMetadata;
+  }
+}
 
 async function addCurrentUserBookmarkFlags(documents: Document[], userId: string) {
   if (documents.length === 0) return documents;
