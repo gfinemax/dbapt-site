@@ -8,6 +8,7 @@ const author: NewsUserView = {
   signupName: null,
   loginId: "admin",
   role: "ADMIN",
+  memberType: "ASSOCIATE",
 };
 
 function newsletter(id: string, title = "2026년 6월 월간 소식"): CoopNewsView {
@@ -79,5 +80,23 @@ describe("buildNewsletterList", () => {
       id: "upcoming-newsletter-2026-07-issue-1",
       isPreview: true,
     });
+  });
+
+  it("formats real newsletter authors with content author policy", () => {
+    const items = buildNewsletterList([
+      {
+        ...newsletter("newsletter-refund"),
+        author: {
+          id: "refund-1",
+          name: "박정산",
+          signupName: null,
+          loginId: "refund1",
+          role: "REFUND",
+          memberType: "REFUND",
+        },
+      },
+    ], "");
+
+    expect(items[0].author.name).toBe("박정산 (환불)");
   });
 });

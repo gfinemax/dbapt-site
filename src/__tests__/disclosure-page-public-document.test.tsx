@@ -60,7 +60,11 @@ describe("disclosure page public document links", () => {
         attachments: true,
       },
     });
-    expect((element as { props: { documents: unknown[] } }).props.documents).toEqual([publicDocument]);
+    expect((element as { props: { documents: unknown[] } }).props.documents).toEqual([{
+      ...publicDocument,
+      likeCount: 0,
+      likedByCurrentUser: false,
+    }]);
   });
 
   it("uses a public document Kakao preview image for disclosure metadata", async () => {

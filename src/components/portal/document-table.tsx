@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PdfViewerModal } from "./pdf-viewer-modal";
+import { ContentLikeButton } from "@/components/content-like-button";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
 import { formatViewCount } from "@/lib/view-count";
 
@@ -36,6 +37,8 @@ export type Document = {
   fileOptimized?: boolean;
   fileSizeReductionPercent?: number | null;
   viewCount?: number;
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
   status: string;
   isStarred?: boolean;
   publishedAt: string | null;
@@ -343,6 +346,15 @@ export function DocumentTable({
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
+          <ContentLikeButton
+            title={doc.title}
+            targetType="DOCUMENT"
+            targetId={doc.id}
+            initialLikeCount={doc.likeCount}
+            initialLikedByCurrentUser={doc.likedByCurrentUser}
+            canLike={role.toUpperCase() !== "PUBLIC"}
+            className="h-7 px-2 py-0 text-[10px] font-bold"
+          />
           {isAdmin && (
             <span
               className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold ${
@@ -426,6 +438,7 @@ export function DocumentTable({
                   <th className="px-5 py-4">문서 제목</th>
                   <th className="px-5 py-4">파일명</th>
                   <th className="px-5 py-4">크기</th>
+                  <th className="px-5 py-4 text-center">공감</th>
                   {isAdmin && <th className="px-5 py-4">상태</th>}
                   <th className="px-5 py-4 text-right">작업</th>
                 </tr>
@@ -491,6 +504,17 @@ export function DocumentTable({
                     </td>
                     <td className="whitespace-nowrap px-5 py-4">
                       {formatSize(doc.fileSize)}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-center">
+                      <ContentLikeButton
+                        title={doc.title}
+                        targetType="DOCUMENT"
+                        targetId={doc.id}
+                        initialLikeCount={doc.likeCount}
+                        initialLikedByCurrentUser={doc.likedByCurrentUser}
+                        canLike={role.toUpperCase() !== "PUBLIC"}
+                        className="h-7 px-2 py-0 text-[10px] font-bold"
+                      />
                     </td>
                     {isAdmin && (
                       <td className="whitespace-nowrap px-5 py-4">

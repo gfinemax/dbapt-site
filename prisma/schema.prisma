@@ -51,6 +51,7 @@ model User {
   freePosts                        FreePost[]
   freeComments                     FreeComment[]
   commentReactions                 CommentReaction[]
+  contentReactions                 ContentReaction[]
   notificationGroupMembers         NotificationGroupMember[]
   disclosureNotificationRecipients DisclosureNotificationRecipient[]
   coopNewsComments                 CoopNewsComment[]
@@ -89,6 +90,7 @@ model Document {
   // 관계 정의
   logs                    DocumentLog[]
   personalBookmarks       PersonalDocumentBookmark[]
+  contentReactions        ContentReaction[]
   attachments             Attachment[]
   disclosureNotifications DisclosureNotification[]
   openChatAnnouncements   OpenChatAnnouncement[]
@@ -561,6 +563,7 @@ model CoopNews {
   authorId              String
   author                User                   @relation(fields: [authorId], references: [id])
   comments              CoopNewsComment[]
+  contentReactions      ContentReaction[]
   openChatAnnouncements OpenChatAnnouncement[]
 
   @@index([registeredAt])
@@ -607,6 +610,7 @@ model FreePost {
   authorId              String
   author                User                   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments              FreeComment[]
+  contentReactions      ContentReaction[]
   openChatAnnouncements OpenChatAnnouncement[]
 
   @@index([registeredAt])
@@ -649,6 +653,30 @@ model CommentReaction {
   @@unique([userId, freeCommentId])
   @@index([coopNewsCommentId])
   @@index([freeCommentId])
+  @@index([userId])
+}
+
+// 8.2. 게시글/문서 좋아요
+model ContentReaction {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  coopNewsId String?
+  freePostId String?
+  documentId String?
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coopNews CoopNews? @relation(fields: [coopNewsId], references: [id], onDelete: Cascade)
+  freePost FreePost? @relation(fields: [freePostId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, coopNewsId])
+  @@unique([userId, freePostId])
+  @@unique([userId, documentId])
+  @@index([coopNewsId])
+  @@index([freePostId])
+  @@index([documentId])
   @@index([userId])
 }
 

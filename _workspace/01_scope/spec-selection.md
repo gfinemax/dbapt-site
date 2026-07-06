@@ -1,3 +1,23 @@
+# Spec Selection - Common Content Likes
+
+## Selected Approved Spec Path
+
+User-approved request in this session; no separate `docs/superpowers` spec exists for this incremental operational change.
+
+## Implementation Boundary
+
+Add a shared like model/API and show a user-facing `공감 N` affordance on free-board posts, notice/newsletter/development content, and disclosure documents without changing access gates, the single-reaction data model, or exposing private document contents.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection - News List Consistency
 
 ## Selected Approved Spec Path

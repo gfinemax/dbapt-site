@@ -19,6 +19,8 @@ export function buildNoticeBoardList(
       title: item.title,
       content: item.content,
       viewCount: item.viewCount,
+      likeCount: item.likeCount ?? 0,
+      likedByCurrentUser: !!item.likedByCurrentUser,
       isStarred: item.isStarred,
       author: {
         ...item.author,

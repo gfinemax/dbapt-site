@@ -7,6 +7,7 @@ export type NewsUserView = {
   signupName?: string | null;
   loginId: string | null;
   role: string;
+  memberType?: string | null;
   displayAuthorName?: string | null;
 };
 
@@ -37,6 +38,8 @@ export type CoopNewsView = {
   title: string;
   content: string;
   viewCount?: number;
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
   isStarred?: boolean;
   imagePath?: string | null;
   socialImagePath?: string | null;
@@ -59,6 +62,8 @@ export type FreePostView = {
   content: string;
   postType: FreePostType | string;
   viewCount?: number;
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
   displayAuthorName?: string | null;
   isStarred?: boolean;
   isPublicShareEnabled?: boolean;

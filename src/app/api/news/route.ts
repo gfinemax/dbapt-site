@@ -5,6 +5,7 @@ import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { DEVELOPMENT_LOG_CATEGORIES } from "@/lib/news/development-log";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
+import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
 
 function hasCreatedAtInput(body: Record<string, unknown>) {
   return Object.prototype.hasOwnProperty.call(body, "createdAt");
@@ -37,8 +38,10 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
+            signupName: true,
             loginId: true,
             role: true,
+            memberType: true,
           },
         },
         comments: {
@@ -47,8 +50,10 @@ export async function GET(request: Request) {
               select: {
                 id: true,
                 name: true,
+                signupName: true,
                 loginId: true,
                 role: true,
+                memberType: true,
               },
             },
             reactions: {
@@ -63,10 +68,16 @@ export async function GET(request: Request) {
       },
       orderBy: { registeredAt: "desc" },
     });
+    const likeSummaries = await loadContentReactionSummaries(
+      "COOP_NEWS",
+      newsList.map((news) => news.id),
+      session?.id,
+    );
 
     return NextResponse.json({
       newsList: newsList.map((news) => ({
         ...news,
+        ...(likeSummaries.get(news.id) || { likeCount: 0, likedByCurrentUser: false }),
         comments: news.comments.map((comment) => ({
           ...comment,
           reactionSummary: summarizeCommentReactions(comment.reactions, session?.id),
@@ -149,8 +160,10 @@ export async function POST(request: Request) {
           select: {
             id: true,
             name: true,
+            signupName: true,
             loginId: true,
             role: true,
+            memberType: true,
           },
         },
       },
@@ -234,8 +247,10 @@ export async function PATCH(request: Request) {
           select: {
             id: true,
             name: true,
+            signupName: true,
             loginId: true,
             role: true,
+            memberType: true,
           },
         },
         comments: {
@@ -244,8 +259,10 @@ export async function PATCH(request: Request) {
               select: {
                 id: true,
                 name: true,
+                signupName: true,
                 loginId: true,
                 role: true,
+                memberType: true,
               },
             },
             reactions: {

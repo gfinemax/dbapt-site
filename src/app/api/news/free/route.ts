@@ -5,6 +5,7 @@ import { normalizeFreePostType } from "@/lib/free-post-type";
 import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
+import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
 
 function normalizeFreePostAttachment(body: {
   attachmentPath?: unknown;
@@ -75,6 +76,7 @@ export async function GET() {
             signupName: true,
             loginId: true,
             role: true,
+            memberType: true,
           },
         },
         comments: {
@@ -86,6 +88,7 @@ export async function GET() {
                 signupName: true,
                 loginId: true,
                 role: true,
+                memberType: true,
               },
             },
             reactions: {
@@ -103,10 +106,16 @@ export async function GET() {
         { registeredAt: "desc" },
       ],
     });
+    const likeSummaries = await loadContentReactionSummaries(
+      "FREE_POST",
+      posts.map((post) => post.id),
+      session.id,
+    );
 
     return NextResponse.json({
       posts: posts.map((post) => ({
         ...post,
+        ...(likeSummaries.get(post.id) || { likeCount: 0, likedByCurrentUser: false }),
         comments: post.comments.map((comment) => ({
           ...comment,
           reactionSummary: summarizeCommentReactions(comment.reactions, session.id),
@@ -189,6 +198,7 @@ export async function POST(request: Request) {
               signupName: true,
               loginId: true,
               role: true,
+              memberType: true,
             },
           },
         },

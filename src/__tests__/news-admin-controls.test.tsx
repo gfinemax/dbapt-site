@@ -1633,9 +1633,10 @@ describe("news admin visible controls", () => {
     expect(within(noticeTable).getByRole("columnheader", { name: "조회수" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).queryByRole("button", { name: "댓글 1개 보기" })).not.toBeInTheDocument();
     expect(within(noticeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
-    expect(noticeTable).toHaveStyle({ minWidth: "760px" });
+    expect(noticeTable).toHaveStyle({ minWidth: "852px" });
     expect(within(noticeTable).getByRole("columnheader", { name: "등록자" })).toHaveClass("whitespace-nowrap");
-    expect(within(noticeTable).getByRole("cell", { name: "관리자" })).toHaveClass("whitespace-nowrap");
+    expect(within(noticeTable).getByRole("cell", { name: "운영자" })).toHaveClass("whitespace-nowrap");
+    expect(within(noticeTable).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
     expect(within(noticeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
     expect(within(noticeTable).getByRole("button", { name: "실제 공지 개인자료실 보관" })).toBeInTheDocument();
     expect(noticeTable.querySelector("[data-notice-list-badges='true']")).toHaveClass("shrink-0");
@@ -1658,9 +1659,10 @@ describe("news admin visible controls", () => {
 
     const freeTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
     expect(freeTable).toHaveClass("table-fixed");
-    expect(freeTable).toHaveStyle({ minWidth: "840px" });
+    expect(freeTable).toHaveStyle({ minWidth: "932px" });
     expect(within(freeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
     expect(within(freeTable).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
+    expect(within(freeTable).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
     expect(within(freeTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
     expect(within(freeTable).getByRole("columnheader", { name: "작성자" })).toHaveClass("whitespace-nowrap");
     expect(within(freeTable).getByText("조합원 (나)")).toHaveClass("whitespace-nowrap");
@@ -1689,7 +1691,7 @@ describe("news admin visible controls", () => {
     );
 
     const memberTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
-    expect(memberTable).toHaveStyle({ minWidth: "840px" });
+    expect(memberTable).toHaveStyle({ minWidth: "932px" });
     expect(within(memberTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
     expect(within(memberTable).queryByRole("button", { name: "게시글 삭제" })).not.toBeInTheDocument();
 
@@ -1702,7 +1704,7 @@ describe("news admin visible controls", () => {
     );
 
     const adminTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
-    expect(adminTable).toHaveStyle({ minWidth: "900px" });
+    expect(adminTable).toHaveStyle({ minWidth: "992px" });
     expect(within(adminTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
     expect(within(adminTable).getByRole("button", { name: "게시글 삭제" })).toBeInTheDocument();
   });
@@ -3146,7 +3148,7 @@ describe("news admin visible controls", () => {
     const panel = screen.getByLabelText("토론 집중 패널");
 
     expect(within(panel).getByText("작성자: 최마리 (나)")).toBeInTheDocument();
-    expect(within(panel).getByText(/김\*조합원/)).toBeInTheDocument();
+    expect(within(panel).getByText(/김참여/)).toBeInTheDocument();
     expect(within(panel).queryByText(/Google Name/)).not.toBeInTheDocument();
   });
 

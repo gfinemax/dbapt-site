@@ -1898,6 +1898,54 @@
 - none
 
 ---
+# Verification - Content Empathy Label Follow-up
+
+## Implemented Feature
+
+- Renamed the user-facing common content reaction from `좋아요` to `공감`.
+- Changed notice/free-board/development-log/document/disclosure list column headers to `공감`.
+- Changed the shared button display to `👍 공감 N` before selection and `🧡 공감 N` after selection.
+- Updated accessible button labels, tooltips, and API/client error copy to use `공감`.
+- Kept the existing single `ContentReaction` storage/API model unchanged.
+- Kept multi-emoji post/document reactions out of scope for this slice.
+
+## Changed Files
+
+- `src/components/content-like-button.tsx`
+- `src/app/api/content-reactions/route.ts`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/components/news/development-log.tsx`
+- `src/components/news/comment-reaction-bar.tsx`
+- `src/components/portal/document-table.tsx`
+- `src/components/disclosure/meetings-table.tsx`
+- `src/__tests__/content-view-counts.test.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-06-content-empathy-label.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+
+## Checks
+
+- `pnpm vitest run src/__tests__/content-view-counts.test.tsx`: FAIL before implementation because headers and accessible names still used `좋아요`.
+- `pnpm vitest run src/__tests__/content-view-counts.test.tsx`: PASS after implementation, 9 tests passed.
+- `pnpm vitest run src/__tests__/content-view-counts.test.tsx src/__tests__/news-admin-controls.test.tsx`: PASS, 111 tests passed. jsdom printed the existing `Window.scrollTo()` not implemented warning.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 581 tests passed. jsdom printed existing `Window.scrollTo()` not implemented warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Existing dev server checked on `http://localhost:3000`.
+- `http://localhost:3000/news`: HTTP 200.
+- `http://localhost:3000/disclosure`: HTTP 200.
+
+## Risks Or Follow-up
+
+- A three-choice post/document reaction system would require a separate data/API/UI change and was intentionally not included here.
+
+---
 # Verification - Rich Image Editor Duplicate Image Fix
 
 ## Implemented Fix

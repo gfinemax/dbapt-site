@@ -23,6 +23,7 @@ import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
 import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
+import { ContentLikeButton } from "@/components/content-like-button";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
@@ -292,7 +293,7 @@ export function NoticeBoard({
         <div className="overflow-x-auto">
           <table
             className="w-full table-fixed text-left text-sm border-collapse"
-            style={{ minWidth: isAdmin ? "820px" : "760px" }}
+            style={{ minWidth: isAdmin ? "912px" : "852px" }}
             aria-label="공지사항 목록"
           >
             <colgroup>
@@ -300,6 +301,7 @@ export function NoticeBoard({
               <col />
               <col style={{ width: "92px" }} />
               <col style={{ width: "116px" }} />
+              <col style={{ width: "92px" }} />
               <col style={{ width: "92px" }} />
               <col style={{ width: "88px" }} />
               {isAdmin && <col style={{ width: "136px" }} />}
@@ -311,6 +313,7 @@ export function NoticeBoard({
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">등록자</th>
                 <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">조회수</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">공감</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
                 {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
               </tr>
@@ -318,7 +321,7 @@ export function NoticeBoard({
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedData.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={isAdmin ? 8 : 7} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 공지사항이 존재하지 않습니다.
                   </td>
                 </tr>
@@ -382,6 +385,17 @@ export function NoticeBoard({
                     </td>
                     <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
                       {formatViewCount(notice.viewCount)}
+                    </td>
+                    <td className="px-3 py-3.5 text-center">
+                      <ContentLikeButton
+                        title={notice.title}
+                        targetType="COOP_NEWS"
+                        targetId={notice.id}
+                        initialLikeCount={notice.likeCount}
+                        initialLikedByCurrentUser={notice.likedByCurrentUser}
+                        canLike={isLoggedIn && notice.isReal}
+                        className="h-6 px-2 py-0 text-[10px] whitespace-nowrap"
+                      />
                     </td>
                     <td className="px-3 py-3.5 text-center">
                       {isLoggedIn && notice.isReal ? (
@@ -504,6 +518,20 @@ export function NoticeBoard({
                 <span>등록일: {activeViewNotice.createdAt}</span>
                 <span>•</span>
                 <span>{formatViewCount(activeViewNotice.viewCount)}</span>
+                {activeViewNotice.isReal && (
+                  <>
+                    <span>•</span>
+                    <ContentLikeButton
+                      title={activeViewNotice.title}
+                      targetType="COOP_NEWS"
+                      targetId={activeViewNotice.id}
+                      initialLikeCount={activeViewNotice.likeCount}
+                      initialLikedByCurrentUser={activeViewNotice.likedByCurrentUser}
+                      canLike={isLoggedIn}
+                      className="h-6 px-2 py-0 text-[10px] font-bold"
+                    />
+                  </>
+                )}
               </div>
 
               <div>

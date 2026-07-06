@@ -78,6 +78,7 @@ function mergeNoticeAuthor(
     signupName: author.signupName ?? fallbackAuthor.signupName ?? null,
     loginId: author.loginId ?? fallbackAuthor.loginId,
     role: author.role ?? fallbackAuthor.role ?? "ADMIN",
+    memberType: author.memberType ?? fallbackAuthor.memberType ?? null,
     displayAuthorName: author.displayAuthorName ?? fallbackAuthor.displayAuthorName ?? displayAuthorName,
   };
 }

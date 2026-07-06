@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
+  getNewsDisplayAuthorName,
   NEWS_DISPLAY_AUTHOR_NAMES,
   type NewsDisplayAuthorName,
 } from "@/lib/news-display-author";
@@ -1127,7 +1128,7 @@ export function NewsClient({
                     <div className="flex items-center gap-3 text-[11px] font-bold text-ash font-mono border-y border-stone-surface/65 py-2.5">
                       <span>📂 분류: 조합 공지사항</span>
                       <span>•</span>
-                      <span>작성자: {activeViewNotice.author?.name || "조합 사무국"}</span>
+                      <span>작성자: {getNewsDisplayAuthorName(activeViewNotice)}</span>
                       <span>•</span>
                       <span>등록일: {formatNoticeDate(activeViewNotice.registeredAt ?? activeViewNotice.createdAt)}</span>
                       <span>•</span>

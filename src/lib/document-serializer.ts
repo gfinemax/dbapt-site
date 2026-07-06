@@ -1,12 +1,17 @@
 import { Document as PrismaDocument, Attachment as PrismaAttachment } from "@prisma/client";
 import { type Document } from "@/components/portal/document-table";
+import { summarizeContentLikes } from "@/lib/content-reactions";
 
 type PrismaDocWithAttachments = PrismaDocument & {
   attachments?: PrismaAttachment[];
+  contentReactions?: { userId: string }[];
 };
 
-export function serializeDocuments(docs: PrismaDocWithAttachments[]): Document[] {
-  return docs.map(doc => ({
+export function serializeDocuments(docs: PrismaDocWithAttachments[], currentUserId?: string | null): Document[] {
+  return docs.map(doc => {
+    const likeSummary = summarizeContentLikes(doc.contentReactions, currentUserId);
+
+    return ({
     id: doc.id,
     title: doc.title,
     description: doc.description,
@@ -24,6 +29,8 @@ export function serializeDocuments(docs: PrismaDocWithAttachments[]): Document[]
     fileOptimized: doc.fileOptimized,
     fileSizeReductionPercent: doc.fileSizeReductionPercent,
     viewCount: (doc as PrismaDocument & { viewCount?: number }).viewCount ?? 0,
+    likeCount: likeSummary.likeCount,
+    likedByCurrentUser: likeSummary.likedByCurrentUser,
     status: doc.status,
     isStarred: doc.isStarred,
     publishedAt: doc.publishedAt ? doc.publishedAt.toISOString() : null,
@@ -46,5 +53,6 @@ export function serializeDocuments(docs: PrismaDocWithAttachments[]): Document[]
       fileSizeReductionPercent: att.fileSizeReductionPercent,
       createdAt: att.createdAt.toISOString(),
     })) : [],
-  }));
+  });
+  });
 }

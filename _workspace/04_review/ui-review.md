@@ -1,6 +1,30 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Common content empathy counts and friendlier 공감 buttons for 소통마당 and 공개자료
+- Governing spec: Current user-approved request to apply common content reactions to all 소통마당 and 공개자료 surfaces
+- Implementation plan: `docs/superpowers/plans/2026-07-06-content-empathy-label.md`
+- Files or pages reviewed: `src/app/api/content-reactions/route.ts`, `src/components/content-like-button.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/components/news/coop-newsletter.tsx`, `src/components/news/development-log.tsx`, `src/components/portal/document-table.tsx`, `src/components/disclosure/meetings-table.tsx`, Prisma migration, related regression tests, local `/news`, local `/disclosure`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The new mutation requires a logged-in session and only targets existing `COOP_NEWS`, `FREE_POST`, or `DOCUMENT` records. It does not expose private comments, member/payment data, document file delivery, anonymous mutation, voting, notifications, or ranking feeds. Public/read-only share visitors can see counts but cannot create likes without login.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The UI labels show the persisted `ContentReaction` count and mark the current user's existing selection with an accessible `선택됨` label. The display now uses `👍 공감 N` before selection and `🧡 공감 N` after selection, while the accessible label remains count-based and truthful. Existing 조회수/열람수 wording remains separate, so view counts and 공감 counts are not conflated.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The button uses existing rounded pill controls, stone borders, ember accent for selected state, a stable minimum width, and compact table/card placement. The inactive thumbs-up and selected orange heart are decorative (`aria-hidden`) and do not replace the text label. `aria-label` includes the content title, count, and selected state, and row-click propagation is stopped on the button. Local `/news` and `/disclosure` returned HTTP 200 after restarting the dev server with the regenerated Prisma client.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Very short Kakao share URLs
 - Governing spec: Current user-approved follow-up to shorten copied Kakao/OpenChat URLs beyond `/share/...`
 - Implementation plan: `docs/superpowers/plans/2026-07-05-short-share-url-code.md`
@@ -17,6 +41,32 @@
 ## Design And Accessibility Review
 - Finding: PASS
 - Evidence: No new visual styling was introduced. `/s/[code]` reuses the existing `ShareRedirectPage` fallback screen with clear destination copy and a `바로 이동` link. The implementation adds no navigation, decorative motion, new controls, or layout changes.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: Content author display policy
+- Governing spec: User-approved request in this session for author labels across 소통마당 and applicable public-data surfaces
+- Implementation plan: Current implementation plan for common author label helper, news/free-board/comment wiring, and memberType data propagation
+- Files or pages reviewed: `/news` desktop and mobile, notice list/detail author labels, free-board author helper tests, notice/comment/newsletter author formatting tests
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only updates visible author labels and User field selection for existing news/free-board/comment data. It does not expose new public routes, change login gates, add document access, alter mutations, or add personal-data surfaces. 공개자료 currently has no document author/uploader user field to relabel.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Member and preliminary member labels now show the stored display name directly, refund users show `(환불)`, related-party users show `(관계자)`, and the admin public names `운영자`/`사무국` remain untagged. Existing `(나)` self marker is preserved.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: No layout, color, typography, motion, navigation, or control behavior was changed. Chrome/Playwright verification at 1440px and 390px opened `/news`, confirmed the notice table renders author labels, and found no document-level horizontal overflow.
 
 ## Outcome
 - Result: PASS

@@ -31,6 +31,7 @@ import { getNoticeCommentAuthorName } from "@/lib/news/comment-author";
 import type { CoopNewsView, NewsCommentView, NewsSessionView } from "@/lib/news/types";
 import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
 import { cn } from "@/lib/utils";
+import { ContentLikeButton } from "@/components/content-like-button";
 import { CommentReactionBar } from "./comment-reaction-bar";
 
 type DevelopmentLogProps = {
@@ -517,13 +518,14 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
         <div className="space-y-4">
           <div className="stone-card overflow-hidden rounded-2xl border border-stone-surface bg-white">
             <div className="overflow-x-auto">
-              <table aria-label="개발일지 목록" className="w-full min-w-[720px] border-collapse text-left">
+              <table aria-label="개발일지 목록" className="w-full min-w-[800px] border-collapse text-left">
                 <thead className="bg-[#f8f7f4] text-[10px] font-black text-ash">
                   <tr>
                     <th scope="col" className="px-4 py-3">상태</th>
                     <th scope="col" className="px-4 py-3">제목</th>
                     <th scope="col" className="px-4 py-3">등록일</th>
                     <th scope="col" className="px-4 py-3 text-center">댓글</th>
+                    <th scope="col" className="px-4 py-3 text-center">공감</th>
                     <th scope="col" className="px-4 py-3 text-right">관리</th>
                   </tr>
                 </thead>
@@ -568,6 +570,17 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                         </td>
                         <td className="px-4 py-3 text-center align-middle text-[11px] font-bold text-graphite">
                           {log.comments?.length || 0}
+                        </td>
+                        <td className="px-4 py-3 text-center align-middle">
+                          <ContentLikeButton
+                            title={log.title}
+                            targetType="COOP_NEWS"
+                            targetId={log.id}
+                            initialLikeCount={log.likeCount}
+                            initialLikedByCurrentUser={log.likedByCurrentUser}
+                            canLike={isLoggedIn}
+                            className="h-6 px-2 py-0 text-[10px] font-bold"
+                          />
                         </td>
                         <td className="px-4 py-3 align-middle">
                           <div className="flex flex-wrap justify-end gap-1.5">
@@ -672,6 +685,17 @@ export function DevelopmentLog({ isAdmin, session, logs, onRefresh }: Developmen
                         <p className="mt-1 text-[10px] font-medium text-ash">
                           등록일 {formatRegisteredDate(selectedLog)}
                         </p>
+                        <div className="mt-2">
+                          <ContentLikeButton
+                            title={selectedLog.title}
+                            targetType="COOP_NEWS"
+                            targetId={selectedLog.id}
+                            initialLikeCount={selectedLog.likeCount}
+                            initialLikedByCurrentUser={selectedLog.likedByCurrentUser}
+                            canLike={isLoggedIn}
+                            className="h-6 px-2 py-0 text-[10px] font-bold"
+                          />
+                        </div>
                       </div>
                       {canEditLog(selectedLog) && !isEditingSelectedLog && (
                         <button

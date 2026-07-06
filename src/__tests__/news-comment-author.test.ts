@@ -14,6 +14,7 @@ function comment(overrides: Partial<NewsCommentView> = {}): NewsCommentView {
       signupName: null,
       loginId: "member1",
       role: "MEMBER",
+      memberType: "REGULAR",
     },
     ...overrides,
   };
@@ -29,6 +30,7 @@ describe("getNoticeCommentAuthorName", () => {
         signupName: null,
         loginId: "admin",
         role: "ADMIN",
+        memberType: "ASSOCIATE",
       },
     }))).toBe("사무국");
   });
@@ -41,6 +43,7 @@ describe("getNoticeCommentAuthorName", () => {
         signupName: null,
         loginId: "admin",
         role: "ADMIN",
+        memberType: "ASSOCIATE",
       },
     }))).toBe("운영자");
   });
@@ -57,7 +60,32 @@ describe("getNoticeCommentAuthorName", () => {
         signupName: null,
         loginId: "member1",
         role: "MEMBER",
+        memberType: "REGULAR",
       },
     }))).toBe("조합원");
+  });
+
+  it("marks refund and related-party comment authors", () => {
+    expect(getNoticeCommentAuthorName(comment({
+      author: {
+        id: "refund-1",
+        name: "박정산",
+        signupName: null,
+        loginId: "refund1",
+        role: "REFUND",
+        memberType: "REFUND",
+      },
+    }))).toBe("박정산 (환불)");
+
+    expect(getNoticeCommentAuthorName(comment({
+      author: {
+        id: "associate-1",
+        name: "외부관계자",
+        signupName: null,
+        loginId: "associate1",
+        role: "ASSOCIATE",
+        memberType: "ASSOCIATE",
+      },
+    }))).toBe("외부관계자 (관계자)");
   });
 });

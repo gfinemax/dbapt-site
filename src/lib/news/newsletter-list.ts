@@ -1,10 +1,13 @@
 import type { CoopNewsView, NewsUserView } from "@/lib/news/types";
+import { getNewsDisplayAuthorName } from "@/lib/news-display-author";
 
 export type NewsletterListItem = {
   id: string;
   title: string;
   content: string;
   viewCount?: number;
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
   isStarred: boolean;
   author: Pick<NewsUserView, "name">;
   createdAt: string;
@@ -33,6 +36,8 @@ const UPCOMING_NEWSLETTER_PREVIEW: NewsletterListItem = {
   attachmentName: null,
   attachmentSize: null,
   isStarred: false,
+  likeCount: 0,
+  likedByCurrentUser: false,
   isReal: false,
   isPreview: true,
   isBookmarkedByCurrentUser: false,
@@ -51,9 +56,11 @@ export function buildNewsletterList(
     title: item.title,
     content: item.content,
     viewCount: item.viewCount,
+    likeCount: item.likeCount ?? 0,
+    likedByCurrentUser: !!item.likedByCurrentUser,
     isStarred: !!item.isStarred,
     isBookmarkedByCurrentUser: !!item.isBookmarkedByCurrentUser,
-    author: { name: item.author.name || "사무국" },
+    author: { name: getNewsDisplayAuthorName(item) },
     createdAt: formatNewsletterDate(item.registeredAt ?? item.createdAt),
     registeredAt: item.registeredAt,
     createdAtRaw: item.createdAt,

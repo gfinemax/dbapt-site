@@ -8,6 +8,7 @@ const author: NewsUserView = {
   name: "관리자",
   loginId: "admin",
   role: "ADMIN",
+  memberType: "ASSOCIATE",
 };
 
 const notice = (overrides: Partial<CoopNewsView> = {}): CoopNewsView => ({
@@ -71,5 +72,32 @@ describe("buildNoticeBoardList", () => {
     );
 
     expect(items.map((item) => item.id)).toEqual(["target"]);
+  });
+
+  it("formats notice author names with content author policy", () => {
+    const items = buildNoticeBoardList(
+      [
+        notice({
+          id: "refund-notice",
+          author: {
+            id: "refund-1",
+            name: "박정산",
+            signupName: null,
+            loginId: "refund1",
+            role: "REFUND",
+            memberType: "REFUND",
+          },
+        }),
+        notice({
+          id: "admin-notice",
+          displayAuthorName: "사무국",
+          author,
+        }),
+      ],
+      "",
+    );
+
+    expect(items.find((item) => item.id === "refund-notice")?.author.name).toBe("박정산 (환불)");
+    expect(items.find((item) => item.id === "admin-notice")?.author.name).toBe("사무국");
   });
 });

@@ -19,7 +19,7 @@ type CommentReactionBarProps = {
 const quickEmojis = ["👍", "❤️", "👏", "✅"] as const;
 
 const emojiLabels: Record<string, string> = {
-  "👍": "좋아요",
+  "👍": "공감",
   "❤️": "마음",
   "👏": "박수",
   "✅": "확인",

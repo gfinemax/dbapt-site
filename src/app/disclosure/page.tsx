@@ -5,6 +5,7 @@ import { isDemoApprovedAccount } from "@/lib/demo-account-filter";
 import { buildDocumentSocialPreview } from "@/lib/document-social-preview";
 import { serializeDocuments } from "@/lib/document-serializer";
 import { normalizeMemberType } from "@/lib/member-type";
+import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
 import { defaultSiteMetadata, siteTitle } from "@/lib/site-metadata";
 import { getUserContactDisplay } from "@/lib/user-contact-display";
 import { DisclosurePageClientShell } from "@/components/disclosure/disclosure-page-client-shell";
@@ -158,7 +159,18 @@ export default async function DisclosurePage({ searchParams }: DisclosurePagePro
         orderBy: { documentDate: "desc" },
       });
       
-      documents = await addCurrentUserBookmarkFlags(serializeDocuments(docs), session.id);
+      const documentLikeSummaries = await loadContentReactionSummaries(
+        "DOCUMENT",
+        docs.map((document) => document.id),
+        session.id,
+      );
+      documents = await addCurrentUserBookmarkFlags(
+        serializeDocuments(docs, session.id).map((document) => ({
+          ...document,
+          ...(documentLikeSummaries.get(document.id) || { likeCount: 0, likedByCurrentUser: false }),
+        })),
+        session.id,
+      );
 
       const savedEmptyMessages = await prisma.disclosureEmptyMessage.findMany({
         orderBy: { subCategory: "asc" },
@@ -264,7 +276,15 @@ export default async function DisclosurePage({ searchParams }: DisclosurePagePro
         },
       });
 
-      documents = publicDocument ? serializeDocuments([publicDocument]) : [];
+      if (publicDocument) {
+        const documentLikeSummaries = await loadContentReactionSummaries("DOCUMENT", [publicDocument.id], null);
+        documents = serializeDocuments([publicDocument]).map((document) => ({
+          ...document,
+          ...(documentLikeSummaries.get(document.id) || { likeCount: 0, likedByCurrentUser: false }),
+        }));
+      } else {
+        documents = [];
+      }
     } catch (e) {
       console.error("Error loading public disclosure document:", e);
     }

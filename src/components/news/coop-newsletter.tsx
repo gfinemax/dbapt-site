@@ -9,6 +9,7 @@ import { buildNewsletterList, type NewsletterListItem } from "@/lib/news/newslet
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import type { CoopNewsView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
+import { ContentLikeButton } from "@/components/content-like-button";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
 
 type CoopNewsletterProps = {
@@ -395,6 +396,17 @@ export function CoopNewsletter({
                     <span>작성자: {news.author.name}</span>
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       <span>등록일 {news.createdAt}</span>
+                      {news.isReal && (
+                        <ContentLikeButton
+                          title={news.title}
+                          targetType="COOP_NEWS"
+                          targetId={news.id}
+                          initialLikeCount={news.likeCount}
+                          initialLikedByCurrentUser={news.likedByCurrentUser}
+                          canLike={isLoggedIn}
+                          className="h-6 px-2 py-0 text-[10px] font-bold"
+                        />
+                      )}
                       {isLoggedIn && news.isReal && (
                         <PersonalBookmarkButton
                           title={news.title}
@@ -642,6 +654,20 @@ export function CoopNewsletter({
                     <span>작성자: {activeViewNews.author.name}</span>
                     <span>•</span>
                     <span>등록일: {activeViewNews.createdAt}</span>
+                    {activeViewNews.isReal && (
+                      <>
+                        <span>•</span>
+                        <ContentLikeButton
+                          title={activeViewNews.title}
+                          targetType="COOP_NEWS"
+                          targetId={activeViewNews.id}
+                          initialLikeCount={activeViewNews.likeCount}
+                          initialLikedByCurrentUser={activeViewNews.likedByCurrentUser}
+                          canLike={isLoggedIn}
+                          className="h-6 px-2 py-0 text-[10px] font-bold"
+                        />
+                      </>
+                    )}
                   </div>
 
                   <div className="text-xs sm:text-[13px] text-graphite/90 leading-7 font-normal whitespace-pre-wrap pt-2">

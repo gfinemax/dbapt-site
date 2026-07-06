@@ -15,6 +15,12 @@ const mockPrisma = vi.hoisted(() => ({
     findUnique: vi.fn(),
     update: vi.fn(),
   },
+  contentReaction: {
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+    findMany: vi.fn(),
+  },
   documentLog: {
     create: vi.fn(),
   },
@@ -48,6 +54,8 @@ const notice = {
   content: "공지 본문",
   category: "NOTICE",
   viewCount: 42,
+  likeCount: 5,
+  likedByCurrentUser: true,
   isStarred: false,
   author: { id: "admin-1", name: "사무국", loginId: "admin", role: "ADMIN" },
   createdAt: "2026-07-04T00:00:00.000Z",
@@ -62,6 +70,8 @@ const freePost = {
   content: "자유글 본문",
   postType: "FREE",
   viewCount: 7,
+  likeCount: 3,
+  likedByCurrentUser: false,
   isStarred: false,
   author: { id: "member-1", name: "조합원", loginId: "member", role: "MEMBER" },
   createdAt: "2026-07-04T00:00:00.000Z",
@@ -80,6 +90,8 @@ const document: Document = {
   fileSize: 1024,
   status: "APPROVED",
   viewCount: 13,
+  likeCount: 2,
+  likedByCurrentUser: true,
   publishedAt: "2026-07-04T00:00:00.000Z",
   documentDate: "2026-07-04T00:00:00.000Z",
   createdAt: "2026-07-04T00:00:00.000Z",
@@ -103,6 +115,7 @@ describe("content view counts", () => {
     );
 
     expect(screen.getByText("조회 42회")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "조회수 공지 공감 5개 선택됨" })).toBeInTheDocument();
     fireEvent.click(screen.getByText("조회수 공지"));
 
     const dialog = screen.getByRole("dialog", { name: "공지사항 상세 열람" });
@@ -121,6 +134,7 @@ describe("content view counts", () => {
 
     const table = screen.getByRole("table", { name: "공지사항 목록" });
     expect(within(table).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
     expect(within(table).queryByRole("columnheader", { name: "댓글" })).not.toBeInTheDocument();
     expect(within(table).getByText("조회 42회")).toBeInTheDocument();
     expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
@@ -154,6 +168,7 @@ describe("content view counts", () => {
     );
 
     expect(screen.getByText("조회 7회")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "조회수 자유글 공감 3개" })).toBeInTheDocument();
     fireEvent.click(screen.getByText("조회수 자유글"));
 
     const panel = screen.getByLabelText("토론 집중 패널");
@@ -172,6 +187,7 @@ describe("content view counts", () => {
     const table = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
     expect(within(table).getByRole("columnheader", { name: "댓글" })).toBeInTheDocument();
     expect(within(table).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
     expect(within(table).getByText("조회 7회")).toBeInTheDocument();
     expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
   });
@@ -202,6 +218,7 @@ describe("content view counts", () => {
     render(<DocumentTable documents={[document]} role="MEMBER" />);
 
     expect(screen.getAllByText("열람 13회").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: "열람수 공개자료 공감 2개 선택됨" }).length).toBeGreaterThan(0);
   });
 
   it("shows a disclosure read-count column and collection baseline notice", () => {
@@ -209,6 +226,7 @@ describe("content view counts", () => {
 
     const table = screen.getByRole("table");
     expect(within(table).getByRole("columnheader", { name: "열람수" })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
     expect(within(table).getByText("열람 13회")).toBeInTheDocument();
     expect(screen.getByText("열람수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
   });

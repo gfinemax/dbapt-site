@@ -24,6 +24,8 @@ export type FreeBoardPostListItem = {
   content: string;
   postType: FreePostType;
   viewCount: number;
+  likeCount: number;
+  likedByCurrentUser: boolean;
   isStarred: boolean;
   registeredAt: string;
   registeredAtRaw: string;
@@ -88,6 +90,8 @@ export function buildFreeBoardPostList(
         content: post.content,
         postType: normalizeFreePostType(post.postType, true),
         viewCount: post.viewCount ?? 0,
+        likeCount: post.likeCount ?? 0,
+        likedByCurrentUser: !!post.likedByCurrentUser,
         isStarred: !!post.isStarred,
         registeredAt: formatFreeBoardDate(registeredAtRaw),
         registeredAtRaw,

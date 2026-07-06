@@ -46,6 +46,7 @@ import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/typ
 import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
 import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
+import { ContentLikeButton } from "@/components/content-like-button";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
 import { CommentReactionBar } from "./comment-reaction-bar";
@@ -71,6 +72,7 @@ function FreeBoardPostRows({
   showOpenChatCopy,
   showCopyToNotice,
   showBookmark,
+  canLike,
   showManageColumn,
   openChatCopyStatus,
   onOpen,
@@ -85,6 +87,7 @@ function FreeBoardPostRows({
   showOpenChatCopy: boolean;
   showCopyToNotice: boolean;
   showBookmark: boolean;
+  canLike: boolean;
   showManageColumn: boolean;
   openChatCopyStatus?: "copying" | "copied" | "error";
   onOpen: () => void;
@@ -159,6 +162,17 @@ function FreeBoardPostRows({
       </td>
       <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
         {formatViewCount(post.viewCount)}
+      </td>
+      <td className="px-3 py-3.5 text-center">
+        <ContentLikeButton
+          title={post.title}
+          targetType="FREE_POST"
+          targetId={post.id}
+          initialLikeCount={post.likeCount}
+          initialLikedByCurrentUser={post.likedByCurrentUser}
+          canLike={canLike}
+          className="h-6 px-2 py-0 text-[10px] whitespace-nowrap"
+        />
       </td>
       <td className="px-3 py-3.5 text-center">
         {showBookmark ? (
@@ -1001,13 +1015,14 @@ export function FreeBoard({
           <table
             aria-label="자유게시판 게시글 목록"
             className="w-full table-fixed text-left text-sm border-collapse"
-            style={{ minWidth: isAdmin ? "900px" : "840px" }}
+            style={{ minWidth: isAdmin ? "992px" : "932px" }}
           >
             <colgroup>
               <col style={{ width: "52px" }} />
               <col />
               <col style={{ width: "92px" }} />
               <col style={{ width: "116px" }} />
+              <col style={{ width: "92px" }} />
               <col style={{ width: "92px" }} />
               <col style={{ width: "92px" }} />
               <col style={{ width: "88px" }} />
@@ -1021,6 +1036,7 @@ export function FreeBoard({
                 <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">댓글</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">조회수</th>
+                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">공감</th>
                 <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
                 {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
               </tr>
@@ -1028,7 +1044,7 @@ export function FreeBoard({
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedPosts.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 8 : 7} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={isAdmin ? 9 : 8} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 자유게시판 글이 없습니다.
                   </td>
                 </tr>
@@ -1039,6 +1055,7 @@ export function FreeBoard({
                   const showOpenChatCopy = post.isReal && isAdmin;
                   const showCopyToNotice = post.isReal && isAdmin;
                   const showBookmark = !!session && post.isReal && !isReadOnlyPublicShare;
+                  const canLike = !!session && post.isReal && !isReadOnlyPublicShare;
 
                   return (
                     <FreeBoardPostRows
@@ -1050,6 +1067,7 @@ export function FreeBoard({
                       showOpenChatCopy={showOpenChatCopy}
                       showCopyToNotice={showCopyToNotice}
                       showBookmark={showBookmark}
+                      canLike={canLike}
                       showManageColumn={isAdmin}
                       openChatCopyStatus={openChatCopyStatus[post.id]}
                       onOpen={() => openFocusedPost(post.id)}
@@ -1194,6 +1212,20 @@ export function FreeBoard({
                   <span>{focusedPost.registeredAt}</span>
                   <span>•</span>
                   <span>{formatViewCount(focusedPost.viewCount)}</span>
+                  {focusedPost.isReal && (
+                    <>
+                      <span>•</span>
+                      <ContentLikeButton
+                        title={focusedPost.title}
+                        targetType="FREE_POST"
+                        targetId={focusedPost.id}
+                        initialLikeCount={focusedPost.likeCount}
+                        initialLikedByCurrentUser={focusedPost.likedByCurrentUser}
+                        canLike={!!session && !isReadOnlyPublicShare}
+                        className="h-6 px-2 py-0 text-[10px] font-bold"
+                      />
+                    </>
+                  )}
                   <span>•</span>
                   <span>댓글 {focusedPost.commentCount}개</span>
                 </div>

@@ -11,6 +11,7 @@ import { NewsClient } from "@/components/news/news-client";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 import { getUserDisplayName } from "@/lib/user-display-name";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
+import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
 import { buildFreePostSocialPreview, buildNewsPostSocialPreview } from "@/lib/news/social-preview";
 import { siteTitle, socialPreviewImage } from "@/lib/site-metadata";
 import type { CoopNewsView, FAQView, FreePostView } from "@/lib/news/types";
@@ -174,6 +175,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
             signupName: true,
             loginId: true,
             role: true,
+            memberType: true,
           },
         },
         comments: {
@@ -185,6 +187,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
                 signupName: true,
                 loginId: true,
                 role: true,
+                memberType: true,
               },
             },
             reactions: {
@@ -200,17 +203,25 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
       orderBy: { registeredAt: "desc" },
     });
 
+    const newsLikeSummaries = await loadContentReactionSummaries(
+      "COOP_NEWS",
+      newsData.map((item) => item.id),
+      session?.id,
+    );
+
     newsList = newsData.map((item) => ({
       ...item,
       registeredAt: item.registeredAt.toISOString(),
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
+      ...(newsLikeSummaries.get(item.id) || { likeCount: 0, likedByCurrentUser: false }),
       author: {
         id: item.author.id,
         name: item.displayAuthorName || item.author.name || "관리자",
         signupName: item.author.signupName,
         loginId: item.author.loginId || "admin",
         role: item.author.role,
+        memberType: item.author.memberType,
       },
       comments: item.comments.map((comment) => ({
         ...comment,
@@ -221,6 +232,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
             signupName: comment.author.signupName,
             loginId: comment.author.loginId || "social",
             role: comment.author.role,
+            memberType: comment.author.memberType,
           },
           reactionSummary: summarizeCommentReactions(comment.reactions, session?.id),
         })),
@@ -240,6 +252,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
               signupName: true,
               loginId: true,
               role: true,
+              memberType: true,
             },
           },
           comments: {
@@ -251,6 +264,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
                   signupName: true,
                   loginId: true,
                   role: true,
+                  memberType: true,
                 },
               },
               reactions: {
@@ -259,12 +273,18 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
                   userId: true,
                 },
               },
-            },
-            orderBy: { createdAt: "asc" },
           },
+          orderBy: { createdAt: "asc" },
         },
+      },
         orderBy: { registeredAt: "desc" },
       });
+
+      const freePostLikeSummaries = await loadContentReactionSummaries(
+        "FREE_POST",
+        postsData.map((post) => post.id),
+        session.id,
+      );
 
       freePosts = postsData.map((post) => ({
         ...post,
@@ -272,12 +292,14 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
         postType: post.postType || "FREE",
+        ...(freePostLikeSummaries.get(post.id) || { likeCount: 0, likedByCurrentUser: false }),
         author: {
           id: post.author.id,
           name: post.author.name || "조합원",
           signupName: post.author.signupName,
           loginId: post.author.loginId || "social",
           role: post.author.role,
+          memberType: post.author.memberType,
           displayAuthorName: post.displayAuthorName,
         },
         comments: post.comments.map((c) => ({
@@ -289,6 +311,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
             signupName: c.author.signupName,
             loginId: c.author.loginId || "social",
             role: c.author.role,
+            memberType: c.author.memberType,
             displayAuthorName: c.displayAuthorName,
           },
           reactionSummary: summarizeCommentReactions(c.reactions, session.id),
@@ -319,12 +342,18 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
               signupName: true,
               loginId: true,
               role: true,
+              memberType: true,
             },
           },
         },
       });
 
       if (publicSharedPost) {
+        const publicFreePostLikeSummaries = await loadContentReactionSummaries(
+          "FREE_POST",
+          [publicSharedPost.id],
+          null,
+        );
         const publicAuthorName = publicSharedPost.displayAuthorName || "조합원";
         freePosts = [{
           ...publicSharedPost,
@@ -332,12 +361,14 @@ export default async function NewsPage({ searchParams }: NewsPageProps = {}) {
           createdAt: publicSharedPost.createdAt.toISOString(),
           updatedAt: publicSharedPost.updatedAt.toISOString(),
           postType: publicSharedPost.postType || "FREE",
+          ...(publicFreePostLikeSummaries.get(publicSharedPost.id) || { likeCount: 0, likedByCurrentUser: false }),
           author: {
             id: publicSharedPost.author.id,
             name: publicAuthorName,
             signupName: publicAuthorName,
             loginId: null,
             role: publicSharedPost.author.role,
+            memberType: publicSharedPost.author.memberType,
             displayAuthorName: publicSharedPost.displayAuthorName,
           },
           comments: [],

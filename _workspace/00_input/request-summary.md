@@ -816,3 +816,10 @@ none
 - Unanswered decision: none.
 
 ---
+# Request Summary
+
+- Requested feature slice: Add a common like button/count for content items across 소통마당 and 공개자료.
+- Follow-up slice: Rename the user-facing content-like label and list column from `좋아요` to `공감`, remove `좋아요` wording from the shared button/error copy, and use a friendlier emoji cue without changing the single-reaction data model.
+- Explicitly excluded scope: Emoji reaction picker for posts/documents, anonymous likes, notification delivery, ranking feeds, and changing existing comment reaction behavior.
+- Candidate governing specification: User-approved request in this session for a shared `LIKE` reaction across `FREE_POST`, `COOP_NEWS`, and `DOCUMENT`.
+- Unanswered decision: none

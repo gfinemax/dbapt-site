@@ -84,8 +84,10 @@ export async function POST(request: Request) {
           select: {
             id: true,
             name: true,
+            signupName: true,
             loginId: true,
             role: true,
+            memberType: true,
           },
         },
         reactions: {
@@ -160,8 +162,10 @@ export async function PATCH(request: Request) {
           select: {
             id: true,
             name: true,
+            signupName: true,
             loginId: true,
             role: true,
+            memberType: true,
           },
         },
         reactions: {

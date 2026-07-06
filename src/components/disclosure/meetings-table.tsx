@@ -7,6 +7,7 @@ import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.
 import { type Document } from "@/components/portal/document-table";
 import { DocumentUploadForm } from "../portal/document-upload-form";
 import { DocumentBookmarkButton } from "../portal/document-bookmark-button";
+import { ContentLikeButton } from "@/components/content-like-button";
 import {
   prepareDocumentUploadFile,
   type PdfUploadOptimizationMode,
@@ -160,6 +161,8 @@ export type RowDocType = {
   fileName?: string;
   fileSize?: number;
   viewCount?: number;
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
   sourceDocument?: Document;
 };
 
@@ -575,6 +578,8 @@ export function MeetingsTable({
           fileName: d.fileName,
           fileSize: d.fileSize,
           viewCount: d.viewCount,
+          likeCount: d.likeCount,
+          likedByCurrentUser: d.likedByCurrentUser,
           sourceDocument: d,
         }))
         .map((d) => ({
@@ -841,6 +846,7 @@ export function MeetingsTable({
               <col />
               <col className="w-24" />
               <col className="w-24" />
+              <col className="w-24" />
               {showBookmarkColumn && <col className="w-28" />}
               {isAdmin && <col className="w-16" />}
             </colgroup>
@@ -850,6 +856,7 @@ export function MeetingsTable({
                 <th className="px-3 py-3.5 font-semibold text-ash text-xs">문서 제목</th>
                 <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">회신기한</th>
                 <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">열람수</th>
+                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">공감</th>
                 {showBookmarkColumn && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">보관</th>}
                 {isAdmin && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">관리</th>}
               </tr>
@@ -857,7 +864,7 @@ export function MeetingsTable({
             <tbody className="divide-y divide-stone-surface/50">
               {paged.length === 0 ? (
                 <tr>
-                  <td colSpan={4 + (showBookmarkColumn ? 1 : 0) + (isAdmin ? 1 : 0)} className="px-5 py-16 text-center text-sm text-graphite">
+                  <td colSpan={5 + (showBookmarkColumn ? 1 : 0) + (isAdmin ? 1 : 0)} className="px-5 py-16 text-center text-sm text-graphite">
                     검색 조건에 맞는 문서가 없습니다.
                   </td>
                 </tr>
@@ -916,6 +923,21 @@ export function MeetingsTable({
                     </td>
                     <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
                       {formatViewCount(doc.viewCount, "열람")}
+                    </td>
+                    <td className="px-3 py-3.5 text-center">
+                      {doc.sourceDocument ? (
+                        <ContentLikeButton
+                          title={doc.title}
+                          targetType="DOCUMENT"
+                          targetId={doc.sourceDocument.id}
+                          initialLikeCount={doc.likeCount}
+                          initialLikedByCurrentUser={doc.likedByCurrentUser}
+                          canLike={isLoggedIn}
+                          className="h-6 px-2 py-0 text-[10px] font-bold"
+                        />
+                      ) : (
+                        <span className="text-[11px] text-ash">-</span>
+                      )}
                     </td>
                     {showBookmarkColumn && (
                       <td className="px-3 py-3.5 text-center">
@@ -1050,6 +1072,17 @@ export function MeetingsTable({
                     </span>
                   </span>
                   <div className="flex items-center gap-1.5">
+                    {doc.sourceDocument && (
+                      <ContentLikeButton
+                        title={doc.title}
+                        targetType="DOCUMENT"
+                        targetId={doc.sourceDocument.id}
+                        initialLikeCount={doc.likeCount}
+                        initialLikedByCurrentUser={doc.likedByCurrentUser}
+                        canLike={isLoggedIn}
+                        className="h-7 px-2 py-0 text-[10px] font-bold"
+                      />
+                    )}
                     {doc.sourceDocument && (
                       <DocumentBookmarkButton
                         document={doc.sourceDocument}
