@@ -1,3 +1,81 @@
+# Verification - Notice Mobile Image Width Parity
+
+## Implemented Feature
+
+- Matched the main notice detail drawer's mobile padding to the free-board focused post panel: `px-3 py-4 sm:p-8`.
+- Matched the standalone notice read modal's mobile padding to the same wider mobile canvas pattern: `px-3 py-4 sm:p-6.5`.
+- Added `h-auto` to notice representative images while preserving `w-full`, `max-h-none`, and `object-contain`.
+- Kept shared rich-body image rules that make mobile images full width without distortion.
+
+## Changed Files
+
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-10-notice-mobile-image-width-parity.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+
+## Checks
+
+- `pnpm test -- src/__tests__/news-admin-controls.test.tsx -t "notice detail drawer|notice-board read modal"`: PASS, 2 tests.
+- `pnpm test -- src/__tests__/news-admin-controls.test.tsx src/__tests__/news-rich-content-links.test.tsx`: PASS, 169 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 592 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Local production server `http://127.0.0.1:3002/news?tab=notice` in local Chrome mobile 390px.
+- Opened the notice titled `제목: 장마를 제낀 푸른 하늘 아래 내 집 마련, 그 시작은 미납 조합운영비 납부입니다`.
+- Confirmed notice detail shell class included `px-3 py-4 sm:p-8`.
+- Confirmed content width was 365px on a 390px viewport, body image width was 341px, image `object-fit` was `contain`, and document horizontal overflow was false.
+
+## Risks Or Follow-up
+
+- none
+
+---
+
+# Verification - News List Scrollbar And Notice Badge Cleanup
+
+## Implemented Feature
+
+- Added a reusable `.scrollbar-none` utility in `src/app/globals.css`.
+- Applied it to the notice and free-board list table overflow wrappers so the horizontal scrollbar no longer appears visually.
+- Removed the notice-list `실제자료` badge from `src/components/news/notice-board.tsx`.
+- Kept notice `중요` and `첨부` badges intact.
+
+## Changed Files
+
+- `src/app/globals.css`
+- `src/components/news/notice-board.tsx`
+- `src/components/news/free-board.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-10-news-list-scrollbar-badge-cleanup.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+
+## Checks
+
+- `pnpm test -- src/__tests__/news-admin-controls.test.tsx`: PASS, 107 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 592 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Local production server `http://127.0.0.1:3002/news?tab=notice` in local Chrome: notice table rendered, wrapper class was `overflow-x-auto scrollbar-none`, computed `scrollbar-width` was `none`, and `실제자료` was absent from the DOM.
+- Free-board list is login-gated in the unauthenticated browser check, so its wrapper class is covered by focused component tests.
+
+## Risks Or Follow-up
+
+- The table can still be horizontally scrollable on very narrow constrained layouts; this change removes the visible scrollbar bar while preserving access to the existing wide table content.
+
+---
+
 # Verification - Notice Detail Mobile Readability
 
 ## Implemented Feature

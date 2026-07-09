@@ -1127,7 +1127,7 @@ export function FreeBoard({
 
       {/* 자유게시판 글 목록 */}
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-none">
           <table
             aria-label="자유게시판 게시글 목록"
             className="w-full table-fixed text-left text-sm border-collapse"

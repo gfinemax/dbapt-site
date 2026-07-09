@@ -880,7 +880,7 @@ export function NewsClient({
 
           <div
             className={cn(
-              "fixed inset-y-0 left-0 z-[130] w-full bg-warm-canvas border-r border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out",
+              "fixed inset-y-0 left-0 z-[130] w-full bg-warm-canvas border-r border-stone-surface shadow-2xl px-3 py-4 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out",
               NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
             )}
             style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
@@ -1148,7 +1148,7 @@ export function NewsClient({
                       <img
                         src={activeViewNotice.imagePath}
                         alt="공지 대표 이미지"
-                        className="mb-4 max-h-none w-full rounded-2xl object-contain border border-stone-surface bg-white"
+                        className="mb-4 max-h-none h-auto w-full rounded-2xl object-contain border border-stone-surface bg-white"
                       />
                     )}
                     <NoticeRichContent content={activeViewNotice.content} />

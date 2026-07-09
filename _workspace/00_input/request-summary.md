@@ -1,3 +1,49 @@
+# Request Summary - Notice Mobile Image Width Parity
+
+## Requested Feature Slice
+
+- Make notice-detail mobile image width match the wider free-board mobile post image presentation.
+- Preserve image aspect ratio so notice images do not stretch or distort.
+- Keep the free-board behavior as the visual reference.
+
+## Explicitly Excluded Scope
+
+- No route, API, database, permission, comment workflow, reaction, bookmark, copy tool, open-chat, public-share, upload, editor behavior, or schema changes.
+- No desktop article width change beyond preserving the existing shared shell/content contract.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - News List Scrollbar And Notice Badge Cleanup
+
+## Requested Feature Slice
+
+- Adjust 소통마당 list tables so the visible horizontal scrollbar does not appear in notice/free-board lists.
+- Explain what the notice-list `실제자료` badge means.
+- Remove the confusing `실제자료` badge from the notice list while keeping meaningful badges such as `중요` and `첨부`.
+
+## Explicitly Excluded Scope
+
+- No route, API, database, permission, comment workflow, reaction, bookmark, copy tool, open-chat, public-share, detail-view, or editor behavior changes.
+- No broad redesign of 공개자료, portal document tables, or unrelated list/table surfaces.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
 # Request Summary - Notice Detail Mobile Readability
 
 ## Requested Feature Slice

@@ -267,7 +267,7 @@ export function NoticeBoard({
   };
 
   const renderNoticeBadges = (notice: NoticeBoardListItem, variant: "table" | "card" = "table") => {
-    if (!notice.isStarred && !notice.isReal && !notice.attachmentPath) return null;
+    if (!notice.isStarred && !notice.attachmentPath) return null;
 
     return (
       <div
@@ -284,9 +284,6 @@ export function NoticeBoard({
             <ImportantNoticeStar />
             <span>중요</span>
           </span>
-        )}
-        {notice.isReal && (
-          <span className="rounded border border-sky-blue/15 bg-sky-blue/10 px-1.5 py-0.5 text-[9px] font-black text-sky-blue select-none">실제자료</span>
         )}
         {notice.attachmentPath && (
           <span className="rounded bg-stone-surface/80 px-1.5 py-0.5 text-[9px] font-black text-graphite select-none">첨부</span>
@@ -480,7 +477,7 @@ export function NoticeBoard({
         </ul>
       ) : (
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-none">
           <table
             className="w-full table-fixed text-left text-sm border-collapse"
             style={{ minWidth: isAdmin ? "820px" : "760px" }}
@@ -604,7 +601,7 @@ export function NoticeBoard({
             aria-modal="true"
             aria-label="공지사항 상세 열람"
             className={cn(
-              "relative w-full rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl p-6.5 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]",
+              "relative w-full rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl px-3 py-4 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh] sm:p-6.5",
               NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
             )}
             style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
@@ -670,7 +667,7 @@ export function NoticeBoard({
                   <img
                     src={activeViewNotice.imagePath}
                     alt="공지 대표 이미지"
-                    className="mb-4 max-h-none w-full rounded-2xl object-contain border border-stone-surface bg-white"
+                    className="mb-4 max-h-none h-auto w-full rounded-2xl object-contain border border-stone-surface bg-white"
                   />
                 )}
                 <NoticeRichContent content={activeViewNotice.content} />

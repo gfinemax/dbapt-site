@@ -1676,12 +1676,13 @@ describe("news admin visible controls", () => {
     expect(within(noticeTable).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
     expect(within(noticeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
     expect(within(noticeTable).getByRole("button", { name: "실제 공지 개인자료실 보관" })).toBeInTheDocument();
+    expect(noticeTable.parentElement).toHaveClass("scrollbar-none");
     expect(noticeTable.querySelector("[data-notice-list-badges='true']")).toHaveClass("shrink-0");
     expect(noticeTable.querySelector("[data-notice-list-title='true']")).toHaveClass("truncate", "whitespace-nowrap");
     const importantBadge = within(noticeTable).getByText("중요").closest("span");
     expect(importantBadge).not.toHaveClass("ring-1");
     expect(importantBadge).not.toHaveClass("border");
-    expect(screen.getByText("실제자료").closest("[data-notice-title-meta='true']")).toBeInTheDocument();
+    expect(screen.queryByText("실제자료")).not.toBeInTheDocument();
     expect(noticeTable.querySelector('[data-notice-title-meta="true"] button[aria-label*="보관"]')).not.toBeInTheDocument();
   });
 
@@ -1772,6 +1773,7 @@ describe("news admin visible controls", () => {
     expect(within(freeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
     expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
     expect(within(freeTable).getByRole("button", { name: "실제 자유게시글 개인자료실 보관" })).toBeInTheDocument();
+    expect(freeTable.parentElement).toHaveClass("scrollbar-none");
     expect(freeTable.querySelector("[data-free-board-list-badges='true']")).toHaveClass("shrink-0");
     expect(freeTable.querySelector("[data-free-board-list-title='true']")).toHaveClass("truncate", "whitespace-nowrap");
     const importantBadge = within(freeTable).getByText("중요").closest("span");
@@ -1989,8 +1991,10 @@ describe("news admin visible controls", () => {
     expect(drawer).toHaveClass("left-0");
     expect(drawer).toHaveClass("border-r");
     expect(drawer).toHaveClass("max-w-[780px]");
+    expect(drawer).toHaveClass("px-3", "py-4", "sm:p-8");
     expect(drawer).toHaveStyle({ maxWidth: "780px" });
     expect(drawer).toHaveClass("slide-in-from-left");
+    expect(drawer).not.toHaveClass("p-6");
     expect(drawer).not.toHaveClass("right-0");
     expect(drawer).not.toHaveClass("max-w-2xl");
     expect(drawer).not.toHaveClass("slide-in-from-right");
@@ -2009,7 +2013,7 @@ describe("news admin visible controls", () => {
     expect(noticeMeta).toHaveClass("flex-wrap", "gap-x-2.5", "gap-y-1.5");
     expect(within(noticeMeta as HTMLElement).getByText("공지사항")).toHaveClass("rounded", "bg-sky-blue/10");
     expect(noticeMeta).not.toHaveTextContent("📂 분류: 조합 공지사항");
-    expect(screen.getByAltText("공지 대표 이미지")).toHaveClass("object-contain", "max-h-none");
+    expect(screen.getByAltText("공지 대표 이미지")).toHaveClass("w-full", "h-auto", "object-contain", "max-h-none");
     const richContent = drawer.querySelector(".notice-rich-content");
     expect(richContent?.parentElement).not.toHaveClass("pt-2");
     expect(richContent?.parentElement).not.toHaveClass("leading-8");
@@ -2866,8 +2870,10 @@ describe("news admin visible controls", () => {
 
     const dialog = screen.getByRole("dialog", { name: "공지사항 상세 열람" });
     expect(dialog).toHaveClass("max-w-[780px]");
+    expect(dialog).toHaveClass("px-3", "py-4", "sm:p-6.5");
     expect(dialog).toHaveStyle({ maxWidth: "780px" });
     expect(dialog).not.toHaveClass("max-w-xl");
+    expect(dialog).not.toHaveClass("p-6.5");
 
     const contentColumn = dialog.querySelector('[data-news-article-content="notice-board-read"]');
     expect(contentColumn).toHaveClass("mx-auto", "w-full", "max-w-[680px]");
@@ -2882,7 +2888,7 @@ describe("news admin visible controls", () => {
     const noticeMeta = dialog.querySelector("[data-notice-detail-meta='true']");
     expect(noticeMeta).toHaveClass("flex-wrap", "gap-x-2.5", "gap-y-1.5");
     expect(within(noticeMeta as HTMLElement).getByText("공지사항")).toHaveClass("rounded", "bg-sky-blue/10");
-    expect(screen.getByAltText("공지 대표 이미지")).toHaveClass("object-contain", "max-h-none");
+    expect(screen.getByAltText("공지 대표 이미지")).toHaveClass("w-full", "h-auto", "object-contain", "max-h-none");
   });
 
   it("shows free board posts as a notice-style list and writes body images in the editor", async () => {

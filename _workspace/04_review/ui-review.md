@@ -1,6 +1,58 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Notice mobile image width parity
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-10-notice-mobile-image-width-parity.md`
+- Files or pages reviewed: `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/notice-rich-editor.tsx`, `src/__tests__/news-admin-controls.test.tsx`, local production `/news?tab=notice`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only adjusts notice-detail mobile spacing and representative image classes. It does not change routes, APIs, schemas, permissions, comments, reactions, bookmarks, copy tools, OpenChat announcements, uploads, public-share behavior, or document access.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Notice detail still renders the same stored title, metadata, representative image, rich body, attachments, reactions, bookmarks, and comments. The change only gives the same content a wider mobile reading canvas and keeps image proportions intact.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Notice detail now uses the same mobile shell padding pattern as free-board focused posts (`px-3 py-4`, with desktop padding restored at `sm`). Representative images keep `w-full`, `h-auto`, `max-h-none`, and `object-contain`; rich-body images already use mobile full-width, `height:auto`, and `object-contain` in `NoticeRichContent`. Desktop shell/content widths remain `780px` and `680px`. Local Chrome at 390px confirmed the notice detail shell width was 390px, content width was 365px, body image width was 341px, `object-fit` was `contain`, and document horizontal overflow was false.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
+- Feature: News list scrollbar and notice badge cleanup
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-10-news-list-scrollbar-badge-cleanup.md`
+- Files or pages reviewed: `src/app/globals.css`, `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`, local production `/news?tab=notice`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only touches list presentation classes and notice-list badge output. It does not change routes, APIs, schemas, permissions, comments, reactions, bookmarks, copy tools, OpenChat announcements, public-share behavior, or document access.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The removed `실제자료` notice-list badge was an internal marker that a record is backed by real operating data rather than sample content. Removing it avoids exposing an unclear internal label while preserving the same real notice title, author, registration date, view count, empathy, bookmark, attachment, and important metadata.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Notice and free-board table wrappers now use `scrollbar-none`, backed by CSS rules for `scrollbar-width: none`, `-ms-overflow-style: none`, and WebKit scrollbar hiding. The existing overflow wrappers remain in place for narrow layouts, so the change removes the visible scrollbar without changing the keyboard/click targets or row structure. Local Chrome confirmed `/news?tab=notice` uses `scrollbar-width: none`, has no `실제자료` badge, and renders the notice table.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review
+
+## Reviewed Change
 - Feature: Notice detail mobile readability and shared reading-surface review
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
 - Implementation plan: `docs/superpowers/plans/2026-07-10-notice-detail-mobile-readability.md`

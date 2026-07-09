@@ -1,3 +1,43 @@
+# Spec Selection - Notice Mobile Image Width Parity
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Refine only existing notice-detail mobile presentation: align the notice read shell mobile padding with the free-board focused post panel, and ensure notice representative/body images render wider on mobile without distortion through `w-full`, `h-auto`, and `object-contain`. Preserve existing routes, APIs, permissions, data, desktop shell/content widths, reactions, bookmarks, comments, copy tools, and editing behavior.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - News List Scrollbar And Notice Badge Cleanup
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Refine only existing 소통마당 list presentation: add a shared scrollbar-hiding utility to the notice/free-board list table wrappers and remove the internal `실제자료` marker from notice list badges. Keep the existing table widths, data source, access gates, actions, reactions, bookmarks, copy tools, and detail views unchanged.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection - Notice Detail Mobile Readability
 
 ## Selected Approved Spec Path

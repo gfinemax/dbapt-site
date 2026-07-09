@@ -127,6 +127,15 @@
     border-radius: 1.5rem;
     background: var(--parchment-card);
   }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @keyframes float-soft {
