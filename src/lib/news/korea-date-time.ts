@@ -12,6 +12,21 @@ export function toKoreaDateTimeLocalValue(value: string | Date | null | undefine
   return koreaTime.toISOString().slice(0, 16);
 }
 
+export function formatKoreaDateValue(value: string | Date | null | undefined) {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).slice(0, 10).replace(/-/g, ".");
+  }
+
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date).replace(/-/g, ".");
+}
+
 export function parseKoreaDateTimeLocalValue(value: unknown): Date | null | undefined {
   if (value === undefined || value === null || value === "") return undefined;
   if (typeof value !== "string") return null;

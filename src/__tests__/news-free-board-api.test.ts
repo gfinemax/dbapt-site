@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildFreeBoardCommentCreatePayload,
+  buildFreeBoardCommentEditPayload,
   buildFreeBoardDeleteUrl,
   buildFreeBoardPostCreatePayload,
   buildFreeBoardPostUpdatePayload,
@@ -90,6 +91,33 @@ describe("free board API helpers", () => {
       content: "답글",
       parentCommentId: "comment-1",
       displayAuthorName: "사무국",
+    });
+  });
+
+  it("builds comment edit payloads for members and administrators", () => {
+    expect(
+      buildFreeBoardCommentEditPayload({
+        commentId: "comment-1",
+        content: "수정 댓글",
+        isAdmin: false,
+        displayAuthorName: "사무국",
+      }),
+    ).toEqual({
+      commentId: "comment-1",
+      content: "수정 댓글",
+    });
+
+    expect(
+      buildFreeBoardCommentEditPayload({
+        commentId: "comment-1",
+        content: "관리자 수정 댓글",
+        isAdmin: true,
+        displayAuthorName: "운영자",
+      }),
+    ).toEqual({
+      commentId: "comment-1",
+      content: "관리자 수정 댓글",
+      displayAuthorName: "운영자",
     });
   });
 

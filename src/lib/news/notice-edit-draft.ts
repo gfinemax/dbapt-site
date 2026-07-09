@@ -2,6 +2,7 @@ import {
   NEWS_DISPLAY_AUTHOR_NAMES,
   type NewsDisplayAuthorName,
 } from "@/lib/news-display-author";
+import { toKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import type { CoopNewsView } from "@/lib/news/types";
 
 export type NoticeEditDraft = {
@@ -40,7 +41,7 @@ export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
 }
 
 function toDateInputValue(value: string) {
-  return String(value).slice(0, 16);
+  return toKoreaDateTimeLocalValue(value);
 }
 
 function legacyNoticeImageHtml(imagePath: string) {

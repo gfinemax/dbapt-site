@@ -1,5 +1,6 @@
 import { getNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { mergeNewsCategoryRefresh } from "@/lib/news/category-refresh";
+import { formatKoreaDateValue } from "@/lib/news/korea-date-time";
 import type { CoopNewsView, NewsUserView } from "@/lib/news/types";
 
 type EditedNoticeInput = Partial<Omit<CoopNewsView, "author">> & {
@@ -84,5 +85,5 @@ function mergeNoticeAuthor(
 }
 
 function formatNoticeDate(value: string) {
-  return String(value).slice(0, 10).replace(/-/g, ".");
+  return formatKoreaDateValue(value);
 }

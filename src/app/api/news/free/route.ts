@@ -304,7 +304,65 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { postId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled, socialImagePath } = body;
+    const { postId, commentId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled, socialImagePath } = body;
+
+    if (commentId) {
+      const commentContent = typeof content === "string" ? content.trim() : "";
+      const parsedDisplayAuthorName = session.role === "ADMIN"
+        ? parseNewsDisplayAuthorName(displayAuthorName)
+        : { ok: true as const, value: null };
+
+      if (!commentContent) {
+        return NextResponse.json({ error: "댓글 내용을 입력해 주세요." }, { status: 400 });
+      }
+
+      if (!parsedDisplayAuthorName.ok) {
+        return NextResponse.json({ error: parsedDisplayAuthorName.error }, { status: 400 });
+      }
+
+      const comment = await prisma.freeComment.findUnique({ where: { id: commentId } });
+      if (!comment) {
+        return NextResponse.json({ error: "수정할 댓글을 찾을 수 없습니다." }, { status: 404 });
+      }
+
+      if (comment.authorId !== session.id && session.role !== "ADMIN") {
+        return NextResponse.json({ error: "댓글 수정 권한이 없습니다." }, { status: 403 });
+      }
+
+      const updated = await prisma.freeComment.update({
+        where: { id: commentId },
+        data: {
+          content: commentContent,
+          ...(session.role === "ADMIN" ? { displayAuthorName: parsedDisplayAuthorName.value } : {}),
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              signupName: true,
+              loginId: true,
+              role: true,
+              memberType: true,
+            },
+          },
+          reactions: {
+            select: {
+              emoji: true,
+              userId: true,
+            },
+          },
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        comment: {
+          ...updated,
+          reactionSummary: summarizeCommentReactions(updated.reactions, session.id),
+        },
+      });
+    }
 
     if (!postId) {
       return NextResponse.json({ error: "수정할 대상 ID가 누락되었습니다." }, { status: 400 });

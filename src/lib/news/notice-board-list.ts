@@ -1,5 +1,6 @@
 import { getNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { getNewsComments, type CoopNewsView } from "@/lib/news/types";
+import { formatKoreaDateValue } from "@/lib/news/korea-date-time";
 
 export type NoticeBoardListItem = CoopNewsView & {
   createdAt: string;
@@ -46,5 +47,5 @@ export function buildNoticeBoardList(
 }
 
 function formatNoticeDate(value: string) {
-  return value.slice(0, 10).replace(/-/g, ".");
+  return formatKoreaDateValue(value);
 }

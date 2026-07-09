@@ -45,6 +45,16 @@ describe("buildNoticeEditDraft", () => {
     });
   });
 
+  it("prefills registeredAt as a Korea datetime-local value", () => {
+    const draft = buildNoticeEditDraft(
+      notice({
+        registeredAt: "2026-07-08T17:26:00.000Z",
+      }),
+    );
+
+    expect(draft.registeredAt).toBe("2026-07-09T02:26");
+  });
+
   it("prepends legacy image html when imagePath is missing from content", () => {
     const draft = buildNoticeEditDraft(
       notice({

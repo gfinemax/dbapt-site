@@ -62,6 +62,20 @@ describe("buildNoticeBoardList", () => {
     expect(items[0].createdAt).toBe("2026.06.21");
   });
 
+  it("formats registeredAt with the Korea calendar date", () => {
+    const items = buildNoticeBoardList(
+      [
+        notice({
+          id: "midnight-korea",
+          registeredAt: "2026-07-08T17:26:00.000Z",
+        }),
+      ],
+      "",
+    );
+
+    expect(items[0].createdAt).toBe("2026.07.09");
+  });
+
   it("searches by notice title after normalization", () => {
     const items = buildNoticeBoardList(
       [

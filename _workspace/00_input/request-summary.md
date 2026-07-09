@@ -1,3 +1,52 @@
+# Request Summary - Notice Detail Mobile Readability
+
+## Requested Feature Slice
+
+- Improve official notice-detail mobile readability so notice posts read like the free-board detail view.
+- Align notice detail width, mobile title scale, metadata wrapping, representative image sizing, and rich-body image sizing.
+- Review whether the same setting applies to public-material and other community surfaces.
+- Apply shared HTML rich-content density where the same renderer is used, and verify public-material PDF viewing remains on the existing full-viewport viewer path.
+
+## Explicitly Excluded Scope
+
+- No API, database, permission, schema, document access, PDF rendering engine, comment workflow, reaction, bookmark, upload, copy-tool, route, or public navigation changes.
+- No broad redesign of 조합뉴스, 개발일지, 공개자료, 자료실, or portal document surfaces in this slice.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
+# Request Summary - Notice List Accumulation Readability
+
+## Requested Feature Slice
+
+- Improve the 소통마당 공지사항 list as notices accumulate.
+- Collapse always-visible administrator row actions so copy/delete controls do not widen every row.
+- Add a mobile-readable notice card list instead of relying on the wide table as the primary mobile surface.
+- Keep title, registered date, view count, empathy, and bookmark controls easy to scan.
+
+## Explicitly Excluded Scope
+
+- No API, database, permission, comment, reaction, bookmark, copy-tool, public-share, OpenChat, route, or detail-view behavior changes.
+- No free-board redesign in this slice.
+- No pagination, month filter, or separate important-notice section in this first implementation slice.
+
+## Candidate Governing Specification
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Unanswered Decision
+
+none
+
+---
+
 # Request Summary - News List Default Width Tightening
 
 ## Requested Feature Slice
@@ -823,3 +872,28 @@ none
 - Explicitly excluded scope: Emoji reaction picker for posts/documents, anonymous likes, notification delivery, ranking feeds, and changing existing comment reaction behavior.
 - Candidate governing specification: User-approved request in this session for a shared `LIKE` reaction across `FREE_POST`, `COOP_NEWS`, and `DOCUMENT`.
 - Unanswered decision: none
+
+---
+
+# Request Summary - Free Board Comment Editing
+
+## Requested Feature Slice
+
+- Allow existing free-board comments and replies to be edited from the focused post panel.
+- Keep the same mutation permission as deletion: the comment author or an administrator can edit.
+- Preserve administrator display-author selection (`운영자`/`사무국`) when editing free-board comments.
+- Follow-up: make the free-board comment input areas about 1.5x taller, including the comment edit textarea and the main comment composer.
+
+## Explicitly Excluded Scope
+
+- No schema migration, edit history, moderation queue, notifications, rich-editor comments, or cross-board comment model merge.
+- No changes to notice/newsletter comment editing beyond keeping existing behavior intact.
+- No public-share comment editing.
+
+## Candidate Governing Specification
+
+Current user-approved free-board comment workflow follow-up; related interaction surface follows `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`.
+
+## Unanswered Decision
+
+none

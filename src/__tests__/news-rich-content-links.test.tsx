@@ -117,6 +117,21 @@ describe("notice rich content links", () => {
     expect(contentRoot).toHaveClass("max-sm:[&_img]:!h-auto", "max-sm:[&_img]:!object-contain");
   });
 
+  it("uses shared mobile reading density for notice and free-board rich content", () => {
+    render(
+      <NoticeRichContent content='<p><img src="/uploads/mobile-full-width.png" alt="본문 이미지" data-width="75" data-pixel-width="415" data-pixel-height="320" data-fit="contain" /></p>' />,
+    );
+
+    const contentRoot = document.querySelector(".notice-rich-content") as HTMLElement;
+
+    expect(contentRoot).toHaveClass(
+      "max-sm:px-3",
+      "max-sm:py-4",
+      "max-sm:[&_img]:!w-full",
+      "max-sm:[&_img]:!max-w-full",
+    );
+  });
+
   it("renders rotated cover images without adding a crop frame", () => {
     const html = sanitizeNoticeContentHtml(
       '<p><img src="/uploads/rotated-cover.png" alt="본문 이미지" data-width="75" data-fit="cover" data-crop-x="center" data-crop-y="center" data-rotate="33" /></p>',

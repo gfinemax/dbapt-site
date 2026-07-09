@@ -78,4 +78,16 @@ describe("notice mutations", () => {
     expect(edited.displayAuthorName).toBe("운영자");
     expect(edited.isReal).toBe(true);
   });
+
+  it("formats active edited notice registeredAt with the Korea calendar date", () => {
+    const edited = buildActiveEditedNoticeView(
+      {
+        ...notice("notice-1"),
+        registeredAt: "2026-07-08T17:26:00.000Z",
+      },
+      "운영자",
+    );
+
+    expect(edited.createdAt).toBe("2026.07.09");
+  });
 });

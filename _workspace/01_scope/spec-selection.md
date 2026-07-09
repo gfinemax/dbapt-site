@@ -1,3 +1,43 @@
+# Spec Selection - Notice Detail Mobile Readability
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Refine only existing read-view presentation for 소통마당 notice details and shared HTML rich-content bodies: keep the 780px shell / 680px content contract, improve mobile title scale and metadata wrapping, show notice representative images without cropping, and make rich-content images full width on narrow screens. Public-material PDF surfaces stay on `PdfViewerModal`, whose mobile viewer rules are verified rather than replaced.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
+# Spec Selection - Notice List Accumulation Readability
+
+## Selected Approved Spec Path
+
+`docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+
+## Implementation Boundary
+
+Refine only the existing notice list presentation: collapse administrator row actions behind one compact menu, add a mobile card list for notice rows, and keep existing notice data, sorting, metadata, reactions, bookmarks, copy actions, and delete actions wired to the same handlers. Keep routes, APIs, schemas, permissions, detail view, public-share behavior, and free-board presentation unchanged.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes
+
+---
+
 # Spec Selection - Common Content Likes
 
 ## Selected Approved Spec Path
@@ -631,3 +671,21 @@ yes
 - Planning may continue: yes.
 
 ---
+
+# Spec Selection - Free Board Comment Editing
+
+## Selected Approved Spec Path
+
+User-approved request in this session; no separate `docs/superpowers` spec exists for this incremental free-board comment workflow change.
+
+## Implementation Boundary
+
+Add edit capability to existing free-board comments and replies only. Reuse the current free-board `PATCH /api/news/free` route, existing author/admin permission rule, existing comment display-author choices for admins, and existing focused post panel UI patterns. Do not change access gates, schemas, post editing, public-share read-only behavior, notice comment editing, reaction behavior, or deletion behavior.
+
+## Conflicts Between Request And Spec
+
+none
+
+## Planning May Continue
+
+yes

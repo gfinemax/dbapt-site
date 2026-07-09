@@ -54,6 +54,7 @@ import { getNoticeCommentAuthorName } from "@/lib/news/comment-author";
 import { buildNoticeEditDraft } from "@/lib/news/notice-edit-draft";
 import { buildNoticeEditPayload } from "@/lib/news/notice-edit-payload";
 import { buildNewsClientSummary } from "@/lib/news/news-client-summary";
+import { formatKoreaDateValue } from "@/lib/news/korea-date-time";
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import {
   getNewsComments,
@@ -91,7 +92,7 @@ const menuItems = [
 
 function formatNoticeDate(value: unknown) {
   if (!value) return "";
-  return String(value).slice(0, 10).replace(/-/g, ".");
+  return formatKoreaDateValue(String(value));
 }
 
 function NewsSectionLockTab({ label, router }: { label: string; router: { push: (href: string) => void } }) {
@@ -1106,7 +1107,7 @@ export function NewsClient({
                 <>
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
+                      <h3 className="text-[19px] font-extrabold text-charcoal-primary leading-snug break-keep [overflow-wrap:anywhere] sm:text-xl">
                         {activeViewNotice.isStarred && (
                           <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 mr-1.5 align-middle">
                             ★ 중요
@@ -1125,8 +1126,13 @@ export function NewsClient({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 text-[11px] font-bold text-ash font-mono border-y border-stone-surface/65 py-2.5">
-                      <span>📂 분류: 조합 공지사항</span>
+                    <div
+                      data-notice-detail-meta="true"
+                      className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] font-bold text-ash font-mono border-y border-stone-surface/65 py-2.5"
+                    >
+                      <span className="rounded bg-sky-blue/10 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-blue">
+                        공지사항
+                      </span>
                       <span>•</span>
                       <span>작성자: {getNewsDisplayAuthorName(activeViewNotice)}</span>
                       <span>•</span>
@@ -1141,8 +1147,8 @@ export function NewsClient({
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={activeViewNotice.imagePath}
-                        alt=""
-                        className="mb-4 max-h-80 w-full rounded-2xl object-cover border border-stone-surface"
+                        alt="공지 대표 이미지"
+                        className="mb-4 max-h-none w-full rounded-2xl object-contain border border-stone-surface bg-white"
                       />
                     )}
                     <NoticeRichContent content={activeViewNotice.content} />

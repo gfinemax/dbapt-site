@@ -28,6 +28,13 @@ type FreeBoardCommentCreatePayloadInput = {
   displayAuthorName: NewsDisplayAuthorName;
 };
 
+type FreeBoardCommentEditPayloadInput = {
+  commentId: string;
+  content: string;
+  isAdmin: boolean;
+  displayAuthorName: NewsDisplayAuthorName;
+};
+
 type FreeBoardDeleteParams = {
   postId?: string;
   commentId?: string;
@@ -104,6 +111,19 @@ export function buildFreeBoardCommentCreatePayload({
     postId,
     content,
     ...(parentCommentId ? { parentCommentId } : {}),
+    ...(isAdmin ? { displayAuthorName } : {}),
+  };
+}
+
+export function buildFreeBoardCommentEditPayload({
+  commentId,
+  content,
+  isAdmin,
+  displayAuthorName,
+}: FreeBoardCommentEditPayloadInput) {
+  return {
+    commentId,
+    content,
     ...(isAdmin ? { displayAuthorName } : {}),
   };
 }

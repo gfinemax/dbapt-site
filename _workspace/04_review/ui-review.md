@@ -1,6 +1,102 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Notice detail mobile readability and shared reading-surface review
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-10-notice-detail-mobile-readability.md`
+- Files or pages reviewed: `src/lib/news/content-layout.ts`, `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, `src/components/news/notice-rich-editor.tsx`, `src/components/portal/pdf-viewer-modal.tsx`, local production `/news?tab=notice&news=68074b97-401f-423e-bc65-b145db6851c9`, disclosure/library PDF viewer tests
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The implementation changes only read-view presentation classes for notice detail and shared HTML rich-content bodies. It does not change routes, APIs, permissions, document access, schemas, comments, reactions, bookmarks, uploads, copy tools, public navigation, or PDF document delivery.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Notice detail still renders the same persisted title, author, registered date, view count, body content, images, and comments. The long category label is shortened visually to `공지사항` without changing the underlying notice category or metadata.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Notice detail uses the established 780px shell and 680px content width contract, mobile title scale `text-[19px] sm:text-xl`, wrapped metadata, uncropped representative images, and full-width rich-body images on narrow screens. Production build Chrome checks confirmed no horizontal overflow at 390px and 1440px. Public자료/자료실 PDF viewing remains on `PdfViewerModal`, whose mobile header and embedded PDF tests passed.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Notice list accumulation readability
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-09-notice-list-accumulation-readability.md`
+- Files or pages reviewed: `src/components/news/notice-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`, local `/news?tab=notice` desktop and mobile
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is presentation-only for the existing notice list. It does not change routes, APIs, permissions, database schema, detail opening, OpenChat copy behavior, board-copy behavior, deletion authority, reactions, bookmarks, or public-share behavior.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The desktop table and mobile cards render the same notice records, badges, author, registered date, view count, empathy count, bookmark state, and administrator actions. Administrator actions are collapsed into a per-row management menu instead of being removed or renamed.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The desktop table now uses tighter stable columns with a single management control, reducing horizontal pressure from repeated action pills. Mobile uses a readable card list after hydration at 390px, with two-line title clamping, visible metadata, and keyboard-focusable action buttons. Chrome headless verified `/news?tab=notice` at 1440px and 390px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Notice registered-date Korea calendar display
+- Governing spec: Direct user-approved bug-fix slice for the existing 소통마당 notice registered-date behavior
+- Implementation plan: Direct focused fix; no separate plan file
+- Files or pages reviewed: `src/lib/news/korea-date-time.ts`, `src/lib/news/notice-board-list.ts`, `src/lib/news/notice-edit-draft.ts`, `src/lib/news/notice-mutations.ts`, `src/components/news/news-client.tsx`, `src/components/news/notice-board.tsx`, local `/news?tab=notice`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change only normalizes existing notice registered-date formatting and edit-form prefill behavior to Korea time. It does not change routes, APIs, permissions, posting/editing authority, comments, reactions, bookmarks, copy tools, attachments, public-share behavior, or database schema.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Stored UTC instants are now displayed as their Korea calendar date, matching the administrator's `datetime-local` registration intent. The checked production-like local row stores `2026-07-08T17:26:00.000Z` and renders `2026.07.09` on `/news?tab=notice`.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: No layout, color, typography, imagery, navigation, motion, or control affordance was changed. Chrome headless rendered `/news?tab=notice` at 1440px and 390px; the date fix rendered in server HTML. The 390px capture still shows existing broad 소통마당/card/table horizontal pressure, which is not introduced by this date-only change and should be handled as a separate readability/layout pass.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
+- Feature: Free-board comment and reply editing
+- Governing spec: Current user-approved free-board comment workflow follow-up
+- Implementation plan: `docs/superpowers/plans/2026-07-06-free-board-comment-editing.md`
+- Files or pages reviewed: `src/components/news/free-board.tsx`, `src/app/api/news/free/route.ts`, `src/lib/news/free-board-api.ts`, focused regression tests, local `/news`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The new edit path uses the existing authenticated free-board API and the same mutation rule as deletion: comment author or administrator only. Public-share read-only visitors still cannot edit comments, and no private data, document access, voting, notification, moderation, or schema behavior was added.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The UI only shows `수정` next to comments/replies the current user can already mutate. The edit form labels are explicit (`댓글 수정 내용`, and administrator-only `댓글 수정 작성자`) and the server rejects empty content, missing comments, and unauthorized edits.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The edit action uses the existing compact rounded pill style beside `삭제`, and the inline edit form uses existing stone/sky borders, white fields, visible labels/sr-only labels, and keyboard-focusable native textarea/select/buttons. The follow-up increases textarea rows only, preserving existing responsive structure. Local Chrome checks rendered `/news` at 1440px and 390px with HTTP 200 and no document horizontal overflow.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+## Reviewed Change
 - Feature: Common content empathy counts and friendlier 공감 buttons for 소통마당 and 공개자료
 - Governing spec: Current user-approved request to apply common content reactions to all 소통마당 and 공개자료 surfaces
 - Implementation plan: `docs/superpowers/plans/2026-07-06-content-empathy-label.md`

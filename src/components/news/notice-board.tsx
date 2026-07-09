@@ -4,6 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { copyTextToClipboard } from "@/lib/copy-to-clipboard";
 import { readOpenChatAnnouncementResponse } from "@/lib/openchat-announcement-response";
@@ -18,6 +19,7 @@ import {
   NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
   NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE,
 } from "@/lib/news/content-layout";
+import { toKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { buildNoticeBoardList, type NoticeBoardListItem } from "@/lib/news/notice-board-list";
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
@@ -48,9 +50,7 @@ function ImportantNoticeStar() {
 }
 
 function toDateInputValue(value: Date | string = new Date()) {
-  const date = value instanceof Date ? value : new Date(value);
-  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-  return offsetDate.toISOString().slice(0, 16);
+  return toKoreaDateTimeLocalValue(value);
 }
 
 export function NoticeBoard({
@@ -64,10 +64,28 @@ export function NoticeBoard({
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [activeViewNotice, setActiveViewNotice] = useState<NoticeBoardListItem | null>(null);
   const [openChatCopyStatus, setOpenChatCopyStatus] = useState<Record<string, "copying" | "copied" | "error">>({});
+  const [openNoticeActionMenuId, setOpenNoticeActionMenuId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isMobileList, setIsMobileList] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const syncMobileList = () => setIsMobileList(mediaQuery.matches);
+    syncMobileList();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", syncMobileList);
+      return () => mediaQuery.removeEventListener("change", syncMobileList);
+    }
+
+    mediaQuery.addListener(syncMobileList);
+    return () => mediaQuery.removeListener(syncMobileList);
   }, []);
 
   useEffect(() => {
@@ -240,6 +258,117 @@ export function NoticeBoard({
     }
   };
 
+  const openNotice = (notice: NoticeBoardListItem) => {
+    if (onViewNotice) {
+      onViewNotice(notice);
+    } else {
+      setActiveViewNotice(notice);
+    }
+  };
+
+  const renderNoticeBadges = (notice: NoticeBoardListItem, variant: "table" | "card" = "table") => {
+    if (!notice.isStarred && !notice.isReal && !notice.attachmentPath) return null;
+
+    return (
+      <div
+        data-notice-list-badges={variant === "table" ? "true" : undefined}
+        data-notice-title-meta="true"
+        className={cn(
+          variant === "table"
+            ? "flex w-[76px] shrink-0 flex-col items-start gap-1"
+            : "flex min-w-0 flex-wrap items-center gap-1.5",
+        )}
+      >
+        {notice.isStarred && (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
+            <ImportantNoticeStar />
+            <span>중요</span>
+          </span>
+        )}
+        {notice.isReal && (
+          <span className="rounded border border-sky-blue/15 bg-sky-blue/10 px-1.5 py-0.5 text-[9px] font-black text-sky-blue select-none">실제자료</span>
+        )}
+        {notice.attachmentPath && (
+          <span className="rounded bg-stone-surface/80 px-1.5 py-0.5 text-[9px] font-black text-graphite select-none">첨부</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderNoticeAdminActions = (notice: NoticeBoardListItem) => {
+    if (!isAdmin || !notice.isReal) return null;
+
+    const isOpen = openNoticeActionMenuId === notice.id;
+
+    return (
+      <div className="flex flex-col items-center gap-1.5">
+        <button
+          type="button"
+          aria-label={`${notice.title} 관리 메뉴`}
+          aria-expanded={isOpen}
+          onClick={(event) => {
+            event.stopPropagation();
+            setOpenNoticeActionMenuId((current) => (current === notice.id ? null : notice.id));
+          }}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-surface bg-white text-graphite transition hover:border-sky-blue/30 hover:bg-sky-blue/5 hover:text-sky-blue focus:outline-none focus:ring-2 focus:ring-sky-blue/25"
+        >
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        </button>
+        {isOpen && (
+          <div
+            className="flex w-[132px] flex-col items-stretch gap-1 rounded-xl border border-stone-surface bg-white p-1.5 shadow-sm"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              aria-label={`${notice.title} 오픈채팅 공지문 복사`}
+              onClick={(event) => {
+                event.stopPropagation();
+                void handleOpenChatCopy(notice);
+              }}
+              disabled={openChatCopyStatus[notice.id] === "copying"}
+              className="rounded-lg px-2 py-1.5 text-left text-[10px] font-bold text-meadow-green transition hover:bg-meadow-green/10 disabled:opacity-60"
+            >
+              {openChatCopyStatus[notice.id] === "copying" ? "복사 중" : "공지문 복사"}
+            </button>
+            {openChatCopyStatus[notice.id] === "copied" && (
+              <span className="px-2 text-[9px] font-bold text-meadow-green">
+                복사됨
+              </span>
+            )}
+            {openChatCopyStatus[notice.id] === "error" && (
+              <span className="px-2 text-[9px] font-bold text-ember-orange">
+                실패
+              </span>
+            )}
+            <button
+              type="button"
+              aria-label={`${notice.title} 자유게시판으로 복사`}
+              onClick={(event) => {
+                event.stopPropagation();
+                void handleCopyNoticeToFreeBoard(notice);
+              }}
+              className="rounded-lg px-2 py-1.5 text-left text-[10px] font-bold text-sky-blue transition hover:bg-sky-blue/10"
+            >
+              자유게시판 복사
+            </button>
+            <button
+              type="button"
+              aria-label="공지 삭제"
+              onClick={(event) => {
+                event.stopPropagation();
+                void handleDeleteNotice(notice);
+              }}
+              className="rounded-lg px-2 py-1.5 text-left text-[10px] font-bold text-coral-red transition hover:bg-coral-red/10"
+            >
+              삭제
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-b border-[#f2f0ed] pb-3">
@@ -288,23 +417,84 @@ export function NoticeBoard({
         </p>
       </div>
 
-      {/* 공지사항 목록 테이블 */}
+      {/* 공지사항 목록 */}
+      {isMobileList ? (
+        <ul aria-label="공지사항 모바일 목록" className="space-y-3">
+          {combinedData.length === 0 ? (
+            <li className="rounded-2xl border border-stone-surface bg-white px-4 py-8 text-center text-xs text-graphite/70">
+              검색 조건에 맞는 공지사항이 존재하지 않습니다.
+            </li>
+          ) : (
+            combinedData.map((notice) => (
+              <li key={notice.id}>
+                <article className="rounded-2xl border border-stone-surface bg-white p-4 shadow-2xs">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 space-y-2">
+                      {renderNoticeBadges(notice, "card")}
+                      <button
+                        type="button"
+                        onClick={() => openNotice(notice)}
+                        className={cn(
+                          "block w-full text-left text-[14px] leading-5 text-charcoal-primary transition hover:text-sky-blue focus:outline-none focus:ring-2 focus:ring-sky-blue/25",
+                          notice.isStarred ? "font-extrabold" : "font-bold",
+                        )}
+                      >
+                        <span className="line-clamp-2">{notice.title}</span>
+                      </button>
+                    </div>
+                    {renderNoticeAdminActions(notice)}
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-ash">
+                    <span className="text-graphite/70">{notice.author.name}</span>
+                    <span className="font-mono">{notice.createdAt}</span>
+                    <span className="font-bold text-graphite/75">{formatViewCount(notice.viewCount)}</span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <ContentLikeButton
+                      title={notice.title}
+                      targetType="COOP_NEWS"
+                      targetId={notice.id}
+                      initialLikeCount={notice.likeCount}
+                      initialLikedByCurrentUser={notice.likedByCurrentUser}
+                      canLike={isLoggedIn && notice.isReal}
+                      className="h-7 px-2.5 py-0 text-[10px] whitespace-nowrap"
+                    />
+                    {isLoggedIn && notice.isReal ? (
+                      <PersonalBookmarkButton
+                        title={notice.title}
+                        targetType="COOP_NEWS"
+                        targetId={notice.id}
+                        initialBookmarked={notice.isBookmarkedByCurrentUser}
+                        className="h-7 px-2.5 py-0 text-[10px] whitespace-nowrap"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-ash/50">보관 불가</span>
+                    )}
+                  </div>
+                </article>
+              </li>
+            ))
+          )}
+        </ul>
+      ) : (
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
           <table
             className="w-full table-fixed text-left text-sm border-collapse"
-            style={{ minWidth: isAdmin ? "912px" : "852px" }}
+            style={{ minWidth: isAdmin ? "820px" : "760px" }}
             aria-label="공지사항 목록"
           >
             <colgroup>
               <col style={{ width: "52px" }} />
               <col />
-              <col style={{ width: "92px" }} />
-              <col style={{ width: "116px" }} />
-              <col style={{ width: "92px" }} />
-              <col style={{ width: "92px" }} />
               <col style={{ width: "88px" }} />
-              {isAdmin && <col style={{ width: "136px" }} />}
+              <col style={{ width: "104px" }} />
+              <col style={{ width: "88px" }} />
+              <col style={{ width: "86px" }} />
+              <col style={{ width: "80px" }} />
+              {isAdmin && <col style={{ width: "84px" }} />}
             </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
@@ -346,26 +536,7 @@ export function NoticeBoard({
                     </td>
                     <td className="px-3 py-3.5">
                       <div className="flex min-w-0 items-center gap-3">
-                        {(notice.isStarred || notice.isReal || notice.attachmentPath) && (
-                          <div
-                            data-notice-list-badges="true"
-                            data-notice-title-meta="true"
-                            className="flex w-[76px] shrink-0 flex-col items-start gap-1"
-                          >
-                          {notice.isStarred && (
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
-                              <ImportantNoticeStar />
-                              <span>중요</span>
-                            </span>
-                          )}
-                            {notice.isReal && (
-                              <span className="rounded border border-sky-blue/15 bg-sky-blue/10 px-1.5 py-0.5 text-[9px] font-black text-sky-blue select-none">실제자료</span>
-                            )}
-                            {notice.attachmentPath && (
-                              <span className="rounded bg-stone-surface/80 px-1.5 py-0.5 text-[9px] font-black text-graphite select-none">첨부</span>
-                            )}
-                          </div>
-                        )}
+                        {renderNoticeBadges(notice)}
                         <span
                           data-notice-list-title="true"
                           className={cn(
@@ -412,54 +583,7 @@ export function NoticeBoard({
                     </td>
                     {isAdmin && (
                       <td className="px-3 py-3.5 text-center">
-                        {notice.isReal && (
-                          <div className="flex flex-wrap items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              aria-label={`${notice.title} 오픈채팅 공지문 복사`}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleOpenChatCopy(notice);
-                              }}
-                              disabled={openChatCopyStatus[notice.id] === "copying"}
-                              className="rounded-full border border-meadow-green/25 bg-meadow-green/10 px-2.5 py-1 text-[10px] font-bold text-meadow-green hover:bg-meadow-green/15 disabled:opacity-60"
-                            >
-                              {openChatCopyStatus[notice.id] === "copying" ? "복사 중" : "공지문 복사"}
-                            </button>
-                            {openChatCopyStatus[notice.id] === "copied" && (
-                              <span className="text-[9px] font-bold text-meadow-green">
-                                복사됨
-                              </span>
-                            )}
-                            {openChatCopyStatus[notice.id] === "error" && (
-                              <span className="text-[9px] font-bold text-ember-orange">
-                                실패
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              aria-label={`${notice.title} 자유게시판으로 복사`}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleCopyNoticeToFreeBoard(notice);
-                              }}
-                              className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/15"
-                            >
-                              자유게시판 복사
-                            </button>
-                            <button
-                              type="button"
-                              aria-label="공지 삭제"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleDeleteNotice(notice);
-                              }}
-                              className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
-                            >
-                              삭제
-                            </button>
-                          </div>
-                        )}
+                        {renderNoticeAdminActions(notice)}
                       </td>
                     )}
                   </tr>
@@ -469,6 +593,7 @@ export function NoticeBoard({
           </table>
         </div>
       </div>
+      )}
 
       {/* 1. 공지사항 상세 열람 모달 */}
       {activeViewNotice && (
@@ -501,7 +626,7 @@ export function NoticeBoard({
               className={cn("mx-auto w-full flex-1 overflow-y-auto space-y-0 pr-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
               style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
             >
-              <h3 className="text-base font-extrabold text-charcoal-primary leading-snug">
+              <h3 className="text-[19px] font-extrabold text-charcoal-primary leading-snug break-keep [overflow-wrap:anywhere] sm:text-xl">
                 {activeViewNotice.isStarred && (
                   <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 mr-1.5 align-middle">
                     ★ 중요
@@ -510,8 +635,13 @@ export function NoticeBoard({
                 {activeViewNotice.title}
               </h3>
               
-              <div className="flex items-center gap-3 text-[10.5px] font-bold text-ash font-mono border-y border-stone-surface/60 py-2">
-                <span>📂 분류: 조합 공지사항</span>
+              <div
+                data-notice-detail-meta="true"
+                className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[10.5px] font-bold text-ash font-mono border-y border-stone-surface/60 py-2"
+              >
+                <span className="rounded bg-sky-blue/10 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-blue">
+                  공지사항
+                </span>
                 <span>•</span>
                 <span>작성자: {activeViewNotice.author.name}</span>
                 <span>•</span>
@@ -539,8 +669,8 @@ export function NoticeBoard({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={activeViewNotice.imagePath}
-                    alt=""
-                    className="mb-4 max-h-72 w-full rounded-2xl object-cover border border-stone-surface"
+                    alt="공지 대표 이미지"
+                    className="mb-4 max-h-none w-full rounded-2xl object-contain border border-stone-surface bg-white"
                   />
                 )}
                 <NoticeRichContent content={activeViewNotice.content} />

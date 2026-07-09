@@ -34,6 +34,7 @@ const mockPrisma = vi.hoisted(() => ({
   freeComment: {
     create: vi.fn(),
     findUnique: vi.fn(),
+    update: vi.fn(),
     delete: vi.fn(),
   },
   coopNewsComment: {
@@ -396,7 +397,7 @@ describe("news admin API controls", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: "실제 공지 자유게시판으로 복사" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "실제 공지 관리 메뉴" })).not.toBeInTheDocument();
 
     rerender(
       <NoticeBoard
@@ -407,6 +408,7 @@ describe("news admin API controls", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 관리 메뉴" }));
     fireEvent.click(screen.getByRole("button", { name: "실제 공지 자유게시판으로 복사" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
@@ -434,6 +436,7 @@ describe("news admin API controls", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 관리 메뉴" }));
     fireEvent.click(screen.getByRole("button", { name: "실제 공지 자유게시판으로 복사" }));
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -1064,6 +1067,37 @@ describe("news admin API controls", () => {
     expect(mockPrisma.freeComment.create).not.toHaveBeenCalled();
   });
 
+  it("allows free-board comment update for the author", async () => {
+    mockGetSession.mockResolvedValue({ id: "member-1", role: "MEMBER" });
+    mockPrisma.freeComment.findUnique.mockResolvedValue({ ...freeComment, authorId: "member-1" });
+    mockPrisma.freeComment.update.mockResolvedValue({
+      ...freeComment,
+      content: "수정된 자유게시판 댓글입니다.",
+      author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
+      reactions: [],
+    });
+
+    const response = await freeRoute.PATCH(
+      jsonRequest({
+        commentId: "comment-1",
+        content: "수정된 자유게시판 댓글입니다.",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      success: true,
+      comment: {
+        id: "comment-1",
+        content: "수정된 자유게시판 댓글입니다.",
+      },
+    });
+    expect(mockPrisma.freeComment.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "comment-1" },
+      data: { content: "수정된 자유게시판 댓글입니다." },
+    }));
+  });
+
   it("rejects post update for non-author and non-admin sessions", async () => {
     mockGetSession.mockResolvedValue({ id: "member-2", role: "MEMBER" });
     mockPrisma.freePost.findUnique.mockResolvedValue({ ...realFreePost, authorId: "member-1" });
@@ -1584,7 +1618,7 @@ describe("news admin visible controls", () => {
     );
 
     expect(screen.queryByRole("button", { name: "+ 신규 공지사항 등록" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "공지 삭제" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "실제 공지 관리 메뉴" })).not.toBeInTheDocument();
 
     rerender(
       <NoticeBoard
@@ -1596,6 +1630,9 @@ describe("news admin visible controls", () => {
     );
 
     expect(screen.getByRole("button", { name: "+ 신규 공지사항 등록" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "실제 공지 관리 메뉴" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "공지 삭제" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 관리 메뉴" }));
     expect(screen.getByRole("button", { name: "공지 삭제" })).toBeInTheDocument();
   });
 
@@ -1633,7 +1670,7 @@ describe("news admin visible controls", () => {
     expect(within(noticeTable).getByRole("columnheader", { name: "조회수" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).queryByRole("button", { name: "댓글 1개 보기" })).not.toBeInTheDocument();
     expect(within(noticeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
-    expect(noticeTable).toHaveStyle({ minWidth: "852px" });
+    expect(noticeTable).toHaveStyle({ minWidth: "760px" });
     expect(within(noticeTable).getByRole("columnheader", { name: "등록자" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).getByRole("cell", { name: "운영자" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
@@ -1646,6 +1683,68 @@ describe("news admin visible controls", () => {
     expect(importantBadge).not.toHaveClass("border");
     expect(screen.getByText("실제자료").closest("[data-notice-title-meta='true']")).toBeInTheDocument();
     expect(noticeTable.querySelector('[data-notice-title-meta="true"] button[aria-label*="보관"]')).not.toBeInTheDocument();
+  });
+
+  it("collapses notice administrator actions into a row management menu", () => {
+    render(
+      <NoticeBoard
+        isLoggedIn
+        isAdmin
+        newsList={[realNotice]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const noticeTable = screen.getByRole("table", { name: "공지사항 목록" });
+    expect(noticeTable).toHaveStyle({ minWidth: "820px" });
+    expect(within(noticeTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
+    expect(within(noticeTable).queryByRole("button", { name: "실제 공지 오픈채팅 공지문 복사" })).not.toBeInTheDocument();
+
+    fireEvent.click(within(noticeTable).getByRole("button", { name: "실제 공지 관리 메뉴" }));
+
+    expect(within(noticeTable).getByRole("button", { name: "실제 공지 오픈채팅 공지문 복사" })).toBeInTheDocument();
+    expect(within(noticeTable).getByRole("button", { name: "실제 공지 자유게시판으로 복사" })).toBeInTheDocument();
+    expect(within(noticeTable).getByRole("button", { name: "공지 삭제" })).toBeInTheDocument();
+  });
+
+  it("renders a mobile notice card list when the viewport is narrow", () => {
+    const originalMatchMedia = window.matchMedia;
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === "(max-width: 767px)",
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+
+    try {
+      render(
+        <NoticeBoard
+          isLoggedIn
+          isAdmin
+          newsList={[{ ...realNotice, isStarred: true }]}
+          onRefresh={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByRole("table", { name: "공지사항 목록" })).not.toBeInTheDocument();
+      const mobileList = screen.getByRole("list", { name: "공지사항 모바일 목록" });
+      expect(within(mobileList).getByText("실제 공지")).toHaveClass("line-clamp-2");
+      expect(within(mobileList).getByText("2026.06.01")).toBeInTheDocument();
+      expect(within(mobileList).getByText("조회 0회")).toBeInTheDocument();
+      expect(within(mobileList).getByRole("button", { name: "실제 공지 관리 메뉴" })).toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        value: originalMatchMedia,
+      });
+    }
   });
 
   it("uses the same compact list structure for the free board", () => {
@@ -1810,6 +1909,7 @@ describe("news admin visible controls", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 관리 메뉴" }));
     fireEvent.click(screen.getByRole("button", { name: "실제 공지 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
@@ -1866,6 +1966,7 @@ describe("news admin visible controls", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "실제 공지 관리 메뉴" }));
     fireEvent.click(screen.getByRole("button", { name: "실제 공지 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(execCommand).toHaveBeenCalledWith("copy"));
@@ -1899,6 +2000,16 @@ describe("news admin visible controls", () => {
     expect(contentColumn).toHaveStyle({ maxWidth: "680px" });
     expect(contentColumn).toHaveClass("space-y-0");
     expect(contentColumn).not.toHaveClass("space-y-6");
+    expect(within(drawer).getByRole("heading", { name: "실제 공지", level: 3 })).toHaveClass(
+      "text-[19px]",
+      "sm:text-xl",
+      "break-keep",
+    );
+    const noticeMeta = drawer.querySelector("[data-notice-detail-meta='true']");
+    expect(noticeMeta).toHaveClass("flex-wrap", "gap-x-2.5", "gap-y-1.5");
+    expect(within(noticeMeta as HTMLElement).getByText("공지사항")).toHaveClass("rounded", "bg-sky-blue/10");
+    expect(noticeMeta).not.toHaveTextContent("📂 분류: 조합 공지사항");
+    expect(screen.getByAltText("공지 대표 이미지")).toHaveClass("object-contain", "max-h-none");
     const richContent = drawer.querySelector(".notice-rich-content");
     expect(richContent?.parentElement).not.toHaveClass("pt-2");
     expect(richContent?.parentElement).not.toHaveClass("leading-8");
@@ -2763,6 +2874,15 @@ describe("news admin visible controls", () => {
     expect(contentColumn).toHaveStyle({ maxWidth: "680px" });
     expect(contentColumn).toHaveClass("space-y-0");
     expect(contentColumn).not.toHaveClass("space-y-4");
+    expect(within(dialog).getByRole("heading", { name: "실제 공지", level: 3 })).toHaveClass(
+      "text-[19px]",
+      "sm:text-xl",
+      "break-keep",
+    );
+    const noticeMeta = dialog.querySelector("[data-notice-detail-meta='true']");
+    expect(noticeMeta).toHaveClass("flex-wrap", "gap-x-2.5", "gap-y-1.5");
+    expect(within(noticeMeta as HTMLElement).getByText("공지사항")).toHaveClass("rounded", "bg-sky-blue/10");
+    expect(screen.getByAltText("공지 대표 이미지")).toHaveClass("object-contain", "max-h-none");
   });
 
   it("shows free board posts as a notice-style list and writes body images in the editor", async () => {
@@ -3018,6 +3138,67 @@ describe("news admin visible controls", () => {
     expect(screen.getByLabelText("게시글 작성자")).toHaveValue("운영자");
     fireEvent.change(screen.getByLabelText("게시글 작성자"), { target: { value: "사무국" } });
     expect(screen.getByLabelText("게시글 작성자")).toHaveValue("사무국");
+  });
+
+  it("lets free-board comment authors edit their comments from the focus panel", async () => {
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        comment: {
+          ...freeComment,
+          content: "수정된 자유게시판 댓글입니다.",
+          author: { id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" },
+          reactionSummary: [],
+        },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[{
+          ...realFreePost,
+          comments: [freeComment],
+        }]}
+        onRefresh={onRefresh}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+    fireEvent.click(within(panel).getByRole("button", { name: "댓글 수정" }));
+    expect(within(panel).getByLabelText("댓글 수정 내용")).toHaveAttribute("rows", "6");
+    fireEvent.change(within(panel).getByLabelText("댓글 수정 내용"), {
+      target: { value: "수정된 자유게시판 댓글입니다." },
+    });
+    fireEvent.click(within(panel).getByRole("button", { name: "수정 완료" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/news/free",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining("\"commentId\":\"comment-1\""),
+      }),
+    ));
+    expect(onRefresh).toHaveBeenCalled();
+  });
+
+  it("renders a larger free-board comment composer", () => {
+    render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[realFreePost]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    const panel = screen.getByLabelText("토론 집중 패널");
+
+    expect(within(panel).getByLabelText("자유게시판 댓글 작성")).toHaveAttribute("rows", "5");
   });
 
   it("copies an openchat announcement message from the free-board list", async () => {

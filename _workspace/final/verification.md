@@ -1,3 +1,139 @@
+# Verification - Notice Detail Mobile Readability
+
+## Implemented Feature
+
+- Matched notice-detail mobile reading with the existing free-board detail width pattern.
+- Reduced notice-detail mobile title pressure with `text-[19px]` and desktop `sm:text-xl`.
+- Changed notice metadata from the long `분류: 조합 공지사항` string to a compact wrapped `공지사항` badge plus author/date/view metadata.
+- Changed notice representative images to preserve full image ratio instead of cropping.
+- Added shared mobile rich-content rules so notice/free-board/development HTML body images use full readable width on narrow screens.
+- Reviewed adjacent 공개자료/자료실 document viewing and kept it on `PdfViewerModal`, which already has separate full-viewport mobile PDF behavior.
+
+## Changed Files
+
+- `src/lib/news/content-layout.ts`
+- `src/components/news/news-client.tsx`
+- `src/components/news/notice-board.tsx`
+- `src/__tests__/news-rich-content-links.test.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-10-notice-detail-mobile-readability.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+
+## Checks
+
+- `pnpm test -- src/__tests__/news-rich-content-links.test.tsx`: FAIL before implementation because shared rich content lacked mobile padding and full-width image classes.
+- `pnpm test -- src/__tests__/news-admin-controls.test.tsx`: FAIL before implementation because notice detail headings, metadata, and representative image classes still used the old layout.
+- `pnpm test -- src/__tests__/news-rich-content-links.test.tsx`: PASS, 62 tests.
+- `pnpm test -- src/__tests__/news-admin-controls.test.tsx`: PASS, 107 tests.
+- `pnpm test -- src/__tests__/news-development-log-component.test.tsx`: PASS, 8 tests.
+- `pnpm test -- src/__tests__/pdf-viewer-modal.test.tsx`: PASS, 9 tests.
+- `pnpm test -- src/__tests__/disclosure-page.test.tsx src/__tests__/library-page.test.tsx`: PASS, 51 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 592 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Local production server `/news?tab=notice&news=68074b97-401f-423e-bc65-b145db6851c9` at 390px: notice detail drawer rendered, metadata compacted, 3 body images present, and `overflowX=false`.
+- Local production server `/news?tab=notice&news=68074b97-401f-423e-bc65-b145db6851c9` at 1440px: drawer width `780px`, content width `680px`, and `overflowX=false`.
+- Existing dev server on port 3000 was left untouched; production verification ran on port 3002 from the fresh build.
+
+## Risks Or Follow-up
+
+- 조합뉴스 detail surfaces still use their own card/text presentation and were not redesigned in this slice.
+- The public document PDF viewer is intentionally separate from HTML rich-content reading rules.
+
+---
+
+# Verification - Notice List Accumulation Readability
+
+## Implemented Feature
+
+- Collapsed notice administrator row actions into a compact per-row management menu.
+- Added a mobile notice card list for narrow viewports instead of forcing the table as the main reading surface.
+- Kept desktop notice rows scannable with tighter stable columns and a smaller admin column.
+- Preserved existing notice data, row opening, badges, reactions, bookmarks, OpenChat copy, board-copy, and delete behavior.
+
+## Changed Files
+
+- `src/components/news/notice-board.tsx`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `docs/superpowers/plans/2026-07-09-notice-list-accumulation-readability.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+
+## Checks
+
+- `pnpm test -- src/__tests__/news-admin-controls.test.tsx`: FAIL before implementation because the visible notice row still exposed all administrator actions and no mobile card list existed.
+- `pnpm test -- src/__tests__/news-admin-controls.test.tsx`: PASS after implementation, 107 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 591 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Local `/news?tab=notice`: HTTP 200.
+- Local Chrome desktop 1440px `/news?tab=notice`: compact notice table rendered with the per-row management menu.
+- Local Chrome mobile 390px `/news?tab=notice`: card-style notice list rendered after hydration with stable title, badges, date, view count, empathy, bookmark, and management menu controls.
+
+## Risks Or Follow-up
+
+- Pagination, month/category filters, and a separate pinned-important section are still not implemented in this slice.
+- Existing upper summary controls still create some horizontal pressure on very narrow mobile screens and should be handled as a separate 소통마당 toolbar pass.
+
+---
+
+# Verification - Free Board Comment Editing
+
+## Implemented Feature
+
+- Added free-board comment/reply editing from the focused post panel.
+- Added `PATCH /api/news/free` handling for `commentId` updates.
+- Kept mutation permission aligned with deletion: comment author or administrator.
+- Preserved administrator display-author selection (`운영자`/`사무국`) for edited comments.
+- Added `수정` actions beside mutable top-level comments and replies.
+- Added a compact inline edit form with `댓글 수정 내용`, `수정 완료`, and `취소`.
+- Increased the free-board comment edit textarea from 4 rows to 6 rows.
+- Increased the main free-board comment composer from 3 rows to 5 rows.
+
+## Changed Files
+
+- `src/app/api/news/free/route.ts`
+- `src/components/news/free-board.tsx`
+- `src/lib/news/free-board-api.ts`
+- `src/__tests__/news-admin-controls.test.tsx`
+- `src/__tests__/news-free-board-api.test.ts`
+- `docs/superpowers/plans/2026-07-06-free-board-comment-editing.md`
+- `_workspace/00_input/request-summary.md`
+- `_workspace/01_scope/spec-selection.md`
+- `_workspace/04_review/ui-review.md`
+
+## Checks
+
+- `pnpm test src/__tests__/news-admin-controls.test.tsx`: FAIL before implementation because `PATCH /api/news/free` returned 400 for `commentId` edits and the focused panel had no `댓글 수정` button.
+- `pnpm test src/__tests__/news-admin-controls.test.tsx`: PASS after implementation, 104 tests.
+- `pnpm test src/__tests__/news-admin-controls.test.tsx src/__tests__/news-free-board-api.test.ts`: PASS, 109 tests.
+- `pnpm test src/__tests__/news-admin-controls.test.tsx`: PASS after textarea resize follow-up, 105 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 585 tests. jsdom printed existing non-failing `Window.scrollTo()` warnings.
+- `pnpm build`: PASS.
+
+## Browser Checks
+
+- Local `/news`: HTTP 200.
+- Local Chrome desktop 1440px `/news`: HTTP 200, title `소통마당 | 대방동 지역주택조합`, no document horizontal overflow.
+- Local Chrome mobile 390px `/news`: HTTP 200, title `소통마당 | 대방동 지역주택조합`, no document horizontal overflow.
+- The exact comment edit controls are session/comment-author gated and are covered by focused Testing Library tests.
+
+## Risks Or Follow-up
+
+- No edit history is stored. If 운영 기록으로 댓글 수정 이력이 필요해지면 별도 감사 로그/버전 기록 설계가 필요하다.
+
+---
+
 # Verification - Very Short Kakao Share URLs
 
 ## Implemented Feature

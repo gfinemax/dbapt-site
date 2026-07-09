@@ -35,6 +35,7 @@ import {
 } from "@/lib/news/free-board-deep-links";
 import {
   buildFreeBoardCommentCreatePayload,
+  buildFreeBoardCommentEditPayload,
   buildFreeBoardDeleteUrl,
   buildFreeBoardPostCreatePayload,
   buildFreeBoardPostUpdatePayload,
@@ -399,6 +400,10 @@ export function FreeBoard({
   const [reactionSummaryOverrides, setReactionSummaryOverrides] = useState<Record<string, CommentReactionSummaryItem[]>>({});
   const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
   const [commentDisplayAuthorName, setCommentDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [editingCommentDisplayAuthorName, setEditingCommentDisplayAuthorName] = useState<NewsDisplayAuthorName>("운영자");
+  const [mutatingCommentId, setMutatingCommentId] = useState<string | null>(null);
   const [viewCountOverrides, setViewCountOverrides] = useState<Record<string, number>>({});
   const viewedPostIdsRef = useRef<Set<string>>(new Set());
 
@@ -469,6 +474,9 @@ export function FreeBoard({
 
   const closeFocusedPost = () => {
     resetWriteForm();
+    setEditingCommentId(null);
+    setEditingCommentContent("");
+    setReplyingCommentId(null);
     setFocusedPostId(null);
     updateFocusedPostUrl(null);
   };
@@ -616,6 +624,7 @@ export function FreeBoard({
   };
 
   const openReplyInput = (topLevelComment: FreeBoardCommentView, targetAuthor?: NewsUserView) => {
+    setEditingCommentId(null);
     setReplyingCommentId(topLevelComment.id);
     setExpandedReplies((prev) => ({ ...prev, [topLevelComment.id]: true }));
     if (targetAuthor) {
@@ -624,6 +633,60 @@ export function FreeBoard({
         ...prev,
         [topLevelComment.id]: prev[topLevelComment.id]?.trim() ? prev[topLevelComment.id] : `@${authorName} `,
       }));
+    }
+  };
+
+  const beginCommentEdit = (comment: FreeBoardCommentView) => {
+    const displayAuthorName = comment.author.displayAuthorName;
+    setReplyingCommentId(null);
+    setEditingCommentId(comment.id);
+    setEditingCommentContent(comment.content);
+    setEditingCommentDisplayAuthorName(
+      displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
+        ? displayAuthorName as NewsDisplayAuthorName
+        : "운영자",
+    );
+  };
+
+  const cancelCommentEdit = () => {
+    setEditingCommentId(null);
+    setEditingCommentContent("");
+    setEditingCommentDisplayAuthorName("운영자");
+  };
+
+  const handleSaveCommentEdit = async (comment: FreeBoardCommentView) => {
+    const content = editingCommentContent.trim();
+    if (!content) {
+      alert("댓글 내용을 입력해 주십시오.");
+      return;
+    }
+
+    setMutatingCommentId(comment.id);
+    try {
+      const res = await fetch("/api/news/free", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildFreeBoardCommentEditPayload({
+          commentId: comment.id,
+          content,
+          isAdmin,
+          displayAuthorName: editingCommentDisplayAuthorName,
+        })),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "댓글 수정에 실패했습니다.");
+        return;
+      }
+
+      cancelCommentEdit();
+      await onRefresh();
+    } catch (err) {
+      console.error(err);
+      alert("댓글 수정 중 오류가 발생했습니다.");
+    } finally {
+      setMutatingCommentId(null);
     }
   };
 
@@ -650,6 +713,59 @@ export function FreeBoard({
   const updateReactionSummary = (commentId: string, reactionSummary: CommentReactionSummaryItem[]) => {
     setReactionSummaryOverrides((prev) => ({ ...prev, [commentId]: reactionSummary }));
   };
+
+  const renderCommentEditForm = (comment: FreeBoardCommentView) => (
+    <div className="mt-2.5 space-y-2 rounded-xl border border-sky-blue/20 bg-sky-blue/5 p-3">
+      {isAdmin && (
+        <div className="space-y-1">
+          <label htmlFor={`free-comment-edit-author-${comment.id}`} className="text-[10px] font-bold text-charcoal-primary font-mono">
+            댓글 수정 작성자
+          </label>
+          <select
+            id={`free-comment-edit-author-${comment.id}`}
+            aria-label="댓글 수정 작성자"
+            value={editingCommentDisplayAuthorName}
+            onChange={(event) => setEditingCommentDisplayAuthorName(event.target.value as NewsDisplayAuthorName)}
+            className="h-8 rounded-xl border border-stone-surface bg-white px-3 text-[11px] font-bold text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+          >
+            {NEWS_DISPLAY_AUTHOR_NAMES.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      <label htmlFor={`free-comment-edit-content-${comment.id}`} className="sr-only">
+        댓글 수정 내용
+      </label>
+      <textarea
+        id={`free-comment-edit-content-${comment.id}`}
+        aria-label="댓글 수정 내용"
+        value={editingCommentContent}
+        onChange={(event) => setEditingCommentContent(event.target.value)}
+        rows={6}
+        className="w-full resize-y rounded-xl border border-stone-surface bg-white px-3 py-2 text-[12px] leading-relaxed text-charcoal-primary outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={cancelCommentEdit}
+          className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[10px] font-bold text-graphite hover:bg-stone-surface"
+        >
+          취소
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSaveCommentEdit(comment)}
+          disabled={mutatingCommentId === comment.id}
+          className="rounded-full bg-midnight px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
+        >
+          {mutatingCommentId === comment.id ? "저장 중…" : "수정 완료"}
+        </button>
+      </div>
+    </div>
+  );
 
   const handleOpenChatCopy = async (post: FreeBoardPostListItem) => {
     if (!post.isReal) return;
@@ -1283,7 +1399,7 @@ export function FreeBoard({
                   <div className="space-y-3">
                     {focusedPost.comments.map((comm: FreeBoardCommentView) => {
                       const commAuthor = getFreeBoardAuthorLabel(comm.author, currentUserId);
-                      const showDeleteComm = comm.isReal && (comm.author.id === currentUserId || isAdmin);
+                      const canMutateComm = comm.isReal && (comm.author.id === currentUserId || isAdmin);
                       const repliesExpanded = expandedReplies[comm.id] ?? focusedPost.commentCount <= 5;
                       return (
                         <article key={comm.id} className="rounded-2xl border border-stone-surface bg-white px-4 py-3.5">
@@ -1299,20 +1415,34 @@ export function FreeBoard({
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-[9.5px] font-mono font-bold text-ash">{comm.createdAt}</span>
-                                {showDeleteComm && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeletePostOrComment({ commentId: comm.id })}
-                                    className="rounded-full bg-coral-red/10 px-2 py-0.5 text-[9px] font-bold text-coral-red"
-                                  >
-                                    삭제
-                                  </button>
+                                {canMutateComm && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      aria-label="댓글 수정"
+                                      onClick={() => beginCommentEdit(comm)}
+                                      className="rounded-full bg-sky-blue/10 px-2 py-0.5 text-[9px] font-bold text-sky-blue"
+                                    >
+                                      수정
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeletePostOrComment({ commentId: comm.id })}
+                                      className="rounded-full bg-coral-red/10 px-2 py-0.5 text-[9px] font-bold text-coral-red"
+                                    >
+                                      삭제
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </div>
-                            <p className="mt-2.5 text-[12px] text-graphite font-normal leading-relaxed whitespace-pre-wrap">
-                              {comm.content}
-                            </p>
+                            {editingCommentId === comm.id ? (
+                              renderCommentEditForm(comm)
+                            ) : (
+                              <p className="mt-2.5 text-[12px] text-graphite font-normal leading-relaxed whitespace-pre-wrap">
+                                {comm.content}
+                              </p>
+                            )}
                             <CommentReactionBar
                               targetType="FREE_COMMENT"
                               targetId={comm.id}
@@ -1347,27 +1477,41 @@ export function FreeBoard({
                             <div className="mt-3 space-y-2 border-l-2 border-stone-surface pl-3">
                               {comm.replies.map((reply) => {
                                 const replyAuthor = getFreeBoardAuthorLabel(reply.author, currentUserId);
-                                const showDeleteReply = reply.isReal && (reply.author.id === currentUserId || isAdmin);
+                                const canMutateReply = reply.isReal && (reply.author.id === currentUserId || isAdmin);
                                 return (
                                   <div key={reply.id} className="rounded-xl bg-[#f8f7f4] px-3 py-2.5">
                                     <div className="mb-1.5 flex items-center justify-between gap-2 text-[9px] font-bold text-ash font-mono">
                                       <span>작성자: {replyAuthor}</span>
                                       <div className="flex items-center gap-2">
                                         <span>{reply.createdAt}</span>
-                                        {showDeleteReply && (
-                                          <button
-                                            type="button"
-                                            onClick={() => handleDeletePostOrComment({ commentId: reply.id })}
-                                            className="rounded-full bg-coral-red/10 px-2 py-0.5 text-[9px] font-bold text-coral-red"
-                                          >
-                                            삭제
-                                          </button>
+                                        {canMutateReply && (
+                                          <>
+                                            <button
+                                              type="button"
+                                              aria-label="댓글 수정"
+                                              onClick={() => beginCommentEdit(reply)}
+                                              className="rounded-full bg-sky-blue/10 px-2 py-0.5 text-[9px] font-bold text-sky-blue"
+                                            >
+                                              수정
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleDeletePostOrComment({ commentId: reply.id })}
+                                              className="rounded-full bg-coral-red/10 px-2 py-0.5 text-[9px] font-bold text-coral-red"
+                                            >
+                                              삭제
+                                            </button>
+                                          </>
                                         )}
                                       </div>
                                     </div>
-                                    <p className="text-[12px] text-graphite/90 font-normal leading-relaxed">
-                                      {reply.content}
-                                    </p>
+                                    {editingCommentId === reply.id ? (
+                                      renderCommentEditForm(reply)
+                                    ) : (
+                                      <p className="text-[12px] text-graphite/90 font-normal leading-relaxed whitespace-pre-wrap">
+                                        {reply.content}
+                                      </p>
+                                    )}
                                     <CommentReactionBar
                                       targetType="FREE_COMMENT"
                                       targetId={reply.id}
@@ -1482,7 +1626,7 @@ export function FreeBoard({
                     placeholder={focusedPost.isReal ? "안전하고 고운 의견 댓글을 작성해 주세요…" : "가상 데모 보존 게시글에는 댓글을 추가하실 수 없습니다."}
                     value={commentContents[focusedPost.id] || ""}
                     disabled={!focusedPost.isReal}
-                    rows={3}
+                    rows={5}
                     onChange={(event) => setCommentContents((prev) => ({ ...prev, [focusedPost.id]: event.target.value }))}
                     className="w-full resize-none rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5 text-xs text-charcoal-primary placeholder:text-ash outline-none transition focus:border-sky-blue focus:ring-1 focus:ring-sky-blue/30"
                   />
