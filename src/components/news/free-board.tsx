@@ -96,59 +96,42 @@ function FreeBoardPostRows({
   onOpenChatCopy: (post: FreeBoardPostListItem) => void;
   onCopyToNotice: (post: FreeBoardPostListItem) => void;
 }) {
-  const typeMeta = getFreePostTypeMeta(post.postType);
+  const [isManageMenuOpen, setIsManageMenuOpen] = useState(false);
 
   return (
     <tr
       onClick={onOpen}
       className={cn(
-        "cursor-pointer transition-all duration-150 hover:bg-sky-blue/[0.03]",
+        "h-[52px] cursor-pointer transition-all duration-150 hover:bg-sky-blue/[0.03]",
         index % 2 === 1 ? "bg-[#fdfcfa]" : "bg-white",
       )}
     >
-      <td className="px-3 py-3.5 text-center text-xs text-ash/75 font-mono tabular-nums">
+      <td className="h-[52px] px-3 py-0 align-middle text-center text-xs text-ash/75 font-mono tabular-nums">
         {index + 1}
       </td>
-      <td className="px-3 py-3.5">
-        <div className="flex min-w-0 items-center gap-3">
-          <div
-            data-free-board-list-badges="true"
-            data-free-board-title-meta="true"
-            className="flex w-[92px] shrink-0 flex-col items-start gap-1"
+      <td className="h-[52px] px-3 py-0 align-middle text-center text-xs text-ash font-mono whitespace-nowrap">
+        {post.registeredDate}
+      </td>
+      <td data-free-board-list-title-cell="true" className="h-[52px] px-3 py-0 align-middle">
+        <div className="flex min-w-0 items-center gap-0">
+          {post.isStarred && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
+              <span>★</span>
+              <span>중요</span>
+            </span>
+          )}
+          <span
+            data-free-board-list-title="true"
+            className="block min-w-0 flex-1 truncate whitespace-nowrap text-[13.5px] font-bold leading-snug text-charcoal-primary"
           >
-            {post.isStarred && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 select-none">
-                <span>★</span>
-                <span>중요</span>
-              </span>
-            )}
-            <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-extrabold", typeMeta.badgeClassName)}>
-              {typeMeta.label}
-            </span>
-            {post.attachmentPath && (
-              <span className="rounded bg-stone-surface/80 px-1.5 py-0.5 text-[9px] font-black text-graphite select-none">첨부</span>
-            )}
-          </div>
-          <div className="min-w-0 flex-1 space-y-1">
-            <span
-              data-free-board-list-title="true"
-              className="block min-w-0 truncate whitespace-nowrap text-[13.5px] font-bold leading-snug text-charcoal-primary"
-            >
-              {post.title}
-            </span>
-            <span className="block min-w-0 truncate whitespace-nowrap text-[11px] font-normal text-graphite/75">
-              {getPlainNoticeText(post.content)}
-            </span>
-          </div>
+            {post.title}
+          </span>
         </div>
       </td>
-      <td className="px-3 py-3.5 text-center text-xs text-graphite/75 font-normal whitespace-nowrap">
+      <td className="h-[52px] px-3 py-0 align-middle text-center text-xs text-graphite/75 font-normal whitespace-nowrap">
         {authorLabel}
       </td>
-      <td className="px-3 py-3.5 text-center text-xs text-ash font-mono whitespace-nowrap">
-        {post.registeredAt}
-      </td>
-      <td className="px-3 py-3.5 text-center">
+      <td className="h-[52px] px-3 py-0 align-middle text-center">
         <button
           type="button"
           aria-label={`댓글 ${post.commentCount}개 보기`}
@@ -161,10 +144,10 @@ function FreeBoardPostRows({
           댓글 {post.commentCount}
         </button>
       </td>
-      <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
+      <td className="h-[52px] px-3 py-0 align-middle text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
         {formatViewCount(post.viewCount)}
       </td>
-      <td className="px-3 py-3.5 text-center">
+      <td className="h-[52px] px-3 py-0 align-middle text-center">
         <ContentLikeButton
           title={post.title}
           targetType="FREE_POST"
@@ -175,7 +158,7 @@ function FreeBoardPostRows({
           className="h-6 px-2 py-0 text-[10px] whitespace-nowrap"
         />
       </td>
-      <td className="px-3 py-3.5 text-center">
+      <td className="h-[52px] px-3 py-0 align-middle text-center">
         {showBookmark ? (
           <PersonalBookmarkButton
             title={post.title}
@@ -189,54 +172,73 @@ function FreeBoardPostRows({
         )}
       </td>
       {showManageColumn && (
-        <td className="px-3 py-3.5 text-center">
+        <td className="h-[52px] px-3 py-0 align-middle text-center">
           {(showOpenChatCopy || showCopyToNotice || showDeletePost) && (
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              {showOpenChatCopy && (
-                <button
-                  type="button"
-                  aria-label={`${post.title} 오픈채팅 공지문 복사`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onOpenChatCopy(post);
-                  }}
-                  disabled={openChatCopyStatus === "copying"}
-                  className="rounded-full border border-meadow-green/25 bg-meadow-green/10 px-2.5 py-1 text-[10px] font-bold text-meadow-green hover:bg-meadow-green/15 disabled:opacity-60"
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                type="button"
+                aria-label={`${post.title} 관리 메뉴`}
+                aria-expanded={isManageMenuOpen}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsManageMenuOpen((current) => !current);
+                }}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-surface bg-white text-sm font-bold text-graphite transition hover:border-sky-blue/30 hover:bg-sky-blue/5 hover:text-sky-blue focus:outline-none focus:ring-2 focus:ring-sky-blue/25"
+              >
+                •••
+              </button>
+              {isManageMenuOpen && (
+                <div
+                  className="flex w-[132px] flex-col items-stretch gap-1 rounded-xl border border-stone-surface bg-white p-1.5 shadow-sm"
+                  onClick={(event) => event.stopPropagation()}
                 >
-                  {openChatCopyStatus === "copying" ? "복사 중" : "공지문 복사"}
-                </button>
-              )}
-              {showOpenChatCopy && openChatCopyStatus === "copied" && (
-                <span className="text-[9px] font-bold text-meadow-green">복사됨</span>
-              )}
-              {showOpenChatCopy && openChatCopyStatus === "error" && (
-                <span className="text-[9px] font-bold text-ember-orange">실패</span>
-              )}
-              {showCopyToNotice && (
-                <button
-                  type="button"
-                  aria-label={`${post.title} 공지사항으로 복사`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onCopyToNotice(post);
-                  }}
-                  className="rounded-full border border-sky-blue/20 bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue hover:bg-sky-blue/15"
-                >
-                  공지사항 복사
-                </button>
-              )}
-              {showDeletePost && (
-                <button
-                  type="button"
-                  aria-label="게시글 삭제"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onDelete({ postId: post.id });
-                  }}
-                  className="rounded-full border border-coral-red/20 bg-coral-red/10 px-2.5 py-1 text-[10px] font-bold text-coral-red hover:bg-coral-red/15"
-                >
-                  삭제
-                </button>
+                  {showOpenChatCopy && (
+                    <button
+                      type="button"
+                      aria-label={`${post.title} 오픈채팅 공지문 복사`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpenChatCopy(post);
+                      }}
+                      disabled={openChatCopyStatus === "copying"}
+                      className="rounded-lg px-2 py-1.5 text-left text-[10px] font-bold text-meadow-green transition hover:bg-meadow-green/10 disabled:opacity-60"
+                    >
+                      {openChatCopyStatus === "copying" ? "복사 중" : "공지문 복사"}
+                    </button>
+                  )}
+                  {showOpenChatCopy && openChatCopyStatus === "copied" && (
+                    <span className="px-2 text-[9px] font-bold text-meadow-green">복사됨</span>
+                  )}
+                  {showOpenChatCopy && openChatCopyStatus === "error" && (
+                    <span className="px-2 text-[9px] font-bold text-ember-orange">실패</span>
+                  )}
+                  {showCopyToNotice && (
+                    <button
+                      type="button"
+                      aria-label={`${post.title} 공지사항으로 복사`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onCopyToNotice(post);
+                      }}
+                      className="rounded-lg px-2 py-1.5 text-left text-[10px] font-bold text-sky-blue transition hover:bg-sky-blue/10"
+                    >
+                      공지사항 복사
+                    </button>
+                  )}
+                  {showDeletePost && (
+                    <button
+                      type="button"
+                      aria-label="게시글 삭제"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDelete({ postId: post.id });
+                      }}
+                      className="rounded-lg px-2 py-1.5 text-left text-[10px] font-bold text-coral-red transition hover:bg-coral-red/10"
+                    >
+                      삭제
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -1130,14 +1132,14 @@ export function FreeBoard({
         <div className="overflow-x-auto scrollbar-none">
           <table
             aria-label="자유게시판 게시글 목록"
-            className="w-full table-fixed text-left text-sm border-collapse"
+            className="h-auto w-full table-fixed text-left text-sm border-collapse"
             style={{ minWidth: isAdmin ? "992px" : "932px" }}
           >
             <colgroup>
               <col style={{ width: "52px" }} />
+              <col style={{ width: "116px" }} />
               <col />
               <col style={{ width: "92px" }} />
-              <col style={{ width: "116px" }} />
               <col style={{ width: "92px" }} />
               <col style={{ width: "92px" }} />
               <col style={{ width: "92px" }} />
@@ -1146,15 +1148,15 @@ export function FreeBoard({
             </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
-                <th className="w-10 px-3 py-3 text-center">No.</th>
-                <th className="px-3 py-3">제목</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">작성자</th>
-                <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">댓글</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">조회수</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">공감</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
-                {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
+                <th className="w-10 px-3 py-2.5 text-center">No.</th>
+                <th className="w-24 px-3 py-2.5 text-center whitespace-nowrap">등록일</th>
+                <th className="px-3 py-2.5 text-center">제목</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">작성자</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">댓글</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">조회수</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">공감</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">보관</th>
+                {isAdmin && <th className="w-28 px-3 py-2.5 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">

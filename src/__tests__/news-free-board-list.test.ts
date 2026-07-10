@@ -102,6 +102,7 @@ describe("buildFreeBoardPostList", () => {
 
     expect(items[0]).toMatchObject({
       registeredAt: "2026-06-20 10:30",
+      registeredDate: "2026-06-20",
       registeredAtRaw: "2026-06-20T01:30:00.000Z",
       attachmentPath: "/uploads/free-agenda.pdf",
       attachmentName: "free-agenda.pdf",

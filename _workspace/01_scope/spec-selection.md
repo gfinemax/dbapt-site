@@ -729,3 +729,45 @@ none
 ## Planning May Continue
 
 yes
+
+---
+
+# Spec Selection - Disclosure Drawer Table Readability
+
+## Selected Approved Specification
+
+- `docs/superpowers/specs/2026-07-10-disclosure-drawer-table-readability-design.md`
+
+## Implementation Boundary
+
+- Change only all disclosure material-library drawers and their shared `MeetingsTable` list presentation.
+- Guarantee a usable title width, prevent character-by-character title wrapping, and preserve existing actions and mobile cards.
+
+## Conflicts
+
+- none
+
+## Planning May Continue
+
+- yes
+
+---
+
+# Spec Selection - Notice And Free-Board List Scan Order
+
+## Selected Approved Specification
+
+- `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+
+## Implementation Boundary
+
+- Change only notice/free-board desktop list column order, badge-title spacing, and free-board list-only date presentation.
+- Preserve stored timestamps and full date/time presentation outside the free-board list.
+
+## Conflicts
+
+- none
+
+## Planning May Continue
+
+- yes

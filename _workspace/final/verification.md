@@ -38,6 +38,196 @@
 
 ---
 
+# Verification - Free-Board Admin Menu Density Fix
+
+## Root Cause And Fix
+
+- Chrome computed-style measurement showed free-board data rows at `83.05px` while notice rows were `52px`.
+- The free-board administrator action group wrapped three buttons inside a narrow management column and produced `82.44px` of intrinsic content height.
+- Replaced the always-visible action group with one `•••` management trigger; OpenChat copy, notice copy, and delete remain available after opening the menu.
+
+## Checks
+
+- Focused news component suite: PASS, 107 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 594 tests.
+- `pnpm build`: PASS.
+- `dbapt-site-ui-review`: PASS.
+
+---
+
+# Verification - Enforced News Row Density
+
+## Implemented Feature
+
+- Added `h-auto` to notice and free-board desktop tables.
+- Applied `h-[52px] py-0 align-middle` to every desktop data cell in both lists.
+- Preserved the shared `52px` row class, important badge, title truncation, and all actions.
+
+## Checks
+
+- Focused news component suite: PASS, 107 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 594 tests.
+- `pnpm build`: PASS.
+- `dbapt-site-ui-review`: PASS.
+
+---
+
+# Verification - Free-Board Row Parity And Important Badge
+
+## Implemented Feature
+
+- Applied `h-[52px]` to notice and free-board desktop data rows.
+- Restored `★ 중요` before starred free-board titles.
+- Continued hiding free-board type/attachment badges and body excerpts in title cells.
+
+## Checks
+
+- Focused news component suite: PASS, 107 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 594 tests.
+- `pnpm build`: PASS.
+- `dbapt-site-ui-review`: PASS.
+
+---
+
+# Verification - Free-Board Title-Only List Follow-up
+
+## Implemented Feature
+
+- Free-board desktop list title cells now render only the post title.
+- Removed list-only important/type/attachment badges and body excerpts from the title cell.
+- Preserved filters, stored metadata, detail/edit rendering, title truncation, and all row actions.
+
+## Checks
+
+- Focused news component suite: PASS, 107 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 594 tests.
+- `pnpm build`: PASS.
+- `dbapt-site-ui-review`: PASS.
+
+## Residual Verification Limitation
+
+- The in-app browser backend remained unavailable, so a final rendered screenshot was not captured.
+
+---
+
+# Verification - Compact Unified News Lists Follow-up
+
+## Implemented Feature
+
+- Centered every notice and free-board desktop table heading.
+- Reduced table header and row vertical padding to `py-2.5`.
+- Changed table badges from vertical stacks to compact horizontal rows.
+- Reduced free-board title/excerpt spacing to `space-y-0.5` with a tighter excerpt line height.
+- Preserved column order, date-only free-board list output, title truncation, and all existing actions.
+
+## Checks
+
+- Focused news component suite: PASS, 107 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 594 tests.
+- `pnpm build`: PASS.
+- `git diff --check`: PASS.
+- `dbapt-site-ui-review`: PASS.
+
+## Residual Verification Limitation
+
+- The in-app browser backend remained unavailable, so the final rendered density could not be captured during this run.
+
+---
+
+# Verification - Notice And Free-Board List Scan Order
+
+## Implemented Feature
+
+- Notice list order now starts `No., 등록일, 제목, 등록자`.
+- Free-board list order now starts `No., 등록일, 제목, 작성자`.
+- Removed fixed `76px` and `92px` badge containers and the outer `gap-3` title spacing.
+- Added a Korea-time `registeredDate` list field while retaining the existing full `registeredAt` and raw timestamp for detail/edit flows.
+
+## Checks
+
+- Focused notice/free-board component and list-helper suites: PASS, 111 tests.
+- React best-practices review: PASS; no new hooks, state synchronization, non-semantic interaction, unstable list keys, or TypeScript escapes introduced.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 594 tests.
+- `pnpm build`: PASS.
+- `git diff --check`: PASS.
+
+## Browser Checks
+
+- The in-app browser backend remained unavailable, so current rendered desktop/mobile checks could not be completed.
+
+## UI Review
+
+- `dbapt-site-ui-review`: PASS.
+
+## Residual Risk
+
+- Final visual density and horizontal overflow were not observed in the rendered browser during this run; DOM regression tests cover column order, list date output, title truncation, and spacing classes.
+
+---
+
+# Verification - Compact Full-Width Disclosure Drawer Follow-up
+
+## Implemented Feature
+
+- Widened all shared public disclosure material-library drawers from `max-w-2xl` to `max-w-5xl`.
+- Reduced the title column to `252px` and compacted auxiliary columns and cell padding.
+- Reduced table minimum widths to `580px` for guests, `656px` for logged-in members, and `728px` for administrators.
+- Preserved title truncation, document actions, and the existing mobile card list.
+
+## Checks
+
+- Focused disclosure suite: PASS, 38 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 594 tests.
+- `pnpm build`: PASS.
+
+## UI Review
+
+- `dbapt-site-ui-review`: PASS.
+
+## Residual Verification Limitation
+
+- The in-app browser backend remained unavailable, so the updated rendered desktop drawer could not be captured in this run.
+
+---
+
+# Verification - Disclosure Drawer Table Readability
+
+## Implemented Feature And Changed Files
+
+- `src/components/disclosure/meetings-table.tsx`: added role-aware table minimum widths (`760px`, `872px`, `936px`), an accessible table name, and a single-line truncated desktop title layout shared by all disclosure material-library folders.
+- `src/__tests__/disclosure-page.test.tsx`: added regression coverage for long Korean titles, the administrator-width contract, absence of `break-all`, and continued desktop/mobile shared rendering.
+- Public notices and the free board were not changed.
+
+## Required Checks
+
+- Focused disclosure suite: PASS, 37 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 87 files and 593 tests. Existing jsdom `Window.scrollTo()` warnings were emitted.
+- `pnpm build`: PASS after removing the generated `.next` cache that contained a stale `.next/dev/types/routes.d.ts` file. Compilation, TypeScript, and 38 static-page generations completed.
+- `git diff --check`: PASS.
+
+## Browser Checks
+
+- The required in-app browser backend was unavailable during this run, so rendered desktop and mobile checks could not be completed.
+- The browser plugin's troubleshooting flow was followed and no unrelated browser backend was substituted.
+
+## UI Review
+
+- `dbapt-site-ui-review`: PASS.
+
+## Unresolved Risks Or Follow-up
+
+- Residual risk: final rendered appearance at desktop and mobile widths was not observed because the in-app browser was unavailable. Layout behavior is covered by the focused DOM regression and the unchanged existing `md` mobile-card breakpoint.
+
+---
+
 # Verification - News List Scrollbar And Notice Badge Cleanup
 
 ## Implemented Feature

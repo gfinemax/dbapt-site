@@ -470,6 +470,7 @@ describe("news admin API controls", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 관리 메뉴" }));
     fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 공지사항으로 복사" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
@@ -1667,6 +1668,7 @@ describe("news admin visible controls", () => {
 
     const noticeTable = screen.getByRole("table", { name: "공지사항 목록" });
     expect(noticeTable).toHaveClass("table-fixed");
+    expect(noticeTable).toHaveClass("h-auto");
     expect(within(noticeTable).getByRole("columnheader", { name: "조회수" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).queryByRole("button", { name: "댓글 1개 보기" })).not.toBeInTheDocument();
     expect(within(noticeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
@@ -1678,7 +1680,21 @@ describe("news admin visible controls", () => {
     expect(within(noticeTable).getByRole("button", { name: "실제 공지 개인자료실 보관" })).toBeInTheDocument();
     expect(noticeTable.parentElement).toHaveClass("scrollbar-none");
     expect(noticeTable.querySelector("[data-notice-list-badges='true']")).toHaveClass("shrink-0");
+    expect(noticeTable.querySelector("[data-notice-list-badges='true']")).not.toHaveClass("w-[76px]");
+    expect(noticeTable.querySelector("[data-notice-list-title-row='true']")).toHaveClass("gap-0");
+    expect(noticeTable.querySelector("[data-notice-list-title-row='true']")).not.toHaveClass("gap-3");
     expect(noticeTable.querySelector("[data-notice-list-title='true']")).toHaveClass("truncate", "whitespace-nowrap");
+    expect(within(noticeTable).getAllByRole("columnheader").slice(0, 4).map((header) => header.textContent)).toEqual([
+      "No.",
+      "등록일",
+      "제목",
+      "등록자",
+    ]);
+    expect(within(noticeTable).getAllByRole("columnheader").every((header) => header.classList.contains("text-center"))).toBe(true);
+    expect(noticeTable.querySelector("tbody td")).toHaveClass("h-[52px]", "py-0", "align-middle");
+    expect(noticeTable.querySelector("tbody tr")).toHaveClass("h-[52px]");
+    expect(noticeTable.querySelector("[data-notice-list-badges='true']")).toHaveClass("flex-row", "items-center");
+    expect(noticeTable.querySelector("[data-notice-list-badges='true']")).not.toHaveClass("flex-col");
     const importantBadge = within(noticeTable).getByText("중요").closest("span");
     expect(importantBadge).not.toHaveClass("ring-1");
     expect(importantBadge).not.toHaveClass("border");
@@ -1759,6 +1775,7 @@ describe("news admin visible controls", () => {
 
     const freeTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
     expect(freeTable).toHaveClass("table-fixed");
+    expect(freeTable).toHaveClass("h-auto");
     expect(freeTable).toHaveStyle({ minWidth: "932px" });
     expect(within(freeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
     expect(within(freeTable).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
@@ -1774,12 +1791,12 @@ describe("news admin visible controls", () => {
     expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
     expect(within(freeTable).getByRole("button", { name: "실제 자유게시글 개인자료실 보관" })).toBeInTheDocument();
     expect(freeTable.parentElement).toHaveClass("scrollbar-none");
-    expect(freeTable.querySelector("[data-free-board-list-badges='true']")).toHaveClass("shrink-0");
     expect(freeTable.querySelector("[data-free-board-list-title='true']")).toHaveClass("truncate", "whitespace-nowrap");
-    const importantBadge = within(freeTable).getByText("중요").closest("span");
-    expect(importantBadge).not.toHaveClass("border");
-    expect(within(freeTable).getByText("자유글").closest("[data-free-board-title-meta='true']")).toBeInTheDocument();
-    expect(freeTable.querySelector('[data-free-board-title-meta="true"] button[aria-label*="보관"]')).not.toBeInTheDocument();
+    expect(freeTable.querySelector("[data-free-board-list-title-cell='true']")).toHaveTextContent("실제 자유게시글");
+    expect(freeTable.querySelector("[data-free-board-list-title-cell='true']")).toHaveTextContent("중요");
+    expect(freeTable.querySelector("[data-free-board-list-title-cell='true']")).not.toHaveTextContent("자유글");
+    expect(freeTable.querySelector("[data-free-board-list-title-cell='true']")).not.toHaveTextContent("실제 자유게시글 본문");
+    expect(freeTable.querySelector("tbody tr")).toHaveClass("h-[52px]");
   });
 
   it("shows the free board management column only to admins", () => {
@@ -1807,6 +1824,9 @@ describe("news admin visible controls", () => {
     const adminTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
     expect(adminTable).toHaveStyle({ minWidth: "992px" });
     expect(within(adminTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
+    expect(within(adminTable).getByRole("button", { name: "실제 자유게시글 관리 메뉴" })).toBeInTheDocument();
+    expect(within(adminTable).queryByRole("button", { name: "게시글 삭제" })).not.toBeInTheDocument();
+    fireEvent.click(within(adminTable).getByRole("button", { name: "실제 자유게시글 관리 메뉴" }));
     expect(within(adminTable).getByRole("button", { name: "게시글 삭제" })).toBeInTheDocument();
   });
 
@@ -2920,7 +2940,21 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("columnheader", { name: "작성자" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "등록일" })).toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "작성일" })).not.toBeInTheDocument();
-    expect(screen.getByText("2026-06-02 09:30")).toBeInTheDocument();
+    expect(screen.getByText("2026-06-02")).toBeInTheDocument();
+    expect(screen.queryByText("2026-06-02 09:30")).not.toBeInTheDocument();
+
+    const freeBoardTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
+    expect(within(freeBoardTable).getAllByRole("columnheader").slice(0, 4).map((header) => header.textContent)).toEqual([
+      "No.",
+      "등록일",
+      "제목",
+      "작성자",
+    ]);
+    expect(within(freeBoardTable).getAllByRole("columnheader").every((header) => header.classList.contains("text-center"))).toBe(true);
+    expect(freeBoardTable.querySelector("tbody td")).toHaveClass("h-[52px]", "py-0", "align-middle");
+    expect(freeBoardTable.querySelector("tbody tr")).toHaveClass("h-[52px]");
+    expect(freeBoardTable.querySelector("[data-free-board-list-title-cell='true']")).toHaveTextContent("실제 자유게시글");
+    expect(freeBoardTable.querySelector("[data-free-board-list-title-cell='true']")).not.toHaveTextContent("자유글");
 
     fireEvent.click(screen.getByRole("button", { name: "✍️ 새 게시글 작성" }));
     expect(screen.getByRole("button", { name: "이미지 삽입" })).toBeInTheDocument();
@@ -3238,6 +3272,7 @@ describe("news admin visible controls", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 관리 메뉴" }));
     fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
@@ -3271,6 +3306,7 @@ describe("news admin visible controls", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 관리 메뉴" }));
     fireEvent.click(screen.getByRole("button", { name: "실제 자유게시글 오픈채팅 공지문 복사" }));
 
     await waitFor(() => expect(screen.getByText("실패")).toBeInTheDocument());

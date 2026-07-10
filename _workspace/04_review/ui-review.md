@@ -24,6 +24,210 @@
 
 ---
 
+# UI Review - Free-Board Admin Menu Density Fix
+
+## Reviewed Change
+- Feature: Collapse free-board administrator row actions to match the compact notice management menu.
+- Governing spec: `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+- Files reviewed: `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Existing administrator copy/delete actions are retained behind one menu trigger; permissions, routes, and mutations are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: No content or capability claim changed.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Chrome measurement identified the wrapped administrator action group as the row-height cause (`82.44px` internal content and `83.05px` row). The default row now exposes one 32px management trigger with `aria-expanded`, matching notice density while preserving labeled actions inside the menu.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Enforced News Row Density
+
+## Reviewed Change
+- Feature: Enforce notice/free-board row density at the cell level.
+- Governing spec: `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+- Files reviewed: `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Only table and cell sizing classes changed. Content, permissions, routes, and actions remain unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: No visible data or copy changed.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Both tables use `h-auto`; every data cell uses `h-[52px] py-0 align-middle`, preserving semantic table structure, centered content, title truncation, and control labels.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Free-Board Row Parity And Important Badge
+
+## Reviewed Change
+- Feature: Match notice/free-board data-row height and restore the free-board important badge.
+- Governing spec: `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+- Files reviewed: `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Only list-row height and starred-title presentation changed; filters, stored metadata, permissions, routes, and actions remain unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The restored `★ 중요` badge reflects the existing `isStarred` value.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Both desktop lists now use explicit `52px` rows. Free-board starred titles reuse the compact amber important treatment while type/attachment badges and excerpts remain absent. Title truncation and interactive control labels are preserved.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Free-Board Title-Only List Follow-up
+
+## Reviewed Change
+- Feature: Show only the title in free-board desktop list title cells.
+- Governing spec: `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+- Files reviewed: `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Only free-board list-row presentation changed. Post type, importance, attachment data, filters, detail/edit surfaces, routes, permissions, and actions remain intact.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The list removes secondary preview metadata without changing or inventing content.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The semantic title cell retains one-line truncation and row-click behavior. Removing badges and excerpts reduces visual noise and row height while accessible action controls remain unchanged.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Compact Unified News Lists Follow-up
+
+## Reviewed Change
+- Feature: Center notice/free-board column headings, minimize row spacing, and unify badge/title density.
+- Governing spec: `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-10-news-list-scan-order.md`
+- Files or pages reviewed: `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/__tests__/news-admin-controls.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Only list-table alignment, spacing, and badge flow changed. Data, permissions, actions, routes, and detail/editor surfaces remain unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: No copy, records, dates, counts, or capability claims changed in this follow-up.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Both tables now use centered semantic headers and consistent `py-2.5` vertical padding. Badges flow horizontally, titles retain one-line truncation, and the free-board excerpt uses compact `space-y-0.5`/`leading-tight`. Existing interactive controls and accessible labels are unchanged. The in-app browser backend remained unavailable; focused DOM coverage verifies the requested class contract.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Notice And Free-Board List Scan Order
+
+## Reviewed Change
+- Feature: Move registered dates before titles, remove badge-title reserved gaps, and show date-only values in free-board list rows.
+- Governing spec: `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-10-news-list-scan-order.md`
+- Files or pages reviewed: `src/components/news/notice-board.tsx`, `src/components/news/free-board.tsx`, `src/lib/news/free-board-list.ts`, `/news?tab=notice`, `/news?tab=free`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The implementation changes only table column order, badge-title layout classes, and a derived list-only date field. Routes, APIs, permissions, stored timestamps, sorting, and actions are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Existing dates are shortened only in the free-board list; full date/time remains available for focused/detail and edit surfaces. No records, counts, or capability claims changed.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Semantic table header and cell order now match in both lists. Title truncation, badge-internal spacing, row click behavior, and existing accessible action labels are preserved. Focused component tests verify header order and badge-title adjacency. The in-app browser backend remained unavailable, so rendered desktop/mobile inspection is recorded as a residual verification limitation.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Compact Full-Width Disclosure Drawer Follow-up
+
+## Reviewed Change
+- Feature: Widen the disclosure material-library drawer while reducing the title column by about one third and compacting auxiliary-column spacing.
+- Governing spec: `docs/superpowers/specs/2026-07-10-disclosure-drawer-table-readability-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-10-disclosure-drawer-table-readability.md`
+- Files or pages reviewed: `src/components/disclosure/disclosure-client.tsx`, `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Only the shared drawer maximum width and shared table layout measurements changed. Access, data, navigation, and document actions remain unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: No visible copy, records, counts, or capability claims changed.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Desktop drawer width is increased to `max-w-5xl`; the table uses a `252px` title column, compact auxiliary widths, and `px-2` cell spacing. The mobile card breakpoint and accessible table name remain intact. Focused tests verify the width contract and shared drawer class.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review - Disclosure Drawer Table Readability
+
+## Reviewed Change
+- Feature: Protect document-title layout across all public disclosure material-library drawers.
+- Governing spec: `docs/superpowers/specs/2026-07-10-disclosure-drawer-table-readability-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-10-disclosure-drawer-table-readability.md`
+- Files or pages reviewed: `src/components/disclosure/meetings-table.tsx`, `src/__tests__/disclosure-page.test.tsx`, `/disclosure` shared material-library drawer path.
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The change is limited to the shared list table's accessible name, minimum width, and title layout classes. Routes, permissions, data, navigation, and document actions are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: No copy, counts, sample records, availability claims, or controls were added or changed.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: The existing warm-card table and mobile-card breakpoint remain unchanged. The desktop table now exposes an accessible name, keeps internal horizontal overflow, and truncates long titles instead of breaking Korean text character by character. Focused DOM coverage verifies the shared renderer and mobile counterpart. The in-app browser backend was unavailable, so rendered desktop/mobile inspection is recorded as a residual verification limitation rather than replaced with another browser backend.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review
 
 ## Reviewed Change

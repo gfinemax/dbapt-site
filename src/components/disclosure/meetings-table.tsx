@@ -840,25 +840,29 @@ export function MeetingsTable({
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-sm">
         {/* 데스크톱/태블릿 격자형 테이블 */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full table-fixed text-left text-sm">
+          <table
+            aria-label="공개자료 문서 목록"
+            className="w-full table-fixed text-left text-sm"
+            style={{ minWidth: isAdmin ? "728px" : showBookmarkColumn ? "656px" : "580px" }}
+          >
             <colgroup>
-              <col className="w-24" />
-              <col />
-              <col className="w-24" />
-              <col className="w-24" />
-              <col className="w-24" />
-              {showBookmarkColumn && <col className="w-28" />}
-              {isAdmin && <col className="w-16" />}
+              <col style={{ width: "88px" }} />
+              <col style={{ width: "252px" }} />
+              <col style={{ width: "88px" }} />
+              <col style={{ width: "72px" }} />
+              <col style={{ width: "80px" }} />
+              {showBookmarkColumn && <col style={{ width: "76px" }} />}
+              {isAdmin && <col style={{ width: "72px" }} />}
             </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface">
               <tr>
-                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">발생일</th>
-                <th className="px-3 py-3.5 font-semibold text-ash text-xs">문서 제목</th>
-                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">회신기한</th>
-                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">열람수</th>
-                <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">공감</th>
-                {showBookmarkColumn && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">보관</th>}
-                {isAdmin && <th className="px-3 py-3.5 font-semibold text-ash text-center text-xs">관리</th>}
+                <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">발생일</th>
+                <th className="px-2 py-3.5 font-semibold text-ash text-xs">문서 제목</th>
+                <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">회신기한</th>
+                <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">열람수</th>
+                <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">공감</th>
+                {showBookmarkColumn && <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">보관</th>}
+                {isAdmin && <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50">
@@ -879,8 +883,8 @@ export function MeetingsTable({
                       "hover:bg-sky-blue/[0.04]"
                     )}
                   >
-                    <td className="px-3 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">{doc.date}</td>
-                    <td className="px-3 py-3.5">
+                    <td className="px-2 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">{doc.date}</td>
+                    <td className="px-2 py-3.5">
                       <div className="flex items-start gap-2 leading-snug">
                         {isAdmin && doc.isReal && (
                           <button
@@ -896,35 +900,38 @@ export function MeetingsTable({
                             {doc.isImportant ? "⭐" : "☆"}
                           </button>
                         )}
-                        <div className="min-w-0 flex-1 break-all">
-                        {doc.isImportant && (
-                          <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
-                            ★ 중요
+                        <div className="flex min-w-0 flex-1 items-center gap-1.5 leading-snug">
+                          {doc.isImportant && (
+                            <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
+                              ★ 중요
+                            </span>
+                          )}
+                          <ReplyStatusBadge status={doc.replyStatus} />
+                          <span
+                            data-disclosure-list-title="true"
+                            className={cn(
+                              "min-w-0 flex-1 truncate whitespace-nowrap font-semibold text-[13px] leading-snug hover:text-sky-blue transition-colors",
+                              doc.isImportant ? "text-charcoal-primary" : "text-charcoal-primary/85"
+                            )}
+                          >
+                            {doc.title}
                           </span>
-                        )}
-                        <ReplyStatusBadge status={doc.replyStatus} />
-                        <span className={cn(
-                          "font-semibold text-[13px] leading-snug hover:text-sky-blue transition-colors",
-                          doc.isImportant ? "text-charcoal-primary" : "text-charcoal-primary/85"
-                        )}>
-                          {doc.title}
-                        </span>
-                        {isRecent(doc.date) && (
-                          <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full select-none shrink-0 shadow-3xs ml-1.5 align-middle">
-                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            NEW
-                          </span>
-                        )}
+                          {isRecent(doc.date) && (
+                            <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full select-none shrink-0 shadow-3xs ml-1.5 align-middle">
+                              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              NEW
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">
+                    <td className="px-2 py-3.5 text-center text-ash font-mono text-xs whitespace-nowrap">
                       {renderReplyDueCell(doc)}
                     </td>
-                    <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
+                    <td className="px-2 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
                       {formatViewCount(doc.viewCount, "열람")}
                     </td>
-                    <td className="px-3 py-3.5 text-center">
+                    <td className="px-2 py-3.5 text-center">
                       {doc.sourceDocument ? (
                         <ContentLikeButton
                           title={doc.title}
@@ -940,7 +947,7 @@ export function MeetingsTable({
                       )}
                     </td>
                     {showBookmarkColumn && (
-                      <td className="px-3 py-3.5 text-center">
+                      <td className="px-2 py-3.5 text-center">
                         {doc.sourceDocument ? (
                           <DocumentBookmarkButton
                             document={doc.sourceDocument}
@@ -953,7 +960,7 @@ export function MeetingsTable({
                       </td>
                     )}
                     {isAdmin && (
-                      <td className="px-3 py-3.5 text-center">
+                      <td className="px-2 py-3.5 text-center">
                         <div className="flex items-center justify-center gap-1">
                           {renderOpenChatCopyButton(doc)}
                           {renderEditButton(doc)}

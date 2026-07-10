@@ -943,3 +943,52 @@ Current user-approved free-board comment workflow follow-up; related interaction
 ## Unanswered Decision
 
 none
+
+---
+
+# Request Summary - Disclosure Drawer Table Readability
+
+## Requested Feature Slice
+
+- Fix every document-list table opened through the public disclosure material-library drawer so titles do not collapse into one-character vertical wrapping.
+- Cover general assembly, board, delegate meeting, incoming correspondence, outgoing/reply correspondence, and other correspondence folders through their shared table renderer.
+- Preserve a readable title column on desktop/tablet and retain the existing mobile card presentation.
+
+## Explicitly Excluded Scope
+
+- No changes to notice or free-board lists.
+- No route, API, database, schema, permission, or access-boundary changes.
+- No changes to document creation, editing, deletion, viewing, reactions, bookmarks, or open-chat copy behavior.
+- No redesign outside the material-library drawers and their shared document-list renderer.
+
+## Governing Specification
+
+- `docs/superpowers/specs/2026-07-10-disclosure-drawer-table-readability-design.md`
+
+## Unanswered Decision
+
+- none
+
+---
+
+# Request Summary - Notice And Free-Board List Scan Order
+
+## Requested Feature Slice
+
+- In the notice list, move `등록일` immediately before `제목` and remove reserved spacing between title badges and title text.
+- In the free-board list, move `등록일` immediately before `제목`, remove reserved spacing between post badges and title text, and show date only in list rows.
+- Tighten the list reading flow without changing detail, edit, authoring, permissions, or stored timestamps.
+
+## Explicitly Excluded Scope
+
+- No API, route, database, schema, permission, sorting, pagination, reaction, bookmark, comment, or management-action changes.
+- No date/time removal from free-board detail, edit, or administrative date controls.
+- No mobile-card redesign beyond keeping list metadata consistent where already present.
+
+## Governing Specification
+
+- `docs/superpowers/specs/2026-07-10-news-list-scan-order-design.md`
+
+## Unanswered Decision
+
+- none

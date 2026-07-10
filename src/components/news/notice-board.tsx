@@ -275,7 +275,7 @@ export function NoticeBoard({
         data-notice-title-meta="true"
         className={cn(
           variant === "table"
-            ? "flex w-[76px] shrink-0 flex-col items-start gap-1"
+            ? "flex shrink-0 flex-row items-center gap-1"
             : "flex min-w-0 flex-wrap items-center gap-1.5",
         )}
       >
@@ -479,15 +479,15 @@ export function NoticeBoard({
       <div className="bg-white rounded-2xl border border-stone-surface overflow-hidden shadow-2xs">
         <div className="overflow-x-auto scrollbar-none">
           <table
-            className="w-full table-fixed text-left text-sm border-collapse"
+            className="h-auto w-full table-fixed text-left text-sm border-collapse"
             style={{ minWidth: isAdmin ? "820px" : "760px" }}
             aria-label="공지사항 목록"
           >
             <colgroup>
               <col style={{ width: "52px" }} />
+              <col style={{ width: "104px" }} />
               <col />
               <col style={{ width: "88px" }} />
-              <col style={{ width: "104px" }} />
               <col style={{ width: "88px" }} />
               <col style={{ width: "86px" }} />
               <col style={{ width: "80px" }} />
@@ -495,14 +495,14 @@ export function NoticeBoard({
             </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
-                <th className="w-10 px-3 py-3 text-center">No.</th>
-                <th className="px-3 py-3">제목</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">등록자</th>
-                <th className="w-24 px-3 py-3 text-center whitespace-nowrap">등록일</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">조회수</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">공감</th>
-                <th className="w-20 px-3 py-3 text-center whitespace-nowrap">보관</th>
-                {isAdmin && <th className="w-28 px-3 py-3 text-center">관리</th>}
+                <th className="w-10 px-3 py-2.5 text-center">No.</th>
+                <th className="w-24 px-3 py-2.5 text-center whitespace-nowrap">등록일</th>
+                <th className="px-3 py-2.5 text-center">제목</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">등록자</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">조회수</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">공감</th>
+                <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">보관</th>
+                {isAdmin && <th className="w-28 px-3 py-2.5 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
@@ -524,15 +524,18 @@ export function NoticeBoard({
                       }
                     }}
                     className={cn(
-                      "cursor-pointer transition-all duration-150 hover:bg-sky-blue/[0.03]",
+                      "h-[52px] cursor-pointer transition-all duration-150 hover:bg-sky-blue/[0.03]",
                       idx % 2 === 1 ? "bg-[#fdfcfa]" : "bg-white"
                     )}
                   >
-                    <td className="px-3 py-3.5 text-center text-xs text-ash/75 font-mono tabular-nums">
+                    <td className="h-[52px] px-3 py-0 align-middle text-center text-xs text-ash/75 font-mono tabular-nums">
                       {idx + 1}
                     </td>
-                    <td className="px-3 py-3.5">
-                      <div className="flex min-w-0 items-center gap-3">
+                    <td className="h-[52px] px-3 py-0 align-middle text-center text-xs text-ash font-mono whitespace-nowrap">
+                      {notice.createdAt}
+                    </td>
+                    <td className="h-[52px] px-3 py-0 align-middle">
+                      <div data-notice-list-title-row="true" className="flex min-w-0 items-center gap-0">
                         {renderNoticeBadges(notice)}
                         <span
                           data-notice-list-title="true"
@@ -545,16 +548,13 @@ export function NoticeBoard({
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 py-3.5 text-center text-xs text-graphite/75 font-normal whitespace-nowrap">
+                    <td className="h-[52px] px-3 py-0 align-middle text-center text-xs text-graphite/75 font-normal whitespace-nowrap">
                       {notice.author.name}
                     </td>
-                    <td className="px-3 py-3.5 text-center text-xs text-ash font-mono whitespace-nowrap">
-                      {notice.createdAt}
-                    </td>
-                    <td className="px-3 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
+                    <td className="h-[52px] px-3 py-0 align-middle text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
                       {formatViewCount(notice.viewCount)}
                     </td>
-                    <td className="px-3 py-3.5 text-center">
+                    <td className="h-[52px] px-3 py-0 align-middle text-center">
                       <ContentLikeButton
                         title={notice.title}
                         targetType="COOP_NEWS"
@@ -565,7 +565,7 @@ export function NoticeBoard({
                         className="h-6 px-2 py-0 text-[10px] whitespace-nowrap"
                       />
                     </td>
-                    <td className="px-3 py-3.5 text-center">
+                    <td className="h-[52px] px-3 py-0 align-middle text-center">
                       {isLoggedIn && notice.isReal ? (
                         <PersonalBookmarkButton
                           title={notice.title}
@@ -579,7 +579,7 @@ export function NoticeBoard({
                       )}
                     </td>
                     {isAdmin && (
-                      <td className="px-3 py-3.5 text-center">
+                      <td className="h-[52px] px-3 py-0 align-middle text-center">
                         {renderNoticeAdminActions(notice)}
                       </td>
                     )}

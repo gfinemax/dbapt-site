@@ -28,6 +28,7 @@ export type FreeBoardPostListItem = {
   likedByCurrentUser: boolean;
   isStarred: boolean;
   registeredAt: string;
+  registeredDate: string;
   registeredAtRaw: string;
   attachmentPath: string | null;
   attachmentName: string | null;
@@ -94,6 +95,7 @@ export function buildFreeBoardPostList(
         likedByCurrentUser: !!post.likedByCurrentUser,
         isStarred: !!post.isStarred,
         registeredAt: formatFreeBoardDate(registeredAtRaw),
+        registeredDate: formatFreeBoardDate(registeredAtRaw).slice(0, 10),
         registeredAtRaw,
         attachmentPath: post.attachmentPath ?? null,
         attachmentName: post.attachmentName ?? null,

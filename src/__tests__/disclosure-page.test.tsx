@@ -706,6 +706,62 @@ describe("disclosure page", () => {
     expect(screen.queryByRole("columnheader", { name: "분류" })).not.toBeInTheDocument();
   });
 
+  it("protects long document titles across disclosure drawer folders", () => {
+    const longTitle = "대방동 지역주택조합 정기총회 의결사항 및 후속 행정절차 이행계획 안내";
+
+    render(
+      <MeetingsTable
+        isLoggedIn
+        role="ADMIN"
+        documents={[
+          {
+            id: "doc-long-title",
+            title: longTitle,
+            description: "총회 의사록",
+            category: "DISCLOSURE",
+            subCategory: "총회 의사록",
+            fileName: "general-meeting.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-07-09T00:00:00.000Z",
+            documentDate: "2026-07-09T00:00:00.000Z",
+            createdAt: "2026-07-09T00:00:00.000Z",
+          },
+        ]}
+        router={{ push: vi.fn() } as never}
+        initialFilterCat="총회 의사록"
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "공개자료 문서 목록" });
+    expect(table).toHaveStyle({ minWidth: "728px" });
+
+    const columns = table.querySelectorAll("col");
+    expect(columns[1]).toHaveStyle({ width: "252px" });
+
+    const title = within(table).getByText(longTitle);
+    const titleLayout = title.closest('[data-disclosure-list-title="true"]');
+    expect(titleLayout).toHaveClass("min-w-0", "truncate", "whitespace-nowrap");
+    expect(titleLayout).not.toHaveClass("break-all");
+
+    expect(screen.getAllByText(longTitle)).toHaveLength(2);
+  });
+
+  it("widens the shared material-library drawer for the compact table", () => {
+    render(
+      <DisclosureClient
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={[]}
+      />,
+    );
+
+    const folderHeading = screen.getByRole("heading", { name: "대방동 지역주택조합 정관 및 조합규약" });
+    const folderCard = folderHeading.closest(".stone-card");
+    fireEvent.click(within(folderCard as HTMLElement).getByRole("button", { name: "자료실 열기" }));
+
+    expect(screen.getByLabelText("문서함 열기 상세 드로어")).toHaveClass("max-w-5xl");
+  });
+
   it("shows completed status in the due-date column for reply documents in the sent folder", () => {
     const documents: Document[] = [
       {

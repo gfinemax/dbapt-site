@@ -1316,7 +1316,7 @@ export function DisclosureClient({
           />
 
           <div
-            className="fixed inset-y-0 left-0 z-50 w-full max-w-2xl bg-warm-canvas border-r border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out"
+            className="fixed inset-y-0 left-0 z-50 w-full max-w-5xl bg-warm-canvas border-r border-stone-surface shadow-2xl p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out"
             aria-label="문서함 열기 상세 드로어"
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
