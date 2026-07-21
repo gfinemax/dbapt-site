@@ -24,6 +24,11 @@ type DocumentFlagOverrides = Record<
 
 const RECENT_DAYS = 14;
 const RECOMMENDED_LIMIT = 6;
+const TAB_GUIDANCE: Record<ActiveTab, string> = {
+  recommended: "아직 열람하지 않은 중요 문서와 최근 14일 이내 등록된 공개 문서를 보여드립니다.",
+  saved: "공개자료실에서 직접 보관한 PDF·공개 문서를 모아 보여드립니다.",
+  content: "공지사항·조합뉴스·자유게시판에서 직접 보관한 게시글을 모아 보여드립니다.",
+};
 
 const formatDate = (dateStr: string | null | undefined) => {
   if (!dateStr) return "-";
@@ -260,7 +265,7 @@ export function PersonalDocumentHub({
           </span>
           <h3 className="mt-3 text-xl font-semibold text-charcoal-primary">오늘 확인할 공개자료</h3>
           <p className="mt-2 max-w-2xl text-xs leading-5 text-graphite">
-            전체 자료를 모두 펼치지 않고, 중요 표시 또는 최근 등록된 미열람 자료만 먼저 보여줍니다. 필요한 문서는 내 보관함에 저장해 다시 볼 수 있습니다.
+            전체 자료를 모두 펼치지 않고, 중요 표시 또는 최근 등록된 미열람 자료만 먼저 보여줍니다. 필요한 문서는 보관한 문서에서 다시 볼 수 있습니다.
           </p>
         </div>
 
@@ -289,7 +294,7 @@ export function PersonalDocumentHub({
               : "bg-parchment-card text-graphite hover:bg-stone-surface",
           )}
         >
-          내 보관함 {savedDocs.length}
+          보관한 문서 {savedDocs.length}
         </button>
         <button
           type="button"
@@ -304,6 +309,13 @@ export function PersonalDocumentHub({
           보관한 게시글 {contentBookmarks.length}
         </button>
       </div>
+
+      <p
+        aria-live="polite"
+        className="rounded-xl bg-parchment-card px-4 py-3 text-xs leading-5 text-graphite"
+      >
+        {TAB_GUIDANCE[activeTab]}
+      </p>
 
       {activeTab === "content" ? (
         contentBookmarks.length === 0 ? (
@@ -333,7 +345,7 @@ export function PersonalDocumentHub({
         </div>
       ) : (
         <div
-          aria-label={activeTab === "recommended" ? "추천자료 목록" : "내 보관함 목록"}
+          aria-label={activeTab === "recommended" ? "추천자료 목록" : "보관한 문서 목록"}
           className="grid gap-3"
         >
           {activeDocs.map((doc) => renderCard(doc))}

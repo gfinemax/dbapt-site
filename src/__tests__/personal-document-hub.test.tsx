@@ -67,6 +67,7 @@ describe("PersonalDocumentHub", () => {
     );
 
     const recommendations = screen.getByLabelText("추천자료 목록");
+    expect(screen.getByText("아직 열람하지 않은 중요 문서와 최근 14일 이내 등록된 공개 문서를 보여드립니다.")).toBeInTheDocument();
     expect(within(recommendations).getByText("중요 미열람 의사록")).toBeInTheDocument();
     expect(within(recommendations).getByText("최근 미열람 공문")).toBeInTheDocument();
     expect(screen.queryByText("이미 본 중요 문서")).not.toBeInTheDocument();
@@ -93,9 +94,10 @@ describe("PersonalDocumentHub", () => {
 
     expect(screen.queryByText("보관한 실태조사 문서")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /내 보관함/ }));
+    fireEvent.click(screen.getByRole("button", { name: /보관한 문서/ }));
 
-    const stash = screen.getByLabelText("내 보관함 목록");
+    expect(screen.getByText("공개자료실에서 직접 보관한 PDF·공개 문서를 모아 보여드립니다.")).toBeInTheDocument();
+    const stash = screen.getByLabelText("보관한 문서 목록");
     expect(within(stash).getByText("보관한 실태조사 문서")).toBeInTheDocument();
   });
 
@@ -114,7 +116,7 @@ describe("PersonalDocumentHub", () => {
           }),
           baseDoc({
             id: "saved-doc",
-            title: "보관한 문서",
+            title: "보관한 공개자료",
             isBookmarkedByCurrentUser: true,
           }),
         ]}
@@ -123,9 +125,9 @@ describe("PersonalDocumentHub", () => {
     );
 
     expect(screen.queryByText("추천자료")).not.toBeInTheDocument();
-    expect(screen.queryByText("내 보관함")).not.toBeInTheDocument();
+    expect(screen.queryByText("보관한 문서")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "추천자료 2" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "내 보관함 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "보관한 문서 1" })).toBeInTheDocument();
   });
 
   it("moves a newly bookmarked recommendation into the saved tab after the API confirms", async () => {
@@ -155,10 +157,10 @@ describe("PersonalDocumentHub", () => {
     fireEvent.click(screen.getByRole("button", { name: "보관" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "내 보관함 1" })).toHaveClass("bg-midnight");
+      expect(screen.getByRole("button", { name: "보관한 문서 1" })).toHaveClass("bg-midnight");
     });
 
-    const stash = screen.getByLabelText("내 보관함 목록");
+    const stash = screen.getByLabelText("보관한 문서 목록");
     expect(within(stash).getByText("보관할 공개자료")).toBeInTheDocument();
   });
 
@@ -198,6 +200,7 @@ describe("PersonalDocumentHub", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "보관한 게시글 2" }));
 
+    expect(screen.getByText("공지사항·조합뉴스·자유게시판에서 직접 보관한 게시글을 모아 보여드립니다.")).toBeInTheDocument();
     const contentList = screen.getByLabelText("보관한 게시글 목록");
     expect(within(contentList).getByText("개인 보관 공지")).toBeInTheDocument();
     expect(within(contentList).getByText("개인 보관 자유글")).toBeInTheDocument();
