@@ -204,9 +204,40 @@ describe("PersonalDocumentHub", () => {
     const contentList = screen.getByLabelText("보관한 게시글 목록");
     expect(within(contentList).getByText("개인 보관 공지")).toBeInTheDocument();
     expect(within(contentList).getByText("개인 보관 자유글")).toBeInTheDocument();
-    expect(within(contentList).getByRole("link", { name: "개인 보관 공지 열기" })).toHaveAttribute(
+    const noticeLink = within(contentList).getByRole("link", { name: "개인 보관 공지 열기" });
+    expect(noticeLink).toHaveAttribute(
       "href",
       "/news?tab=notice&notice=notice-1",
     );
+    expect(noticeLink).toHaveClass("rounded-xl", "px-4", "py-3");
+    expect(within(contentList).queryByText("열기")).not.toBeInTheDocument();
+  });
+
+  it("shows five bookmarked posts first and reveals the rest on request", () => {
+    render(
+      <PersonalDocumentHub
+        documents={[]}
+        role="member"
+        contentBookmarks={Array.from({ length: 6 }, (_, index) => ({
+          id: `bookmark-${index + 1}`,
+          targetType: "FREE_POST" as const,
+          targetId: `free-${index + 1}`,
+          sourceLabel: "자유게시판",
+          title: `보관 게시글 ${index + 1}`,
+          description: `보관 게시글 ${index + 1} 요약`,
+          href: `/news?tab=free&post=free-${index + 1}`,
+          createdAt: "2026-06-21T00:00:00.000Z",
+          registeredAt: "2026-06-18T00:00:00.000Z",
+          isStarred: false,
+        }))}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "보관한 게시글 6" }));
+
+    expect(screen.getByText("보관 게시글 5")).toBeInTheDocument();
+    expect(screen.queryByText("보관 게시글 6")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "게시글 더보기 (1)" }));
+    expect(screen.getByText("보관 게시글 6")).toBeInTheDocument();
   });
 });
