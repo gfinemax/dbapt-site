@@ -99,6 +99,14 @@ describe("PersonalDocumentHub", () => {
     expect(screen.getByText("공개자료실에서 직접 보관한 PDF·공개 문서를 모아 보여드립니다.")).toBeInTheDocument();
     const stash = screen.getByLabelText("보관한 문서 목록");
     expect(within(stash).getByText("보관한 실태조사 문서")).toBeInTheDocument();
+    expect(within(stash).getByRole("button", { name: "보관한 실태조사 문서 열람" })).toHaveClass(
+      "absolute",
+      "inset-0",
+      "rounded-xl",
+    );
+    expect(within(stash).getByRole("button", { name: "보관한 실태조사 문서 개인자료실 보관 해제" })).toBeInTheDocument();
+    expect(within(stash).queryByText("document.pdf")).not.toBeInTheDocument();
+    expect(within(stash).queryByText("1.0 KB")).not.toBeInTheDocument();
   });
 
   it("does not duplicate the recommendation and stash counts in the header", () => {
@@ -211,6 +219,26 @@ describe("PersonalDocumentHub", () => {
     );
     expect(noticeLink).toHaveClass("rounded-xl", "px-4", "py-3");
     expect(within(contentList).queryByText("열기")).not.toBeInTheDocument();
+  });
+
+  it("shows five saved documents first and reveals the rest on request", () => {
+    render(
+      <PersonalDocumentHub
+        documents={Array.from({ length: 6 }, (_, index) => baseDoc({
+          id: `saved-${index + 1}`,
+          title: `보관 문서 ${index + 1}`,
+          isBookmarkedByCurrentUser: true,
+        }))}
+        role="member"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "보관한 문서 6" }));
+
+    expect(screen.getByText("보관 문서 5")).toBeInTheDocument();
+    expect(screen.queryByText("보관 문서 6")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "문서 더보기 (1)" }));
+    expect(screen.getByText("보관 문서 6")).toBeInTheDocument();
   });
 
   it("shows five bookmarked posts first and reveals the rest on request", () => {

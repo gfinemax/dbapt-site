@@ -76,6 +76,7 @@ export function PersonalDocumentHub({
 }: PersonalDocumentHubProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("recommended");
   const [visibleContentCount, setVisibleContentCount] = useState(INITIAL_CONTENT_LIMIT);
+  const [visibleSavedCount, setVisibleSavedCount] = useState(INITIAL_CONTENT_LIMIT);
   const [documentFlagOverrides, setDocumentFlagOverrides] = useState<DocumentFlagOverrides>({});
 
   const localDocs = useMemo(
@@ -206,6 +207,62 @@ export function PersonalDocumentHub({
       </article>
     );
   };
+
+  const renderSavedDocumentCard = (doc: Document) => (
+    <article
+      key={doc.id}
+      className="group relative w-full min-w-0 rounded-xl"
+    >
+      <button
+        type="button"
+        aria-label={`${doc.title} 열람`}
+        onClick={() => handleOpen(doc)}
+        className="absolute inset-0 rounded-xl bg-white shadow-[inset_0_0_0_1px_#f2f0ed] transition-colors hover:bg-warm-canvas/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/40"
+      />
+      <div className="pointer-events-none relative px-4 py-3">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className="rounded-full bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue">
+              {getCategoryLabel(doc.category)}
+            </span>
+            {doc.isStarred && (
+              <span className="rounded-full bg-sunburst-yellow/20 px-2.5 py-1 text-[10px] font-bold text-charcoal-primary">
+                중요
+              </span>
+            )}
+            <span className="rounded-full bg-ember-orange/10 px-2.5 py-1 text-[10px] font-bold text-ember-orange">
+              보관됨
+            </span>
+          </div>
+          <span className="shrink-0 font-mono text-[11px] text-ash">
+            {formatDate(doc.documentDate || doc.publishedAt || doc.createdAt)}
+          </span>
+        </div>
+
+        <div className="mt-2 flex min-w-0 items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate text-sm font-bold leading-5 text-charcoal-primary">
+              {doc.title}
+            </h4>
+            {doc.description && (
+              <p className="mt-0.5 truncate text-xs leading-5 text-graphite/70">
+                {doc.description}
+              </p>
+            )}
+          </div>
+          <div className="pointer-events-auto relative z-10 shrink-0">
+            <DocumentBookmarkButton
+              document={doc}
+              onBookmarkChange={handleBookmarkChange}
+              includeDocumentTitleInLabel
+              className="h-7 px-2.5 text-[10px]"
+            />
+          </div>
+          <span aria-hidden="true" className="shrink-0 text-base font-bold text-ash transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal-primary">›</span>
+        </div>
+      </div>
+    </article>
+  );
 
   const renderContentCard = (item: PersonalLibraryContentBookmark) => (
     <Link
@@ -357,9 +414,19 @@ export function PersonalDocumentHub({
       ) : (
         <div
           aria-label={activeTab === "recommended" ? "추천자료 목록" : "보관한 문서 목록"}
-          className="grid gap-3"
+          className={cn("grid", activeTab === "saved" ? "gap-2" : "gap-3")}
         >
-          {activeDocs.map((doc) => renderCard(doc))}
+          {(activeTab === "saved" ? activeDocs.slice(0, visibleSavedCount) : activeDocs)
+            .map((doc) => activeTab === "saved" ? renderSavedDocumentCard(doc) : renderCard(doc))}
+          {activeTab === "saved" && visibleSavedCount < savedDocs.length && (
+            <button
+              type="button"
+              onClick={() => setVisibleSavedCount(savedDocs.length)}
+              className="mt-1 rounded-full bg-parchment-card px-4 py-2 text-xs font-bold text-graphite transition-colors hover:bg-stone-surface"
+            >
+              문서 더보기 ({savedDocs.length - visibleSavedCount})
+            </button>
+          )}
         </div>
       )}
 
