@@ -60,7 +60,7 @@ const CROP_PRESETS: Array<{ label: string; x: CropX; y: CropY }> = [
   { label: "중앙", x: "center", y: "center" },
   { label: "오른쪽 아래", x: "right", y: "bottom" },
 ];
-const SAFE_FONT_FAMILIES = new Set(["Pretendard", "Gulim", "Malgun Gothic"]);
+const SAFE_FONT_FAMILIES = new Set(["Pretendard Variable", "Pretendard", "Gulim", "Malgun Gothic"]);
 const SAFE_FONT_SIZES = new Set(["12px", "14px", "16px", "18px", "20px", "24px"]);
 const SAFE_LINE_HEIGHTS = new Set(["1.2", "1.5", "1.625", "1.8", "2"]);
 const SAFE_TEXT_ALIGNS = new Set<TextAlign>(["left", "center", "right", "justify"]);

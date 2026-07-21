@@ -276,17 +276,17 @@ describe("notice rich content links", () => {
       />,
     );
 
-    expect(screen.getByLabelText("글꼴")).toHaveValue("Pretendard");
-    expect(screen.getByLabelText("글자 크기")).toHaveValue("12px");
+    expect(screen.getByLabelText("글꼴")).toHaveValue("Pretendard Variable");
+    expect(screen.getByLabelText("글자 크기")).toHaveValue("14px");
     expect(screen.getByLabelText("줄간격")).toHaveValue("1.625");
     expect(screen.getByRole("textbox", { name: "본문 편집창" })).toHaveClass(
       "px-6",
       "py-6",
-      "text-xs",
+      "text-sm",
       "leading-relaxed",
       "[&_p]:mb-3",
     );
-    expect(screen.getByRole("textbox", { name: "본문 편집창" })).not.toHaveClass("text-sm", "px-7");
+    expect(screen.getByRole("textbox", { name: "본문 편집창" })).not.toHaveClass("text-xs", "px-7");
     expect(screen.getByRole("button", { name: "굵게" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "밑줄" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "취소선" })).toBeInTheDocument();
@@ -330,6 +330,16 @@ describe("notice rich content links", () => {
     expect(consoleError).not.toHaveBeenCalledWith(expect.stringContaining("flushSync was called"));
 
     consoleError.mockRestore();
+  });
+
+  it("preserves the site's Pretendard Variable font in published content", () => {
+    const html = sanitizeNoticeContentHtml(
+      '<p><span data-font-family="Pretendard Variable" data-font-size="14px" style="font-family:Pretendard Variable;font-size:14px;">기본 본문</span></p>',
+    );
+
+    expect(html).toContain('data-font-family="Pretendard Variable"');
+    expect(html).toContain('data-font-size="14px"');
+    expect(html).toContain('style="font-family:Pretendard Variable;font-size:14px;"');
   });
 
   it("does not rewrite rich text formatting from a native input event during mouse selection", () => {

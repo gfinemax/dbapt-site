@@ -131,7 +131,7 @@ type ImageEditDraft = {
 type ImageToolButtonEvent = React.MouseEvent<HTMLButtonElement> | React.PointerEvent<HTMLButtonElement>;
 
 const FONT_OPTIONS = [
-  { label: "Pretendard", value: "Pretendard" },
+  { label: "Pretendard", value: "Pretendard Variable" },
   { label: "굴림", value: "Gulim" },
   { label: "맑은 고딕", value: "Malgun Gothic" },
 ];
@@ -2059,6 +2059,54 @@ export function RichTextEditorV2({
     callback();
   }, [editor]);
 
+  const applyFontFamily = useCallback((fontFamily: string) => {
+    if (!editor) return;
+    const { from, to, empty, $from } = editor.state.selection;
+    if (!empty) {
+      editor.chain().focus().setFontFamily(fontFamily).run();
+      return;
+    }
+
+    const paragraphFrom = $from.start();
+    const paragraphTo = $from.end();
+    if (paragraphFrom === paragraphTo) {
+      editor.chain().focus().setFontFamily(fontFamily).run();
+      return;
+    }
+
+    editor
+      .chain()
+      .focus()
+      .setTextSelection({ from: paragraphFrom, to: paragraphTo })
+      .setFontFamily(fontFamily)
+      .setTextSelection({ from, to })
+      .run();
+  }, [editor]);
+
+  const applyFontSize = useCallback((fontSize: string) => {
+    if (!editor) return;
+    const { from, to, empty, $from } = editor.state.selection;
+    if (!empty) {
+      editor.chain().focus().setFontSize(fontSize).run();
+      return;
+    }
+
+    const paragraphFrom = $from.start();
+    const paragraphTo = $from.end();
+    if (paragraphFrom === paragraphTo) {
+      editor.chain().focus().setFontSize(fontSize).run();
+      return;
+    }
+
+    editor
+      .chain()
+      .focus()
+      .setTextSelection({ from: paragraphFrom, to: paragraphTo })
+      .setFontSize(fontSize)
+      .setTextSelection({ from, to })
+      .run();
+  }, [editor]);
+
   const insertImageFiles = useCallback(async (files: File[]) => {
     if (!editor || files.length === 0) return;
     setIsUploadingImage(true);
@@ -2152,8 +2200,10 @@ export function RichTextEditorV2({
           id="rich-editor-font-family"
           aria-label="글꼴"
           className={cn(FIELD_CLASS, "w-36")}
-          value={editor?.getAttributes("textStyle").fontFamily || "Pretendard"}
-          onChange={(event) => run(() => editor?.chain().focus().setFontFamily(event.target.value).run())}
+          value={editor?.getAttributes("textStyle").fontFamily === "Pretendard"
+            ? "Pretendard Variable"
+            : editor?.getAttributes("textStyle").fontFamily || "Pretendard Variable"}
+          onChange={(event) => applyFontFamily(event.target.value)}
         >
           {FONT_OPTIONS.map((font) => (
             <option key={font.value} value={font.value}>{font.label}</option>
@@ -2164,8 +2214,8 @@ export function RichTextEditorV2({
           id="rich-editor-font-size"
           aria-label="글자 크기"
           className={cn(FIELD_CLASS, "w-28")}
-          value={editor?.getAttributes("textStyle").fontSize || "12px"}
-          onChange={(event) => run(() => editor?.chain().focus().setFontSize(event.target.value).run())}
+          value={editor?.getAttributes("textStyle").fontSize || "14px"}
+          onChange={(event) => applyFontSize(event.target.value)}
         >
           {FONT_SIZE_OPTIONS.map((size) => (
             <option key={size} value={size}>{size}</option>
