@@ -1138,7 +1138,7 @@ export function NewsClient({
                         {activeViewNotice.title}
                       </h3>
                       <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
-                        {activeViewNotice.isReal && (
+                        {canCommentOnNotice && (
                           <ContentShareActions kind="notice" contentId={activeViewNotice.id} title={activeViewNotice.title} />
                         )}
                         {isEditableNotice && (

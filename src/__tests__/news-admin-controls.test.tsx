@@ -1872,6 +1872,22 @@ describe("news admin visible controls", () => {
     expect(screen.getByRole("button", { name: "링크 복사" })).toBeInTheDocument();
   });
 
+  it("shows notice sharing for a real deep-linked notice without an isReal marker", () => {
+    mockSearchParamsValue.value = "tab=notice&news=notice-1";
+
+    render(
+      <NewsClient
+        session={{ id: "admin-1", name: "관리자", loginId: "admin", role: "ADMIN" }}
+        initialNewsList={[{ ...realNotice, isReal: undefined }]}
+        initialFreePosts={[]}
+        initialFaqs={[]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "카카오톡 공유" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "링크 복사" })).toBeInTheDocument();
+  });
+
   it("shows the selected display author name instead of the admin account name", () => {
     render(
       <NoticeBoard
