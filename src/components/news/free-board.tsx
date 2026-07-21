@@ -51,6 +51,7 @@ import { ContentLikeButton } from "@/components/content-like-button";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
 import { CommentReactionBar } from "./comment-reaction-bar";
+import { ContentShareActions } from "./content-share-actions";
 
 type FreeBoardProps = {
   session: NewsSessionView | null | undefined;
@@ -422,6 +423,9 @@ export function FreeBoard({
     () => buildFreeBoardPostList(postsWithViewCounts, typeFilter, searchQuery),
     [postsWithViewCounts, searchQuery, typeFilter],
   );
+  const showManageColumn = !!session && combinedPosts.some(
+    (post) => post.isReal && (isAdmin || post.author.id === currentUserId),
+  );
 
   const focusedPost = useMemo(
     () => combinedPosts.find((post) => post.id === focusedPostId) || null,
@@ -705,6 +709,9 @@ export function FreeBoard({
         return;
       }
 
+      if (params.postId && focusedPost?.id === params.postId) {
+        closeFocusedPost();
+      }
       await onRefresh();
     } catch (err) {
       console.error(err);
@@ -1133,7 +1140,7 @@ export function FreeBoard({
           <table
             aria-label="자유게시판 게시글 목록"
             className="h-auto w-full table-fixed text-left text-sm border-collapse"
-            style={{ minWidth: isAdmin ? "992px" : "932px" }}
+            style={{ minWidth: showManageColumn ? "992px" : "932px" }}
           >
             <colgroup>
               <col style={{ width: "52px" }} />
@@ -1144,7 +1151,7 @@ export function FreeBoard({
               <col style={{ width: "92px" }} />
               <col style={{ width: "92px" }} />
               <col style={{ width: "88px" }} />
-              {isAdmin && <col style={{ width: "136px" }} />}
+              {showManageColumn && <col style={{ width: "136px" }} />}
             </colgroup>
             <thead className="bg-[#f7f6f3] border-b border-stone-surface text-[11px] font-bold text-ash">
               <tr>
@@ -1156,20 +1163,20 @@ export function FreeBoard({
                 <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">조회수</th>
                 <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">공감</th>
                 <th className="w-20 px-3 py-2.5 text-center whitespace-nowrap">보관</th>
-                {isAdmin && <th className="w-28 px-3 py-2.5 text-center">관리</th>}
+                {showManageColumn && <th className="w-28 px-3 py-2.5 text-center">관리</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-surface/50 text-graphite font-medium">
               {combinedPosts.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 9 : 8} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
+                  <td colSpan={showManageColumn ? 9 : 8} className="px-5 py-16 text-center text-xs text-graphite/70 font-normal">
                     검색 조건에 맞는 자유게시판 글이 없습니다.
                   </td>
                 </tr>
               ) : (
                 combinedPosts.map((post, index) => {
                   const authorLabel = getFreeBoardAuthorLabel(post.author, currentUserId);
-                  const showDeletePost = post.isReal && isAdmin;
+                  const showDeletePost = post.isReal && (isAdmin || post.author.id === currentUserId);
                   const showOpenChatCopy = post.isReal && isAdmin;
                   const showCopyToNotice = post.isReal && isAdmin;
                   const showBookmark = !!session && post.isReal && !isReadOnlyPublicShare;
@@ -1186,7 +1193,7 @@ export function FreeBoard({
                       showCopyToNotice={showCopyToNotice}
                       showBookmark={showBookmark}
                       canLike={canLike}
-                      showManageColumn={isAdmin}
+                      showManageColumn={showManageColumn}
                       openChatCopyStatus={openChatCopyStatus[post.id]}
                       onOpen={() => openFocusedPost(post.id)}
                       onDelete={handleDeletePostOrComment}
@@ -1279,7 +1286,7 @@ export function FreeBoard({
               ) : (
               <>
               <div className="space-y-3">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col items-start justify-between gap-3 sm:flex-row">
                   <h3 className="text-xl font-extrabold text-charcoal-primary leading-snug">
                   {focusedPost.isStarred && (
                     <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-extrabold px-1.5 py-0.5 select-none shrink-0 mr-1.5 align-middle">
@@ -1288,7 +1295,7 @@ export function FreeBoard({
                   )}
                   {focusedPost.title}
                   </h3>
-                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
                     {session && focusedPost.isReal && !isReadOnlyPublicShare && (
                       <PersonalBookmarkButton
                         title={focusedPost.title}
@@ -1296,6 +1303,9 @@ export function FreeBoard({
                         targetId={focusedPost.id}
                         initialBookmarked={focusedPost.isBookmarkedByCurrentUser}
                       />
+                    )}
+                    {focusedPost.isReal && focusedPost.isPublicShareEnabled && (
+                      <ContentShareActions kind="free" contentId={focusedPost.id} title={focusedPost.title} />
                     )}
                     {focusedPost.isReal && (focusedPost.author.id === currentUserId || isAdmin) && (
                       <button
@@ -1305,6 +1315,16 @@ export function FreeBoard({
                         className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
                       >
                         수정
+                      </button>
+                    )}
+                    {focusedPost.isReal && (focusedPost.author.id === currentUserId || isAdmin) && (
+                      <button
+                        type="button"
+                        aria-label="게시글 삭제"
+                        onClick={() => void handleDeletePostOrComment({ postId: focusedPost.id })}
+                        className="rounded-full border border-coral-red/20 bg-coral-red/10 px-3 py-1.5 text-[11px] font-bold text-coral-red hover:bg-coral-red/15 focus:outline-none focus:ring-2 focus:ring-coral-red/25"
+                      >
+                        삭제
                       </button>
                     )}
                     {focusedPost.isReal && isAdmin && (

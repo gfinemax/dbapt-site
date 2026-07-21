@@ -1776,11 +1776,11 @@ describe("news admin visible controls", () => {
     const freeTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
     expect(freeTable).toHaveClass("table-fixed");
     expect(freeTable).toHaveClass("h-auto");
-    expect(freeTable).toHaveStyle({ minWidth: "932px" });
+    expect(freeTable).toHaveStyle({ minWidth: "992px" });
     expect(within(freeTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
     expect(within(freeTable).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
     expect(within(freeTable).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
-    expect(within(freeTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
+    expect(within(freeTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
     expect(within(freeTable).getByRole("columnheader", { name: "작성자" })).toHaveClass("whitespace-nowrap");
     expect(within(freeTable).getByText("조합원 (나)")).toHaveClass("whitespace-nowrap");
     const commentButton = within(freeTable).getByRole("button", { name: "댓글 1개 보기" });
@@ -1799,10 +1799,10 @@ describe("news admin visible controls", () => {
     expect(freeTable.querySelector("tbody tr")).toHaveClass("h-[52px]");
   });
 
-  it("shows the free board management column only to admins", () => {
+  it("shows free-board delete controls to the author and administrators", () => {
     const { rerender } = render(
       <FreeBoard
-        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        session={{ id: "member-2", name: "다른 조합원", loginId: "member2", role: "MEMBER" }}
         posts={[{ ...realFreePost, comments: [freeComment] }]}
         onRefresh={vi.fn()}
       />,
@@ -1812,6 +1812,21 @@ describe("news admin visible controls", () => {
     expect(memberTable).toHaveStyle({ minWidth: "932px" });
     expect(within(memberTable).queryByRole("columnheader", { name: "관리" })).not.toBeInTheDocument();
     expect(within(memberTable).queryByRole("button", { name: "게시글 삭제" })).not.toBeInTheDocument();
+
+    rerender(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[{ ...realFreePost, comments: [freeComment] }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    const authorTable = screen.getByRole("table", { name: "자유게시판 게시글 목록" });
+    expect(authorTable).toHaveStyle({ minWidth: "992px" });
+    expect(within(authorTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
+    fireEvent.click(within(authorTable).getByRole("button", { name: "실제 자유게시글 관리 메뉴" }));
+    expect(within(authorTable).getByRole("button", { name: "게시글 삭제" })).toBeInTheDocument();
+    fireEvent.click(within(authorTable).getByRole("button", { name: "실제 자유게시글 관리 메뉴" }));
 
     rerender(
       <FreeBoard
@@ -1828,6 +1843,33 @@ describe("news admin visible controls", () => {
     expect(within(adminTable).queryByRole("button", { name: "게시글 삭제" })).not.toBeInTheDocument();
     fireEvent.click(within(adminTable).getByRole("button", { name: "실제 자유게시글 관리 메뉴" }));
     expect(within(adminTable).getByRole("button", { name: "게시글 삭제" })).toBeInTheDocument();
+  });
+
+  it("shows sharing only for public free-board posts and delete in the author detail", () => {
+    const { rerender } = render(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[{ ...realFreePost, isPublicShareEnabled: false }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    expect(screen.getByRole("button", { name: "게시글 삭제" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "카카오톡 공유" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "목록으로" }));
+
+    rerender(
+      <FreeBoard
+        session={{ id: "member-1", name: "조합원", loginId: "member1", role: "MEMBER" }}
+        posts={[{ ...realFreePost, isPublicShareEnabled: true }]}
+        onRefresh={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("실제 자유게시글"));
+    expect(screen.getByRole("button", { name: "카카오톡 공유" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "링크 복사" })).toBeInTheDocument();
   });
 
   it("shows the selected display author name instead of the admin account name", () => {

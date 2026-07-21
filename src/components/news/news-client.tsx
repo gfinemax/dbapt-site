@@ -68,6 +68,7 @@ import { cn } from "@/lib/utils";
 import { formatViewCount } from "@/lib/view-count";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeBoard } from "./notice-board";
+import { ContentShareActions } from "./content-share-actions";
 import { CommentReactionBar } from "./comment-reaction-bar";
 import { FreeBoard } from "./free-board";
 import { FaqAccordion } from "./faq-accordion";
@@ -370,6 +371,27 @@ export function NewsClient({
       alert(err instanceof Error ? err.message : "공지사항 수정 중 오류가 발생했습니다.");
     } finally {
       setIsSavingNotice(false);
+    }
+  };
+
+  const deleteActiveNotice = async () => {
+    if (!activeViewNotice || !isAdmin) return;
+    if (!confirm(`"${activeViewNotice.title}" 공지사항을 삭제하시겠습니까?\n\n삭제 후에는 복구할 수 없습니다.`)) return;
+
+    try {
+      const response = await fetch(`/api/news?id=${encodeURIComponent(activeViewNotice.id)}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(data.error || "공지사항 삭제에 실패했습니다.");
+        return;
+      }
+
+      setNewsList((current) => current.filter((item) => item.id !== activeViewNotice.id));
+      setActiveViewNotice(null);
+      setIsEditingNotice(false);
+    } catch (error) {
+      console.error(error);
+      alert("공지사항 삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -1106,7 +1128,7 @@ export function NewsClient({
               ) : (
                 <>
                   <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col items-start justify-between gap-3 sm:flex-row">
                       <h3 className="text-[19px] font-extrabold text-charcoal-primary leading-snug break-keep [overflow-wrap:anywhere] sm:text-xl">
                         {activeViewNotice.isStarred && (
                           <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 mr-1.5 align-middle">
@@ -1115,15 +1137,30 @@ export function NewsClient({
                         )}
                         {activeViewNotice.title}
                       </h3>
-                      {isEditableNotice && (
-                        <button
-                          type="button"
-                          onClick={beginNoticeEdit}
-                          className="shrink-0 rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface"
-                        >
-                          수정
-                        </button>
-                      )}
+                      <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
+                        {activeViewNotice.isReal && (
+                          <ContentShareActions kind="notice" contentId={activeViewNotice.id} title={activeViewNotice.title} />
+                        )}
+                        {isEditableNotice && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={beginNoticeEdit}
+                              className="rounded-full border border-stone-surface bg-white px-3 py-1.5 text-[11px] font-bold text-graphite hover:bg-stone-surface focus:outline-none focus:ring-2 focus:ring-sky-blue/25"
+                            >
+                              수정
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="공지 삭제"
+                              onClick={() => void deleteActiveNotice()}
+                              className="rounded-full border border-coral-red/20 bg-coral-red/10 px-3 py-1.5 text-[11px] font-bold text-coral-red hover:bg-coral-red/15 focus:outline-none focus:ring-2 focus:ring-coral-red/25"
+                            >
+                              삭제
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     <div

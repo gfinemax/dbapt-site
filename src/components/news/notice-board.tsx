@@ -29,6 +29,7 @@ import { ContentLikeButton } from "@/components/content-like-button";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
+import { ContentShareActions } from "./content-share-actions";
 
 type NoticeBoardProps = {
   isLoggedIn: boolean;
@@ -631,6 +632,9 @@ export function NoticeBoard({
                 )}
                 {activeViewNotice.title}
               </h3>
+              {activeViewNotice.isReal && (
+                <ContentShareActions kind="notice" contentId={activeViewNotice.id} title={activeViewNotice.title} />
+              )}
               
               <div
                 data-notice-detail-meta="true"
