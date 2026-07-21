@@ -6,6 +6,10 @@ export function formatViewCount(value: number | null | undefined, label = "조�
   return `${label} ${normalizeViewCount(value).toLocaleString("ko-KR")}회`;
 }
 
+export function formatViewCountNumber(value: number | null | undefined) {
+  return normalizeViewCount(value).toLocaleString("ko-KR");
+}
+
 export const VIEW_COUNT_BASELINE_DATE = "2026.07.05";
 
 export function formatViewCountBaseline(label = "조회수") {

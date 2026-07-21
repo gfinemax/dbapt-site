@@ -12,7 +12,7 @@ import {
   prepareDocumentUploadFile,
   type PdfUploadOptimizationMode,
 } from "@/lib/pdf-upload-optimization";
-import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
+import { formatViewCount, formatViewCountBaseline, formatViewCountNumber } from "@/lib/view-count";
 
 // ── 공개자료 문서함 분류 타입 ──
 export type MeetingCategory =
@@ -929,7 +929,9 @@ export function MeetingsTable({
                       {renderReplyDueCell(doc)}
                     </td>
                     <td className="px-2 py-3.5 text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
-                      {formatViewCount(doc.viewCount, "열람")}
+                      <span aria-label={`열람수 ${formatViewCountNumber(doc.viewCount)}회`}>
+                        {formatViewCountNumber(doc.viewCount)}
+                      </span>
                     </td>
                     <td className="px-2 py-3.5 text-center">
                       {doc.sourceDocument ? (

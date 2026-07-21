@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Document } from "./document-table";
 import { DocumentBookmarkButton } from "./document-bookmark-button";
@@ -144,8 +143,15 @@ export function PersonalDocumentHub({
     return (
       <article
         key={doc.id}
-        className="w-full min-w-0 rounded-2xl bg-white p-4 shadow-[inset_0_0_0_1px_#f2f0ed] transition-colors hover:bg-warm-canvas/60"
+        className="group relative w-full min-w-0 rounded-2xl"
       >
+        <button
+          type="button"
+          aria-label={`${doc.title} 열람`}
+          onClick={() => handleOpen(doc)}
+          className="absolute inset-0 rounded-2xl bg-white shadow-[inset_0_0_0_1px_#f2f0ed] transition-colors hover:bg-warm-canvas/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/40"
+        />
+        <div className="pointer-events-none relative p-4">
         <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="rounded-full bg-sky-blue/10 px-2.5 py-1 text-[10px] font-bold text-sky-blue">
@@ -188,21 +194,15 @@ export function PersonalDocumentHub({
             </p>
             <p className="mt-0.5 font-mono text-[10px] text-ash">{formatSize(doc.fileSize)}</p>
           </div>
-          <div className="flex shrink-0 items-center justify-end gap-2">
+          <div className="pointer-events-auto relative z-10 flex shrink-0 items-center justify-end gap-2">
             <DocumentBookmarkButton
               document={doc}
               onBookmarkChange={handleBookmarkChange}
               className="h-8 px-3 text-[11px]"
             />
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => handleOpen(doc)}
-              className="h-8 rounded-full bg-midnight px-3 text-[11px] font-bold text-white hover:bg-charcoal-primary"
-            >
-              열람
-            </Button>
+            <span aria-hidden="true" className="pointer-events-none text-base font-bold text-ash transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal-primary">›</span>
           </div>
+        </div>
         </div>
       </article>
     );

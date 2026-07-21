@@ -1671,7 +1671,7 @@ describe("news admin visible controls", () => {
     expect(noticeTable).toHaveClass("h-auto");
     expect(within(noticeTable).getByRole("columnheader", { name: "조회수" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).queryByRole("button", { name: "댓글 1개 보기" })).not.toBeInTheDocument();
-    expect(within(noticeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
+    expect(within(noticeTable).getByLabelText("조회수 0회")).toHaveTextContent("0");
     expect(noticeTable).toHaveStyle({ minWidth: "760px" });
     expect(within(noticeTable).getByRole("columnheader", { name: "등록자" })).toHaveClass("whitespace-nowrap");
     expect(within(noticeTable).getByRole("cell", { name: "운영자" })).toHaveClass("whitespace-nowrap");
@@ -1787,7 +1787,7 @@ describe("news admin visible controls", () => {
     expect(commentButton).toHaveTextContent("댓글 1");
     expect(commentButton).toHaveClass("px-2.5", "py-1", "text-[11px]");
     expect(commentButton).toHaveClass("whitespace-nowrap");
-    expect(within(freeTable).getByText("조회 0회")).toHaveClass("whitespace-nowrap");
+    expect(within(freeTable).getByLabelText("조회수 0회")).toHaveTextContent("0");
     expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
     expect(within(freeTable).getByRole("button", { name: "실제 자유게시글 개인자료실 보관" })).toBeInTheDocument();
     expect(freeTable.parentElement).toHaveClass("scrollbar-none");

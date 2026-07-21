@@ -114,7 +114,7 @@ describe("content view counts", () => {
       />,
     );
 
-    expect(screen.getByText("조회 42회")).toBeInTheDocument();
+    expect(screen.getByText("42")).toHaveAttribute("aria-label", "조회수 42회");
     expect(screen.getByRole("button", { name: "조회수 공지 공감 5개 선택됨" })).toBeInTheDocument();
     fireEvent.click(screen.getByText("조회수 공지"));
 
@@ -136,7 +136,7 @@ describe("content view counts", () => {
     expect(within(table).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
     expect(within(table).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
     expect(within(table).queryByRole("columnheader", { name: "댓글" })).not.toBeInTheDocument();
-    expect(within(table).getByText("조회 42회")).toBeInTheDocument();
+    expect(within(table).getByText("42")).toHaveAttribute("aria-label", "조회수 42회");
     expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
   });
 
@@ -167,7 +167,7 @@ describe("content view counts", () => {
       />,
     );
 
-    expect(screen.getByText("조회 7회")).toBeInTheDocument();
+    expect(screen.getByText("7")).toHaveAttribute("aria-label", "조회수 7회");
     expect(screen.getByRole("button", { name: "조회수 자유글 공감 3개" })).toBeInTheDocument();
     fireEvent.click(screen.getByText("조회수 자유글"));
 
@@ -188,7 +188,7 @@ describe("content view counts", () => {
     expect(within(table).getByRole("columnheader", { name: "댓글" })).toBeInTheDocument();
     expect(within(table).getByRole("columnheader", { name: "조회수" })).toBeInTheDocument();
     expect(within(table).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
-    expect(within(table).getByText("조회 7회")).toBeInTheDocument();
+    expect(within(table).getByText("7")).toHaveAttribute("aria-label", "조회수 7회");
     expect(screen.getByText("조회수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
   });
 
@@ -227,7 +227,7 @@ describe("content view counts", () => {
     const table = screen.getByRole("table");
     expect(within(table).getByRole("columnheader", { name: "열람수" })).toBeInTheDocument();
     expect(within(table).getByRole("columnheader", { name: "공감" })).toBeInTheDocument();
-    expect(within(table).getByText("열람 13회")).toBeInTheDocument();
+    expect(within(table).getByText("13")).toHaveAttribute("aria-label", "열람수 13회");
     expect(screen.getByText("열람수는 2026.07.05부터 집계됩니다.")).toBeInTheDocument();
   });
 

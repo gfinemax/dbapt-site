@@ -45,7 +45,7 @@ import { uploadPublicFile } from "@/lib/news/public-upload";
 import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
 import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
 import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
-import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
+import { formatViewCount, formatViewCountBaseline, formatViewCountNumber } from "@/lib/view-count";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { ContentLikeButton } from "@/components/content-like-button";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
@@ -146,7 +146,9 @@ function FreeBoardPostRows({
         </button>
       </td>
       <td className="h-[52px] px-3 py-0 align-middle text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
-        {formatViewCount(post.viewCount)}
+        <span aria-label={`조회수 ${formatViewCountNumber(post.viewCount)}회`}>
+          {formatViewCountNumber(post.viewCount)}
+        </span>
       </td>
       <td className="h-[52px] px-3 py-0 align-middle text-center">
         <ContentLikeButton

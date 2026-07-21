@@ -77,7 +77,7 @@ describe("personal library drawer host", () => {
     });
 
     const drawer = screen.getByLabelText("이조합 개인 자료실 드로어");
-    fireEvent.click(within(drawer).getByRole("button", { name: "열람" }));
+    fireEvent.click(within(drawer).getByRole("button", { name: "2026년 지역주택조합 실태조사 결과통지 열람" }));
 
     const viewerPanel = screen.getByTestId("pdf-viewer-panel");
     const viewerLayer = screen.getByTestId("pdf-viewer-modal-layer");

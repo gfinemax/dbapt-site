@@ -24,7 +24,7 @@ import { buildNoticeBoardList, type NoticeBoardListItem } from "@/lib/news/notic
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getNewsComments, type CoopNewsView, type NewsCommentView } from "@/lib/news/types";
 import { cn } from "@/lib/utils";
-import { formatViewCount, formatViewCountBaseline } from "@/lib/view-count";
+import { formatViewCount, formatViewCountBaseline, formatViewCountNumber } from "@/lib/view-count";
 import { ContentLikeButton } from "@/components/content-like-button";
 import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
@@ -553,7 +553,9 @@ export function NoticeBoard({
                       {notice.author.name}
                     </td>
                     <td className="h-[52px] px-3 py-0 align-middle text-center text-[11px] font-bold text-graphite/75 whitespace-nowrap">
-                      {formatViewCount(notice.viewCount)}
+                      <span aria-label={`조회수 ${formatViewCountNumber(notice.viewCount)}회`}>
+                        {formatViewCountNumber(notice.viewCount)}
+                      </span>
                     </td>
                     <td className="h-[52px] px-3 py-0 align-middle text-center">
                       <ContentLikeButton

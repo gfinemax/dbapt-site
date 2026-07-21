@@ -70,6 +70,11 @@ describe("PersonalDocumentHub", () => {
     expect(screen.getByText("아직 열람하지 않은 중요 문서와 최근 14일 이내 등록된 공개 문서를 보여드립니다.")).toBeInTheDocument();
     expect(within(recommendations).getByText("중요 미열람 의사록")).toBeInTheDocument();
     expect(within(recommendations).getByText("최근 미열람 공문")).toBeInTheDocument();
+    expect(within(recommendations).getByRole("button", { name: "중요 미열람 의사록 열람" })).toHaveClass(
+      "absolute",
+      "inset-0",
+    );
+    expect(within(recommendations).queryByText("열람")).not.toBeInTheDocument();
     expect(screen.queryByText("이미 본 중요 문서")).not.toBeInTheDocument();
     expect(screen.queryByText("오래된 일반 문서")).not.toBeInTheDocument();
   });
