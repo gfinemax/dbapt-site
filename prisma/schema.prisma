@@ -249,17 +249,27 @@ model Attachment {
 
 // 3. 보안 감사 로그 (열람 및 다운로드 이력)
 model DocumentLog {
-  id         String   @id @default(uuid())
-  userId     String
-  documentId String
-  actionType String // VIEW, DOWNLOAD
-  ipAddress  String? // 열람자 IP
-  userAgent  String? // 브라우저 정보
-  createdAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  userId       String
+  documentId   String
+  actionType   String // VIEW, DOWNLOAD
+  resourceType String   @default("MAIN_FILE") // MAIN_FILE, LEGACY_ATTACHMENT, ATTACHMENT, MERGED_FILE
+  attachmentId String?
+  fileName     String?
+  fileSize     Int?
+  requestPath  String?
+  ipAddress    String? // 열람자 IP
+  userAgent    String? // 브라우저 정보
+  createdAt    DateTime @default(now())
 
   // 관계 정의
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([actionType, createdAt])
+  @@index([userId, createdAt])
+  @@index([documentId, createdAt])
 }
 
 // 3.1. 조합원 개인 자료 보관함

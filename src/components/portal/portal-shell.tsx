@@ -11,8 +11,7 @@ import { DocumentTable, type Document } from "./document-table";
 import { PersonalDocumentHub } from "./personal-document-hub";
 import { PdfViewerModal } from "./pdf-viewer-modal";
 import { ContributionDashboard } from "./contribution-dashboard";
-import { DocumentUploadForm } from "./document-upload-form";
-import { AuditLogsTable, type LogEntry } from "./audit-logs-table";
+import { type LogEntry } from "./audit-logs-table";
 import { ContributionSummaryMini } from "./contribution-summary-mini";
 import { PortalHamburger } from "./portal-hamburger";
 import { buildContributionDashboardView } from "@/lib/contribution-dashboard";
@@ -137,6 +136,11 @@ export function PortalShell({
   const router = useRouter();
   const profile = portalProfiles[role];
   const isLoggedIn = !!session;
+  const disclosureDocumentCount = documents.filter((document) => document.category === "DISCLOSURE").length;
+  const accountingDocumentCount = documents.filter((document) => document.category === "ACCOUNTING").length;
+  const accountingDocumentDegrees = documents.length > 0
+    ? Math.max((accountingDocumentCount / documents.length) * 360, accountingDocumentCount > 0 ? 4 : 0)
+    : 0;
   const resolvedContributionDashboard =
     contributionDashboard ??
     buildContributionDashboardView({
@@ -652,26 +656,63 @@ export function PortalShell({
                     <span className="inline-flex rounded-full bg-sunburst-yellow/20 text-charcoal-primary px-3 py-1 text-xs font-semibold">
                       운영 및 승인 관리
                     </span>
-                    <div className="mt-4 grid gap-6 md:grid-cols-2">
+                    <div className="mt-4">
                       <div>
                         <h2 className="text-xl font-semibold">관리자 대시보드 요약</h2>
-                        <p className="mt-2 text-sm text-graphite">총 정보공개 문서와 감사 로그 상태 요약입니다.</p>
-                        <ul className="mt-4 text-xs space-y-2 leading-5 text-graphite">
-                          <li>• 등록된 문서 건수: <strong className="text-charcoal-primary font-semibold">{documents.length}건</strong> (의무공개 {documents.filter(d=>d.category==='DISCLOSURE').length}건 / 회계보고 {documents.filter(d=>d.category==='ACCOUNTING').length}건)</li>
-                          <li>• 총 보안 다운로드 수: <strong className="text-charcoal-primary font-semibold">{logs.length}회</strong></li>
-                          <li>• 승인 대기 중 소셜 회원: <strong className="text-ember-orange font-semibold">{pendingUsers.length}명</strong></li>
-                        </ul>
-                        <Link
-                          href="/portal/admin/members"
-                          className="mt-5 inline-flex items-center rounded-full bg-midnight px-4 py-2 text-xs font-semibold text-white transition hover:bg-charcoal-primary"
-                        >
-                          PeopleOn 조합원 관리
-                        </Link>
-                      </div>
-                      <div>
-                        <DocumentUploadForm onSuccess={() => {
-                          router.refresh();
-                        }} />
+                        <p className="mt-2 text-sm text-graphite">총 정보공개 문서와 보안 감사 상태 요약입니다.</p>
+                        <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(230px,0.9fr)_minmax(220px,1.1fr)]">
+                          <section className="flex items-center gap-4 rounded-2xl border border-stone-surface bg-parchment-card/50 p-4" aria-labelledby="document-summary-title">
+                            <div
+                              role="img"
+                              aria-label={`전체 문서 ${documents.length}건 중 의무 정보 공개 ${disclosureDocumentCount}건, 회계 및 자금 보고 ${accountingDocumentCount}건`}
+                              className="relative grid size-28 shrink-0 place-items-center rounded-full"
+                              style={{
+                                background: documents.length > 0
+                                  ? `conic-gradient(#f4a261 0deg ${accountingDocumentDegrees}deg, #1689e8 ${accountingDocumentDegrees}deg 360deg)`
+                                  : "#ece9e4",
+                              }}
+                            >
+                              <div className="grid size-[74px] place-items-center rounded-full bg-white text-center shadow-sm">
+                                <span className="text-[10px] font-semibold text-ash">전체 문서</span>
+                                <strong className="-mt-1 text-xl font-extrabold text-charcoal-primary">{documents.length}건</strong>
+                              </div>
+                            </div>
+                            <div className="min-w-0">
+                              <h3 id="document-summary-title" className="text-sm font-bold text-charcoal-primary">문서 현황</h3>
+                              <dl className="mt-3 space-y-2 text-xs text-graphite">
+                                <div className="flex items-center justify-between gap-4">
+                                  <dt className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-sky-blue" />의무 정보 공개</dt>
+                                  <dd className="font-bold text-charcoal-primary">{disclosureDocumentCount}건</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                  <dt className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-[#f4a261]" />회계 및 자금 보고</dt>
+                                  <dd className="font-bold text-charcoal-primary">{accountingDocumentCount}건</dd>
+                                </div>
+                              </dl>
+                            </div>
+                          </section>
+
+                          <div className="grid gap-3 sm:grid-rows-2">
+                            <section className="rounded-2xl border border-stone-surface bg-white p-4">
+                              <p className="text-xs font-semibold text-ash">보안 활동</p>
+                              <div className="mt-1 flex items-end justify-between gap-3">
+                                <strong className="text-2xl font-extrabold text-charcoal-primary">{formatNumber(logs.length)}건</strong>
+                                <span className="text-[10px] text-ash">감사 로그 누적</span>
+                              </div>
+                            </section>
+                            <section className="rounded-2xl border border-stone-surface bg-white p-4">
+                              <p className="text-xs font-semibold text-ash">승인 대기 소셜 회원</p>
+                              <div className="mt-1 flex items-end justify-between gap-3">
+                                <strong className="text-2xl font-extrabold text-ember-orange">{pendingUsers.length}명</strong>
+                                <span className="text-[10px] text-ash">확인 필요</span>
+                              </div>
+                            </section>
+                          </div>
+                        </div>
+                        <div className="mt-5 flex flex-wrap gap-2">
+                          <Link href="/portal/admin/members" className="inline-flex items-center rounded-full bg-midnight px-4 py-2 text-xs font-semibold text-white transition hover:bg-charcoal-primary">PeopleOn 조합원 관리</Link>
+                          <Link href="/portal/admin/audit-logs" className="inline-flex items-center rounded-full border border-stone-surface bg-white px-4 py-2 text-xs font-semibold text-charcoal-primary transition hover:border-sky-blue hover:text-sky-blue">보안 감사 전체 보기</Link>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -849,21 +890,29 @@ export function PortalShell({
             </section>
 
             {/* 2. Interactive Document Table */}
-            {role !== "admin" && (
-              <PersonalDocumentHub
-                documents={managedDocs}
-                contentBookmarks={contentBookmarks}
-                role={role}
-                isDrawerMode={isDrawerMode}
-                onOpenDocument={handleOpenDocument}
-              />
-            )}
+            <PersonalDocumentHub
+              documents={managedDocs}
+              contentBookmarks={contentBookmarks}
+              role={role}
+              isDrawerMode={isDrawerMode}
+              onOpenDocument={handleOpenDocument}
+              sectionId={role === "admin" ? "portal-personal-library-section" : undefined}
+            />
 
             {/* 3. Document list for Admin */}
             {role === "admin" && (
               <section id="portal-documents-section" className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
-                <h3 className="text-lg font-semibold text-charcoal-primary mb-2">전체 등록 문서 목록</h3>
-                <p className="text-xs text-graphite mb-6">등록된 전체 문서들의 세부 정보 및 상태입니다.</p>
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-charcoal-primary">전체 등록 문서 목록</h3>
+                    <p className="mt-2 text-xs leading-5 text-graphite">
+                      등록된 전체 문서의 세부 정보와 공개 상태를 관리합니다. 중요 표시는 전체 사용자에게, 즐겨찾기는 운영자 본인에게만 적용됩니다.
+                    </p>
+                  </div>
+                  <Link href="/portal/admin/documents/new" className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-midnight px-5 text-xs font-bold text-white transition hover:bg-charcoal-primary">
+                    + 새 문서 등록
+                  </Link>
+                </div>
                 <DocumentTable 
                   documents={managedDocs} 
                   role={role} 
@@ -877,12 +926,6 @@ export function PortalShell({
               </section>
             )}
 
-            {/* 4. Audit Log Table for Admin only */}
-            {role === "admin" && (
-              <section className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
-                <AuditLogsTable logs={logs} />
-              </section>
-            )}
           </div>
         ) : (
           /* Render static preview profiles cards (fallback when not logged in) */

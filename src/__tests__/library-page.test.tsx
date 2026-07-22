@@ -210,14 +210,14 @@ describe("library page", () => {
     expect(within(materialTable).getByRole("columnheader", { name: "발생일" })).toBeInTheDocument();
     expect(within(materialTable).getByRole("columnheader", { name: "문서 제목" })).toBeInTheDocument();
     expect(within(materialTable).getByRole("columnheader", { name: "회신기한" })).toBeInTheDocument();
-    expect(within(materialTable).getByRole("columnheader", { name: "보관" })).toBeInTheDocument();
+    expect(within(materialTable).getByRole("columnheader", { name: "즐겨찾기" })).toBeInTheDocument();
     expect(within(materialTable).getByRole("columnheader", { name: "관리" })).toBeInTheDocument();
 
     const uploadedEntry = within(materialTable).getByLabelText("조합규약(260418 1차개정) 관리");
     expect(within(uploadedEntry).getByText("2026.06.04")).toBeInTheDocument();
     expect(within(uploadedEntry).getByText("실제 업로드")).toBeInTheDocument();
     expect(within(uploadedEntry).getByText("정관 및 조합규약")).toBeInTheDocument();
-    expect(within(uploadedEntry).getByRole("button", { name: "조합규약(260418 1차개정) 개인자료실 보관" })).toBeInTheDocument();
+    expect(within(uploadedEntry).getByRole("button", { name: "조합규약(260418 1차개정) 즐겨찾기" })).toBeInTheDocument();
     expect(within(uploadedEntry).getByRole("button", { name: "자료 열람" })).toBeInTheDocument();
     expect(within(materialTable).queryByText("2026년 정기총회에서 조합규약 개정됨")).not.toBeInTheDocument();
   });

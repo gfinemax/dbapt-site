@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionMock = vi.fn();
 const loadPersonalLibraryDataMock = vi.fn();
-const portalShellMock = vi.fn((props: { documents?: unknown[]; role: string }) => (
-  <div data-testid={`${props.role}-portal`}>{JSON.stringify(props.documents)}</div>
+const portalShellMock = vi.fn((props: { documents?: unknown[]; contentBookmarks?: unknown[]; role: string }) => (
+  <div data-testid={`${props.role}-portal`}>{JSON.stringify(props)}</div>
 ));
 
 vi.mock("@/lib/auth", () => ({
@@ -21,6 +21,7 @@ vi.mock("@/lib/personal-library-data", () => ({
     paymentNotices: [],
     pendingUsers: [],
     approvedSocialUsers: [],
+    contentBookmarks: [],
   }),
   loadPersonalLibraryData: loadPersonalLibraryDataMock,
 }));
@@ -69,6 +70,7 @@ describe("portal pages personal library loading", () => {
       paymentNotices: [],
       pendingUsers: [],
       approvedSocialUsers: [],
+      contentBookmarks: [{ id: "saved-post-1", title: "저장한 게시글" }],
     });
   });
 
@@ -79,6 +81,7 @@ describe("portal pages personal library loading", () => {
 
     expect(loadPersonalLibraryDataMock).toHaveBeenCalledWith(session);
     expect(screen.getByTestId("member-portal")).toHaveTextContent("isBookmarkedByCurrentUser");
+    expect(screen.getByTestId("member-portal")).toHaveTextContent("저장한 게시글");
   });
 
   it("loads refund portal documents through the personal library loader", async () => {
@@ -89,5 +92,6 @@ describe("portal pages personal library loading", () => {
 
     expect(loadPersonalLibraryDataMock).toHaveBeenCalledWith({ ...session, role: "REFUND" });
     expect(screen.getByTestId("refund-portal")).toHaveTextContent("isBookmarkedByCurrentUser");
+    expect(screen.getByTestId("refund-portal")).toHaveTextContent("저장한 게시글");
   });
 });

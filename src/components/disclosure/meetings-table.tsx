@@ -861,7 +861,7 @@ export function MeetingsTable({
                 <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">회신기한</th>
                 <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">열람수</th>
                 <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">공감</th>
-                {showBookmarkColumn && <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">보관</th>}
+                {showBookmarkColumn && <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">즐겨찾기</th>}
                 {isAdmin && <th className="px-2 py-3.5 font-semibold text-ash text-center text-xs">관리</th>}
               </tr>
             </thead>

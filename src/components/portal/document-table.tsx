@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PdfViewerModal } from "./pdf-viewer-modal";
 import { ContentLikeButton } from "@/components/content-like-button";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
 import { formatViewCount } from "@/lib/view-count";
+import { DocumentBookmarkButton } from "./document-bookmark-button";
+import {
+  DOCUMENT_BOOKMARK_CHANGED_EVENT,
+  type DocumentBookmarkChangedDetail,
+} from "@/lib/document-bookmark-events";
+
+const PAGE_SIZE = 20;
 
 export type Attachment = {
   id: string;
@@ -77,9 +85,23 @@ export function DocumentTable({
   const isAdmin = role.toUpperCase() === "ADMIN";
   const [search, setSearch] = useState(initialSearch);
   const [categoryFilter, setCategoryFilter] = useState(initialCategory);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [page, setPage] = useState(1);
+  const [bookmarkOverrides, setBookmarkOverrides] = useState<Record<string, boolean>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [starringId, setStarringId] = useState<string | null>(null);
   const [activeViewDoc, setActiveViewDoc] = useState<Document | null>(null);
+
+  useEffect(() => {
+    const handleExternalBookmarkChange = (event: Event) => {
+      const { documentId, isBookmarked } = (event as CustomEvent<DocumentBookmarkChangedDetail>).detail;
+      setBookmarkOverrides((current) => ({ ...current, [documentId]: isBookmarked }));
+    };
+
+    window.addEventListener(DOCUMENT_BOOKMARK_CHANGED_EVENT, handleExternalBookmarkChange);
+    return () => window.removeEventListener(DOCUMENT_BOOKMARK_CHANGED_EVENT, handleExternalBookmarkChange);
+  }, []);
   const activeViewDocRelation = activeViewDoc ? getPdfRelatedDocument(activeViewDoc, documents) : null;
 
   useEffect(() => {
@@ -92,14 +114,27 @@ export function DocumentTable({
     setCategoryFilter(initialCategory);
   }, [initialCategory]);
 
-  const filtered = documents
+  const localDocuments = useMemo(
+    () =>
+      documents.map((document) => ({
+        ...document,
+        ...(bookmarkOverrides[document.id] === undefined
+          ? {}
+          : { isBookmarkedByCurrentUser: bookmarkOverrides[document.id] }),
+      })),
+    [bookmarkOverrides, documents],
+  );
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const filtered = localDocuments
     .filter((doc) => {
-      const matchesSearch = doc.title
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchesSearch = [doc.title, doc.fileName, doc.description || ""]
+        .some((value) => value.toLowerCase().includes(normalizedSearch));
       const matchesCategory =
         categoryFilter === "all" || doc.category === categoryFilter;
-      return matchesSearch && matchesCategory;
+      const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
+      const matchesFavorite = !favoritesOnly || doc.isBookmarkedByCurrentUser;
+      return matchesSearch && matchesCategory && matchesStatus && matchesFavorite;
     })
     .sort((a, b) => {
       // 별표 문서를 항상 상단에 정렬
@@ -107,6 +142,13 @@ export function DocumentTable({
       if (!a.isStarred && b.isStarred) return 1;
       return 0;
     });
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedDocuments = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const handleBookmarkChange = (documentId: string, isBookmarked: boolean) => {
+    setBookmarkOverrides((current) => ({ ...current, [documentId]: isBookmarked }));
+  };
 
   const handleDelete = async (id: string, title: string) => {
     if (
@@ -196,12 +238,19 @@ export function DocumentTable({
     if (isAdmin) {
       return (
         <button
+          type="button"
           onClick={() => handleStarToggle(doc)}
           disabled={starringId === doc.id}
-          className="text-base leading-none transition-transform duration-150 active:scale-125 cursor-pointer disabled:opacity-50 select-none"
-          title={doc.isStarred ? "중요 해제" : "중요 표시"}
+          aria-label={`${doc.title} ${doc.isStarred ? "중요 해제" : "중요 지정"}`}
+          className={`inline-flex h-7 items-center gap-1 rounded-full border px-2 text-[10px] font-bold transition disabled:opacity-50 ${
+            doc.isStarred
+              ? "border-amber-300 bg-amber-50 text-amber-700"
+              : "border-stone-surface bg-white text-graphite hover:border-amber-300 hover:text-amber-700"
+          }`}
+          title="중요 표시는 모든 사용자에게 공통 적용되며 개인 즐겨찾기와 다릅니다."
         >
-          {doc.isStarred ? "⭐" : "☆"}
+          <span aria-hidden="true">{doc.isStarred ? "★" : "☆"}</span>
+          {starringId === doc.id ? "처리 중" : doc.isStarred ? "중요 해제" : "중요 지정"}
         </button>
       );
     }
@@ -220,8 +269,10 @@ export function DocumentTable({
     if (!isAdmin) return null;
     return (
       <button
+        type="button"
         onClick={() => handleDelete(doc.id, doc.title)}
         disabled={deletingId === doc.id}
+        aria-label={`${doc.title} 삭제`}
         className="flex items-center justify-center size-8 rounded-full text-ash hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all duration-150 cursor-pointer disabled:opacity-40"
         title="문서 삭제"
       >
@@ -287,109 +338,73 @@ export function DocumentTable({
   const renderCard = (doc: Document) => (
     <div
       key={doc.id}
-      className={`stone-card bg-white p-4.5 rounded-2xl border hover:shadow-xs transition-all duration-200 flex flex-col gap-3.5 ${
+      className={`group w-full min-w-0 rounded-xl border bg-white px-4 py-3 transition-colors hover:bg-warm-canvas/60 ${
         doc.isStarred
-          ? "border-amber-orange/30 bg-amber-50/20"
-          : "border-[#f2f0ed] hover:border-ember-orange/45"
+          ? "border-amber-orange/30"
+          : "border-[#f2f0ed]"
       }`}
     >
-      {/* 구분 뱃지, 별표 및 일자 */}
-      <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {renderStarButton(doc)}
           {renderCategoryBadge(doc)}
-        </div>
-        <span className="text-graphite/60 font-mono text-[11px]">
-          {formatDate(doc.documentDate || doc.publishedAt || doc.createdAt)}
-        </span>
-      </div>
-
-      {/* 제목 및 설명 */}
-      <div className="space-y-1">
-        <h4 className="text-[13px] font-bold text-charcoal-primary leading-snug break-all">
-          {doc.isStarred && (
-            <span className="inline-flex items-center justify-center rounded bg-amber-500/15 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 select-none shrink-0 border border-amber-500/20 mr-1.5 align-middle">
-              ★ 중요
-            </span>
-          )}
-          <span>{doc.title}</span>
-          {isRecent(doc.publishedAt || doc.createdAt) && (
-            <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full select-none shrink-0 shadow-3xs ml-1.5 align-middle">
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              NEW
-            </span>
-          )}
-          {renderAttachmentBadge(doc)}
-        </h4>
-        {doc.description && (
-          <p className="text-[11px] text-graphite/70 leading-relaxed font-normal break-all">
-            {doc.description}
-          </p>
-        )}
-      </div>
-
-      {/* 파일명, 용량 및 CTA */}
-      <div className="flex items-center justify-between pt-3 border-t border-[#f2f0ed] gap-4">
-        <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-          <span
-            className="text-[10px] text-ash font-mono truncate max-w-[260px] block"
-            title={doc.fileName}
-          >
-            {doc.fileName}
-          </span>
-          <span className="text-[9px] text-[#848281] font-mono">
-            {formatSize(doc.fileSize)}
-          </span>
-          <span className="text-[9px] text-ash font-mono">
-            {formatViewCount(doc.viewCount, "열람")}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          <ContentLikeButton
-            title={doc.title}
-            targetType="DOCUMENT"
-            targetId={doc.id}
-            initialLikeCount={doc.likeCount}
-            initialLikedByCurrentUser={doc.likedByCurrentUser}
-            canLike={role.toUpperCase() !== "PUBLIC"}
-            className="h-7 px-2 py-0 text-[10px] font-bold"
-          />
           {isAdmin && (
             <span
-              className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold ${
+              className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${
                 doc.status === "APPROVED"
                   ? "bg-green-100 text-green-800"
                   : "bg-amber-100 text-amber-800"
               }`}
             >
-              {doc.status === "APPROVED" ? "공개됨" : "대기중"}
+              {doc.status === "APPROVED" ? "공개됨" : "공개 대기"}
             </span>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => openViewDoc(doc)}
-            className="text-[11px] h-8 px-3 rounded-full border-[#f2f0ed] hover:border-ember-orange hover:text-ember-orange active:scale-95 transition-all duration-200 cursor-pointer"
-          >
-            열람
-          </Button>
-          {renderDeleteButton(doc)}
         </div>
+        <span className="shrink-0 font-mono text-[11px] text-ash">
+          {formatDate(doc.documentDate || doc.publishedAt || doc.createdAt)}
+        </span>
       </div>
+
+      <div className="mt-2 flex min-w-0 items-center gap-3">
+        <button
+          type="button"
+          onClick={() => openViewDoc(doc)}
+          aria-label={`${doc.title} 열람`}
+          className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-blue/40"
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-sm font-bold leading-5 text-charcoal-primary">{doc.title}</span>
+            {isRecent(doc.publishedAt || doc.createdAt) && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-600">
+                <span className="size-1.5 rounded-full bg-emerald-500" /> NEW
+              </span>
+            )}
+            {renderAttachmentBadge(doc)}
+          </span>
+          <span className="mt-0.5 block truncate text-xs leading-5 text-graphite/70">
+            {doc.description || doc.fileName}
+          </span>
+        </button>
+        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-ash transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal-primary" />
+      </div>
+
     </div>
   );
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+      <div className="mb-6 space-y-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {/* Search */}
         <input
           type="text"
-          placeholder="문서 제목으로 검색..."
+          placeholder="제목·파일명·설명 검색..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:max-w-xs rounded-xl border border-[#f2f0ed] bg-white px-4 py-2.5 text-sm outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="w-full lg:max-w-md rounded-xl border border-[#f2f0ed] bg-white px-4 py-2.5 text-sm outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
         />
 
         {/* Category Filters */}
@@ -397,7 +412,10 @@ export function DocumentTable({
           {["all", "DISCLOSURE", "ACCOUNTING", "NOTICE"].map((cat) => (
             <button
               key={cat}
-              onClick={() => setCategoryFilter(cat)}
+              onClick={() => {
+                setCategoryFilter(cat);
+                setPage(1);
+              }}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                 categoryFilter === cat
                   ? "bg-midnight text-white"
@@ -408,6 +426,50 @@ export function DocumentTable({
             </button>
           ))}
         </div>
+        </div>
+
+        {isAdmin && (
+          <div className="flex flex-wrap items-center gap-2 border-t border-stone-surface pt-3">
+            <span className="mr-1 text-[11px] font-semibold text-ash">관리 필터</span>
+            {[
+              ["all", "전체 상태"],
+              ["APPROVED", "공개됨"],
+              ["PENDING", "공개 대기"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                  statusFilter === value
+                    ? "bg-midnight text-white"
+                    : "bg-parchment-card text-graphite hover:bg-stone-surface"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              type="button"
+              aria-pressed={favoritesOnly}
+              onClick={() => {
+                setFavoritesOnly((current) => !current);
+                setPage(1);
+              }}
+              className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                favoritesOnly
+                  ? "bg-sky-blue text-white"
+                  : "bg-parchment-card text-graphite hover:bg-stone-surface"
+              }`}
+            >
+              즐겨찾기 문서
+            </button>
+            <span className="ml-auto text-[11px] text-ash">검색 결과 {filtered.length}건</span>
+          </div>
+        )}
       </div>
 
       {filtered.length === 0 ? (
@@ -417,14 +479,14 @@ export function DocumentTable({
       ) : isDrawerMode ? (
         /* 드로어 전용 모드: 컴팩트한 카드형 모바일 최적화 레이아웃 */
         <div className="space-y-3.5">
-          {filtered.map((doc) => renderCard(doc))}
+          {pagedDocuments.map((doc) => renderCard(doc))}
         </div>
       ) : (
         /* 일반 데스크톱 모드: PC 화면에서는 기존 테이블, 모바일 화면에서는 카드 리스트 자동 변환 */
         <>
           {/* 1) 모바일 뷰 카드 리스트 (block md:hidden) */}
           <div className="block md:hidden space-y-3.5">
-            {filtered.map((doc) => renderCard(doc))}
+            {pagedDocuments.map((doc) => renderCard(doc))}
           </div>
 
           {/* 2) 데스크톱 뷰 테이블 (hidden md:block) */}
@@ -432,19 +494,20 @@ export function DocumentTable({
             <table className="w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-[#f2f0ed] bg-[#f8f7f4] text-xs font-semibold text-charcoal-primary uppercase tracking-wider">
-                  <th className="px-3 py-4 w-10 text-center">★</th>
+                  <th className="px-3 py-4 w-14 text-center">중요</th>
                   <th className="px-5 py-4">발생일</th>
                   <th className="px-5 py-4">구분</th>
                   <th className="px-5 py-4">문서 제목</th>
                   <th className="px-5 py-4">파일명</th>
                   <th className="px-5 py-4">크기</th>
                   <th className="px-5 py-4 text-center">공감</th>
+                  <th className="px-5 py-4 text-center">즐겨찾기</th>
                   {isAdmin && <th className="px-5 py-4">상태</th>}
                   <th className="px-5 py-4 text-right">작업</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f2f0ed] text-graphite">
-                {filtered.map((doc) => (
+                {pagedDocuments.map((doc) => (
                   <tr
                     key={doc.id}
                     className={`transition-colors ${
@@ -516,6 +579,13 @@ export function DocumentTable({
                         className="h-7 px-2 py-0 text-[10px] font-bold"
                       />
                     </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-center">
+                      <DocumentBookmarkButton
+                        document={doc}
+                        onBookmarkChange={handleBookmarkChange}
+                        includeDocumentTitleInLabel
+                      />
+                    </td>
                     {isAdmin && (
                       <td className="whitespace-nowrap px-5 py-4">
                         <span
@@ -548,6 +618,30 @@ export function DocumentTable({
             </table>
           </div>
         </>
+      )}
+
+      {filtered.length > PAGE_SIZE && (
+        <nav aria-label="문서 목록 페이지" className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={currentPage === 1}
+            className="rounded-full bg-parchment-card px-4 py-2 text-xs font-semibold text-graphite transition hover:bg-stone-surface disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            이전
+          </button>
+          <span className="min-w-16 text-center text-xs font-semibold text-charcoal-primary">
+            {currentPage} / {pageCount}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
+            disabled={currentPage === pageCount}
+            className="rounded-full bg-parchment-card px-4 py-2 text-xs font-semibold text-graphite transition hover:bg-stone-surface disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            다음
+          </button>
+        </nav>
       )}
 
       {/* 실시간 보안 인라인 PDF 뷰어 모달 */}

@@ -177,7 +177,7 @@ describe("disclosure page", () => {
 
     fireEvent.click(
       within(rulesCard as HTMLElement).getByRole("button", {
-        name: "운영관리규정(260418 제정) 개인자료실 보관",
+        name: "운영관리규정(260418 제정) 즐겨찾기",
       }),
     );
 
@@ -212,7 +212,7 @@ describe("disclosure page", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: /개인자료실 보관/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /즐겨찾기/ })).not.toBeInTheDocument();
   });
 
   it("lets users bookmark documents from the folder document list without opening the document", async () => {
@@ -250,7 +250,7 @@ describe("disclosure page", () => {
     );
 
     const bookmarkButtons = screen.getAllByRole("button", {
-      name: "제2026-026 조합원 관련 민원 회신 개인자료실 보관",
+      name: "제2026-026 조합원 관련 민원 회신 즐겨찾기",
     });
     expect(bookmarkButtons.length).toBeGreaterThanOrEqual(2);
 

@@ -1,3 +1,41 @@
+# Verification - Dedicated Security Audit History (2026-07-22)
+
+- 관리자 전용 `/portal/admin/audit-logs`와 CSV `/api/admin/audit-logs/export` 구현.
+- 본문, 기존 추가 첨부, 다중 첨부, 통합 PDF의 열람·다운로드를 성공한 파일 응답 이후 공통 함수로 기록.
+- 로그 스냅샷 필드: 실제 파일명, 파일 크기, 첨부 ID, 파일 종류, 요청 경로, IP, 사용자 환경.
+- 관리자 메인은 최근 5건과 `전체 이력 보기` 링크만 유지.
+- additive Prisma migration `20260722090000_expand_document_audit_logs`를 실제 DB에 적용하고 기존 기록 보존 확인.
+- `pnpm test`: PASS, 93 files / 610 tests.
+- `pnpm lint`: PASS.
+- `pnpm build`: PASS, `/portal/admin/audit-logs`와 export route 포함.
+- 실행 서버: 비로그인 페이지 307 `/login`, 비로그인 CSV API 403 확인.
+
+---
+
+# Verification - Document Library Favorites And Role Clarity (2026-07-22)
+
+## Implemented Feature
+
+- 관리자 전체 등록 문서 목록에 제목·파일명·설명 통합 검색, 분류/상태/내 즐겨찾기 필터, 중요 문서 우선 정렬, 20개 단위 페이지 이동을 추가했다.
+- 전역 `중요`와 개인 `즐겨찾기`를 별도 열과 설명으로 구분했다.
+- 문서 보관 용어를 `내 즐겨찾기`로 통일하고, 게시글 보관은 `보관한 게시글`로 유지했다.
+- 운영자는 `운영 문서 관리실`, 조합원은 이름 기반 `개인 자료실`로 표시한다.
+- 관리자·조합원·환급 포털과 홈 개인자료 패널에 실제 문서/게시글 즐겨찾기 데이터를 연결했다.
+
+## Checks
+
+- Focused tests: PASS, 7 files and 73 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 90 files and 606 tests. 기존 jsdom `Window.scrollTo()` 경고만 발생했다.
+- `pnpm build`: PASS, Next.js 16.2.6 production build.
+- Local Chrome `/portal/admin`: PASS. 데스크톱 검색 결과 63건, 새 열과 페이지 이동 확인; 모바일에서 가로 넘침 없음, 표 대신 카드형 조작부와 즐겨찾기 버튼 표시 확인.
+
+## Risks Or Follow-up
+
+- 없음.
+
+---
+
 # Verification - Notice Mobile Image Width Parity
 
 ## Implemented Feature

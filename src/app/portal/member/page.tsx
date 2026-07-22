@@ -24,6 +24,7 @@ export default async function MemberPortalPage() {
       role="member"
       session={session}
       documents={personalLibraryData.documents}
+      contentBookmarks={personalLibraryData.contentBookmarks}
       contributionSummary={personalLibraryData.contributionSummary}
       contributionDashboard={personalLibraryData.contributionDashboard}
       paymentNotices={personalLibraryData.paymentNotices}

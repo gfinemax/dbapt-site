@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
+import { recordDocumentAccess } from "@/lib/document-audit";
 
 export async function GET(
   request: Request,
@@ -33,23 +34,19 @@ export async function GET(
       return NextResponse.json({ error: "해당 문서를 볼 수 있는 권한이 없습니다." }, { status: 403 });
     }
 
-    // 3. Create Audit Log (Append-only) for security audits
-    const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
-    const userAgent = request.headers.get("user-agent") || "Unknown";
-
-    await prisma.documentLog.create({
-      data: {
-        userId: session.id,
-        documentId: document.id,
-        actionType: "DOWNLOAD", // Standard audit download log
-        ipAddress,
-        userAgent,
-      },
-    });
-
-    // 4. Download from private Supabase Storage and return through the gated API.
+    // 3. Download from private Supabase Storage and return through the gated API.
     const file = await downloadDocumentFile(document.attachmentPath);
     const fileBuffer = await file.arrayBuffer();
+
+    await recordDocumentAccess({
+      request,
+      session,
+      documentId: document.id,
+      actionType: "DOWNLOAD",
+      resourceType: "LEGACY_ATTACHMENT",
+      fileName: document.attachmentName || "attachment",
+      fileSize: fileBuffer.byteLength,
+    });
 
     return new Response(fileBuffer, {
       headers: {

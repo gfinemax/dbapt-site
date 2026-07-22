@@ -96,6 +96,7 @@ export default async function Home() {
       contributionSummary={personalLibraryData.contributionSummary}
       contributionDashboard={personalLibraryData.contributionDashboard}
       paymentNotices={personalLibraryData.paymentNotices}
+      contentBookmarks={personalLibraryData.contentBookmarks}
       notices={notices}
     />
   );

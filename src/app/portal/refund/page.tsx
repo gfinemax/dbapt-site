@@ -24,6 +24,7 @@ export default async function RefundPortalPage() {
       role="refund"
       session={session}
       documents={personalLibraryData.documents}
+      contentBookmarks={personalLibraryData.contentBookmarks}
       refundInfo={personalLibraryData.refundInfo}
       contributionSummary={personalLibraryData.contributionSummary}
       contributionDashboard={personalLibraryData.contributionDashboard}

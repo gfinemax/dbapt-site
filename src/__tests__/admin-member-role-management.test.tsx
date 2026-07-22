@@ -6,6 +6,10 @@ const portalShellMock = vi.fn(() => <div data-testid="admin-portal" />);
 const documentFindManyMock = vi.fn();
 const documentLogFindManyMock = vi.fn();
 const userFindManyMock = vi.fn();
+const personalDocumentBookmarkFindManyMock = vi.fn();
+const personalContentBookmarkFindManyMock = vi.fn();
+const coopNewsFindManyMock = vi.fn();
+const freePostFindManyMock = vi.fn();
 
 vi.mock("@/lib/auth", () => ({
   getSession: getSessionMock,
@@ -20,6 +24,10 @@ vi.mock("@/lib/db", () => ({
     document: { findMany: documentFindManyMock },
     documentLog: { findMany: documentLogFindManyMock },
     user: { findMany: userFindManyMock },
+    personalDocumentBookmark: { findMany: personalDocumentBookmarkFindManyMock },
+    personalContentBookmark: { findMany: personalContentBookmarkFindManyMock },
+    coopNews: { findMany: coopNewsFindManyMock },
+    freePost: { findMany: freePostFindManyMock },
   },
 }));
 
@@ -38,6 +46,10 @@ describe("admin member role management data", () => {
       role: "ADMIN",
     });
     documentFindManyMock.mockResolvedValue([]);
+    personalDocumentBookmarkFindManyMock.mockResolvedValue([]);
+    personalContentBookmarkFindManyMock.mockResolvedValue([]);
+    coopNewsFindManyMock.mockResolvedValue([]);
+    freePostFindManyMock.mockResolvedValue([]);
     documentLogFindManyMock.mockResolvedValue([
       {
         id: "seed-log",

@@ -27,6 +27,22 @@ afterEach(() => {
 });
 
 describe("portal shell", () => {
+  it("keeps document registration out of the personal sidebar and links from the document list", () => {
+    render(
+      <PortalShell
+        role="admin"
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={[]}
+        isDrawerMode
+      />,
+    );
+
+    expect(screen.queryByRole("heading", { name: "신규 정보공개 문서 등록" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "+ 새 문서 등록" })).toHaveAttribute("href", "/portal/admin/documents/new");
+    expect(screen.getByRole("link", { name: "보안 감사 전체 보기" })).toHaveAttribute("href", "/portal/admin/audit-logs");
+    expect(screen.queryByRole("heading", { name: "최근 보안 활동" })).not.toBeInTheDocument();
+  });
+
   it("shows the login announcement popup after administrator login lands on the portal", async () => {
     vi.useFakeTimers();
 
@@ -68,6 +84,46 @@ describe("portal shell", () => {
       "href",
       "/portal/admin/members",
     );
+  });
+
+  it("shows document composition as a donut chart and keeps independent admin metrics separate", () => {
+    render(
+      <PortalShell
+        role="admin"
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={[
+          {
+            id: "disclosure-1",
+            title: "의무공개 문서",
+            description: null,
+            category: "DISCLOSURE",
+            fileName: "disclosure.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-07-22T00:00:00.000Z",
+            createdAt: "2026-07-22T00:00:00.000Z",
+          },
+          {
+            id: "accounting-1",
+            title: "회계보고 문서",
+            description: null,
+            category: "ACCOUNTING",
+            fileName: "accounting.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-07-22T00:00:00.000Z",
+            createdAt: "2026-07-22T00:00:00.000Z",
+          },
+        ]}
+        logs={[{ id: "log-1" } as never]}
+        pendingUsers={[]}
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "전체 문서 2건 중 의무 정보 공개 1건, 회계 및 자금 보고 1건" })).toBeInTheDocument();
+    expect(screen.getByText("문서 현황")).toBeInTheDocument();
+    expect(screen.getByText("감사 로그 누적")).toBeInTheDocument();
+    expect(screen.getByText("확인 필요")).toBeInTheDocument();
   });
 
   it("renders supplied contribution payment status for member sessions", () => {

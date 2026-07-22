@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
 import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
 import { getInlinePdfResponseHeaders } from "@/lib/pdf-response-headers";
+import { recordDocumentAccess } from "@/lib/document-audit";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -45,25 +46,21 @@ export async function GET(
       );
     }
 
-    // 3. 보안 감사 로그 생성 (Append-only - VIEW 액션 타입)
-    if (shouldWriteDocumentViewLog(session)) {
-      const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
-      const userAgent = request.headers.get("user-agent") || "Unknown";
-
-      await prisma.documentLog.create({
-        data: {
-          userId: session.id,
-          documentId: document.id,
-          actionType: "VIEW", // 열람 이력 기록
-          ipAddress,
-          userAgent,
-        },
-      });
-    }
-
-    // 4. Supabase Storage 비공개 버킷에서 파일 스트리밍
+    // 3. Supabase Storage 비공개 버킷에서 파일 스트리밍
     const file = await downloadDocumentFile(document.filePath);
     const fileBuffer = await file.arrayBuffer();
+
+    if (shouldWriteDocumentViewLog(session)) {
+      await recordDocumentAccess({
+        request,
+        session,
+        documentId: document.id,
+        actionType: "VIEW",
+        resourceType: "MAIN_FILE",
+        fileName: document.fileName,
+        fileSize: fileBuffer.byteLength,
+      });
+    }
 
     try {
       await prisma.document.update({

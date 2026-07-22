@@ -17,6 +17,7 @@ import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeV
 import { cn } from "@/lib/utils";
 import { getPersonalLibraryLabel } from "@/lib/personal-library-label";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
+import type { PersonalLibraryContentBookmark } from "@/lib/personal-library-data";
 
 type HomeClientProps = {
   session?: {
@@ -54,6 +55,7 @@ type HomeClientProps = {
   contributionSummary?: ContributionSummaryView | null;
   contributionDashboard?: ContributionDashboardView | null;
   paymentNotices?: PaymentNoticeView[];
+  contentBookmarks?: PersonalLibraryContentBookmark[];
   notices?: LandingNotice[];
 };
 
@@ -67,6 +69,7 @@ export function HomeClient({
   contributionSummary,
   contributionDashboard,
   paymentNotices = [],
+  contentBookmarks = [],
   notices = [],
 }: HomeClientProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -257,6 +260,7 @@ export function HomeClient({
               contributionSummary={contributionSummary}
               contributionDashboard={contributionDashboard}
               paymentNotices={paymentNotices}
+              contentBookmarks={contentBookmarks}
               isDrawerMode={true}
               initialCategory={portalCategory}
               initialSearch={portalSearch}

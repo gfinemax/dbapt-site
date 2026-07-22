@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Document } from "./document-table";
 import { DocumentBookmarkButton } from "./document-bookmark-button";
 import type { PersonalLibraryContentBookmark } from "@/lib/personal-library-data";
+import {
+  DOCUMENT_BOOKMARK_CHANGED_EVENT,
+  type DocumentBookmarkChangedDetail,
+} from "@/lib/document-bookmark-events";
 
 type PersonalDocumentHubProps = {
   documents: Document[];
@@ -13,6 +17,7 @@ type PersonalDocumentHubProps = {
   contentBookmarks?: PersonalLibraryContentBookmark[];
   isDrawerMode?: boolean;
   onOpenDocument?: (doc: Document) => void;
+  sectionId?: string;
 };
 
 type ActiveTab = "recommended" | "saved" | "content";
@@ -26,7 +31,7 @@ const RECOMMENDED_LIMIT = 6;
 const INITIAL_CONTENT_LIMIT = 5;
 const TAB_GUIDANCE: Record<ActiveTab, string> = {
   recommended: "아직 열람하지 않은 중요 문서와 최근 14일 이내 등록된 공개 문서를 보여드립니다.",
-  saved: "공개자료실에서 직접 보관한 PDF·공개 문서를 모아 보여드립니다.",
+  saved: "공개자료실에서 직접 즐겨찾기한 PDF·공개 문서를 모아 보여드립니다.",
   content: "공지사항·조합뉴스·자유게시판에서 직접 보관한 게시글을 모아 보여드립니다.",
 };
 
@@ -72,11 +77,28 @@ export function PersonalDocumentHub({
   contentBookmarks = [],
   isDrawerMode = false,
   onOpenDocument,
+  sectionId = "portal-documents-section",
 }: PersonalDocumentHubProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("recommended");
   const [visibleContentCount, setVisibleContentCount] = useState(INITIAL_CONTENT_LIMIT);
   const [visibleSavedCount, setVisibleSavedCount] = useState(INITIAL_CONTENT_LIMIT);
   const [documentFlagOverrides, setDocumentFlagOverrides] = useState<DocumentFlagOverrides>({});
+
+  useEffect(() => {
+    const handleExternalBookmarkChange = (event: Event) => {
+      const { documentId, isBookmarked } = (event as CustomEvent<DocumentBookmarkChangedDetail>).detail;
+      setDocumentFlagOverrides((current) => ({
+        ...current,
+        [documentId]: {
+          ...current[documentId],
+          isBookmarkedByCurrentUser: isBookmarked,
+        },
+      }));
+    };
+
+    window.addEventListener(DOCUMENT_BOOKMARK_CHANGED_EVENT, handleExternalBookmarkChange);
+    return () => window.removeEventListener(DOCUMENT_BOOKMARK_CHANGED_EVENT, handleExternalBookmarkChange);
+  }, []);
 
   const localDocs = useMemo(
     () =>
@@ -169,7 +191,7 @@ export function PersonalDocumentHub({
             )}
             {doc.isBookmarkedByCurrentUser && (
               <span className="rounded-full bg-ember-orange/10 px-2.5 py-1 text-[10px] font-bold text-ember-orange">
-                보관됨
+                즐겨찾기
               </span>
             )}
           </div>
@@ -310,7 +332,7 @@ export function PersonalDocumentHub({
 
   return (
     <section
-      id="portal-documents-section"
+      id={sectionId}
       className={cn(
         "w-full min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white p-5 shadow-[inset_0_0_0_1px_#f2f0ed] sm:max-w-none",
         isDrawerMode ? "space-y-4" : "space-y-5 sm:p-6",
@@ -323,7 +345,7 @@ export function PersonalDocumentHub({
           </span>
           <h3 className="mt-3 text-xl font-semibold text-charcoal-primary">오늘 확인할 공개자료</h3>
           <p className="mt-2 max-w-2xl text-xs leading-5 text-graphite">
-            전체 자료를 모두 펼치지 않고, 중요 표시 또는 최근 등록된 미열람 자료만 먼저 보여줍니다. 필요한 문서는 보관한 문서에서 다시 볼 수 있습니다.
+            전체 자료를 모두 펼치지 않고, 중요 표시 또는 최근 등록된 미열람 자료만 먼저 보여줍니다. 필요한 문서는 내 즐겨찾기에서 다시 볼 수 있습니다.
           </p>
         </div>
 
@@ -352,7 +374,7 @@ export function PersonalDocumentHub({
               : "bg-parchment-card text-graphite hover:bg-stone-surface",
           )}
         >
-          보관한 문서 {savedDocs.length}
+          내 즐겨찾기 {savedDocs.length}
         </button>
         <button
           type="button"
@@ -403,17 +425,17 @@ export function PersonalDocumentHub({
           <p className="font-bold text-charcoal-primary">
             {activeTab === "recommended"
               ? "새로 확인할 중요/최근 자료가 없습니다."
-              : "아직 보관한 자료가 없습니다."}
+              : "아직 즐겨찾기한 자료가 없습니다."}
           </p>
           <p className="mt-2 text-xs leading-5 text-graphite/75">
             {activeTab === "recommended"
               ? "이미 열람한 자료는 추천 목록에서 제외되며, 전체 자료는 공개자료실에서 검색할 수 있습니다."
-              : "추천자료에서 보관 버튼을 누르면 이곳에 개인적으로 저장됩니다."}
+              : "추천자료에서 즐겨찾기 버튼을 누르면 이곳에 개인적으로 저장됩니다."}
           </p>
         </div>
       ) : (
         <div
-          aria-label={activeTab === "recommended" ? "추천자료 목록" : "보관한 문서 목록"}
+          aria-label={activeTab === "recommended" ? "추천자료 목록" : "내 즐겨찾기 목록"}
           className={cn("grid", activeTab === "saved" ? "gap-2" : "gap-3")}
         >
           {(activeTab === "saved" ? activeDocs.slice(0, visibleSavedCount) : activeDocs)

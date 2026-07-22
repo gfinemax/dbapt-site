@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
 import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
 import { getInlinePdfResponseHeaders } from "@/lib/pdf-response-headers";
+import { recordDocumentAccess } from "@/lib/document-audit";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -46,23 +47,21 @@ export async function GET(
       );
     }
 
-    if (shouldWriteDocumentViewLog(session)) {
-      const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
-      const userAgent = request.headers.get("user-agent") || "Unknown";
-
-      await prisma.documentLog.create({
-        data: {
-          userId: session.id,
-          documentId: attachment.documentId,
-          actionType: "VIEW",
-          ipAddress,
-          userAgent,
-        },
-      });
-    }
-
     const file = await downloadDocumentFile(attachment.filePath);
     const fileBuffer = await file.arrayBuffer();
+
+    if (shouldWriteDocumentViewLog(session)) {
+      await recordDocumentAccess({
+        request,
+        session,
+        documentId: attachment.documentId,
+        actionType: "VIEW",
+        resourceType: "ATTACHMENT",
+        attachmentId: attachment.id,
+        fileName: attachment.fileName,
+        fileSize: fileBuffer.byteLength,
+      });
+    }
 
     return new Response(fileBuffer, {
       headers: getInlinePdfResponseHeaders(attachment.fileName),

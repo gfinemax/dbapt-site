@@ -6,6 +6,10 @@ import { isDemoApprovedAccount } from "@/lib/demo-account-filter";
 import { serializeDocuments } from "@/lib/document-serializer";
 import { normalizeMemberType } from "@/lib/member-type";
 import { getUserContactDisplay } from "@/lib/user-contact-display";
+import {
+  loadPersonalContentBookmarks,
+  type PersonalLibraryContentBookmark,
+} from "@/lib/personal-library-data";
 
 import { type Document } from "@/components/portal/document-table";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
@@ -21,6 +25,7 @@ export default async function AdminPortalPage() {
   let logs: LogEntry[] = [];
   let pendingUsers: { id: string; name: string; email: string; signupName?: string | null; signupPhone?: string | null; signupMemo?: string | null; createdAt: string }[] = [];
   let approvedSocialUsers: { id: string; name: string; email: string; role: string; memberType: string; createdAt: string }[] = [];
+  let contentBookmarks: PersonalLibraryContentBookmark[] = [];
 
   if (session) {
     try {
@@ -31,7 +36,19 @@ export default async function AdminPortalPage() {
         },
         orderBy: { documentDate: "desc" },
       });
-      documents = serializeDocuments(docs);
+      const documentBookmarks = await prisma.personalDocumentBookmark.findMany({
+        where: {
+          userId: session.id,
+          documentId: { in: docs.map((document) => document.id) },
+        },
+        select: { documentId: true },
+      });
+      const bookmarkedDocumentIds = new Set(documentBookmarks.map((bookmark) => bookmark.documentId));
+      documents = serializeDocuments(docs).map((document) => ({
+        ...document,
+        isBookmarkedByCurrentUser: bookmarkedDocumentIds.has(document.id),
+      }));
+      contentBookmarks = await loadPersonalContentBookmarks(session.id);
 
       // 2. Fetch all security audit logs
       const docLogs = await prisma.documentLog.findMany({
@@ -51,6 +68,7 @@ export default async function AdminPortalPage() {
           },
         },
         orderBy: { createdAt: "desc" },
+        take: 5,
       });
 
       logs = docLogs
@@ -107,6 +125,7 @@ export default async function AdminPortalPage() {
       role="admin"
       session={session}
       documents={documents}
+      contentBookmarks={contentBookmarks}
       logs={logs}
       pendingUsers={pendingUsers}
       approvedSocialUsers={approvedSocialUsers}

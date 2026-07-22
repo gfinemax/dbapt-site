@@ -86,6 +86,7 @@ describe("site header", () => {
 
     expect(screen.getByText("전체 메뉴 (사이트맵)")).toBeInTheDocument();
     expect(screen.queryByText("운영자 개인 자료실 열기")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "운영 문서 관리실 열기" })).toBeInTheDocument();
   });
 
   it("uses a compact rounded active indicator directly under the active desktop nav label", () => {

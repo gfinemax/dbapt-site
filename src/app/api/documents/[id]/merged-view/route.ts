@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/document-storage";
 import { getDocumentViewAccessError, shouldWriteDocumentViewLog } from "@/lib/document-view-access";
 import { getInlinePdfResponseHeaders } from "@/lib/pdf-response-headers";
+import { recordDocumentAccess } from "@/lib/document-audit";
 
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
@@ -70,24 +71,21 @@ export async function GET(
       }
     }
 
-    if (shouldWriteDocumentViewLog(session)) {
-      const ipAddress = request.headers.get("x-forwarded-for") || "127.0.0.1";
-      const userAgent = request.headers.get("user-agent") || "Unknown";
-
-      await prisma.documentLog.create({
-        data: {
-          userId: session.id,
-          documentId: document.id,
-          actionType: "VIEW",
-          ipAddress,
-          userAgent,
-        },
-      });
-    }
-
     const mergedBytes = await mergedPdf.save();
     const mergedBuffer = new ArrayBuffer(mergedBytes.byteLength);
     new Uint8Array(mergedBuffer).set(mergedBytes);
+
+    if (shouldWriteDocumentViewLog(session)) {
+      await recordDocumentAccess({
+        request,
+        session,
+        documentId: document.id,
+        actionType: "VIEW",
+        resourceType: "MERGED_FILE",
+        fileName: `${document.fileName} 외 ${Math.max(0, pdfSources.length - 1)}건 통합.pdf`,
+        fileSize: mergedBuffer.byteLength,
+      });
+    }
 
     try {
       await prisma.document.update({

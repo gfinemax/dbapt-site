@@ -805,7 +805,7 @@ function MaterialEntryTable({
           회신기한
         </span>
         <span role="columnheader" className="px-3 py-3.5 text-center">
-          보관
+          즐겨찾기
         </span>
         <span role="columnheader" className="px-3 py-3.5 text-center">
           관리
@@ -1124,7 +1124,7 @@ function MaterialEntryRow({
               <span className="font-mono text-xs font-semibold text-ash">-</span>
             </div>
             <div role="cell" className="flex items-center justify-center">
-              <span className="hidden text-xs font-bold text-ash">보관</span>
+              <span className="hidden text-xs font-bold text-ash">즐겨찾기</span>
               <DocumentBookmarkButton document={document} includeDocumentTitleInLabel />
             </div>
             <div role="cell" className="flex items-center justify-center gap-2">
@@ -1262,7 +1262,7 @@ function MaterialEntryRow({
         <span className="font-mono text-xs font-semibold text-ash">-</span>
       </div>
       <div role="cell" className="text-center text-sm">
-        <span className="hidden text-xs font-bold text-ash">보관</span>
+        <span className="hidden text-xs font-bold text-ash">즐겨찾기</span>
         <span className="text-[11px] font-semibold text-ash">-</span>
       </div>
       <div role="cell" className="flex items-center justify-center gap-2">

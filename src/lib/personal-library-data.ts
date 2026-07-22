@@ -91,7 +91,7 @@ function getCoopNewsHref(category: string, id: string) {
     : `/news?tab=notice&notice=${encodeURIComponent(id)}`;
 }
 
-async function loadPersonalContentBookmarks(userId: string): Promise<PersonalLibraryContentBookmark[]> {
+export async function loadPersonalContentBookmarks(userId: string): Promise<PersonalLibraryContentBookmark[]> {
   const bookmarks = await prisma.personalContentBookmark.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
@@ -216,7 +216,7 @@ export async function loadPersonalLibraryData(
   data.paymentNotices = serializePaymentNotices(notices);
   data.contributionDashboard = await loadContributionDashboardData(session.id, data.contributionSummary);
 
-  if (session.role !== "ADMIN" && data.documents.length > 0) {
+  if (data.documents.length > 0) {
     const documentIds = data.documents.map((doc) => doc.id);
     const [viewedLogs, bookmarks] = await Promise.all([
       prisma.documentLog.findMany({

@@ -1,3 +1,53 @@
+# UI Review - Dedicated Security Audit History (2026-07-22)
+
+## Reviewed Change
+- Feature: 관리자 전용 보안 감사 페이지와 파일 단위 열람·다운로드 기록
+- Pages: `/portal/admin/audit-logs`, `/portal/admin`
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 관리자 권한은 서버 페이지와 CSV API에서 각각 재검증한다. 비로그인 페이지 접근은 `/login`으로 이동하고 API 접근은 403을 반환한다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 새 로그는 본문·추가 첨부·첨부파일·통합 PDF를 구분하고 당시 파일명·크기·요청 경로를 저장한다. 과거 로그는 세부 필드가 없음을 표시하면서 문서 본문 파일명을 보완 노출한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 검색, 활동·파일 종류·역할·기간 필터, 30건 단위 페이지 이동, 요약 지표, CSV 내보내기와 사용자 환경 상세를 제공한다. 표는 좁은 화면에서 가로 스크롤되며 입력 요소에 명시적 이름이 있다.
+
+## Outcome
+- Result: PASS
+- Limitation: 자동 브라우저 렌더 캡처는 내장 브라우저 연결 부재로 수행하지 못했고 컴포넌트 렌더 테스트와 실행 서버 HTTP 검증으로 대체했다.
+
+---
+
+# UI Review - Document Library Favorites And Role Clarity (2026-07-22)
+
+## Reviewed Change
+- Feature: 관리자 전체 등록 문서 관리, 개인 즐겨찾기, 운영자/조합원 자료실 역할 구분
+- Governing spec: `docs/harness/dbapt-site/team-spec.md`
+- Implementation plan: `docs/superpowers/plans/2026-07-22-document-library-favorites.md`
+- Pages reviewed: local `/portal/admin`, member/refund personal-library data wiring
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 공개 문서의 권한·공개 상태·중요 표시 규칙은 유지하고, 개인 즐겨찾기와 관리용 검색·필터·페이지 이동만 추가했다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: `중요`는 운영자가 정하는 전체 공통 표시, `즐겨찾기`는 로그인 사용자 개인 표시로 화면 문구와 데이터 흐름을 분리했다. ADMIN 자료실 명칭도 `운영 문서 관리실`로 구분했다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 데스크톱 1600px에서 검색 결과 63건, 중요/즐겨찾기 열, 20개 단위 페이지 이동을 확인했다. 모바일 폭에서는 데스크톱 표가 숨겨지고 카드형 문서 조작부가 표시되며 문서 전체의 가로 넘침이 없었다. 검색은 제목·파일명·설명을 대상으로 하고 상태·분류·내 즐겨찾기 필터가 키보드 접근 가능한 버튼/입력 요소로 제공된다.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review
 
 ## Reviewed Change

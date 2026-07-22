@@ -3,6 +3,7 @@
 import { useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { notifyDocumentBookmarkChanged } from "@/lib/document-bookmark-events";
 import type { Document } from "./document-table";
 
 type DocumentBookmarkButtonProps = {
@@ -60,6 +61,7 @@ export function DocumentBookmarkButton({
           isBookmarked: nextBookmarked,
         });
       }
+      notifyDocumentBookmarkChanged({ documentId: document.id, isBookmarked: nextBookmarked });
     } catch (error) {
       console.error(error);
       alert("문서 보관 상태 변경 중 문제가 발생했습니다.");
@@ -77,7 +79,7 @@ export function DocumentBookmarkButton({
       disabled={isSaving}
       aria-label={
         includeDocumentTitleInLabel
-          ? `${document.title} ${isBookmarked ? "개인자료실 보관 해제" : "개인자료실 보관"}`
+          ? `${document.title} ${isBookmarked ? "즐겨찾기 해제" : "즐겨찾기"}`
           : undefined
       }
       className={cn(
@@ -86,7 +88,7 @@ export function DocumentBookmarkButton({
         className,
       )}
     >
-      {isSaving ? "처리 중" : isBookmarked ? "보관 해제" : "보관"}
+      {isSaving ? "처리 중" : isBookmarked ? "즐겨찾기 해제" : "즐겨찾기"}
     </Button>
   );
 }
