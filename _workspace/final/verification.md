@@ -123,6 +123,30 @@
 - 카카오톡 인앱 브라우저 자체 주소창과 하단 내비게이션은 웹 페이지가 강제로 숨길 수 없다. Fullscreen API가 차단되면 페이지 내부 몰입 모드까지만 제공한다.
 
 ---
+
+# Verification - Persistent Landscape Reading Mode
+
+## Implemented Change
+
+- 가로 진입 시 문서 정보와 PDF 페이지·배율 도구를 계속 숨기는 몰입 열람 상태를 추가했다.
+- 항상 보이는 `× 열람 종료`, 최초 2.4초 안내, 안드로이드 뒤로가기 우선 종료, 세로 회전 복원을 추가했다.
+- 종료 시 문서 정보와 PDF 도구를 모두 즉시 복원한다.
+
+## Checks
+
+- Focused PDF tests: PASS, 2 files and 10 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 99 files and 635 tests.
+- `pnpm build`: PASS.
+- Actual public PDF at 844x390: immersive header hidden, PDF toolbar hidden, exit control visible, horizontal overflow 0px, Next error overlay 0.
+- After exit: document header visible, PDF toolbar visible, exit control removed, horizontal overflow 0px.
+- UI review: PASS.
+
+## Risks Or Follow-up
+
+- 카카오톡 자체 주소창은 Fullscreen API 허용 여부에 따라 남을 수 있지만 페이지 내부 일반 메뉴는 가로 몰입 중 다시 나타나지 않는다.
+
+---
 # Verification - Continuous Mobile PDF Viewer
 
 ## Implemented

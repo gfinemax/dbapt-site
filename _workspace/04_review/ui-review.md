@@ -937,3 +937,29 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+---
+
+# UI Review - Persistent Landscape Reading Mode (2026-08-06)
+
+## Reviewed Change
+- Feature: 가로 PDF 몰입 열람과 안전한 원상 복귀
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-05-immersive-mobile-pdf-controls.md`
+- Files or pages reviewed: 자유게시판 PDF 전용 화면과 공통 PDF 컨트롤, 실제 공개 PDF의 844x390 로컬 production 화면
+
+## Boundary Review
+- Finding: PASS
+- Evidence: PDF 보기·다운로드 API, 공개 공유 조건, 다운로드 확인 절차를 변경하지 않고 가로 표시 상태만 확장했다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 가로 진입 시 일반 메뉴와 PDF 도구를 숨기고 항상 보이는 `× 열람 종료`와 최초 안내를 제공한다. 종료·뒤로가기·세로 회전은 같은 원상 복귀 동작을 사용한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 종료 버튼은 최소 44px 터치 영역과 키보드 focus ring을 유지한다. 숨은 메뉴는 aria-hidden과 inert로 접근성 트리와 초점 순서에서 제외한다. 실제 공개 PDF를 844x390에서 확인한 결과 몰입 중 문서 헤더와 PDF 도구가 숨고 종료 버튼만 표시됐다. 종료 후 두 메뉴가 모두 즉시 복원됐으며 전후 가로 넘침은 0px, Next 오류 오버레이는 0건이었다.
+
+## Outcome
+- Result: PASS
+- Required action: none

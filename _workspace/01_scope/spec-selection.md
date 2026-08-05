@@ -48,3 +48,13 @@
 - Approved extension: 세로·가로 공통 오버레이 컨트롤, 1.8초 자동 숨김, 탭 재표시, Fullscreen API와 인페이지 대체 모드.
 - Conflicts: none.
 - Planning may continue: yes.
+
+---
+
+# Specification Selection - Persistent Landscape Reading Mode
+
+- Selected approved spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Implementation boundary: 자유게시판 PDF 전용 화면과 공통 PDF 컨트롤의 가로 표시 상태만 변경하며 보기·다운로드 API는 유지한다.
+- Approved extension: 가로에서 문서 정보와 PDF 도구를 잠그고 종료 버튼, 최초 안내, history 기반 뒤로가기 복원, 세로 회전 복원을 제공한다.
+- Conflicts: none.
+- Planning may continue: yes.

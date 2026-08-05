@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FreePostPdfViewer } from "@/components/news/free-post-pdf-viewer";
 
 vi.mock("@/components/pdf/pdf-canvas-viewer", () => ({
-  PdfCanvasViewer: () => <div data-testid="mock-pdf-canvas" />,
+  PdfCanvasViewer: ({ controlsLockedHidden, controlsForcedVisible }: { controlsLockedHidden?: boolean; controlsForcedVisible?: boolean }) => (
+    <div
+      data-testid="mock-pdf-canvas"
+      data-controls-locked={controlsLockedHidden ? "true" : "false"}
+      data-controls-forced={controlsForcedVisible ? "true" : "false"}
+    />
+  ),
 }));
 
 describe("FreePostPdfViewer", () => {
@@ -14,7 +20,9 @@ describe("FreePostPdfViewer", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     Reflect.deleteProperty(HTMLElement.prototype, "requestFullscreen");
+    window.history.replaceState(null, "", "/");
   });
 
   it("auto-hides the document header and reveals it on viewer interaction", () => {
@@ -50,5 +58,39 @@ describe("FreePostPdfViewer", () => {
     await act(async () => Promise.resolve());
     expect(screen.getByTestId("free-post-pdf-viewer")).toHaveAttribute("data-immersive", "true");
     expect(screen.getByRole("button", { name: "전체화면 종료" })).toBeInTheDocument();
+  });
+
+  it("keeps landscape reading controls hidden until the user exits", async () => {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    vi.stubGlobal("matchMedia", vi.fn(() => ({
+      matches: true,
+      media: "(orientation: landscape)",
+      onchange: null,
+      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => listeners.add(listener),
+      removeEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => listeners.delete(listener),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })));
+    vi.spyOn(window.history, "back").mockImplementation(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    render(<FreePostPdfViewer postId="post-1" title="회의자료" fileName="회의자료.pdf" fileSize={null} />);
+    act(() => vi.advanceTimersByTime(16));
+
+    expect(screen.getByTestId("free-post-pdf-viewer")).toHaveAttribute("data-landscape-reading", "true");
+    expect(screen.getByTestId("free-post-pdf-header")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByTestId("mock-pdf-canvas")).toHaveAttribute("data-controls-locked", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("종료 버튼으로 돌아갈 수 있어");
+
+    fireEvent.click(screen.getByRole("button", { name: "× 열람 종료" }));
+    await act(async () => Promise.resolve());
+
+    expect(window.history.back).toHaveBeenCalledOnce();
+    expect(screen.getByTestId("free-post-pdf-viewer")).toHaveAttribute("data-landscape-reading", "false");
+    expect(screen.getByTestId("free-post-pdf-header")).toHaveAttribute("aria-hidden", "false");
+    expect(screen.getByTestId("mock-pdf-canvas")).toHaveAttribute("data-controls-locked", "false");
+    expect(screen.getByTestId("mock-pdf-canvas")).toHaveAttribute("data-controls-forced", "true");
   });
 });

@@ -21,27 +21,97 @@ export function FreePostPdfViewer({ postId, title, fileName, fileSize }: FreePos
   const [areControlsVisible, setAreControlsVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isImmersiveFallback, setIsImmersiveFallback] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const [isLandscapeReading, setIsLandscapeReading] = useState(false);
+  const [showLandscapeHint, setShowLandscapeHint] = useState(false);
   const viewerRef = useRef<HTMLElement>(null);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const landscapeHistoryRef = useRef(false);
   const viewUrl = `/api/news/free/${encodeURIComponent(postId)}/attachment/view`;
   const downloadUrl = `/api/news/free/${encodeURIComponent(postId)}/attachment/download`;
   const sizeLabel = formatFileSize(fileSize);
 
   const revealControls = useCallback(() => {
+    if (isLandscapeReading) return;
     setAreControlsVisible(true);
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
     controlsTimerRef.current = setTimeout(() => setAreControlsVisible(false), 1800);
+  }, [isLandscapeReading]);
+
+  const exitLandscapeReading = useCallback(async () => {
+    setIsLandscapeReading(false);
+    setShowLandscapeHint(false);
+    setAreControlsVisible(true);
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen?.();
+      } catch {
+        // 브라우저가 전체화면을 먼저 종료했어도 기본 메뉴는 복원한다.
+      }
+    }
+    setIsImmersiveFallback(false);
   }, []);
 
   useEffect(() => {
     controlsTimerRef.current = setTimeout(() => setAreControlsVisible(false), 1800);
     const handleFullscreenChange = () => setIsFullscreen(document.fullscreenElement === viewerRef.current);
+    const orientationQuery = typeof window.matchMedia === "function"
+      ? window.matchMedia("(orientation: landscape)")
+      : null;
+    let initialLandscapeFrame: number | null = null;
+    const handleOrientationChange = (event: MediaQueryListEvent) => {
+      setIsLandscape(event.matches);
+      if (event.matches) {
+        setIsLandscapeReading(true);
+        setShowLandscapeHint(true);
+        setAreControlsVisible(false);
+        hintTimerRef.current = setTimeout(() => setShowLandscapeHint(false), 2400);
+        if (!landscapeHistoryRef.current) {
+          window.history.pushState({ pdfLandscapeReading: true }, "");
+          landscapeHistoryRef.current = true;
+        }
+      } else {
+        if (landscapeHistoryRef.current) window.history.back();
+        else void exitLandscapeReading();
+      }
+    };
+    const handlePopState = () => {
+      if (!landscapeHistoryRef.current) return;
+      landscapeHistoryRef.current = false;
+      void exitLandscapeReading();
+    };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    orientationQuery?.addEventListener("change", handleOrientationChange);
+    window.addEventListener("popstate", handlePopState);
+    if (orientationQuery?.matches) {
+      initialLandscapeFrame = window.requestAnimationFrame(() => {
+        setIsLandscape(true);
+        setIsLandscapeReading(true);
+        setShowLandscapeHint(true);
+        setAreControlsVisible(false);
+      });
+      window.history.pushState({ pdfLandscapeReading: true }, "");
+      landscapeHistoryRef.current = true;
+      hintTimerRef.current = setTimeout(() => setShowLandscapeHint(false), 2400);
+    }
     return () => {
       if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+      if (initialLandscapeFrame !== null) window.cancelAnimationFrame(initialLandscapeFrame);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      orientationQuery?.removeEventListener("change", handleOrientationChange);
+      window.removeEventListener("popstate", handlePopState);
     };
-  }, []);
+  }, [exitLandscapeReading]);
+
+  const handleLandscapeExit = () => {
+    if (landscapeHistoryRef.current) {
+      window.history.back();
+      return;
+    }
+    void exitLandscapeReading();
+  };
 
   const toggleFullscreen = async () => {
     revealControls();
@@ -72,6 +142,7 @@ export function FreePostPdfViewer({ postId, title, fileName, fileSize }: FreePos
       ref={viewerRef}
       data-testid="free-post-pdf-viewer"
       data-immersive={isFullscreen || isImmersiveFallback ? "true" : "false"}
+      data-landscape-reading={isLandscapeReading ? "true" : "false"}
       onPointerDown={revealControls}
       onFocus={revealControls}
       tabIndex={0}
@@ -80,10 +151,10 @@ export function FreePostPdfViewer({ postId, title, fileName, fileSize }: FreePos
     >
       <header
         data-testid="free-post-pdf-header"
-        aria-hidden={!areControlsVisible}
-        inert={!areControlsVisible}
+        aria-hidden={isLandscapeReading || !areControlsVisible}
+        inert={isLandscapeReading || !areControlsVisible}
         className={`absolute inset-x-2 top-2 z-30 rounded-2xl border border-stone-surface bg-warm-canvas/95 px-3 py-3 shadow-lg backdrop-blur transition duration-200 motion-reduce:transition-none sm:inset-x-4 sm:px-6 ${
-          areControlsVisible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+          !isLandscapeReading && areControlsVisible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
         }`}
         onPointerDown={(event) => event.stopPropagation()}
       >
@@ -114,11 +185,29 @@ export function FreePostPdfViewer({ postId, title, fileName, fileSize }: FreePos
         </div>
       </header>
 
+      {isLandscape && isLandscapeReading ? (
+        <button
+          type="button"
+          onClick={handleLandscapeExit}
+          className="absolute right-3 top-3 z-40 inline-flex min-h-11 items-center justify-center rounded-full bg-midnight/80 px-4 text-xs font-bold text-white shadow-lg backdrop-blur transition hover:bg-midnight focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-sky-blue/40 motion-reduce:transition-none"
+        >
+          × 열람 종료
+        </button>
+      ) : null}
+
+      {isLandscape && isLandscapeReading && showLandscapeHint ? (
+        <div role="status" className="pointer-events-none absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full bg-midnight/75 px-4 py-2 text-[11px] font-semibold text-white shadow-lg backdrop-blur">
+          화면을 넓게 표시했어. 종료 버튼으로 돌아갈 수 있어.
+        </div>
+      ) : null}
+
       <section aria-label="PDF 온라인 열람" className="min-h-0 w-full flex-1 p-0 sm:p-2 landscape:p-0">
         <PdfCanvasViewer
           sourceUrl={viewUrl}
           fileName={fileName}
-          controlsTopOffset={areControlsVisible ? 88 : 8}
+          controlsTopOffset={!isLandscapeReading && areControlsVisible ? 88 : 8}
+          controlsLockedHidden={isLandscapeReading}
+          controlsForcedVisible={!isLandscapeReading && areControlsVisible}
           className="h-full border-stone-surface sm:rounded-2xl sm:border landscape:rounded-none landscape:border-0"
         />
       </section>

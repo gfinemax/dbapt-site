@@ -9,6 +9,8 @@ type PdfCanvasViewerProps = {
   fileName: string;
   className?: string;
   controlsTopOffset?: number;
+  controlsLockedHidden?: boolean;
+  controlsForcedVisible?: boolean;
 };
 
 type PdfContinuousPageProps = {
@@ -174,7 +176,14 @@ function PdfContinuousPage({
   );
 }
 
-export function PdfCanvasViewer({ sourceUrl, fileName, className = "", controlsTopOffset = 8 }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({
+  sourceUrl,
+  fileName,
+  className = "",
+  controlsTopOffset = 8,
+  controlsLockedHidden = false,
+  controlsForcedVisible = false,
+}: PdfCanvasViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pagesRef = useRef<HTMLDivElement>(null);
@@ -212,9 +221,15 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "", controlsT
   }, [clearControlsTimer]);
 
   const revealControls = useCallback(() => {
+    if (controlsLockedHidden) return;
     setAreControlsVisible(true);
     scheduleControlsHide();
-  }, [scheduleControlsHide]);
+  }, [controlsLockedHidden, scheduleControlsHide]);
+
+  useEffect(() => {
+    if (!controlsLockedHidden) return;
+    clearControlsTimer();
+  }, [clearControlsTimer, controlsLockedHidden]);
 
   useEffect(() => {
     setScrollRoot(scrollRef.current);
@@ -386,6 +401,7 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "", controlsT
   };
 
   const availableWidth = Math.max(280, containerWidth - 32);
+  const controlsAreShown = !controlsLockedHidden && (controlsForcedVisible || areControlsVisible);
 
   return (
     <div
@@ -415,11 +431,11 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "", controlsT
         <>
           <div
             data-testid="pdf-viewer-controls"
-            aria-hidden={!areControlsVisible}
-            inert={!areControlsVisible}
+            aria-hidden={!controlsAreShown}
+            inert={!controlsAreShown}
             style={{ top: `${controlsTopOffset}px` }}
             className={`absolute inset-x-2 z-20 flex flex-wrap items-center justify-center gap-1.5 rounded-2xl border border-stone-surface bg-white/95 p-2 shadow-lg backdrop-blur transition-[opacity,transform,top] duration-200 motion-reduce:transition-none sm:inset-x-4 sm:gap-2 ${
-              areControlsVisible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+              controlsAreShown ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
             }`}
             onPointerDown={(event) => {
               event.stopPropagation();
@@ -474,6 +490,7 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "", controlsT
               setAreControlsVisible(false);
             }}
             onClick={() => {
+              if (controlsLockedHidden) return;
               if (pinchRef.current) return;
               if (areControlsVisible) {
                 clearControlsTimer();
