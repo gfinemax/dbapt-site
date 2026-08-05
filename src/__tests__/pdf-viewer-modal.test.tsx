@@ -23,6 +23,7 @@ describe("PdfViewerModal", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "문서 정보" }));
     expect(screen.getByText("문서 설명")).toBeInTheDocument();
     expect(screen.getByText("사무국 운영 및 문서 보존 절차")).toBeInTheDocument();
   });
@@ -43,6 +44,7 @@ describe("PdfViewerModal", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "문서 정보" }));
     const previewViewers = screen.getAllByTestId("pdf-canvas-viewer");
     expect(previewViewers).toHaveLength(1);
     expect(previewViewers[0]).toHaveAttribute("data-source-url", "/api/documents/doc-1/merged-view");
@@ -61,11 +63,12 @@ describe("PdfViewerModal", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "문서 정보" }));
     expect(screen.getByTestId("pdf-preview-scroll-area")).toHaveClass("p-1", "sm:p-2");
     expect(screen.getByTestId("pdf-preview-frame-area")).toHaveClass("h-[76vh]", "min-h-[560px]");
   });
 
-  it("opens in full viewport mode by default", () => {
+  it("opens PDF documents in the PDF-only full viewport mode by default", () => {
     render(
       <PdfViewerModal
         documentId="doc-1"
@@ -75,8 +78,10 @@ describe("PdfViewerModal", () => {
       />,
     );
 
-    expect(screen.getByTestId("pdf-viewer-panel")).toHaveClass("h-[95vh]", "w-[95vw]", "max-w-none");
-    expect(screen.getByRole("button", { name: "화면 축소" })).toBeInTheDocument();
+    expect(screen.getByTestId("pdf-viewer-panel")).toHaveClass("h-[98vh]", "w-[98vw]", "max-w-none");
+    expect(screen.getByTestId("pdf-preview-scroll-area")).toHaveClass("p-0");
+    expect(screen.queryByTestId("pdf-viewer-header")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "문서 정보" })).toBeInTheDocument();
   });
 
   it("portals the viewer layer to the document body outside transformed ancestors", () => {
@@ -98,7 +103,7 @@ describe("PdfViewerModal", () => {
     expect(transformedRoot.contains(layer)).toBe(false);
   });
 
-  it("can switch to a PDF-only enlarged view and return to the detailed viewer", () => {
+  it("can switch from the default PDF-only view to document information and back", () => {
     render(
       <PdfViewerModal
         documentId="doc-1"
@@ -109,19 +114,21 @@ describe("PdfViewerModal", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "PDF만 크게" }));
-
     expect(screen.getByTestId("pdf-viewer-panel")).toHaveClass("h-[98vh]", "w-[98vw]");
     expect(screen.getByTestId("pdf-preview-scroll-area")).toHaveClass("p-0");
     expect(screen.getByTestId("pdf-preview-frame-area")).toHaveClass("h-full", "min-h-0");
     expect(screen.queryByTestId("pdf-viewer-header")).not.toBeInTheDocument();
     expect(screen.queryByText("본문 문서")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "상세 보기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "문서 정보" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "상세 보기" }));
+    fireEvent.click(screen.getByRole("button", { name: "문서 정보" }));
 
     expect(screen.getByTestId("pdf-viewer-header")).toBeInTheDocument();
     expect(screen.getByText("본문 문서")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "PDF 전체 보기" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "PDF 전체 보기" }));
+    expect(screen.queryByTestId("pdf-viewer-header")).not.toBeInTheDocument();
   });
 
   it("keeps the viewer header readable on mobile widths", () => {
@@ -135,6 +142,7 @@ describe("PdfViewerModal", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "문서 정보" }));
     expect(screen.getByTestId("pdf-viewer-panel")).toHaveClass("max-sm:h-[92svh]", "max-sm:w-[calc(100vw-16px)]");
     expect(screen.getByTestId("pdf-viewer-header")).toHaveClass("flex-col", "sm:flex-row");
     expect(screen.getByTestId("pdf-viewer-title")).toHaveClass("whitespace-normal", "break-keep");
@@ -172,6 +180,7 @@ describe("PdfViewerModal", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "문서 정보" }));
     expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute("data-source-url", "/api/documents/reply-1/view");
 
     fireEvent.click(screen.getByRole("button", { name: "원 수신공문 보기" }));
@@ -239,6 +248,7 @@ describe("PdfViewerModal", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "문서 정보" }));
     fireEvent.click(screen.getByRole("button", { name: /appendix\.docx/ }));
     expect(fetchMock).not.toHaveBeenCalled();
     fireEvent.click(within(screen.getByRole("dialog", { name: "이 파일을 다운로드할까?" })).getByRole("button", { name: "다운로드" }));

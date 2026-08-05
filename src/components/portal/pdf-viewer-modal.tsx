@@ -83,7 +83,7 @@ export function PdfViewerModal({
       : `/api/documents/${activeDocument.id}/view`
     : null;
   const [isFullScreen, setIsFullScreen] = useState(true);
-  const [isPdfOnlyMode, setIsPdfOnlyMode] = useState(false);
+  const [isPdfOnlyMode, setIsPdfOnlyMode] = useState(canPreviewInline);
   const [pendingDownload, setPendingDownload] = useState<PendingDownload | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -212,19 +212,28 @@ export function PdfViewerModal({
             onClick={() => setIsPdfOnlyMode((value) => !value)}
             className="inline-flex h-9 items-center justify-center rounded-full border border-stone-surface bg-white/95 px-3 text-[11px] font-extrabold text-charcoal-primary shadow-sm backdrop-blur transition hover:bg-parchment-card focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
           >
-            {isPdfOnlyMode ? "상세 보기" : "PDF만 크게"}
+            {isPdfOnlyMode ? "문서 정보" : "PDF 전체 보기"}
           </button>
           {isPdfOnlyMode && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-white/95 px-3 text-[11px] font-extrabold text-graphite shadow-sm backdrop-blur transition hover:bg-parchment-card focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
-            >
-              <svg className="size-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              닫기
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setPendingDownload({ kind: "document", fileName: previewFileName, fileSize: activeDocument.fileSize })}
+                className="inline-flex h-9 items-center justify-center rounded-full border border-stone-surface bg-white/95 px-3 text-[11px] font-extrabold text-graphite shadow-sm backdrop-blur transition hover:bg-parchment-card focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+              >
+                다운로드
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-white/95 px-3 text-[11px] font-extrabold text-graphite shadow-sm backdrop-blur transition hover:bg-parchment-card focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+              >
+                <svg className="size-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                닫기
+              </button>
+            </>
           )}
         </div>
 

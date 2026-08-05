@@ -31,3 +31,11 @@
 - Explicitly excluded scope: 문서 권한·저장소·감사 정책 변경, 비 PDF 형식 변환, 브라우저 네이티브 PDF 다운로드 동작 호출.
 - Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Unanswered decision: none. 사용자가 브라우저 기본 PDF 뷰어와 유사한 사용성을 사이트 내부 PDF.js 뷰어로 구현하도록 승인했다.
+
+---
+
+# Request Summary - PDF Viewer Entry Correction
+
+- Reported issue: 연속 PDF 렌더링은 반영됐지만 기존 문서 정보 카드가 기본 화면으로 남아 사용성이 이전과 같았다.
+- Corrected behavior: PDF 문서는 문서 정보 카드 없이 PDF 전용 전체 화면으로 바로 열고, 사용자가 선택할 때만 문서 정보를 표시한다.
+- Download boundary: PDF 전용 화면의 다운로드 버튼을 선택한 뒤 확인할 때만 다운로드한다.

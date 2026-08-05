@@ -55,7 +55,8 @@ describe("disclosure page", () => {
       />,
     );
 
-    expect(await screen.findByTestId("pdf-viewer-title")).toHaveTextContent("운영관리규정(260418 제정)");
+    fireEvent.click(await screen.findByRole("button", { name: "문서 정보" }));
+    expect(screen.getByTestId("pdf-viewer-title")).toHaveTextContent("운영관리규정(260418 제정)");
     expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute(
       "data-source-url",
       "/api/documents/doc-operation-rules/view",
