@@ -230,8 +230,8 @@ describe("library page", () => {
     const uploadedEntry = screen.getByLabelText("2026년 정기총회 의사록(직인) 관리");
     fireEvent.click(within(uploadedEntry).getByRole("button", { name: "자료 열람" }));
 
-    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute(
-      "src",
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute(
+      "data-source-url",
       "/api/documents/doc-regular-meeting/view",
     );
   });
@@ -260,7 +260,7 @@ describe("library page", () => {
     const uploadedEntry = screen.getByLabelText("23년 1사분기_실적보고서 관리");
     fireEvent.click(within(uploadedEntry).getByRole("button", { name: "자료 열람" }));
 
-    expect(screen.queryByTitle("문서 온라인 열람 뷰어")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pdf-canvas-viewer")).not.toBeInTheDocument();
     expect(screen.getByText("이 문서는 PDF 미리보기를 지원하지 않습니다.")).toBeInTheDocument();
     expect(screen.getAllByText(/23년 1사분기_실적보고서\.docx/).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "문서 다운로드" })).toBeInTheDocument();

@@ -19,3 +19,12 @@
 - Approved extension: 사용자가 2026-08-05 PDF.js 기반 페이지별 모바일 열람 방향을 검토한 뒤 구현을 승인했다.
 - Conflicts: none.
 - Planning may continue: yes.
+
+---
+
+# Specification Selection - Document PDF Online Viewer
+
+- Selected approved spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation boundary: 세션 권한을 검증하는 비공개 문서 스트리밍 API와 VIEW/DOWNLOAD 감사 기록을 유지하면서 전체 화면 PDF 열람 및 PDF만 크게 보기를 제공한다.
+- Conflicts: none.
+- Planning may continue: yes.

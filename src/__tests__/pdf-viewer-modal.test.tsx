@@ -1,8 +1,17 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 
+vi.mock("@/components/pdf/pdf-canvas-viewer", () => ({
+  PdfCanvasViewer: ({ sourceUrl, fileName, className }: { sourceUrl: string; fileName: string; className?: string }) => (
+    <div data-testid="pdf-canvas-viewer" data-source-url={sourceUrl} data-file-name={fileName} className={className} />
+  ),
+}));
+
 describe("PdfViewerModal", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   it("shows the document description in the viewer header", () => {
     render(
       <PdfViewerModal
@@ -34,9 +43,9 @@ describe("PdfViewerModal", () => {
       />,
     );
 
-    const previewFrames = screen.getAllByTitle(/열람 뷰어/);
-    expect(previewFrames).toHaveLength(1);
-    expect(previewFrames[0]).toHaveAttribute("src", "/api/documents/doc-1/merged-view");
+    const previewViewers = screen.getAllByTestId("pdf-canvas-viewer");
+    expect(previewViewers).toHaveLength(1);
+    expect(previewViewers[0]).toHaveAttribute("data-source-url", "/api/documents/doc-1/merged-view");
     expect(screen.getByText("통합 PDF 문서")).toBeInTheDocument();
     expect(screen.getByText("appendix-3.docx")).toBeInTheDocument();
   });
@@ -132,7 +141,7 @@ describe("PdfViewerModal", () => {
     expect(screen.getByTestId("pdf-viewer-actions")).toHaveClass("grid", "grid-cols-3", "sm:flex");
   });
 
-  it("renders the embedded PDF frame on mobile instead of forcing a separate direct-open flow", () => {
+  it("renders the PDF with the in-app canvas viewer on mobile", () => {
     render(
       <PdfViewerModal
         documentId="doc-1"
@@ -142,7 +151,7 @@ describe("PdfViewerModal", () => {
       />,
     );
 
-    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveClass("block");
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute("data-source-url", "/api/documents/doc-1/view");
     expect(screen.queryByRole("link", { name: "스마트폰에서 바로 보기" })).not.toBeInTheDocument();
   });
 
@@ -163,17 +172,77 @@ describe("PdfViewerModal", () => {
       />,
     );
 
-    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute("src", "/api/documents/reply-1/view");
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute("data-source-url", "/api/documents/reply-1/view");
 
     fireEvent.click(screen.getByRole("button", { name: "원 수신공문 보기" }));
 
     expect(screen.getByText("민원 수신공문")).toBeInTheDocument();
     expect(screen.getByText("회신 대상 원문")).toBeInTheDocument();
-    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute("src", "/api/documents/received-1/view");
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute("data-source-url", "/api/documents/received-1/view");
 
     fireEvent.click(screen.getByRole("button", { name: "원 문서 보기" }));
 
     expect(screen.getByText("민원 회신공문")).toBeInTheDocument();
-    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute("src", "/api/documents/reply-1/view");
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute("data-source-url", "/api/documents/reply-1/view");
+  });
+
+  it("does not request a download until the user confirms", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      blob: vi.fn().mockResolvedValue(new Blob(["pdf"])),
+    } as unknown as Response);
+    const createObjectUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:test");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+
+    render(
+      <PdfViewerModal
+        documentId="doc-1"
+        documentTitle="대용량 보고서"
+        fileName="large-report.pdf"
+        fileSize={5_242_880}
+        onClose={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "다운로드" })[0]);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "이 파일을 다운로드할까?" })).toBeInTheDocument();
+    expect(screen.getByText("파일 크기 5.0 MB")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "다운로드" })[0]);
+    fireEvent.click(within(screen.getByRole("dialog", { name: "이 파일을 다운로드할까?" })).getByRole("button", { name: "다운로드" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/documents/doc-1/download"));
+    expect(createObjectUrl).toHaveBeenCalledOnce();
+  });
+
+  it("confirms an attachment download before requesting it", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      blob: vi.fn().mockResolvedValue(new Blob(["pdf"])),
+    } as unknown as Response);
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:attachment");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+
+    render(
+      <PdfViewerModal
+        documentId="doc-1"
+        documentTitle="첨부 문서"
+        fileName="main.pdf"
+        attachments={[{ id: "att-1", fileName: "appendix.docx", fileSize: 4096 }]}
+        onClose={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /appendix\.docx/ }));
+    expect(fetchMock).not.toHaveBeenCalled();
+    fireEvent.click(within(screen.getByRole("dialog", { name: "이 파일을 다운로드할까?" })).getByRole("button", { name: "다운로드" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/documents/attachments/att-1"));
   });
 });

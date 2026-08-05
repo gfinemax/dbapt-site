@@ -859,3 +859,29 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+---
+
+# UI Review - Document PDF Online Viewer (2026-08-05)
+
+## Reviewed Change
+- Feature: 카카오톡 인앱 브라우저용 PDF 캔버스 열람 및 다운로드 확인
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-05-document-kakaotalk-pdf-viewer.md`
+- Files or pages reviewed: 공통 PDF 캔버스 뷰어, 문서 PDF 모달, 자유게시판 PDF 전용 화면, 390x844 조합원 포털
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 기존 보호된 view/download API와 역할별 세션 경계를 그대로 사용하고 공개 탐색 범위를 변경하지 않았다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: PDF 로딩 진행률과 오류·재시도 상태만 표시하며, 다운로드 확인 전에는 다운로드 API를 호출하지 않는다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 기존 warm canvas와 pill control을 유지했고, 키보드 초점·dialog label·44px 모바일 확인 버튼을 제공한다. 390x844 모바일 포털에서 가로 넘침 없이 문서 진입 화면을 확인했으며 캔버스 뷰어의 모바일/전체화면 계약은 집중 테스트로 검증했다.
+
+## Outcome
+- Result: PASS
+- Required action: none

@@ -56,8 +56,8 @@ describe("disclosure page", () => {
     );
 
     expect(await screen.findByTestId("pdf-viewer-title")).toHaveTextContent("운영관리규정(260418 제정)");
-    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute(
-      "src",
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute(
+      "data-source-url",
       "/api/documents/doc-operation-rules/view",
     );
   });

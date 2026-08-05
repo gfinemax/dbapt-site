@@ -278,7 +278,7 @@ describe("portal shell", () => {
     fireEvent.click(screen.getByRole("button", { name: "2026년도 1분기 수입 및 지출 자금집행 실적 보고서 열람" }));
 
     expect(screen.getByTestId("pdf-viewer-panel")).toBeInTheDocument();
-    expect(screen.getByTitle("문서 온라인 열람 뷰어")).toHaveAttribute("src", "/api/documents/doc-1/view");
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute("data-source-url", "/api/documents/doc-1/view");
   });
 
   it("shows supplied contribution payment status in the portal login announcement", async () => {

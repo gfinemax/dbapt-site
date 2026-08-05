@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { PdfCanvasViewer } from "@/components/pdf/pdf-canvas-viewer";
 import { Button } from "@/components/ui/button";
 
 type PdfViewerModalProps = {
@@ -34,6 +35,10 @@ type PdfViewerModalProps = {
 function isPdfFile(fileName: string) {
   return fileName.trim().toLowerCase().endsWith(".pdf");
 }
+
+type PendingDownload =
+  | { kind: "document"; fileName: string; fileSize?: number }
+  | { kind: "attachment"; attachmentId: string; fileName: string; fileSize?: number };
 
 export function PdfViewerModal({ 
   documentId, 
@@ -77,13 +82,10 @@ export function PdfViewerModal({
       ? `/api/documents/${activeDocument.id}/merged-view`
       : `/api/documents/${activeDocument.id}/view`
     : null;
-  const previewKey = canPreviewInline
-    ? `${activeDocument.id}:${previewFileName}:${pdfAttachments.map((attachment) => attachment.id).join(",")}`
-    : null;
-  const [loadedPreviewKey, setLoadedPreviewKey] = useState<string | null>(null);
-  const isLoading = canPreviewInline && loadedPreviewKey !== previewKey;
   const [isFullScreen, setIsFullScreen] = useState(true);
   const [isPdfOnlyMode, setIsPdfOnlyMode] = useState(false);
+  const [pendingDownload, setPendingDownload] = useState<PendingDownload | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // ESC 키 클릭 시 자동으로 모달 닫기
   useEffect(() => {
@@ -104,7 +106,7 @@ export function PdfViewerModal({
     };
   }, []);
 
-  const handleDownload = async () => {
+  const performDocumentDownload = async () => {
     try {
       const res = await fetch(`/api/documents/${activeDocument.id}/download`);
       if (!res.ok) {
@@ -126,7 +128,7 @@ export function PdfViewerModal({
     }
   };
 
-  const handleAttachmentDownload = async (attachmentId: string, fileName: string) => {
+  const performAttachmentDownload = async (attachmentId: string, fileName: string) => {
     try {
       const res = await fetch(`/api/documents/attachments/${attachmentId}`);
       if (!res.ok) {
@@ -162,6 +164,21 @@ export function PdfViewerModal({
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(
       d.getDate()
     ).padStart(2, "0")}`;
+  };
+
+  const confirmDownload = async () => {
+    if (!pendingDownload || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      if (pendingDownload.kind === "document") {
+        await performDocumentDownload();
+      } else {
+        await performAttachmentDownload(pendingDownload.attachmentId, pendingDownload.fileName);
+      }
+      setPendingDownload(null);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   if (typeof document === "undefined") {
@@ -292,7 +309,7 @@ export function PdfViewerModal({
             </Button>
             {/* 다운로드 */}
             <Button
-              onClick={handleDownload}
+              onClick={() => setPendingDownload({ kind: "document", fileName: previewFileName, fileSize: activeDocument.fileSize })}
               variant="outline"
               size="sm"
               className="rounded-full h-9 px-2 text-[11px] font-bold border-stone-surface text-graphite hover:bg-stone-surface cursor-pointer sm:h-8 sm:px-3"
@@ -323,7 +340,7 @@ export function PdfViewerModal({
               {activeDocument.attachments.map((att) => (
                 <button
                   key={att.id}
-                  onClick={() => handleAttachmentDownload(att.id, att.fileName)}
+                  onClick={() => setPendingDownload({ kind: "attachment", attachmentId: att.id, fileName: att.fileName, fileSize: att.fileSize })}
                   className="inline-flex items-center gap-1 rounded-full bg-white border border-[#f2f0ed] px-2.5 py-1 text-[10px] font-semibold text-graphite hover:border-ember-orange hover:text-ember-orange hover:bg-ember-orange/5 active:scale-95 transition-all duration-150 cursor-pointer"
                   title={`${att.fileName} (${formatSize(att.fileSize)})`}
                 >
@@ -361,7 +378,7 @@ export function PdfViewerModal({
                   </p>
                 </div>
                 <Button
-                  onClick={handleDownload}
+                  onClick={() => setPendingDownload({ kind: "document", fileName: previewFileName, fileSize: activeDocument.fileSize })}
                   variant="outline"
                   size="sm"
                   className="w-full rounded-full border-stone-surface text-[10px] font-bold text-graphite hover:bg-stone-surface sm:w-auto"
@@ -380,22 +397,7 @@ export function PdfViewerModal({
                       : "relative h-[76vh] min-h-[560px] bg-[#f0ede9]"
                   }
                 >
-                  <iframe
-                    src={previewUrl}
-                    className="relative z-10 block h-full w-full border-none bg-[#f0ede9]"
-                    onLoad={() => setLoadedPreviewKey(previewKey)}
-                    title="문서 온라인 열람 뷰어"
-                  />
-
-                  {isLoading && (
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-parchment-card">
-                      <div className="h-10 w-10 rounded-full border-4 border-midnight border-t-transparent animate-spin" />
-                      <div className="space-y-1.5 text-center">
-                        <p className="text-xs font-bold text-charcoal-primary">보안 문서를 안전하게 로드하는 중입니다</p>
-                        <p className="text-[10px] font-medium text-ash">조합원님의 세션 권한 및 실시간 감사 로그가 바인딩되고 있습니다.</p>
-                      </div>
-                    </div>
-                  )}
+                  <PdfCanvasViewer sourceUrl={previewUrl} fileName={previewFileName} className="h-full" />
                 </div>
               ) : (
                 <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 bg-parchment-card px-6 py-10">
@@ -409,7 +411,7 @@ export function PdfViewerModal({
                     </p>
                   </div>
                   <Button
-                    onClick={handleDownload}
+                    onClick={() => setPendingDownload({ kind: "document", fileName: previewFileName, fileSize: activeDocument.fileSize })}
                     className="rounded-full bg-midnight px-5 text-xs font-bold text-white hover:bg-midnight/90"
                   >
                     문서 다운로드
@@ -429,7 +431,7 @@ export function PdfViewerModal({
                     <p className="mt-0.5 text-[10px] text-ash">{attachment.fileName}</p>
                   </div>
                   <Button
-                    onClick={() => handleAttachmentDownload(attachment.id, attachment.fileName)}
+                    onClick={() => setPendingDownload({ kind: "attachment", attachmentId: attachment.id, fileName: attachment.fileName, fileSize: attachment.fileSize })}
                     variant="outline"
                     size="sm"
                     className="rounded-full border-stone-surface text-[10px] font-bold text-graphite hover:bg-stone-surface"
@@ -438,10 +440,10 @@ export function PdfViewerModal({
                   </Button>
                 </div>
                 <div className="h-[76vh] min-h-[560px] bg-[#f0ede9] max-sm:min-h-[420px]">
-                  <iframe
-                    src={`/api/documents/attachments/${attachment.id}/view`}
-                    className="block h-full w-full border-none bg-[#f0ede9]"
-                    title={`추가 첨부 PDF 열람 뷰어 ${index + 1}`}
+                  <PdfCanvasViewer
+                    sourceUrl={`/api/documents/attachments/${attachment.id}/view`}
+                    fileName={attachment.fileName}
+                    className="h-full"
                   />
                 </div>
               </section>
@@ -449,6 +451,47 @@ export function PdfViewerModal({
           </div>
         </div>
       </div>
+
+      {pendingDownload ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="download-confirm-title"
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+        >
+          <div className="w-full max-w-sm rounded-3xl border border-stone-surface bg-white p-5 shadow-2xl sm:p-6">
+            <h4 id="download-confirm-title" className="text-base font-bold text-charcoal-primary">
+              이 파일을 다운로드할까?
+            </h4>
+            <p className="mt-2 break-all text-sm font-semibold leading-5 text-graphite">{pendingDownload.fileName}</p>
+            {pendingDownload.fileSize !== undefined ? (
+              <p className="mt-1 text-xs text-ash">파일 크기 {formatSize(pendingDownload.fileSize)}</p>
+            ) : null}
+            <p className="mt-4 rounded-2xl bg-parchment-card px-4 py-3 text-xs leading-5 text-graphite">
+              모바일 데이터 이용 중이면 파일 크기만큼 데이터가 사용될 수 있어. 취소하면 다운로드 요청은 전송되지 않아.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isDownloading}
+                onClick={() => setPendingDownload(null)}
+                className="min-h-11 rounded-full border-stone-surface text-sm font-bold"
+              >
+                취소
+              </Button>
+              <Button
+                type="button"
+                disabled={isDownloading}
+                onClick={() => void confirmDownload()}
+                className="min-h-11 rounded-full bg-midnight text-sm font-bold text-white hover:bg-midnight/90"
+              >
+                {isDownloading ? "준비 중…" : "다운로드"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>,
     document.body,
   );

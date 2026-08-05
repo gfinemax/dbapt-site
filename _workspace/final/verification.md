@@ -12,6 +12,30 @@
 
 ---
 
+# Verification - Document PDF Online Viewer
+
+## Implemented Feature
+
+- Replaced browser-native document PDF iframes with a shared PDF.js canvas viewer for main, merged, and PDF attachment views.
+- Added page navigation, zoom, loading progress, retry, and responsive canvas sizing.
+- Added explicit download confirmation for document, attachment, and free-board PDF downloads; cancel does not call a download API.
+- Preserved the existing permission-checked view/download endpoints and audit-log boundaries.
+
+## Checks
+
+- `pnpm exec vitest run src/__tests__/pdf-viewer-modal.test.tsx`: PASS, 11 tests.
+- Related portal/disclosure/library regression tests: PASS, 68 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 97 files and 625 tests.
+- `pnpm build`: PASS.
+- Chrome mobile viewport 390x844: authenticated member portal document entry rendered without horizontal overflow. The existing one-time registration announcement prevented completing the modal interaction in that browser session; modal canvas and confirmation behavior are covered by focused tests.
+
+## Risks Or Follow-up
+
+- Final KakaoTalk in-app verification should be repeated on the affected Android device after deployment because native WebView behavior cannot be fully emulated by Chrome.
+
+---
+
 # Verification - Document Library Favorites And Role Clarity (2026-07-22)
 
 ## Implemented Feature
