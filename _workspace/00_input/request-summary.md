@@ -60,3 +60,11 @@
 
 - Reported issue: 손을 뗀 뒤 고해상도 캔버스로 교체되는 순간에도 화면이 번쩍이거나 끊겨 보일 수 있었다.
 - Corrected behavior: 기존 캔버스를 유지한 채 보이지 않는 보조 캔버스에서 고해상도 렌더링을 끝낸 후 180ms 교차 전환한다.
+
+---
+
+# Request Summary - Immersive Mobile PDF Controls
+
+- Requested feature slice: 세로·가로 PDF 열람에서 상단 문서 정보와 페이지 도구를 자동으로 감추고, 화면 탭으로 다시 표시하며, 특히 가로 화면에서 전체화면을 지원한다.
+- Explicitly excluded scope: 문서 권한·저장·다운로드 확인 정책 변경, 카카오톡 자체 브라우저 UI의 강제 제어.
+- Approved behavior: Fullscreen API를 우선 사용하고 차단되는 인앱 브라우저에서는 페이지 내부 몰입 모드로 대체한다.

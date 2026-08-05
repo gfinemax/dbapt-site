@@ -8,6 +8,7 @@ type PdfCanvasViewerProps = {
   sourceUrl: string;
   fileName: string;
   className?: string;
+  controlsTopOffset?: number;
 };
 
 type PdfContinuousPageProps = {
@@ -22,6 +23,7 @@ type PdfContinuousPageProps = {
 
 const MIN_ZOOM = 0.75;
 const MAX_RENDER_ZOOM = 3;
+const CONTROLS_HIDE_DELAY = 1800;
 
 function clampZoom(value: number) {
   return Math.max(MIN_ZOOM, value);
@@ -172,12 +174,13 @@ function PdfContinuousPage({
   );
 }
 
-export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanvasViewerProps) {
+export function PdfCanvasViewer({ sourceUrl, fileName, className = "", controlsTopOffset = 8 }: PdfCanvasViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pagesRef = useRef<HTMLDivElement>(null);
   const visibleRatiosRef = useRef(new Map<number, number>());
   const pinchFrameRef = useRef<number | null>(null);
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pinchRef = useRef<{
     distance: number;
     zoom: number;
@@ -196,6 +199,22 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanv
   const [reloadKey, setReloadKey] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
+  const [areControlsVisible, setAreControlsVisible] = useState(true);
+
+  const clearControlsTimer = useCallback(() => {
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = null;
+  }, []);
+
+  const scheduleControlsHide = useCallback(() => {
+    clearControlsTimer();
+    controlsTimerRef.current = setTimeout(() => setAreControlsVisible(false), CONTROLS_HIDE_DELAY);
+  }, [clearControlsTimer]);
+
+  const revealControls = useCallback(() => {
+    setAreControlsVisible(true);
+    scheduleControlsHide();
+  }, [scheduleControlsHide]);
 
   useEffect(() => {
     setScrollRoot(scrollRef.current);
@@ -205,9 +224,13 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanv
     pagesRef.current?.style.setProperty("zoom", String(zoom));
   }, [zoom]);
 
-  useEffect(() => () => {
-    if (pinchFrameRef.current !== null) cancelAnimationFrame(pinchFrameRef.current);
-  }, []);
+  useEffect(() => {
+    scheduleControlsHide();
+    return () => {
+      if (pinchFrameRef.current !== null) cancelAnimationFrame(pinchFrameRef.current);
+      clearControlsTimer();
+    };
+  }, [clearControlsTimer, scheduleControlsHide]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -321,6 +344,8 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanv
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     if (event.touches.length !== 2) return;
+    clearControlsTimer();
+    setAreControlsVisible(false);
     const midpoint = touchMidpoint(event);
     pinchRef.current = {
       distance: touchDistance(event.touches),
@@ -357,6 +382,7 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanv
     const nextZoom = pinchRef.current?.previewZoom;
     if (nextZoom !== undefined) setZoom(nextZoom);
     pinchRef.current = null;
+    revealControls();
   };
 
   const availableWidth = Math.max(280, containerWidth - 32);
@@ -387,7 +413,19 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanv
         </div>
       ) : (
         <>
-          <div className="flex shrink-0 flex-wrap items-center justify-center gap-1.5 border-b border-stone-surface bg-white p-2 sm:gap-2">
+          <div
+            data-testid="pdf-viewer-controls"
+            aria-hidden={!areControlsVisible}
+            inert={!areControlsVisible}
+            style={{ top: `${controlsTopOffset}px` }}
+            className={`absolute inset-x-2 z-20 flex flex-wrap items-center justify-center gap-1.5 rounded-2xl border border-stone-surface bg-white/95 p-2 shadow-lg backdrop-blur transition-[opacity,transform,top] duration-200 motion-reduce:transition-none sm:inset-x-4 sm:gap-2 ${
+              areControlsVisible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+            }`}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              revealControls();
+            }}
+          >
             <button type="button" disabled={currentPage <= 1} onClick={() => goToPage(currentPage - 1)} className="min-h-9 rounded-full bg-stone-surface px-3 text-[11px] font-bold disabled:opacity-40">
               이전
             </button>
@@ -428,6 +466,22 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanv
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onTouchCancel={handleTouchEnd}
+            tabIndex={0}
+            aria-label="PDF 문서 화면"
+            onFocus={revealControls}
+            onScroll={() => {
+              clearControlsTimer();
+              setAreControlsVisible(false);
+            }}
+            onClick={() => {
+              if (pinchRef.current) return;
+              if (areControlsVisible) {
+                clearControlsTimer();
+                setAreControlsVisible(false);
+              } else {
+                revealControls();
+              }
+            }}
             className="relative min-h-0 flex-1 touch-pan-x touch-pan-y overflow-auto overscroll-contain px-2 py-4 sm:px-4"
           >
             <p className="sr-only" aria-live="polite">현재 {currentPage}쪽, 전체 {pdfDocument.numPages}쪽</p>

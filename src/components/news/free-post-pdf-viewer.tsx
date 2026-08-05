@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PdfCanvasViewer } from "@/components/pdf/pdf-canvas-viewer";
 
 type FreePostPdfViewerProps = {
@@ -18,13 +18,75 @@ function formatFileSize(size: number | null) {
 
 export function FreePostPdfViewer({ postId, title, fileName, fileSize }: FreePostPdfViewerProps) {
   const [isConfirmingDownload, setIsConfirmingDownload] = useState(false);
+  const [areControlsVisible, setAreControlsVisible] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isImmersiveFallback, setIsImmersiveFallback] = useState(false);
+  const viewerRef = useRef<HTMLElement>(null);
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const viewUrl = `/api/news/free/${encodeURIComponent(postId)}/attachment/view`;
   const downloadUrl = `/api/news/free/${encodeURIComponent(postId)}/attachment/download`;
   const sizeLabel = formatFileSize(fileSize);
 
+  const revealControls = useCallback(() => {
+    setAreControlsVisible(true);
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = setTimeout(() => setAreControlsVisible(false), 1800);
+  }, []);
+
+  useEffect(() => {
+    controlsTimerRef.current = setTimeout(() => setAreControlsVisible(false), 1800);
+    const handleFullscreenChange = () => setIsFullscreen(document.fullscreenElement === viewerRef.current);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    revealControls();
+    if (isImmersiveFallback) {
+      setIsImmersiveFallback(false);
+      return;
+    }
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen?.();
+      } catch {
+        // 브라우저가 이미 전체화면을 종료한 경우 로컬 상태만 정리한다.
+      }
+      setIsImmersiveFallback(false);
+      return;
+    }
+    try {
+      if (!viewerRef.current?.requestFullscreen) throw new Error("Fullscreen API unavailable");
+      await viewerRef.current.requestFullscreen();
+      setIsImmersiveFallback(false);
+    } catch {
+      setIsImmersiveFallback((value) => !value);
+    }
+  };
+
   return (
-    <main className="fixed inset-0 z-[100] flex min-h-dvh flex-col overflow-hidden bg-warm-canvas text-charcoal-primary">
-      <header className="z-20 shrink-0 border-b border-stone-surface bg-warm-canvas/95 px-3 py-3 backdrop-blur sm:px-6">
+    <main
+      ref={viewerRef}
+      data-testid="free-post-pdf-viewer"
+      data-immersive={isFullscreen || isImmersiveFallback ? "true" : "false"}
+      onPointerDown={revealControls}
+      onFocus={revealControls}
+      tabIndex={0}
+      aria-label="PDF 전체 화면 열람"
+      className={`fixed inset-0 z-[100] flex h-[100svh] flex-col overflow-hidden bg-warm-canvas text-charcoal-primary ${isImmersiveFallback ? "z-[9999]" : ""}`}
+    >
+      <header
+        data-testid="free-post-pdf-header"
+        aria-hidden={!areControlsVisible}
+        inert={!areControlsVisible}
+        className={`absolute inset-x-2 top-2 z-30 rounded-2xl border border-stone-surface bg-warm-canvas/95 px-3 py-3 shadow-lg backdrop-blur transition duration-200 motion-reduce:transition-none sm:inset-x-4 sm:px-6 ${
+          areControlsVisible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+        }`}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-sm font-black">{title}</p>
@@ -32,18 +94,33 @@ export function FreePostPdfViewer({ postId, title, fileName, fileSize }: FreePos
               {fileName}{sizeLabel ? ` · ${sizeLabel}` : ""}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsConfirmingDownload(true)}
-            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-stone-surface bg-white px-4 text-xs font-bold text-graphite transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-sky-blue/30"
-          >
-            원본 다운로드
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void toggleFullscreen()}
+              aria-label={isFullscreen || isImmersiveFallback ? "전체화면 종료" : "전체화면"}
+              className="inline-flex size-10 items-center justify-center rounded-full border border-stone-surface bg-white text-lg font-bold text-graphite transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-sky-blue/30"
+            >
+              {isFullscreen || isImmersiveFallback ? "↙" : "⛶"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsConfirmingDownload(true)}
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-stone-surface bg-white px-3 text-[11px] font-bold text-graphite transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-sky-blue/30 sm:px-4 sm:text-xs"
+            >
+              원본 다운로드
+            </button>
+          </div>
         </div>
       </header>
 
-      <section aria-label="PDF 온라인 열람" className="mx-auto min-h-0 w-full max-w-5xl flex-1 p-2 sm:p-4">
-        <PdfCanvasViewer sourceUrl={viewUrl} fileName={fileName} className="h-full rounded-2xl border border-stone-surface" />
+      <section aria-label="PDF 온라인 열람" className="min-h-0 w-full flex-1 p-0 sm:p-2 landscape:p-0">
+        <PdfCanvasViewer
+          sourceUrl={viewUrl}
+          fileName={fileName}
+          controlsTopOffset={areControlsVisible ? 88 : 8}
+          className="h-full border-stone-surface sm:rounded-2xl sm:border landscape:rounded-none landscape:border-0"
+        />
       </section>
 
       {isConfirmingDownload ? (

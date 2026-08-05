@@ -99,6 +99,30 @@
 - none
 
 ---
+
+# Verification - Immersive Mobile PDF Controls
+
+## Implemented Change
+
+- PDF 문서 정보와 페이지·배율 도구를 오버레이형 자동 숨김 컨트롤로 변경했다.
+- 스크롤·핀치 중 숨기고 화면 탭 또는 키보드 초점으로 다시 표시한다.
+- Fullscreen API와 카카오톡 차단 환경용 인페이지 몰입 모드를 추가했다.
+- 가로 화면에서는 외곽 여백과 둥근 테두리를 제거해 PDF 영역을 최대화했다.
+
+## Checks
+
+- Focused PDF tests: PASS, 2 files and 9 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 99 files and 634 tests.
+- `pnpm build`: PASS.
+- Local production `/news`: portrait 390x844 and landscape 844x390 both HTTP 200, horizontal overflow 0px, Next error overlay 0.
+- UI review: PASS.
+
+## Risks Or Follow-up
+
+- 카카오톡 인앱 브라우저 자체 주소창과 하단 내비게이션은 웹 페이지가 강제로 숨길 수 없다. Fullscreen API가 차단되면 페이지 내부 몰입 모드까지만 제공한다.
+
+---
 # Verification - Continuous Mobile PDF Viewer
 
 ## Implemented

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PdfCanvasViewer } from "@/components/pdf/pdf-canvas-viewer";
 
 const { getDocumentMock, getPageMock, renderPageMock } = vi.hoisted(() => ({
@@ -28,6 +28,10 @@ describe("PdfCanvasViewer", () => {
       onProgress: null,
       promise: Promise.resolve({ numPages: 3, getPage: getPageMock, destroy: vi.fn() }),
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders every page in one continuous scroll surface", async () => {
@@ -100,5 +104,17 @@ describe("PdfCanvasViewer", () => {
 
     expect(screen.getByRole("button", { name: "화면 너비에 맞춤" })).toHaveTextContent("150%");
     await waitFor(() => expect(renderPageMock.mock.calls.length).toBeGreaterThan(3));
+  });
+
+  it("hides overlay controls while scrolling and reveals them when the document is tapped", async () => {
+    render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
+    const scrollArea = await screen.findByTestId("pdf-continuous-scroll");
+    const controls = screen.getByTestId("pdf-viewer-controls");
+
+    expect(controls).toHaveAttribute("aria-hidden", "false");
+    fireEvent.scroll(scrollArea);
+    expect(controls).toHaveAttribute("aria-hidden", "true");
+    fireEvent.click(scrollArea);
+    expect(controls).toHaveAttribute("aria-hidden", "false");
   });
 });

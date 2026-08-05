@@ -911,3 +911,29 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+---
+
+# UI Review - Immersive Mobile PDF Controls (2026-08-05)
+
+## Reviewed Change
+- Feature: PDF 상단 정보·도구 자동 숨김과 가로 전체화면
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-05-immersive-mobile-pdf-controls.md`
+- Files or pages reviewed: 공통 PDF 캔버스 뷰어, 자유게시판 PDF 전용 화면, 390x844 및 844x390 로컬 production 화면
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 기존 PDF 보기·다운로드 URL과 다운로드 확인 절차를 유지하고 표시 컨트롤과 전체화면 진입만 변경했다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 전체화면 버튼은 지원 브라우저에서 Fullscreen API를 호출하며 차단될 때는 화면 내부 몰입 모드로 전환한다. 다운로드는 기존 확인 대화상자를 거친다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 문서 정보와 페이지 도구는 콘텐츠 위 오버레이로 배치되어 레이아웃 높이를 차지하지 않고 1.8초 뒤 숨는다. 화면 탭과 키보드 초점으로 다시 표시되며 숨은 도구는 inert 처리된다. 핀치·스크롤 중 도구가 숨고 reduced-motion 환경에서는 전환 애니메이션이 제거된다. 로컬 production `/news`의 390x844 및 844x390 화면에서 가로 넘침 0px와 Next 오류 오버레이 0건을 확인했고, PDF 전용 상호작용은 집중 컴포넌트 테스트로 검증했다.
+
+## Outcome
+- Result: PASS
+- Required action: none

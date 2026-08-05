@@ -38,3 +38,13 @@
 - Approved extension: 모든 페이지 연속 스크롤, 화면 주변 지연 렌더링, 두 손가락 확대·축소, 페이지 번호 직접 이동.
 - Conflicts: none.
 - Planning may continue: yes.
+
+---
+
+# Specification Selection - Immersive Mobile PDF Controls
+
+- Selected approved spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Implementation boundary: 기존 보호된 보기 URL과 다운로드 확인 흐름을 유지하고 PDF 열람 화면의 컨트롤 배치·자동 숨김·전체화면 진입만 확장한다.
+- Approved extension: 세로·가로 공통 오버레이 컨트롤, 1.8초 자동 숨김, 탭 재표시, Fullscreen API와 인페이지 대체 모드.
+- Conflicts: none.
+- Planning may continue: yes.
