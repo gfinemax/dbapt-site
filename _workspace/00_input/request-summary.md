@@ -53,3 +53,10 @@
 
 - Reported issue: 두 손가락을 움직일 때마다 PDF 캔버스를 다시 렌더링해 확대 화면이 떨렸다.
 - Corrected behavior: 제스처 중에는 프레임 단위 화면 확대와 중심점 보정만 수행하고, 손을 뗄 때 한 번만 선명도를 다시 렌더링한다.
+
+---
+
+# Request Summary - Smooth PDF Quality Refresh
+
+- Reported issue: 손을 뗀 뒤 고해상도 캔버스로 교체되는 순간에도 화면이 번쩍이거나 끊겨 보일 수 있었다.
+- Corrected behavior: 기존 캔버스를 유지한 채 보이지 않는 보조 캔버스에서 고해상도 렌더링을 끝낸 후 180ms 교차 전환한다.

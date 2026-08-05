@@ -65,6 +65,25 @@ describe("PdfCanvasViewer", () => {
     expect(zoomIn).toBeEnabled();
   });
 
+  it("keeps the previous canvas visible until the sharper canvas is ready", async () => {
+    const { container } = render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
+    await screen.findByTestId("pdf-continuous-scroll");
+    await waitFor(() => expect(renderPageMock).toHaveBeenCalledTimes(3));
+
+    const pageCanvases = container.querySelectorAll<HTMLCanvasElement>('[data-pdf-page="1"] canvas');
+    const previousCanvas = Array.from(pageCanvases).find((canvas) => canvas.style.opacity === "1");
+    expect(previousCanvas).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "확대" }));
+
+    await waitFor(() => {
+      const nextCanvas = Array.from(pageCanvases).find((canvas) => canvas !== previousCanvas && canvas.style.opacity === "1");
+      expect(nextCanvas).toBeDefined();
+    });
+    expect(previousCanvas?.style.opacity).toBe("0");
+    expect(previousCanvas?.style.transition).toContain("opacity 180ms");
+  });
+
   it("uses a two-finger gesture to enlarge the continuous document", async () => {
     render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
     const scrollArea = await screen.findByTestId("pdf-continuous-scroll");

@@ -37,12 +37,21 @@ function PdfContinuousPage({
   onVisibilityChange,
 }: PdfContinuousPageProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRefs = useRef<[HTMLCanvasElement | null, HTMLCanvasElement | null]>([null, null]);
+  const activeCanvasIndexRef = useRef(0);
+  const hasVisibleCanvasRef = useRef(false);
   const [isNearViewport, setIsNearViewport] = useState(
     () => pageNumber <= 2 || typeof IntersectionObserver === "undefined",
   );
   const [pageSize, setPageSize] = useState({ width: 0, height: 560 });
   const [isRendering, setIsRendering] = useState(false);
+
+  useEffect(() => {
+    if (!isNearViewport) {
+      activeCanvasIndexRef.current = 0;
+      hasVisibleCanvasRef.current = false;
+    }
+  }, [isNearViewport]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -69,7 +78,7 @@ function PdfContinuousPage({
   }, [onVisibilityChange, pageNumber, scrollRoot]);
 
   useEffect(() => {
-    if (!isNearViewport || !canvasRef.current || availableWidth <= 0) return;
+    if (!isNearViewport || !canvasRefs.current[0] || !canvasRefs.current[1] || availableWidth <= 0) return;
 
     let active = true;
     let page: PDFPageProxy | null = null;
@@ -83,10 +92,14 @@ function PdfContinuousPage({
         const fitScale = Math.min(1.75, Math.max(0.35, availableWidth / baseViewport.width));
         const displayViewport = page.getViewport({ scale: fitScale });
         const renderViewport = page.getViewport({ scale: fitScale * Math.min(renderZoom, MAX_RENDER_ZOOM) });
-        const canvas = canvasRef.current!;
+        const previousCanvasIndex = activeCanvasIndexRef.current;
+        const nextCanvasIndex = hasVisibleCanvasRef.current ? 1 - previousCanvasIndex : previousCanvasIndex;
+        const previousCanvas = canvasRefs.current[previousCanvasIndex];
+        const canvas = canvasRefs.current[nextCanvasIndex]!;
         const outputScale = Math.min(window.devicePixelRatio || 1, 2);
 
         setPageSize({ width: Math.floor(displayViewport.width), height: Math.floor(displayViewport.height) });
+        canvas.style.opacity = "0";
         canvas.width = Math.floor(renderViewport.width * outputScale);
         canvas.height = Math.floor(renderViewport.height * outputScale);
         canvas.style.width = `${Math.floor(displayViewport.width)}px`;
@@ -97,6 +110,16 @@ function PdfContinuousPage({
           transform: outputScale === 1 ? undefined : [outputScale, 0, 0, outputScale, 0, 0],
         });
         await renderTask.promise;
+        if (!active) return;
+
+        canvas.style.transition = hasVisibleCanvasRef.current ? "opacity 180ms ease-out" : "none";
+        canvas.style.opacity = "1";
+        if (hasVisibleCanvasRef.current && previousCanvas && previousCanvas !== canvas) {
+          previousCanvas.style.transition = "opacity 180ms ease-out";
+          previousCanvas.style.opacity = "0";
+        }
+        activeCanvasIndexRef.current = nextCanvasIndex;
+        hasVisibleCanvasRef.current = true;
       } catch (renderError) {
         if (renderError instanceof Error && renderError.name === "RenderingCancelledException") return;
         console.error(`PDF page ${pageNumber} render error:`, renderError);
@@ -118,15 +141,22 @@ function PdfContinuousPage({
     <div
       ref={wrapperRef}
       data-pdf-page={pageNumber}
+      role="img"
+      aria-label={`${fileName} ${pageNumber}쪽`}
       className="relative mx-auto flex shrink-0 items-start justify-center"
       style={{ width: `${Math.max(pageSize.width, Math.min(availableWidth, 320))}px`, minHeight: `${pageSize.height}px` }}
     >
       {isNearViewport ? (
-        <canvas
-          ref={canvasRef}
-          aria-label={`${fileName} ${pageNumber}쪽`}
-          className="block max-w-none bg-white shadow-[0_1px_8px_rgba(0,0,0,0.16)]"
-        />
+        <>
+          {[0, 1].map((canvasIndex) => (
+            <canvas
+              key={canvasIndex}
+              ref={(canvas) => { canvasRefs.current[canvasIndex as 0 | 1] = canvas; }}
+              aria-hidden="true"
+              className="absolute left-0 top-0 block max-w-none bg-white opacity-0 shadow-[0_1px_8px_rgba(0,0,0,0.16)]"
+            />
+          ))}
+        </>
       ) : (
         <div aria-hidden="true" className="h-full w-full bg-white/65 shadow-sm" />
       )}
