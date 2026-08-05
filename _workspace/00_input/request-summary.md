@@ -46,3 +46,10 @@
 
 - Requested feature slice: 모바일 PDF의 두 손가락 확대에서 250% 상한을 제거하고 반복 제스처로 계속 확대할 수 있게 한다.
 - Safety boundary: 표시 배율은 계속 증가시키되 캔버스 내부 렌더링 해상도는 휴대폰 메모리 보호를 위해 제한한다.
+
+---
+
+# Request Summary - Smooth PDF Pinch Zoom
+
+- Reported issue: 두 손가락을 움직일 때마다 PDF 캔버스를 다시 렌더링해 확대 화면이 떨렸다.
+- Corrected behavior: 제스처 중에는 프레임 단위 화면 확대와 중심점 보정만 수행하고, 손을 뗄 때 한 번만 선명도를 다시 렌더링한다.

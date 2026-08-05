@@ -68,6 +68,7 @@ describe("PdfCanvasViewer", () => {
   it("uses a two-finger gesture to enlarge the continuous document", async () => {
     render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
     const scrollArea = await screen.findByTestId("pdf-continuous-scroll");
+    await waitFor(() => expect(renderPageMock).toHaveBeenCalledTimes(3));
 
     fireEvent.touchStart(scrollArea, {
       touches: [{ clientX: 0, clientY: 0 }, { clientX: 100, clientY: 0 }],
@@ -75,7 +76,10 @@ describe("PdfCanvasViewer", () => {
     fireEvent.touchMove(scrollArea, {
       touches: [{ clientX: 0, clientY: 0 }, { clientX: 150, clientY: 0 }],
     });
+    expect(renderPageMock).toHaveBeenCalledTimes(3);
+    fireEvent.touchEnd(scrollArea, { touches: [] });
 
     expect(screen.getByRole("button", { name: "화면 너비에 맞춤" })).toHaveTextContent("150%");
+    await waitFor(() => expect(renderPageMock.mock.calls.length).toBeGreaterThan(3));
   });
 });
