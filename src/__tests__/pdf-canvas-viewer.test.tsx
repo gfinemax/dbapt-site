@@ -54,6 +54,17 @@ describe("PdfCanvasViewer", () => {
     expect(screen.getByRole("button", { name: "화면 너비에 맞춤" })).toHaveTextContent("100%");
   });
 
+  it("keeps allowing continuous zoom beyond the former 250 percent limit", async () => {
+    render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
+    await screen.findByTestId("pdf-continuous-scroll");
+
+    const zoomIn = screen.getByRole("button", { name: "확대" });
+    for (let step = 0; step < 8; step += 1) fireEvent.click(zoomIn);
+
+    expect(screen.getByRole("button", { name: "화면 너비에 맞춤" })).toHaveTextContent("300%");
+    expect(zoomIn).toBeEnabled();
+  });
+
   it("uses a two-finger gesture to enlarge the continuous document", async () => {
     render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
     const scrollArea = await screen.findByTestId("pdf-continuous-scroll");

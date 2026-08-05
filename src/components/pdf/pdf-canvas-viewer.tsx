@@ -21,10 +21,10 @@ type PdfContinuousPageProps = {
 };
 
 const MIN_ZOOM = 0.75;
-const MAX_ZOOM = 2.5;
+const MAX_RENDER_ZOOM = 3;
 
 function clampZoom(value: number) {
-  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+  return Math.max(MIN_ZOOM, value);
 }
 
 function PdfContinuousPage({
@@ -81,18 +81,19 @@ function PdfContinuousPage({
         page = await pdfDocument.getPage(pageNumber);
         const baseViewport = page.getViewport({ scale: 1 });
         const fitScale = Math.min(1.75, Math.max(0.35, availableWidth / baseViewport.width));
-        const viewport = page.getViewport({ scale: fitScale * zoom });
+        const displayViewport = page.getViewport({ scale: fitScale * zoom });
+        const renderViewport = page.getViewport({ scale: fitScale * Math.min(zoom, MAX_RENDER_ZOOM) });
         const canvas = canvasRef.current!;
         const outputScale = Math.min(window.devicePixelRatio || 1, 2);
 
-        setPageSize({ width: Math.floor(viewport.width), height: Math.floor(viewport.height) });
-        canvas.width = Math.floor(viewport.width * outputScale);
-        canvas.height = Math.floor(viewport.height * outputScale);
-        canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = `${Math.floor(viewport.height)}px`;
+        setPageSize({ width: Math.floor(displayViewport.width), height: Math.floor(displayViewport.height) });
+        canvas.width = Math.floor(renderViewport.width * outputScale);
+        canvas.height = Math.floor(renderViewport.height * outputScale);
+        canvas.style.width = `${Math.floor(displayViewport.width)}px`;
+        canvas.style.height = `${Math.floor(displayViewport.height)}px`;
         renderTask = page.render({
           canvas,
-          viewport,
+          viewport: renderViewport,
           transform: outputScale === 1 ? undefined : [outputScale, 0, 0, outputScale, 0, 0],
         });
         await renderTask.promise;
@@ -334,7 +335,7 @@ export function PdfCanvasViewer({ sourceUrl, fileName, className = "" }: PdfCanv
             <button type="button" onClick={() => setZoom(1)} aria-label="화면 너비에 맞춤" className="min-h-9 rounded-full bg-parchment-card px-2.5 text-[10px] font-bold text-graphite">
               {Math.round(zoom * 100)}%
             </button>
-            <button type="button" disabled={zoom >= MAX_ZOOM} onClick={() => setZoom((value) => clampZoom(Number((value + 0.25).toFixed(2))))} aria-label="확대" className="size-9 rounded-full bg-stone-surface text-lg font-bold disabled:opacity-40">+</button>
+            <button type="button" onClick={() => setZoom((value) => clampZoom(Number((value + 0.25).toFixed(2))))} aria-label="확대" className="size-9 rounded-full bg-stone-surface text-lg font-bold">+</button>
           </div>
           <div
             ref={scrollRef}

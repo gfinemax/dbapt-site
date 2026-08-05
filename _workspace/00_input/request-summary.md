@@ -39,3 +39,10 @@
 - Reported issue: 연속 PDF 렌더링은 반영됐지만 기존 문서 정보 카드가 기본 화면으로 남아 사용성이 이전과 같았다.
 - Corrected behavior: PDF 문서는 문서 정보 카드 없이 PDF 전용 전체 화면으로 바로 열고, 사용자가 선택할 때만 문서 정보를 표시한다.
 - Download boundary: PDF 전용 화면의 다운로드 버튼을 선택한 뒤 확인할 때만 다운로드한다.
+
+---
+
+# Request Summary - Unbounded PDF Pinch Zoom
+
+- Requested feature slice: 모바일 PDF의 두 손가락 확대에서 250% 상한을 제거하고 반복 제스처로 계속 확대할 수 있게 한다.
+- Safety boundary: 표시 배율은 계속 증가시키되 캔버스 내부 렌더링 해상도는 휴대폰 메모리 보호를 위해 제한한다.
