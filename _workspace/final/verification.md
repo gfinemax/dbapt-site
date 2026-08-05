@@ -76,6 +76,31 @@
 
 ---
 
+# Verification - KakaoTalk PDF Online Viewer
+
+## Implemented Feature
+
+- 자유게시판 PDF 첨부를 `PDF 바로 보기`와 `다운로드`로 분리했다.
+- 공개 공유 및 로그인 접근 경계를 확인하는 전용 view/download API를 추가했다.
+- Supabase 공개 첨부 URL을 허용된 storage origin과 uploads 경로로 제한했다.
+- PDF.js 전체 화면 뷰어에 페이지 이동, 확대·축소, 로딩률, 재시도, 원본 다운로드를 추가했다.
+
+## Checks
+
+- Focused tests: PASS, 4 files / 118 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 97 files / 623 tests.
+- `pnpm build`: PASS. 새 view/download API와 `/news/free/[id]/attachment` 라우트가 production route 목록에 포함됨.
+- Chrome production check at 390x844: PASS. 실제 공개 공유 PDF 815KB/4쪽에서 1쪽 렌더와 다음 버튼을 통한 2쪽 이동 확인.
+- Responsive check: PASS. document/body scroll width 390px, PDF container client/scroll width 365px, canvas width 342px.
+- `dbapt-site-ui-review`: PASS.
+
+## Risks Or Follow-up
+
+- 카카오톡 실제 단말의 최종 확인은 배포 후 동일 공유 링크에서 한 번 더 확인한다.
+
+---
+
 # Verification - Free-Board Admin Menu Density Fix
 
 ## Root Cause And Fix

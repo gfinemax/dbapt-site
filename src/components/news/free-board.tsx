@@ -66,6 +66,10 @@ function formatAttachmentSize(size: number | null | undefined) {
   return `${(size / (1024 * 1024)).toFixed(1)}MB`;
 }
 
+function isPdfAttachment(fileName: string) {
+  return fileName.trim().toLowerCase().endsWith(".pdf");
+}
+
 function FreeBoardPostRows({
   post,
   index,
@@ -1370,21 +1374,33 @@ export function FreeBoard({
                   <span>댓글 {focusedPost.commentCount}개</span>
                 </div>
                 {focusedPost.attachmentPath && focusedPost.attachmentName && (
-                  <a
-                    href={focusedPost.attachmentPath}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${focusedPost.attachmentName} 다운로드`}
-                    className="inline-flex max-w-full items-center gap-2 rounded-xl border border-sky-blue/20 bg-sky-blue/10 px-3 py-2 text-[11px] font-extrabold text-sky-blue hover:bg-sky-blue/15"
-                  >
-                    <span aria-hidden="true">첨부</span>
-                    <span className="truncate">{focusedPost.attachmentName}</span>
-                    {focusedPost.attachmentSize ? (
-                      <span className="shrink-0 font-mono text-[10px] text-sky-blue/75">
-                        {formatAttachmentSize(focusedPost.attachmentSize)}
-                      </span>
+                  <div className="flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-sky-blue/20 bg-sky-blue/10 p-2 text-[11px] text-sky-blue">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 px-1 font-extrabold">
+                      <span aria-hidden="true">첨부</span>
+                      <span className="truncate">{focusedPost.attachmentName}</span>
+                      {focusedPost.attachmentSize ? (
+                        <span className="shrink-0 font-mono text-[10px] text-sky-blue/75">
+                          {formatAttachmentSize(focusedPost.attachmentSize)}
+                        </span>
+                      ) : null}
+                    </div>
+                    {isPdfAttachment(focusedPost.attachmentName) ? (
+                      <a
+                        href={`/news/free/${encodeURIComponent(focusedPost.id)}/attachment`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex min-h-9 items-center justify-center rounded-full bg-midnight px-3 text-[10px] font-bold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-sky-blue/30"
+                      >
+                        PDF 바로 보기
+                      </a>
                     ) : null}
-                  </a>
+                    <a
+                      href={`/api/news/free/${encodeURIComponent(focusedPost.id)}/attachment/download`}
+                      className="inline-flex min-h-9 items-center justify-center rounded-full border border-sky-blue/25 bg-white px-3 text-[10px] font-bold text-sky-blue transition hover:bg-sky-blue/10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-sky-blue/30"
+                    >
+                      다운로드
+                    </a>
+                  </div>
                 )}
               </div>
 

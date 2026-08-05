@@ -3572,9 +3572,13 @@ describe("news admin visible controls", () => {
 
     fireEvent.click(screen.getByText("첨부 있는 자유글"));
     const panel = screen.getByLabelText("토론 집중 패널");
-    expect(within(panel).getByRole("link", { name: "free-agenda.pdf 다운로드" })).toHaveAttribute(
+    expect(within(panel).getByRole("link", { name: "PDF 바로 보기" })).toHaveAttribute(
       "href",
-      "/uploads/free-agenda.pdf",
+      "/news/free/free-1/attachment",
+    );
+    expect(within(panel).getByRole("link", { name: "다운로드" })).toHaveAttribute(
+      "href",
+      "/api/news/free/free-1/attachment/download",
     );
 
     fireEvent.click(within(panel).getByRole("button", { name: "게시글 수정" }));

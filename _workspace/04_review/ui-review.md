@@ -48,6 +48,30 @@
 
 ---
 
+## Reviewed Change
+- Feature: 자유게시판 카카오톡 PDF 온라인 열람
+- Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, `docs/superpowers/plans/2026-06-25-free-board-public-share.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-05-free-board-kakaotalk-pdf-viewer.md`
+- Files or pages reviewed: 자유게시판 첨부 동작, `/news/free/[id]/attachment`, 첨부 view/download API, 390x844 공개 공유 PDF 화면
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 공개 공유가 활성화된 글은 비로그인 열람을 허용하고, 비공개 글은 401을 반환한다. Supabase URL은 설정된 origin, 공개 uploads 버킷, `uploads/` 하위 경로만 허용한다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: PDF 첨부는 `PDF 바로 보기`와 `다운로드`가 분리되며, 비PDF는 다운로드만 제공한다. 로딩, 페이지 표시, 실패 재시도, 원본 다운로드 상태가 실제 동작과 일치한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Pretendard와 기존 warm canvas/stone/dark pill 토큰을 유지했다. 390x844 Chrome에서 4쪽 PDF의 1쪽과 2쪽 이동을 확인했고 document/body 폭은 390px, PDF 컨테이너 client/scroll 폭은 모두 365px로 가로 넘침이 없었다. 이전·다음·확대·축소 버튼은 명시적 accessible name과 focus-visible 상태를 가진다.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 # UI Review
 
 ## Reviewed Change

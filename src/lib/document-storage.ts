@@ -238,3 +238,37 @@ export async function uploadPublicFile(file: File) {
   const { data } = supabase.storage.from(UPLOADS_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
+
+export function getPublicUploadStoragePath(publicUrl: string) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error("SUPABASE_URL is required.");
+  }
+
+  const source = new URL(publicUrl);
+  const expectedOrigin = new URL(supabaseUrl).origin;
+  const publicPrefix = `/storage/v1/object/public/${encodeURIComponent(UPLOADS_BUCKET)}/`;
+
+  if (source.origin !== expectedOrigin || !source.pathname.startsWith(publicPrefix)) {
+    throw new Error("허용되지 않은 공개 첨부파일 경로입니다.");
+  }
+
+  const storagePath = decodeURIComponent(source.pathname.slice(publicPrefix.length));
+  const segments = storagePath.split("/");
+  if (!storagePath.startsWith("uploads/") || segments.some((segment) => !segment || segment === "." || segment === "..")) {
+    throw new Error("올바르지 않은 공개 첨부파일 경로입니다.");
+  }
+
+  return storagePath;
+}
+
+export async function downloadPublicUpload(publicUrl: string) {
+  const storagePath = getPublicUploadStoragePath(publicUrl);
+  const { data, error } = await getSupabaseAdmin().storage.from(UPLOADS_BUCKET).download(storagePath);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

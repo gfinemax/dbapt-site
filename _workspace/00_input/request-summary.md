@@ -4,3 +4,12 @@
 - Explicitly excluded scope: 공개 권한 정책 변경, 문서 스키마 변경, 새 문서 승인 절차, 감사 로그 정책 변경.
 - Candidate governing specification: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, `docs/superpowers/specs/2026-06-14-personal-library-curated-documents-design.md`.
 - Unanswered decision: none. 사용자가 2026-07-22 개선 방향 전체 구현을 승인했다.
+
+---
+
+# Request Summary - KakaoTalk PDF Online Viewer
+
+- Requested feature slice: 카카오톡으로 공유된 자유게시판 글의 PDF 첨부를 다운로드로 이탈하지 않고 홈페이지에서 바로 열람할 수 있게 한다.
+- Explicitly excluded scope: 카카오 SDK 도입, 자동 메시지 발송, 비공개 게시글 공개, PDF 이외 문서 형식의 온라인 변환.
+- Candidate governing specification: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, `docs/superpowers/plans/2026-06-25-free-board-public-share.md`.
+- Unanswered decision: none. 사용자가 2026-08-05 제안한 보기·다운로드 분리와 PDF.js 기반 개선 방향의 구현을 승인했다.
