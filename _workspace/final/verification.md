@@ -99,6 +99,29 @@
 - none
 
 ---
+# Verification - Continuous Mobile PDF Viewer
+
+## Implemented
+
+- 모든 PDF 페이지를 한 화면에서 연속 스크롤하도록 공통 PDF.js 뷰어를 확장했다.
+- 화면에서 약 900px 이내의 페이지만 렌더링하고 나머지는 페이지 크기를 유지해 대용량 문서의 메모리 사용을 줄였다.
+- 이전·다음, 페이지 번호 직접 이동, 75~250% 확대, 화면 너비 맞춤, 두 손가락 확대·축소를 추가했다.
+- 기존 보기 API와 다운로드 확인 절차는 변경하지 않았다.
+
+## Checks
+
+- `npx eslint src/components/pdf/pdf-canvas-viewer.tsx src/__tests__/pdf-canvas-viewer.test.tsx`: PASS.
+- `pnpm exec vitest run src/__tests__/pdf-canvas-viewer.test.tsx src/__tests__/pdf-viewer-modal.test.tsx`: PASS, 14 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 98 files and 628 tests.
+- `pnpm build`: PASS after correcting the React touch-list type used by the production type checker.
+- Chrome mobile viewport verification: authenticated member portal and free-board entry surfaces rendered with 0px page-level horizontal overflow and no PDF iframe usage. Viewer interaction contracts are covered by the focused tests because the recurring member announcement overlay prevented reliable automated entry into the document modal.
+
+## Risks Or Follow-up
+
+- 실제 카카오톡 Android 인앱 브라우저에서 두 손가락 확대와 긴 PDF 메모리 사용을 배포 후 한 차례 확인하는 것이 좋다.
+
+---
 
 # Verification - KakaoTalk PDF Online Viewer
 

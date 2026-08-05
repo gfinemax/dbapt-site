@@ -48,6 +48,32 @@
 
 ---
 
+# UI Review - Continuous Mobile PDF Viewer (2026-08-05)
+
+## Reviewed Change
+- Feature: 모바일 PDF 연속 스크롤, 확대·축소, 페이지 직접 이동
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-05-continuous-mobile-pdf-viewer.md`
+- Files or pages reviewed: 공통 PDF 캔버스 뷰어, 390x844 조합원 포털과 자유게시판 진입 화면
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 기존 보호된 보기 API와 명시적 다운로드 확인 흐름을 유지했으며 원본 PDF URL을 브라우저 기본 다운로드 대상으로 열지 않는다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 실제 PDF 페이지 수, 현재 페이지, 렌더링 상태와 확대 비율만 표시한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 모바일에서도 이전·다음, 숫자 페이지 입력, 75~250% 확대와 화면 너비 맞춤을 사용할 수 있다. 연속 페이지는 단일 스크롤 영역에 배치되고 현재 화면 주변만 렌더링한다. 390x844 검증에서 페이지 자체 가로 넘침은 0px였고 iframe은 사용하지 않았다.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 ## Reviewed Change
 - Feature: 자유게시판 카카오톡 PDF 온라인 열람
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`, `docs/superpowers/plans/2026-06-25-free-board-public-share.md`

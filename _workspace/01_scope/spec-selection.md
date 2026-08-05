@@ -28,3 +28,13 @@
 - Implementation boundary: 세션 권한을 검증하는 비공개 문서 스트리밍 API와 VIEW/DOWNLOAD 감사 기록을 유지하면서 전체 화면 PDF 열람 및 PDF만 크게 보기를 제공한다.
 - Conflicts: none.
 - Planning may continue: yes.
+
+---
+
+# Specification Selection - Continuous Mobile PDF Viewer
+
+- Selected approved spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Implementation boundary: 기존 보호된 PDF 보기 URL과 다운로드 확인 흐름을 유지하며, 공통 캔버스 뷰어의 표시·탐색 기능만 확장한다.
+- Approved extension: 모든 페이지 연속 스크롤, 화면 주변 지연 렌더링, 두 손가락 확대·축소, 페이지 번호 직접 이동.
+- Conflicts: none.
+- Planning may continue: yes.

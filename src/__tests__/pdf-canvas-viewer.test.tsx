@@ -1,0 +1,70 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PdfCanvasViewer } from "@/components/pdf/pdf-canvas-viewer";
+
+const { getDocumentMock, getPageMock, renderPageMock } = vi.hoisted(() => ({
+  getDocumentMock: vi.fn(),
+  getPageMock: vi.fn(),
+  renderPageMock: vi.fn(),
+}));
+
+vi.mock("pdfjs-dist/webpack.mjs", () => ({
+  getDocument: getDocumentMock,
+}));
+
+describe("PdfCanvasViewer", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", { configurable: true, value: 390 });
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+
+    renderPageMock.mockReturnValue({ promise: Promise.resolve(), cancel: vi.fn() });
+    getPageMock.mockImplementation(async () => ({
+      getViewport: ({ scale }: { scale: number }) => ({ width: 600 * scale, height: 840 * scale }),
+      render: renderPageMock,
+      cleanup: vi.fn(),
+    }));
+    getDocumentMock.mockReturnValue({
+      onProgress: null,
+      promise: Promise.resolve({ numPages: 3, getPage: getPageMock, destroy: vi.fn() }),
+    });
+  });
+
+  it("renders every page in one continuous scroll surface", async () => {
+    render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" className="h-full" />);
+
+    expect(await screen.findByTestId("pdf-continuous-scroll")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByLabelText(/쪽$/)).toHaveLength(3));
+    expect(screen.getByTestId("pdf-canvas-viewer")).toHaveAttribute("data-source-url", "/api/documents/doc-1/view");
+  });
+
+  it("supports direct page movement and zoom controls", async () => {
+    render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
+    await screen.findByTestId("pdf-continuous-scroll");
+
+    const pageInput = screen.getByRole("spinbutton");
+    fireEvent.change(pageInput, { target: { value: "3" } });
+    fireEvent.keyDown(pageInput, { key: "Enter" });
+    expect(pageInput).toHaveValue(3);
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole("button", { name: "확대" }));
+    expect(screen.getByRole("button", { name: "화면 너비에 맞춤" })).toHaveTextContent("125%");
+    fireEvent.click(screen.getByRole("button", { name: "화면 너비에 맞춤" }));
+    expect(screen.getByRole("button", { name: "화면 너비에 맞춤" })).toHaveTextContent("100%");
+  });
+
+  it("uses a two-finger gesture to enlarge the continuous document", async () => {
+    render(<PdfCanvasViewer sourceUrl="/api/documents/doc-1/view" fileName="report.pdf" />);
+    const scrollArea = await screen.findByTestId("pdf-continuous-scroll");
+
+    fireEvent.touchStart(scrollArea, {
+      touches: [{ clientX: 0, clientY: 0 }, { clientX: 100, clientY: 0 }],
+    });
+    fireEvent.touchMove(scrollArea, {
+      touches: [{ clientX: 0, clientY: 0 }, { clientX: 150, clientY: 0 }],
+    });
+
+    expect(screen.getByRole("button", { name: "화면 너비에 맞춤" })).toHaveTextContent("150%");
+  });
+});

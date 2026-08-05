@@ -22,3 +22,12 @@
 - Explicitly excluded scope: DB, 문서 저장 정책, 권한 정책, 감사 로그 정책 변경.
 - Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Unanswered decision: none.
+
+---
+
+# Request Summary - Continuous Mobile PDF Viewer
+
+- Requested feature slice: 모바일과 카카오톡 인앱 브라우저에서 PDF를 다운로드하지 않고 연속 스크롤, 손가락 확대·축소, 페이지 빠른 이동으로 열람한다.
+- Explicitly excluded scope: 문서 권한·저장소·감사 정책 변경, 비 PDF 형식 변환, 브라우저 네이티브 PDF 다운로드 동작 호출.
+- Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Unanswered decision: none. 사용자가 브라우저 기본 PDF 뷰어와 유사한 사용성을 사이트 내부 PDF.js 뷰어로 구현하도록 승인했다.
