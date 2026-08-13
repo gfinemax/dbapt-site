@@ -73,3 +73,9 @@
 - Boundary: correct only numeric control sizing/native chrome and responsive wrapping.
 - Conflicts: none.
 - Planning may continue: yes, under the existing approved implementation plan.
+## 2026-08-14 Google Docs-style compact toolbar follow-up
+
+- Selected approved spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Boundary: correct numeric-entry interaction and compact the existing toolbar without adding new document capabilities.
+- Conflicts: none.
+- Planning may continue: yes, under the existing approved implementation plan.

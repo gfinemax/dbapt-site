@@ -91,3 +91,9 @@
 - Explicitly excluded scope: typography storage rules and editor command behavior remain unchanged.
 - Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
 - Unanswered decision: none.
+## 2026-08-14 Google Docs-style compact toolbar follow-up
+
+- Requested feature slice: allow freely typed line-height values and reorganize the editor toolbar into compact Google Docs-inspired groups.
+- Explicitly excluded scope: editor persistence format, image/YouTube behavior, and new document features.
+- Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Unanswered decision: none.

@@ -277,21 +277,16 @@ describe("notice rich content links", () => {
     );
 
     expect(screen.getByLabelText("글꼴")).toHaveValue("Pretendard Variable");
-    expect(screen.getByLabelText("글자 크기")).toHaveValue(14);
-    expect(screen.getByLabelText("글자 크기")).toHaveAttribute("min", "10");
-    expect(screen.getByLabelText("글자 크기")).toHaveAttribute("max", "48");
-    expect(screen.getByLabelText("글자 크기")).toHaveAttribute("step", "1");
-    expect(screen.getByLabelText("글자 크기")).toHaveClass("w-16", "appearance-none", "tabular-nums");
+    expect(screen.getByLabelText("글자 크기")).toHaveValue("14");
+    expect(screen.getByLabelText("글자 크기")).toHaveClass("w-12", "appearance-none", "tabular-nums");
     expect(screen.getByLabelText("글자 크기")).not.toHaveAttribute("list");
     expect(screen.getByRole("button", { name: "글자 크기 1px 줄이기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "글자 크기 1px 늘리기" })).toBeInTheDocument();
-    expect(screen.getByLabelText("줄간격")).toHaveValue(1.6);
-    expect(screen.getByLabelText("줄간격")).toHaveAttribute("step", "0.1");
-    expect(screen.getByLabelText("줄간격")).toHaveClass("w-16", "appearance-none", "tabular-nums");
+    expect(screen.getByLabelText("줄간격")).toHaveValue("1.6");
+    expect(screen.getByLabelText("줄간격")).toHaveClass("w-12", "appearance-none", "tabular-nums");
     expect(screen.getByLabelText("줄간격")).not.toHaveAttribute("list");
-    expect(screen.getByLabelText("문단 뒤 간격")).toHaveValue(12);
-    expect(screen.getByLabelText("문단 뒤 간격")).toHaveAttribute("step", "1");
-    expect(screen.getByLabelText("문단 뒤 간격")).toHaveClass("w-16", "appearance-none", "tabular-nums");
+    expect(screen.getByLabelText("문단 뒤 간격")).toHaveValue("12");
+    expect(screen.getByLabelText("문단 뒤 간격")).toHaveClass("w-12", "appearance-none", "tabular-nums");
     expect(screen.getByLabelText("문단 뒤 간격")).not.toHaveAttribute("list");
     expect(screen.getByRole("textbox", { name: "본문 편집창" })).toHaveClass(
       "px-6",
@@ -312,6 +307,26 @@ describe("notice rich content links", () => {
     expect(screen.getByRole("button", { name: "이미지 삽입" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "2열 이미지" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대표+2열 이미지" })).toBeInTheDocument();
+  });
+
+  it("allows free line-height typing and commits the value on blur", () => {
+    render(
+      <NoticeRichEditor
+        value="<p>본문</p>"
+        onChange={vi.fn()}
+        onUploadImage={async () => ({ url: "/uploads/image.png" })}
+        ariaLabel="본문 편집창"
+        placeholder="본문"
+      />,
+    );
+
+    const lineHeight = screen.getByLabelText("줄간격");
+    fireEvent.change(lineHeight, { target: { value: "2." } });
+    expect(lineHeight).toHaveValue("2.");
+    fireEvent.change(lineHeight, { target: { value: "2.35" } });
+    expect(lineHeight).toHaveValue("2.35");
+    fireEvent.blur(lineHeight);
+    expect(lineHeight).toHaveValue("2.35");
   });
 
   it("schedules external HTML value updates outside the React effect call stack", async () => {

@@ -48,11 +48,7 @@ import {
   DEFAULT_EDITOR_LINE_HEIGHT,
   DEFAULT_EDITOR_PARAGRAPH_SPACING,
   MAX_EDITOR_FONT_SIZE,
-  MAX_EDITOR_LINE_HEIGHT,
-  MAX_EDITOR_PARAGRAPH_SPACING,
   MIN_EDITOR_FONT_SIZE,
-  MIN_EDITOR_LINE_HEIGHT,
-  MIN_EDITOR_PARAGRAPH_SPACING,
   normalizeEditorFontSize,
   normalizeEditorLineHeight,
   normalizeEditorParagraphSpacing,
@@ -155,10 +151,13 @@ const DEFAULT_CROP_BOX: CropBox = { top: 0, right: 0, bottom: 0, left: 0 };
 const MAX_CROP_INSET = 45;
 const MAX_CROP_PAIR_TOTAL = 75;
 const TOOL_BUTTON_CLASS =
-  "flex size-8 items-center justify-center border-r border-stone-surface text-graphite hover:bg-parchment-card focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-40";
+  "flex size-8 shrink-0 items-center justify-center rounded-md text-graphite hover:bg-parchment-card focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-40";
 const TOOL_BUTTON_ACTIVE_CLASS = "bg-stone-surface text-sky-blue";
 const FIELD_CLASS =
-  "h-9 border-r border-stone-surface bg-white px-3 text-sm text-charcoal-primary outline-none focus:bg-parchment-card focus:ring-2 focus:ring-sky-blue/20";
+  "h-8 rounded-md bg-transparent px-2 text-sm text-charcoal-primary outline-none hover:bg-white focus:bg-white focus:ring-2 focus:ring-sky-blue/20";
+const COMPACT_NUMBER_INPUT_CLASS =
+  "h-7 w-12 appearance-none rounded-md border border-stone-surface bg-white px-1 text-center text-xs tabular-nums text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20";
+const TOOLBAR_DIVIDER_CLASS = "mx-0.5 h-6 w-px shrink-0 bg-stone-surface";
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     fontSize: {
@@ -2154,6 +2153,20 @@ export function RichTextEditorV2({
     ? currentParagraphSpacing
     : DEFAULT_EDITOR_PARAGRAPH_SPACING;
 
+  const [fontSizeDraft, setFontSizeDraft] = useState(String(currentFontSize));
+  const [lineHeightDraft, setLineHeightDraft] = useState(String(currentLineHeight));
+  const [paragraphSpacingDraft, setParagraphSpacingDraft] = useState(String(resolvedParagraphSpacing));
+
+  const commitFontSize = useCallback(() => {
+    const normalized = normalizeEditorFontSize(`${fontSizeDraft}px`);
+    if (!normalized) {
+      setFontSizeDraft(String(currentFontSize));
+      return;
+    }
+    applyFontSize(normalized);
+    setFontSizeDraft(normalized.replace("px", ""));
+  }, [applyFontSize, currentFontSize, fontSizeDraft]);
+
   const applyLineHeight = useCallback((value: string) => {
     if (!editor) return;
     const normalized = normalizeEditorLineHeight(value);
@@ -2167,6 +2180,26 @@ export function RichTextEditorV2({
     if (!normalized) return;
     editor.chain().focus().setParagraphSpacing(normalized).run();
   }, [editor]);
+
+  const commitLineHeight = useCallback(() => {
+    const normalized = normalizeEditorLineHeight(lineHeightDraft);
+    if (!normalized) {
+      setLineHeightDraft(String(currentLineHeight));
+      return;
+    }
+    applyLineHeight(normalized);
+    setLineHeightDraft(normalized);
+  }, [applyLineHeight, currentLineHeight, lineHeightDraft]);
+
+  const commitParagraphSpacing = useCallback(() => {
+    const normalized = normalizeEditorParagraphSpacing(`${paragraphSpacingDraft}px`);
+    if (!normalized) {
+      setParagraphSpacingDraft(String(resolvedParagraphSpacing));
+      return;
+    }
+    applyParagraphSpacing(normalized);
+    setParagraphSpacingDraft(normalized.replace("px", ""));
+  }, [applyParagraphSpacing, paragraphSpacingDraft, resolvedParagraphSpacing]);
 
   const insertImageFiles = useCallback(async (files: File[]) => {
     if (!editor || files.length === 0) return;
@@ -2255,12 +2288,12 @@ export function RichTextEditorV2({
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-stone-surface bg-white focus-within:border-sky-blue focus-within:ring-1 focus-within:ring-sky-blue/30">
-      <div className="flex flex-wrap items-center gap-y-1 border-b border-stone-surface bg-[#fbfaf9] p-1 sm:p-0">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-stone-surface bg-[#fbfaf9] p-1.5" aria-label="본문 서식 도구 모음">
         <label className="sr-only" htmlFor="rich-editor-font-family">글꼴</label>
         <select
           id="rich-editor-font-family"
           aria-label="글꼴"
-          className={cn(FIELD_CLASS, "w-36")}
+          className={cn(FIELD_CLASS, "w-32 shrink-0")}
           value={editor?.getAttributes("textStyle").fontFamily === "Pretendard"
             ? "Pretendard Variable"
             : editor?.getAttributes("textStyle").fontFamily || "Pretendard Variable"}
@@ -2270,67 +2303,75 @@ export function RichTextEditorV2({
             <option key={font.value} value={font.value}>{font.label}</option>
           ))}
         </select>
-        <div className="flex h-9 shrink-0 items-center gap-1 whitespace-nowrap border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" role="group" aria-label="글자 크기 조절">
-          <label htmlFor="rich-editor-font-size">크기</label>
+        <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
+        <div className="flex h-8 shrink-0 items-center gap-0.5 whitespace-nowrap" role="group" aria-label="글자 크기 조절">
+          <label className="sr-only" htmlFor="rich-editor-font-size">글자 크기</label>
           <button
             type="button"
             aria-label="글자 크기 1px 줄이기"
-            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-parchment-card focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
+            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
             disabled={currentFontSize <= MIN_EDITOR_FONT_SIZE}
-            onClick={() => applyFontSize(`${currentFontSize - 1}px`)}
+            onClick={() => {
+              const next = currentFontSize - 1;
+              setFontSizeDraft(String(next));
+              applyFontSize(`${next}px`);
+            }}
           >
             −
           </button>
           <input
             id="rich-editor-font-size"
             aria-label="글자 크기"
-            type="number"
+            type="text"
             inputMode="numeric"
-            min={MIN_EDITOR_FONT_SIZE}
-            max={MAX_EDITOR_FONT_SIZE}
-            step={1}
-            className="h-7 w-16 appearance-none rounded-md border border-stone-surface bg-white px-2 text-center text-xs tabular-nums text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            value={currentFontSize}
-            onChange={(event) => {
-              const normalized = normalizeEditorFontSize(`${event.target.value}px`);
-              if (normalized) applyFontSize(normalized);
-            }}
+            className={COMPACT_NUMBER_INPUT_CLASS}
+            value={fontSizeDraft}
+            onFocus={() => setFontSizeDraft(String(currentFontSize))}
+            onChange={(event) => setFontSizeDraft(event.target.value)}
+            onBlur={commitFontSize}
+            onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commitFontSize(); } }}
           />
           <button
             type="button"
             aria-label="글자 크기 1px 늘리기"
-            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-parchment-card focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
+            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
             disabled={currentFontSize >= MAX_EDITOR_FONT_SIZE}
-            onClick={() => applyFontSize(`${currentFontSize + 1}px`)}
+            onClick={() => {
+              const next = currentFontSize + 1;
+              setFontSizeDraft(String(next));
+              applyFontSize(`${next}px`);
+            }}
           >
             +
           </button>
-          <span aria-hidden="true" className="font-medium text-ash">px</span>
         </div>
+        <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
         {markButton("굵게", <Bold className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("bold")), () => run(() => editor?.chain().focus().toggleBold().run()))}
         {markButton("기울임", <Italic className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("italic")), () => run(() => editor?.chain().focus().toggleItalic().run()))}
         {markButton("밑줄", <UnderlineIcon className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("underline")), () => run(() => editor?.chain().focus().toggleUnderline().run()))}
         {markButton("취소선", <Strikethrough className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("strike")), () => run(() => editor?.chain().focus().toggleStrike().run()))}
-        <label className="flex h-9 items-center gap-2 border-r border-stone-surface px-2 text-xs font-bold text-graphite">
-          글자색
+        <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
+        <label className="flex h-8 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-graphite hover:bg-white">
+          색
           <input
             aria-label="글자색"
             type="color"
             value="#343433"
-            className="size-6 rounded border border-stone-surface bg-white"
+            className="size-5 rounded border border-stone-surface bg-white"
             onChange={(event) => run(() => editor?.chain().focus().setColor(event.target.value).run())}
           />
         </label>
-        <label className="flex h-9 items-center gap-2 border-r border-stone-surface px-2 text-xs font-bold text-graphite">
-          배경색
+        <label className="flex h-8 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-graphite hover:bg-white">
+          배경
           <input
             aria-label="배경색"
             type="color"
             value="#ffffff"
-            className="size-6 rounded border border-stone-surface bg-white"
+            className="size-5 rounded border border-stone-surface bg-white"
             onChange={(event) => run(() => editor?.chain().focus().toggleHighlight({ color: event.target.value }).run())}
           />
         </label>
+        <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
         {markButton("왼쪽 정렬", <AlignLeft className="size-4" aria-hidden="true" />, Boolean(editor?.isActive({ textAlign: "left" })), () => run(() => editor?.chain().focus().setTextAlign("left").run()))}
         {markButton("가운데 정렬", <AlignCenter className="size-4" aria-hidden="true" />, Boolean(editor?.isActive({ textAlign: "center" })), () => run(() => editor?.chain().focus().setTextAlign("center").run()))}
         {markButton("오른쪽 정렬", <AlignRight className="size-4" aria-hidden="true" />, Boolean(editor?.isActive({ textAlign: "right" })), () => run(() => editor?.chain().focus().setTextAlign("right").run()))}
@@ -2339,37 +2380,38 @@ export function RichTextEditorV2({
         {markButton("번호 목록", <ListOrdered className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("orderedList")), () => run(() => editor?.chain().focus().toggleOrderedList().run()))}
         {markButton("내어쓰기", <Outdent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().liftListItem("listItem").run()))}
         {markButton("들여쓰기", <Indent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().sinkListItem("listItem").run()))}
-        <label className="flex h-9 shrink-0 items-center gap-1 whitespace-nowrap border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-line-height">
-          줄간격
+        <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
+        <label className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-semibold text-graphite hover:bg-white" htmlFor="rich-editor-line-height">
+          줄
           <input
             id="rich-editor-line-height"
             aria-label="줄간격"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={MIN_EDITOR_LINE_HEIGHT}
-            max={MAX_EDITOR_LINE_HEIGHT}
-            step={0.1}
-            className="h-7 w-16 appearance-none rounded-md border border-stone-surface bg-white px-2 text-center text-xs tabular-nums text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            value={currentLineHeight}
-            onChange={(event) => applyLineHeight(event.target.value)}
+            className={COMPACT_NUMBER_INPUT_CLASS}
+            value={lineHeightDraft}
+            onFocus={() => setLineHeightDraft(String(currentLineHeight))}
+            onChange={(event) => setLineHeightDraft(event.target.value)}
+            onBlur={commitLineHeight}
+            onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commitLineHeight(); } }}
           />
         </label>
-        <label className="flex h-9 shrink-0 items-center gap-1 whitespace-nowrap border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-paragraph-spacing">
-          문단 뒤
+        <label className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-semibold text-graphite hover:bg-white" htmlFor="rich-editor-paragraph-spacing">
+          문단
           <input
             id="rich-editor-paragraph-spacing"
             aria-label="문단 뒤 간격"
-            type="number"
+            type="text"
             inputMode="numeric"
-            min={MIN_EDITOR_PARAGRAPH_SPACING}
-            max={MAX_EDITOR_PARAGRAPH_SPACING}
-            step={1}
-            className="h-7 w-16 appearance-none rounded-md border border-stone-surface bg-white px-2 text-center text-xs tabular-nums text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            value={resolvedParagraphSpacing}
-            onChange={(event) => applyParagraphSpacing(`${event.target.value}px`)}
+            className={COMPACT_NUMBER_INPUT_CLASS}
+            value={paragraphSpacingDraft}
+            onFocus={() => setParagraphSpacingDraft(String(resolvedParagraphSpacing))}
+            onChange={(event) => setParagraphSpacingDraft(event.target.value)}
+            onBlur={commitParagraphSpacing}
+            onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commitParagraphSpacing(); } }}
           />
-          <span aria-hidden="true" className="font-medium text-ash">px</span>
         </label>
+        <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
         <button
           type="button"
           aria-label="링크"
@@ -2396,7 +2438,7 @@ export function RichTextEditorV2({
           type="button"
           aria-label="2열 이미지"
           aria-pressed={imageInsertMode === "two-column"}
-          className={cn("h-9 border-r border-stone-surface px-3 text-xs font-bold text-graphite hover:bg-parchment-card", imageInsertMode === "two-column" && "bg-sky-blue text-white")}
+          className={cn("h-8 shrink-0 rounded-md px-2 text-[11px] font-semibold text-graphite hover:bg-parchment-card", imageInsertMode === "two-column" && "bg-sky-blue text-white")}
           onClick={() => {
             setImageInsertMode("two-column");
             fileInputRef.current?.click();
@@ -2408,13 +2450,13 @@ export function RichTextEditorV2({
           type="button"
           aria-label="대표+2열 이미지"
           aria-pressed={imageInsertMode === "featured-grid"}
-          className={cn("h-9 border-r border-stone-surface px-3 text-xs font-bold text-graphite hover:bg-parchment-card", imageInsertMode === "featured-grid" && "bg-sky-blue text-white")}
+          className={cn("h-8 shrink-0 rounded-md px-2 text-[11px] font-semibold text-graphite hover:bg-parchment-card", imageInsertMode === "featured-grid" && "bg-sky-blue text-white")}
           onClick={() => {
             setImageInsertMode("featured-grid");
             fileInputRef.current?.click();
           }}
         >
-          대표+2열
+          대표+2
         </button>
         <input
           ref={fileInputRef}

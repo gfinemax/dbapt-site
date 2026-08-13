@@ -1000,3 +1000,14 @@
 - Design and accessibility finding: PASS. At 516px and 1440px, all three controls retain 64px width, display `14`, `1.6`, and `12` unobscured, and produce no horizontal page overflow. Font size also exposes keyboard-focusable minus/plus controls.
 - Result: PASS.
 - Required action: none.
+## 2026-08-14 Compact toolbar follow-up
+
+- Feature: freely editable paragraph metrics and Google Docs-inspired compact grouping.
+- Governing spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Implementation plan: `docs/superpowers/plans/2026-08-13-news-editor-typography-consistency.md`.
+- Files or pages reviewed: notice/free-board editor toolbar.
+- Boundary finding: no access or product boundary changed.
+- Truthful presentation finding: PASS. Existing editor actions and labels still represent their actual behavior.
+- Design and accessibility finding: PASS. At 516px, the toolbar wraps without document overflow, numeric controls are 48px wide, and `2.` through `2.35` remains editable and commits on Enter. At 1440px the 678px drawer toolbar uses an orderly two-row layout.
+- Result: PASS.
+- Required action: none.

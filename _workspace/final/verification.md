@@ -2556,3 +2556,9 @@
 - Checks: `pnpm lint` passed; `pnpm test` passed (101 files, 645 tests); `pnpm build` passed.
 - Browser checks: Chrome at 516x900 and 1440x900; values visible, native control chrome removed, and document scroll width matched viewport width.
 - Unresolved risks: none.
+## 2026-08-14 Compact toolbar follow-up
+
+- Implemented: draft-based numeric entry committed on Enter/blur, compact control widths, grouped dividers, and reduced repeated labels.
+- Checks: `pnpm lint` passed; focused editor tests passed (65 tests); `pnpm test` passed (101 files, 646 tests); `pnpm build` passed.
+- Browser checks: Chrome at 516x900 and 1440x900; `2.` and `2.35` input states verified, Enter commit verified, no page overflow.
+- Unresolved risks: none.
