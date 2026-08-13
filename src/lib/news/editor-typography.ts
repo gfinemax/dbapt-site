@@ -7,6 +7,9 @@ export const MAX_EDITOR_LINE_HEIGHT = 3;
 export const DEFAULT_EDITOR_PARAGRAPH_SPACING = 12;
 export const MIN_EDITOR_PARAGRAPH_SPACING = 0;
 export const MAX_EDITOR_PARAGRAPH_SPACING = 48;
+export const MIN_EDITOR_INDENT_LEVEL = 0;
+export const MAX_EDITOR_INDENT_LEVEL = 6;
+export const EDITOR_INDENT_STEP_PX = 24;
 
 export function normalizeEditorFontSize(value: string) {
   const match = value.trim().match(/^(\d{1,2})px$/);
@@ -33,4 +36,11 @@ export function normalizeEditorParagraphSpacing(value: string) {
   return Number.isInteger(spacing) && spacing >= MIN_EDITOR_PARAGRAPH_SPACING && spacing <= MAX_EDITOR_PARAGRAPH_SPACING
     ? `${spacing}px`
     : "";
+}
+
+export function normalizeEditorIndentLevel(value: string | number) {
+  const level = Number(value);
+  return Number.isInteger(level) && level >= MIN_EDITOR_INDENT_LEVEL && level <= MAX_EDITOR_INDENT_LEVEL
+    ? level
+    : null;
 }

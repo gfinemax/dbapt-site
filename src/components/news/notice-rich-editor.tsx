@@ -6,8 +6,10 @@ import { NEWS_ARTICLE_BODY_SURFACE_CLASS } from "@/lib/news/content-layout";
 import { cn } from "@/lib/utils";
 import {
   normalizeEditorFontSize,
+  normalizeEditorIndentLevel,
   normalizeEditorLineHeight,
   normalizeEditorParagraphSpacing,
+  EDITOR_INDENT_STEP_PX,
 } from "@/lib/news/editor-typography";
 import { RichTextEditorV2 } from "./rich-text-editor-v2";
 export { getPlainNoticeText } from "@/lib/news/rich-text";
@@ -117,6 +119,7 @@ function buildNoticeParagraphOpenTag(attrs: string) {
   const paragraphSpacing = normalizeEditorParagraphSpacing(
     readHtmlAttr(attrs, "data-paragraph-spacing") || readStyleValue(attrs, "margin-bottom"),
   );
+  const indentLevel = normalizeEditorIndentLevel(readHtmlAttr(attrs, "data-indent-level"));
   const attrParts: string[] = [];
   const styleParts: string[] = [];
 
@@ -131,6 +134,10 @@ function buildNoticeParagraphOpenTag(attrs: string) {
   if (paragraphSpacing) {
     attrParts.push(`data-paragraph-spacing="${paragraphSpacing}"`);
     styleParts.push(`margin-bottom:${paragraphSpacing};`);
+  }
+  if (indentLevel) {
+    attrParts.push(`data-indent-level="${indentLevel}"`);
+    styleParts.push(`margin-left:${indentLevel * EDITOR_INDENT_STEP_PX}px;`);
   }
   if (styleParts.length > 0) attrParts.push(`style="${styleParts.join("")}"`);
   return attrParts.length > 0 ? `<p ${attrParts.join(" ")}>` : "<p>";

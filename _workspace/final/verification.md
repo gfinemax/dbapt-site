@@ -2562,3 +2562,9 @@
 - Checks: `pnpm lint` passed; focused editor tests passed (65 tests); `pnpm test` passed (101 files, 646 tests); `pnpm build` passed.
 - Browser checks: Chrome at 516x900 and 1440x900; `2.` and `2.35` input states verified, Enter commit verified, no page overflow.
 - Unresolved risks: none.
+## 2026-08-14 Paragraph indent and line-height button follow-up
+
+- Implemented: ordinary paragraph indent levels, sanitizer persistence, list-aware indent behavior, and 0.1 line-height minus/plus buttons.
+- Checks: `pnpm lint` passed; focused editor tests passed (66 tests); `pnpm test` passed (101 files, 647 tests); `pnpm build` passed.
+- Browser checks: ordinary paragraph changed to `data-indent-level="1"` and `margin-left:24px`, outdent removed both; arrows changed 1.6 to 1.7 and back; 516px had no overflow.
+- Unresolved risks: none currently identified.

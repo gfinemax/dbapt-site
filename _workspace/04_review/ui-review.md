@@ -1011,3 +1011,14 @@
 - Design and accessibility finding: PASS. At 516px, the toolbar wraps without document overflow, numeric controls are 48px wide, and `2.` through `2.35` remains editable and commits on Enter. At 1440px the 678px drawer toolbar uses an orderly two-row layout.
 - Result: PASS.
 - Required action: none.
+## 2026-08-14 Paragraph indent and line-height button follow-up
+
+- Feature: normal-paragraph indent/outdent and line-height step buttons.
+- Governing spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Implementation plan: `docs/superpowers/plans/2026-08-13-news-editor-typography-consistency.md`.
+- Files or pages reviewed: free-board composer at desktop and 516px mobile width.
+- Boundary finding: no access or product boundary changed.
+- Truthful presentation finding: PASS. Indent buttons now affect both list items and ordinary paragraphs; line-height arrows accurately change by 0.1.
+- Design and accessibility finding: PASS. Vertical arrow controls are labeled, keyboard-focusable, and create no horizontal overflow at 516px.
+- Result: PASS.
+- Required action: none.

@@ -25,6 +25,8 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  ChevronDown,
+  ChevronUp,
   Crop as CropIcon,
   ImageIcon,
   Indent,
@@ -47,7 +49,9 @@ import {
   DEFAULT_EDITOR_FONT_SIZE,
   DEFAULT_EDITOR_LINE_HEIGHT,
   DEFAULT_EDITOR_PARAGRAPH_SPACING,
+  EDITOR_INDENT_STEP_PX,
   MAX_EDITOR_FONT_SIZE,
+  MAX_EDITOR_INDENT_LEVEL,
   MIN_EDITOR_FONT_SIZE,
   normalizeEditorFontSize,
   normalizeEditorLineHeight,
@@ -171,6 +175,9 @@ declare module "@tiptap/core" {
     paragraphSpacing: {
       setParagraphSpacing: (paragraphSpacing: string) => ReturnType;
       unsetParagraphSpacing: () => ReturnType;
+    };
+    paragraphIndent: {
+      setParagraphIndent: (indentLevel: number) => ReturnType;
     };
   }
 }
@@ -1791,6 +1798,19 @@ const LineHeightExtension = Extension.create({
               };
             },
           },
+          indentLevel: {
+            default: 0,
+            keepOnSplit: true,
+            parseHTML: (element) => Number(element.getAttribute("data-indent-level")) || 0,
+            renderHTML: (attributes) => {
+              const indentLevel = Number(attributes.indentLevel) || 0;
+              if (indentLevel <= 0) return {};
+              return {
+                "data-indent-level": String(indentLevel),
+                style: `margin-left:${indentLevel * EDITOR_INDENT_STEP_PX}px;`,
+              };
+            },
+          },
         },
       },
     ];
@@ -1813,6 +1833,10 @@ const LineHeightExtension = Extension.create({
         () =>
         ({ chain }) =>
           chain().updateAttributes("paragraph", { paragraphSpacing: null }).run(),
+      setParagraphIndent:
+        (indentLevel: number) =>
+        ({ chain }) =>
+          chain().updateAttributes("paragraph", { indentLevel }).run(),
     };
   },
 });
@@ -2201,6 +2225,26 @@ export function RichTextEditorV2({
     setParagraphSpacingDraft(normalized.replace("px", ""));
   }, [applyParagraphSpacing, paragraphSpacingDraft, resolvedParagraphSpacing]);
 
+  const changeParagraphIndent = useCallback((direction: -1 | 1) => {
+    if (!editor) return;
+    if (editor.isActive("listItem")) {
+      if (direction > 0) editor.chain().focus().sinkListItem("listItem").run();
+      else editor.chain().focus().liftListItem("listItem").run();
+      return;
+    }
+    const currentIndent = Number(editor.getAttributes("paragraph").indentLevel) || 0;
+    const nextIndent = Math.min(MAX_EDITOR_INDENT_LEVEL, Math.max(0, currentIndent + direction));
+    editor.chain().focus().setParagraphIndent(nextIndent).run();
+  }, [editor]);
+
+  const changeLineHeight = useCallback((direction: -1 | 1) => {
+    const base = Number(lineHeightDraft) || currentLineHeight;
+    const next = Math.min(3, Math.max(1, Math.round((base + direction * 0.1) * 10) / 10));
+    const normalized = String(next);
+    setLineHeightDraft(normalized);
+    applyLineHeight(normalized);
+  }, [applyLineHeight, currentLineHeight, lineHeightDraft]);
+
   const insertImageFiles = useCallback(async (files: File[]) => {
     if (!editor || files.length === 0) return;
     setIsUploadingImage(true);
@@ -2378,11 +2422,12 @@ export function RichTextEditorV2({
         {markButton("양쪽 정렬", <AlignJustify className="size-4" aria-hidden="true" />, Boolean(editor?.isActive({ textAlign: "justify" })), () => run(() => editor?.chain().focus().setTextAlign("justify").run()))}
         {markButton("글머리 기호", <List className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("bulletList")), () => run(() => editor?.chain().focus().toggleBulletList().run()))}
         {markButton("번호 목록", <ListOrdered className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("orderedList")), () => run(() => editor?.chain().focus().toggleOrderedList().run()))}
-        {markButton("내어쓰기", <Outdent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().liftListItem("listItem").run()))}
-        {markButton("들여쓰기", <Indent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().sinkListItem("listItem").run()))}
+        {markButton("내어쓰기", <Outdent className="size-4" aria-hidden="true" />, false, () => changeParagraphIndent(-1))}
+        {markButton("들여쓰기", <Indent className="size-4" aria-hidden="true" />, false, () => changeParagraphIndent(1))}
         <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
-        <label className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-semibold text-graphite hover:bg-white" htmlFor="rich-editor-line-height">
+        <div className="flex h-8 shrink-0 items-center gap-0.5 whitespace-nowrap" role="group" aria-label="줄간격 조절">
           줄
+          <label className="sr-only" htmlFor="rich-editor-line-height">줄간격</label>
           <input
             id="rich-editor-line-height"
             aria-label="줄간격"
@@ -2395,7 +2440,15 @@ export function RichTextEditorV2({
             onBlur={commitLineHeight}
             onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commitLineHeight(); } }}
           />
-        </label>
+          <span className="flex h-7 w-5 shrink-0 flex-col overflow-hidden rounded-md border border-stone-surface bg-white">
+            <button type="button" aria-label="줄간격 0.1 늘리기" className="flex min-h-0 flex-1 items-center justify-center text-graphite hover:bg-parchment-card focus:outline-none focus:ring-1 focus:ring-inset focus:ring-sky-blue" onClick={() => changeLineHeight(1)}>
+              <ChevronUp className="size-3" aria-hidden="true" />
+            </button>
+            <button type="button" aria-label="줄간격 0.1 줄이기" className="flex min-h-0 flex-1 items-center justify-center border-t border-stone-surface text-graphite hover:bg-parchment-card focus:outline-none focus:ring-1 focus:ring-inset focus:ring-sky-blue" onClick={() => changeLineHeight(-1)}>
+              <ChevronDown className="size-3" aria-hidden="true" />
+            </button>
+          </span>
+        </div>
         <label className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-semibold text-graphite hover:bg-white" htmlFor="rich-editor-paragraph-spacing">
           문단
           <input

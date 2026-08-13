@@ -285,6 +285,8 @@ describe("notice rich content links", () => {
     expect(screen.getByLabelText("줄간격")).toHaveValue("1.6");
     expect(screen.getByLabelText("줄간격")).toHaveClass("w-12", "appearance-none", "tabular-nums");
     expect(screen.getByLabelText("줄간격")).not.toHaveAttribute("list");
+    expect(screen.getByRole("button", { name: "줄간격 0.1 줄이기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "줄간격 0.1 늘리기" })).toBeInTheDocument();
     expect(screen.getByLabelText("문단 뒤 간격")).toHaveValue("12");
     expect(screen.getByLabelText("문단 뒤 간격")).toHaveClass("w-12", "appearance-none", "tabular-nums");
     expect(screen.getByLabelText("문단 뒤 간격")).not.toHaveAttribute("list");
@@ -304,6 +306,7 @@ describe("notice rich content links", () => {
     expect(screen.getByRole("button", { name: "왼쪽 정렬" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "글머리 기호" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "들여쓰기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "내어쓰기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "이미지 삽입" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "2열 이미지" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대표+2열 이미지" })).toBeInTheDocument();
@@ -373,6 +376,17 @@ describe("notice rich content links", () => {
     expect(html).not.toContain('data-font-size="9px"');
     expect(html).not.toContain('data-line-height="3.1"');
     expect(html).not.toContain('data-paragraph-spacing="49px"');
+  });
+
+  it("preserves safe paragraph indentation and removes excessive indentation", () => {
+    const html = sanitizeNoticeContentHtml(
+      '<p data-indent-level="2" style="margin-left:48px;">정상</p><p data-indent-level="7" style="margin-left:168px;">범위 밖</p>',
+    );
+
+    expect(html).toContain('data-indent-level="2"');
+    expect(html).toContain("margin-left:48px");
+    expect(html).not.toContain('data-indent-level="7"');
+    expect(html).not.toContain("margin-left:168px");
   });
 
   it("preserves the site's Pretendard Variable font in published content", () => {

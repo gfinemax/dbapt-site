@@ -97,3 +97,9 @@
 - Explicitly excluded scope: editor persistence format, image/YouTube behavior, and new document features.
 - Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
 - Unanswered decision: none.
+## 2026-08-14 paragraph indent and line-height buttons follow-up
+
+- Requested feature slice: make indent/outdent work for ordinary paragraphs and add minus/plus line-height controls while retaining direct entry.
+- Explicitly excluded scope: new editor document types or persistence changes outside sanitized HTML attributes.
+- Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Unanswered decision: none.
