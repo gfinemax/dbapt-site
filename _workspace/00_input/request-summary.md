@@ -85,3 +85,9 @@
 - Explicitly excluded scope: DB/API 변경, 협업 편집, 자동 저장, 기존 게시글 일괄 재작성.
 - Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
 - Unanswered decision: none. 사용자가 제안 계획과 기본값 14px/1.6/12px 구현을 승인했다.
+## 2026-08-13 editor numeric control visibility follow-up
+
+- Requested feature slice: prevent the font-size and line-height values from being covered by native number/datalist controls.
+- Explicitly excluded scope: typography storage rules and editor command behavior remain unchanged.
+- Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Unanswered decision: none.

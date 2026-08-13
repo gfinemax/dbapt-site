@@ -149,9 +149,6 @@ const FONT_OPTIONS = [
   { label: "굴림", value: "Gulim" },
   { label: "맑은 고딕", value: "Malgun Gothic" },
 ];
-const FONT_SIZE_SUGGESTIONS = [12, 13, 14, 15, 16, 18, 20, 24, 28, 32];
-const LINE_HEIGHT_SUGGESTIONS = [1, 1.2, 1.4, 1.6, 1.8, 2];
-const PARAGRAPH_SPACING_SUGGESTIONS = [0, 4, 8, 12, 16, 20, 24];
 const GALLERY_GRID_STYLE =
   "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;max-width:820px;";
 const DEFAULT_CROP_BOX: CropBox = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -2273,8 +2270,17 @@ export function RichTextEditorV2({
             <option key={font.value} value={font.value}>{font.label}</option>
           ))}
         </select>
-        <label className="flex h-9 items-center gap-1 border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-font-size">
-          크기
+        <div className="flex h-9 shrink-0 items-center gap-1 whitespace-nowrap border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" role="group" aria-label="글자 크기 조절">
+          <label htmlFor="rich-editor-font-size">크기</label>
+          <button
+            type="button"
+            aria-label="글자 크기 1px 줄이기"
+            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-parchment-card focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
+            disabled={currentFontSize <= MIN_EDITOR_FONT_SIZE}
+            onClick={() => applyFontSize(`${currentFontSize - 1}px`)}
+          >
+            −
+          </button>
           <input
             id="rich-editor-font-size"
             aria-label="글자 크기"
@@ -2283,19 +2289,24 @@ export function RichTextEditorV2({
             min={MIN_EDITOR_FONT_SIZE}
             max={MAX_EDITOR_FONT_SIZE}
             step={1}
-            list="rich-editor-font-size-suggestions"
-            className="h-7 w-12 rounded-md border border-stone-surface bg-white px-1.5 text-center text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20"
+            className="h-7 w-16 appearance-none rounded-md border border-stone-surface bg-white px-2 text-center text-xs tabular-nums text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             value={currentFontSize}
             onChange={(event) => {
               const normalized = normalizeEditorFontSize(`${event.target.value}px`);
               if (normalized) applyFontSize(normalized);
             }}
           />
+          <button
+            type="button"
+            aria-label="글자 크기 1px 늘리기"
+            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-parchment-card focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
+            disabled={currentFontSize >= MAX_EDITOR_FONT_SIZE}
+            onClick={() => applyFontSize(`${currentFontSize + 1}px`)}
+          >
+            +
+          </button>
           <span aria-hidden="true" className="font-medium text-ash">px</span>
-          <datalist id="rich-editor-font-size-suggestions">
-            {FONT_SIZE_SUGGESTIONS.map((size) => <option key={size} value={size} />)}
-          </datalist>
-        </label>
+        </div>
         {markButton("굵게", <Bold className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("bold")), () => run(() => editor?.chain().focus().toggleBold().run()))}
         {markButton("기울임", <Italic className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("italic")), () => run(() => editor?.chain().focus().toggleItalic().run()))}
         {markButton("밑줄", <UnderlineIcon className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("underline")), () => run(() => editor?.chain().focus().toggleUnderline().run()))}
@@ -2328,7 +2339,7 @@ export function RichTextEditorV2({
         {markButton("번호 목록", <ListOrdered className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("orderedList")), () => run(() => editor?.chain().focus().toggleOrderedList().run()))}
         {markButton("내어쓰기", <Outdent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().liftListItem("listItem").run()))}
         {markButton("들여쓰기", <Indent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().sinkListItem("listItem").run()))}
-        <label className="flex h-9 items-center gap-1 border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-line-height">
+        <label className="flex h-9 shrink-0 items-center gap-1 whitespace-nowrap border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-line-height">
           줄간격
           <input
             id="rich-editor-line-height"
@@ -2338,16 +2349,12 @@ export function RichTextEditorV2({
             min={MIN_EDITOR_LINE_HEIGHT}
             max={MAX_EDITOR_LINE_HEIGHT}
             step={0.1}
-            list="rich-editor-line-height-suggestions"
-            className="h-7 w-14 rounded-md border border-stone-surface bg-white px-1.5 text-center text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20"
+            className="h-7 w-16 appearance-none rounded-md border border-stone-surface bg-white px-2 text-center text-xs tabular-nums text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             value={currentLineHeight}
             onChange={(event) => applyLineHeight(event.target.value)}
           />
-          <datalist id="rich-editor-line-height-suggestions">
-            {LINE_HEIGHT_SUGGESTIONS.map((lineHeight) => <option key={lineHeight} value={lineHeight} />)}
-          </datalist>
         </label>
-        <label className="flex h-9 items-center gap-1 border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-paragraph-spacing">
+        <label className="flex h-9 shrink-0 items-center gap-1 whitespace-nowrap border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-paragraph-spacing">
           문단 뒤
           <input
             id="rich-editor-paragraph-spacing"
@@ -2357,15 +2364,11 @@ export function RichTextEditorV2({
             min={MIN_EDITOR_PARAGRAPH_SPACING}
             max={MAX_EDITOR_PARAGRAPH_SPACING}
             step={1}
-            list="rich-editor-paragraph-spacing-suggestions"
-            className="h-7 w-12 rounded-md border border-stone-surface bg-white px-1.5 text-center text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20"
+            className="h-7 w-16 appearance-none rounded-md border border-stone-surface bg-white px-2 text-center text-xs tabular-nums text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             value={resolvedParagraphSpacing}
             onChange={(event) => applyParagraphSpacing(`${event.target.value}px`)}
           />
           <span aria-hidden="true" className="font-medium text-ash">px</span>
-          <datalist id="rich-editor-paragraph-spacing-suggestions">
-            {PARAGRAPH_SPACING_SUGGESTIONS.map((spacing) => <option key={spacing} value={spacing} />)}
-          </datalist>
         </label>
         <button
           type="button"

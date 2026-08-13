@@ -989,3 +989,14 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+## 2026-08-13 Numeric control visibility follow-up
+
+- Feature: unobscured typography numeric inputs.
+- Governing spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Implementation plan: `docs/superpowers/plans/2026-08-13-news-editor-typography-consistency.md`.
+- Files or pages reviewed: news notice/free-board editor toolbar.
+- Boundary finding: no access or product boundary changed.
+- Truthful presentation finding: labels, values, units, and limits remain accurate.
+- Design and accessibility finding: PASS. At 516px and 1440px, all three controls retain 64px width, display `14`, `1.6`, and `12` unobscured, and produce no horizontal page overflow. Font size also exposes keyboard-focusable minus/plus controls.
+- Result: PASS.
+- Required action: none.

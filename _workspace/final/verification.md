@@ -2550,3 +2550,9 @@
 - none
 
 ---
+## 2026-08-13 Numeric control visibility follow-up
+
+- Implemented: widened numeric inputs, removed overlapping browser datalist affordances, hid native spinner chrome, and prevented label shrink.
+- Checks: `pnpm lint` passed; `pnpm test` passed (101 files, 645 tests); `pnpm build` passed.
+- Browser checks: Chrome at 516x900 and 1440x900; values visible, native control chrome removed, and document scroll width matched viewport width.
+- Unresolved risks: none.

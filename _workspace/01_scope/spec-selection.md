@@ -67,3 +67,9 @@
 - Approved extension: 가로에서 문서 정보와 PDF 도구를 잠그고 종료 버튼, 최초 안내, history 기반 뒤로가기 복원, 세로 회전 복원을 제공한다.
 - Conflicts: none.
 - Planning may continue: yes.
+## 2026-08-13 editor numeric control visibility follow-up
+
+- Selected approved spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Boundary: correct only numeric control sizing/native chrome and responsive wrapping.
+- Conflicts: none.
+- Planning may continue: yes, under the existing approved implementation plan.
