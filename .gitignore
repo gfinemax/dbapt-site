@@ -1,5 +1,6 @@
 .worktrees/
 .tmp/
+.tmp-*/
 .superpowers/
 
 # dependencies

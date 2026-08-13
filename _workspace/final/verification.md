@@ -100,6 +100,25 @@
 
 ---
 
+# Verification - News Editor Typography Consistency (2026-08-13)
+
+## Implemented
+- 글자 크기 10~48px, 1px 단위 숫자 입력과 추천값을 추가했다.
+- 줄간격 1.0~3.0, 0.1 단위 입력과 문단 뒤 간격 0~48px, 1px 단위 입력을 추가했다.
+- sanitizer와 편집·조회 fallback을 14px/1.6/12px 계약으로 통일하고 기존 명시 HTML을 보존했다.
+
+## Checks
+- Focused tests: PASS, 183 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 101 files / 645 tests.
+- `pnpm build`: PASS.
+- Browser: local production with temporary admin session, 1440x1000 and 390x844; controls visible and document horizontal overflow 0px.
+
+## Risks Or Follow-up
+- none
+
+---
+
 # Verification - Immersive Mobile PDF Controls
 
 ## Implemented Change

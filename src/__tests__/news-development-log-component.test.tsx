@@ -77,7 +77,7 @@ describe("DevelopmentLog", () => {
     expect(within(detailPanel).getByRole("heading", { name: "댓글 알림 요구사항" })).toBeInTheDocument();
     const readBody = within(detailPanel).getByText("댓글 알림이 필요합니다.");
     expect(readBody).toBeInTheDocument();
-    expect(readBody).toHaveClass("px-6", "py-6", "text-sm", "leading-relaxed", "[&_p]:mb-3");
+    expect(readBody).toHaveClass("px-6", "py-6", "text-[14px]", "leading-[1.6]", "[&_p]:mb-3");
 
     fireEvent.click(within(detailPanel).getByRole("button", { name: "목록으로" }));
     expect(screen.queryByRole("complementary", { name: "개발일지 상세 패널" })).not.toBeInTheDocument();
@@ -233,8 +233,8 @@ describe("DevelopmentLog", () => {
     expect(within(detailPanel).getByLabelText("개발일지 내용 수정")).toHaveClass(
       "px-6",
       "py-6",
-      "text-sm",
-      "leading-relaxed",
+      "text-[14px]",
+      "leading-[1.6]",
     );
     fireEvent.change(within(detailPanel).getByLabelText("개발일지 등록일 수정"), {
       target: { value: "2026-06-22T10:15" },

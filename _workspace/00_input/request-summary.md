@@ -76,3 +76,12 @@
 - Requested feature slice: 가로 열람 중 일반 상단 메뉴가 다시 나타나지 않게 유지하고, 사용을 마치면 명확한 종료 동작으로 기존 메뉴를 복원한다.
 - Safety behavior: 항상 보이는 `× 열람 종료`, 최초 2.4초 안내, 안드로이드 뒤로가기 우선 종료, 세로 회전 자동 복원을 제공한다.
 - Explicitly excluded scope: 카카오톡 자체 주소창 강제 제어, 문서·다운로드 권한 변경.
+
+---
+
+# Request Summary - News Editor Typography Consistency
+
+- Requested feature slice: 공지사항·자유게시판 공용 편집기를 1px 글자 크기, 명시적인 줄간격, 문단 간격을 제공하는 사용자 편의형 작성 도구로 개선한다.
+- Explicitly excluded scope: DB/API 변경, 협업 편집, 자동 저장, 기존 게시글 일괄 재작성.
+- Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Unanswered decision: none. 사용자가 제안 계획과 기본값 14px/1.6/12px 구현을 승인했다.

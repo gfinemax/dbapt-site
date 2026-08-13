@@ -277,13 +277,19 @@ describe("notice rich content links", () => {
     );
 
     expect(screen.getByLabelText("글꼴")).toHaveValue("Pretendard Variable");
-    expect(screen.getByLabelText("글자 크기")).toHaveValue("14px");
-    expect(screen.getByLabelText("줄간격")).toHaveValue("1.625");
+    expect(screen.getByLabelText("글자 크기")).toHaveValue(14);
+    expect(screen.getByLabelText("글자 크기")).toHaveAttribute("min", "10");
+    expect(screen.getByLabelText("글자 크기")).toHaveAttribute("max", "48");
+    expect(screen.getByLabelText("글자 크기")).toHaveAttribute("step", "1");
+    expect(screen.getByLabelText("줄간격")).toHaveValue(1.6);
+    expect(screen.getByLabelText("줄간격")).toHaveAttribute("step", "0.1");
+    expect(screen.getByLabelText("문단 뒤 간격")).toHaveValue(12);
+    expect(screen.getByLabelText("문단 뒤 간격")).toHaveAttribute("step", "1");
     expect(screen.getByRole("textbox", { name: "본문 편집창" })).toHaveClass(
       "px-6",
       "py-6",
-      "text-sm",
-      "leading-relaxed",
+      "text-[14px]",
+      "leading-[1.6]",
       "[&_p]:mb-3",
     );
     expect(screen.getByRole("textbox", { name: "본문 편집창" })).not.toHaveClass("text-xs", "px-7");
@@ -330,6 +336,20 @@ describe("notice rich content links", () => {
     expect(consoleError).not.toHaveBeenCalledWith(expect.stringContaining("flushSync was called"));
 
     consoleError.mockRestore();
+  });
+
+  it("preserves one-pixel font sizes and bounded paragraph typography", () => {
+    const html = sanitizeNoticeContentHtml(
+      '<p data-line-height="1.6" data-paragraph-spacing="13px" style="line-height:1.6;margin-bottom:13px;"><span data-font-size="13px" style="font-size:13px;">정상</span></p><p data-line-height="3.1" data-paragraph-spacing="49px" style="line-height:3.1;margin-bottom:49px;"><span data-font-size="9px" style="font-size:9px;">범위 밖</span></p>',
+    );
+
+    expect(html).toContain('data-font-size="13px"');
+    expect(html).toContain('data-line-height="1.6"');
+    expect(html).toContain('data-paragraph-spacing="13px"');
+    expect(html).toContain('style="line-height:1.6;margin-bottom:13px;"');
+    expect(html).not.toContain('data-font-size="9px"');
+    expect(html).not.toContain('data-line-height="3.1"');
+    expect(html).not.toContain('data-paragraph-spacing="49px"');
   });
 
   it("preserves the site's Pretendard Variable font in published content", () => {

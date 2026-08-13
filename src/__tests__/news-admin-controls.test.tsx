@@ -2499,8 +2499,8 @@ describe("news admin visible controls", () => {
 
     const content = container.querySelector(".notice-rich-content");
 
-    expect(content).toHaveClass("text-sm");
-    expect(content).toHaveClass("leading-relaxed");
+    expect(content).toHaveClass("text-[14px]");
+    expect(content).toHaveClass("leading-[1.6]");
     expect(content).toHaveClass("text-charcoal-primary");
     expect(content).toHaveClass("px-6", "py-6", "[&_p]:mb-3");
   });
@@ -3463,8 +3463,8 @@ describe("news admin visible controls", () => {
     expect(within(panel).getByText("실제 자유게시글 내용")).toBeInTheDocument();
     const richContent = panel.querySelector(".notice-rich-content");
     expect(richContent?.parentElement).not.toHaveClass("pt-2");
-    expect(richContent).toHaveClass("text-sm");
-    expect(richContent).toHaveClass("leading-relaxed");
+    expect(richContent).toHaveClass("text-[14px]");
+    expect(richContent).toHaveClass("leading-[1.6]");
     expect(richContent).toHaveClass("max-sm:px-3", "max-sm:py-4");
     expect(richContent).not.toHaveClass("text-xs");
     expect(richContent).not.toHaveClass("leading-8");

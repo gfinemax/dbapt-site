@@ -963,3 +963,29 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+---
+
+# UI Review - News Editor Typography Consistency (2026-08-13)
+
+## Reviewed Change
+- Feature: 공지사항·자유게시판 공용 편집기 글자 크기·줄간격·문단 간격 개선
+- Governing spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-13-news-editor-typography-consistency.md`
+- Files or pages reviewed: 공지 작성 도구, 공지·자유게시판 공용 편집/조회 타이포그래피
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 기존 공개/로그인 경계, 게시글 권한, HTML 저장/API 계약을 변경하지 않았다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 입력 필드에 실제 허용 범위와 단위가 반영되고 표시 기본값과 조회 fallback이 14px/1.6/12px로 일치한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Pretendard와 기존 warm canvas 툴바를 유지했다. 숫자 입력에 label, min/max/step, 키보드 조절을 제공한다. 로컬 관리자 작성 화면에서 1440x1000과 390x844 모두 문서 가로 넘침이 없고 데스크톱 본문 폭은 678px였다.
+
+## Outcome
+- Result: PASS
+- Required action: none

@@ -4,6 +4,11 @@ import { LinkIcon, Maximize2, RotateCw, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NEWS_ARTICLE_BODY_SURFACE_CLASS } from "@/lib/news/content-layout";
 import { cn } from "@/lib/utils";
+import {
+  normalizeEditorFontSize,
+  normalizeEditorLineHeight,
+  normalizeEditorParagraphSpacing,
+} from "@/lib/news/editor-typography";
 import { RichTextEditorV2 } from "./rich-text-editor-v2";
 export { getPlainNoticeText } from "@/lib/news/rich-text";
 
@@ -61,8 +66,6 @@ const CROP_PRESETS: Array<{ label: string; x: CropX; y: CropY }> = [
   { label: "오른쪽 아래", x: "right", y: "bottom" },
 ];
 const SAFE_FONT_FAMILIES = new Set(["Pretendard Variable", "Pretendard", "Gulim", "Malgun Gothic"]);
-const SAFE_FONT_SIZES = new Set(["12px", "14px", "16px", "18px", "20px", "24px"]);
-const SAFE_LINE_HEIGHTS = new Set(["1.2", "1.5", "1.625", "1.8", "2"]);
 const SAFE_TEXT_ALIGNS = new Set<TextAlign>(["left", "center", "right", "justify"]);
 
 function escapeAttr(value: string) {
@@ -90,8 +93,7 @@ function normalizeTextAlign(value: string): TextAlign | "" {
 }
 
 function normalizeLineHeight(value: string) {
-  const normalized = value.trim();
-  return SAFE_LINE_HEIGHTS.has(normalized) ? normalized : "";
+  return normalizeEditorLineHeight(value);
 }
 
 function normalizeFontFamily(value: string) {
@@ -100,8 +102,7 @@ function normalizeFontFamily(value: string) {
 }
 
 function normalizeFontSize(value: string) {
-  const normalized = value.trim();
-  return SAFE_FONT_SIZES.has(normalized) ? normalized : "";
+  return normalizeEditorFontSize(value);
 }
 
 function normalizeSafeColor(value: string) {
@@ -113,6 +114,9 @@ function normalizeSafeColor(value: string) {
 function buildNoticeParagraphOpenTag(attrs: string) {
   const textAlign = normalizeTextAlign(readHtmlAttr(attrs, "data-text-align") || readStyleValue(attrs, "text-align"));
   const lineHeight = normalizeLineHeight(readHtmlAttr(attrs, "data-line-height") || readStyleValue(attrs, "line-height"));
+  const paragraphSpacing = normalizeEditorParagraphSpacing(
+    readHtmlAttr(attrs, "data-paragraph-spacing") || readStyleValue(attrs, "margin-bottom"),
+  );
   const attrParts: string[] = [];
   const styleParts: string[] = [];
 
@@ -123,6 +127,10 @@ function buildNoticeParagraphOpenTag(attrs: string) {
   if (lineHeight) {
     attrParts.push(`data-line-height="${lineHeight}"`);
     styleParts.push(`line-height:${lineHeight};`);
+  }
+  if (paragraphSpacing) {
+    attrParts.push(`data-paragraph-spacing="${paragraphSpacing}"`);
+    styleParts.push(`margin-bottom:${paragraphSpacing};`);
   }
   if (styleParts.length > 0) attrParts.push(`style="${styleParts.join("")}"`);
   return attrParts.length > 0 ? `<p ${attrParts.join(" ")}>` : "<p>";

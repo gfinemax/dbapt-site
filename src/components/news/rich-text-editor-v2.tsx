@@ -43,6 +43,20 @@ import {
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { NEWS_ARTICLE_BODY_SURFACE_CLASS } from "@/lib/news/content-layout";
+import {
+  DEFAULT_EDITOR_FONT_SIZE,
+  DEFAULT_EDITOR_LINE_HEIGHT,
+  DEFAULT_EDITOR_PARAGRAPH_SPACING,
+  MAX_EDITOR_FONT_SIZE,
+  MAX_EDITOR_LINE_HEIGHT,
+  MAX_EDITOR_PARAGRAPH_SPACING,
+  MIN_EDITOR_FONT_SIZE,
+  MIN_EDITOR_LINE_HEIGHT,
+  MIN_EDITOR_PARAGRAPH_SPACING,
+  normalizeEditorFontSize,
+  normalizeEditorLineHeight,
+  normalizeEditorParagraphSpacing,
+} from "@/lib/news/editor-typography";
 import { cn } from "@/lib/utils";
 
 type UploadImage = (file: File) => Promise<{ url: string }>;
@@ -135,8 +149,9 @@ const FONT_OPTIONS = [
   { label: "굴림", value: "Gulim" },
   { label: "맑은 고딕", value: "Malgun Gothic" },
 ];
-const FONT_SIZE_OPTIONS = ["12px", "14px", "16px", "18px", "20px", "24px"];
-const LINE_HEIGHT_OPTIONS = ["1.2", "1.5", "1.625", "1.8", "2"];
+const FONT_SIZE_SUGGESTIONS = [12, 13, 14, 15, 16, 18, 20, 24, 28, 32];
+const LINE_HEIGHT_SUGGESTIONS = [1, 1.2, 1.4, 1.6, 1.8, 2];
+const PARAGRAPH_SPACING_SUGGESTIONS = [0, 4, 8, 12, 16, 20, 24];
 const GALLERY_GRID_STYLE =
   "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;max-width:820px;";
 const DEFAULT_CROP_BOX: CropBox = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -156,6 +171,10 @@ declare module "@tiptap/core" {
     lineHeight: {
       setLineHeight: (lineHeight: string) => ReturnType;
       unsetLineHeight: () => ReturnType;
+    };
+    paragraphSpacing: {
+      setParagraphSpacing: (paragraphSpacing: string) => ReturnType;
+      unsetParagraphSpacing: () => ReturnType;
     };
   }
 }
@@ -1717,6 +1736,7 @@ const FontSizeExtension = Extension.create({
         attributes: {
           fontSize: {
             default: null,
+            keepOnSplit: true,
             parseHTML: (element) => element.getAttribute("data-font-size") || element.style.fontSize || null,
             renderHTML: (attributes) => {
               if (!attributes.fontSize) return {};
@@ -1753,12 +1773,25 @@ const LineHeightExtension = Extension.create({
         attributes: {
           lineHeight: {
             default: null,
+            keepOnSplit: true,
             parseHTML: (element) => element.getAttribute("data-line-height") || element.style.lineHeight || null,
             renderHTML: (attributes) => {
               if (!attributes.lineHeight) return {};
               return {
                 "data-line-height": attributes.lineHeight,
                 style: `line-height:${attributes.lineHeight};`,
+              };
+            },
+          },
+          paragraphSpacing: {
+            default: null,
+            keepOnSplit: true,
+            parseHTML: (element) => element.getAttribute("data-paragraph-spacing") || element.style.marginBottom || null,
+            renderHTML: (attributes) => {
+              if (!attributes.paragraphSpacing) return {};
+              return {
+                "data-paragraph-spacing": attributes.paragraphSpacing,
+                style: `margin-bottom:${attributes.paragraphSpacing};`,
               };
             },
           },
@@ -1776,6 +1809,14 @@ const LineHeightExtension = Extension.create({
         () =>
         ({ chain }) =>
           chain().updateAttributes("paragraph", { lineHeight: null }).run(),
+      setParagraphSpacing:
+        (paragraphSpacing: string) =>
+        ({ chain }) =>
+          chain().updateAttributes("paragraph", { paragraphSpacing }).run(),
+      unsetParagraphSpacing:
+        () =>
+        ({ chain }) =>
+          chain().updateAttributes("paragraph", { paragraphSpacing: null }).run(),
     };
   },
 });
@@ -2107,6 +2148,29 @@ export function RichTextEditorV2({
       .run();
   }, [editor]);
 
+  const currentFontSize = Number.parseInt(editor?.getAttributes("textStyle").fontSize || "", 10)
+    || DEFAULT_EDITOR_FONT_SIZE;
+  const currentLineHeight = Number(editor?.getAttributes("paragraph").lineHeight)
+    || DEFAULT_EDITOR_LINE_HEIGHT;
+  const currentParagraphSpacing = Number.parseInt(editor?.getAttributes("paragraph").paragraphSpacing || "", 10);
+  const resolvedParagraphSpacing = Number.isFinite(currentParagraphSpacing)
+    ? currentParagraphSpacing
+    : DEFAULT_EDITOR_PARAGRAPH_SPACING;
+
+  const applyLineHeight = useCallback((value: string) => {
+    if (!editor) return;
+    const normalized = normalizeEditorLineHeight(value);
+    if (!normalized) return;
+    editor.chain().focus().setLineHeight(normalized).run();
+  }, [editor]);
+
+  const applyParagraphSpacing = useCallback((value: string) => {
+    if (!editor) return;
+    const normalized = normalizeEditorParagraphSpacing(value);
+    if (!normalized) return;
+    editor.chain().focus().setParagraphSpacing(normalized).run();
+  }, [editor]);
+
   const insertImageFiles = useCallback(async (files: File[]) => {
     if (!editor || files.length === 0) return;
     setIsUploadingImage(true);
@@ -2194,7 +2258,7 @@ export function RichTextEditorV2({
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-stone-surface bg-white focus-within:border-sky-blue focus-within:ring-1 focus-within:ring-sky-blue/30">
-      <div className="flex flex-wrap items-center border-b border-stone-surface bg-[#fbfaf9]">
+      <div className="flex flex-wrap items-center gap-y-1 border-b border-stone-surface bg-[#fbfaf9] p-1 sm:p-0">
         <label className="sr-only" htmlFor="rich-editor-font-family">글꼴</label>
         <select
           id="rich-editor-font-family"
@@ -2209,18 +2273,29 @@ export function RichTextEditorV2({
             <option key={font.value} value={font.value}>{font.label}</option>
           ))}
         </select>
-        <label className="sr-only" htmlFor="rich-editor-font-size">글자 크기</label>
-        <select
-          id="rich-editor-font-size"
-          aria-label="글자 크기"
-          className={cn(FIELD_CLASS, "w-28")}
-          value={editor?.getAttributes("textStyle").fontSize || "14px"}
-          onChange={(event) => applyFontSize(event.target.value)}
-        >
-          {FONT_SIZE_OPTIONS.map((size) => (
-            <option key={size} value={size}>{size}</option>
-          ))}
-        </select>
+        <label className="flex h-9 items-center gap-1 border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-font-size">
+          크기
+          <input
+            id="rich-editor-font-size"
+            aria-label="글자 크기"
+            type="number"
+            inputMode="numeric"
+            min={MIN_EDITOR_FONT_SIZE}
+            max={MAX_EDITOR_FONT_SIZE}
+            step={1}
+            list="rich-editor-font-size-suggestions"
+            className="h-7 w-12 rounded-md border border-stone-surface bg-white px-1.5 text-center text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20"
+            value={currentFontSize}
+            onChange={(event) => {
+              const normalized = normalizeEditorFontSize(`${event.target.value}px`);
+              if (normalized) applyFontSize(normalized);
+            }}
+          />
+          <span aria-hidden="true" className="font-medium text-ash">px</span>
+          <datalist id="rich-editor-font-size-suggestions">
+            {FONT_SIZE_SUGGESTIONS.map((size) => <option key={size} value={size} />)}
+          </datalist>
+        </label>
         {markButton("굵게", <Bold className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("bold")), () => run(() => editor?.chain().focus().toggleBold().run()))}
         {markButton("기울임", <Italic className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("italic")), () => run(() => editor?.chain().focus().toggleItalic().run()))}
         {markButton("밑줄", <UnderlineIcon className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("underline")), () => run(() => editor?.chain().focus().toggleUnderline().run()))}
@@ -2253,18 +2328,45 @@ export function RichTextEditorV2({
         {markButton("번호 목록", <ListOrdered className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("orderedList")), () => run(() => editor?.chain().focus().toggleOrderedList().run()))}
         {markButton("내어쓰기", <Outdent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().liftListItem("listItem").run()))}
         {markButton("들여쓰기", <Indent className="size-4" aria-hidden="true" />, false, () => run(() => editor?.chain().focus().sinkListItem("listItem").run()))}
-        <label className="sr-only" htmlFor="rich-editor-line-height">줄간격</label>
-        <select
-          id="rich-editor-line-height"
-          aria-label="줄간격"
-          className={cn(FIELD_CLASS, "w-24")}
-          value={editor?.getAttributes("paragraph").lineHeight || "1.625"}
-          onChange={(event) => run(() => editor?.chain().focus().setLineHeight(event.target.value).run())}
-        >
-          {LINE_HEIGHT_OPTIONS.map((lineHeight) => (
-            <option key={lineHeight} value={lineHeight}>{lineHeight}</option>
-          ))}
-        </select>
+        <label className="flex h-9 items-center gap-1 border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-line-height">
+          줄간격
+          <input
+            id="rich-editor-line-height"
+            aria-label="줄간격"
+            type="number"
+            inputMode="decimal"
+            min={MIN_EDITOR_LINE_HEIGHT}
+            max={MAX_EDITOR_LINE_HEIGHT}
+            step={0.1}
+            list="rich-editor-line-height-suggestions"
+            className="h-7 w-14 rounded-md border border-stone-surface bg-white px-1.5 text-center text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20"
+            value={currentLineHeight}
+            onChange={(event) => applyLineHeight(event.target.value)}
+          />
+          <datalist id="rich-editor-line-height-suggestions">
+            {LINE_HEIGHT_SUGGESTIONS.map((lineHeight) => <option key={lineHeight} value={lineHeight} />)}
+          </datalist>
+        </label>
+        <label className="flex h-9 items-center gap-1 border-r border-stone-surface bg-white px-2 text-[11px] font-bold text-graphite" htmlFor="rich-editor-paragraph-spacing">
+          문단 뒤
+          <input
+            id="rich-editor-paragraph-spacing"
+            aria-label="문단 뒤 간격"
+            type="number"
+            inputMode="numeric"
+            min={MIN_EDITOR_PARAGRAPH_SPACING}
+            max={MAX_EDITOR_PARAGRAPH_SPACING}
+            step={1}
+            list="rich-editor-paragraph-spacing-suggestions"
+            className="h-7 w-12 rounded-md border border-stone-surface bg-white px-1.5 text-center text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-2 focus:ring-sky-blue/20"
+            value={resolvedParagraphSpacing}
+            onChange={(event) => applyParagraphSpacing(`${event.target.value}px`)}
+          />
+          <span aria-hidden="true" className="font-medium text-ash">px</span>
+          <datalist id="rich-editor-paragraph-spacing-suggestions">
+            {PARAGRAPH_SPACING_SUGGESTIONS.map((spacing) => <option key={spacing} value={spacing} />)}
+          </datalist>
+        </label>
         <button
           type="button"
           aria-label="링크"

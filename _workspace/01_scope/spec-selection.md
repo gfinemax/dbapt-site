@@ -10,6 +10,15 @@
 
 ---
 
+# Specification Selection - News Editor Typography Consistency
+
+- Selected approved spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Implementation boundary: 기존 HTML 저장/API 계약과 게시판 권한을 유지하면서 공용 편집기·sanitizer·조회 fallback만 확장한다.
+- Conflicts: none.
+- Planning may continue: yes.
+
+---
+
 # Specification Selection - KakaoTalk PDF Online Viewer
 
 - Selected approved specs:
