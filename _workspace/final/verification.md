@@ -2568,3 +2568,9 @@
 - Checks: `pnpm lint` passed; focused editor tests passed (66 tests); `pnpm test` passed (101 files, 647 tests); `pnpm build` passed.
 - Browser checks: ordinary paragraph changed to `data-indent-level="1"` and `margin-left:24px`, outdent removed both; arrows changed 1.6 to 1.7 and back; 516px had no overflow.
 - Unresolved risks: none currently identified.
+## 2026-08-14 Matching typography steppers follow-up
+
+- Implemented: font-size vertical arrows matching line-height controls, full `줄간격` label, and shared 12px medium labels.
+- Checks: `pnpm lint` passed; focused editor tests passed (66 tests); `pnpm test` passed (101 files, 647 tests); `pnpm build` passed.
+- Browser checks: font size changed 14 to 15 and back to 14; `줄간격` rendered in Pretendard 12px/500; no horizontal overflow.
+- Unresolved risks: none currently identified.

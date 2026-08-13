@@ -103,3 +103,9 @@
 - Explicitly excluded scope: new editor document types or persistence changes outside sanitized HTML attributes.
 - Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
 - Unanswered decision: none.
+## 2026-08-14 matching font-size stepper and line-height label follow-up
+
+- Requested feature slice: use the same vertical arrows for font size and line height, rename `줄` to `줄간격`, and normalize toolbar label typography.
+- Explicitly excluded scope: formatting behavior and stored HTML.
+- Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Unanswered decision: none.

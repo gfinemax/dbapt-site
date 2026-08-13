@@ -1022,3 +1022,14 @@
 - Design and accessibility finding: PASS. Vertical arrow controls are labeled, keyboard-focusable, and create no horizontal overflow at 516px.
 - Result: PASS.
 - Required action: none.
+## 2026-08-14 Matching typography steppers follow-up
+
+- Feature: vertical font-size arrows, full `줄간격` label, and consistent toolbar label typography.
+- Governing spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Implementation plan: `docs/superpowers/plans/2026-08-13-news-editor-typography-consistency.md`.
+- Files or pages reviewed: free-board composer toolbar in Chrome.
+- Boundary finding: no access or product boundary changed.
+- Truthful presentation finding: PASS. Both vertical font-size arrows change by exactly 1px.
+- Design and accessibility finding: PASS. `줄간격` uses Pretendard at 12px/500, arrow buttons are labeled and focusable, and the toolbar has no horizontal overflow.
+- Result: PASS.
+- Required action: none.

@@ -287,6 +287,7 @@ describe("notice rich content links", () => {
     expect(screen.getByLabelText("줄간격")).not.toHaveAttribute("list");
     expect(screen.getByRole("button", { name: "줄간격 0.1 줄이기" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "줄간격 0.1 늘리기" })).toBeInTheDocument();
+    expect(screen.getByText("줄간격", { selector: "span" })).toHaveClass("text-xs", "font-medium");
     expect(screen.getByLabelText("문단 뒤 간격")).toHaveValue("12");
     expect(screen.getByLabelText("문단 뒤 간격")).toHaveClass("w-12", "appearance-none", "tabular-nums");
     expect(screen.getByLabelText("문단 뒤 간격")).not.toHaveAttribute("list");

@@ -85,3 +85,9 @@
 - Boundary: extend existing paragraph formatting and toolbar usability only.
 - Conflicts: none.
 - Planning may continue: yes, under the existing approved implementation plan.
+## 2026-08-14 matching font-size stepper and line-height label follow-up
+
+- Selected approved spec: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
+- Boundary: visual and interaction consistency of existing typography controls only.
+- Conflicts: none.
+- Planning may continue: yes, under the existing approved implementation plan.

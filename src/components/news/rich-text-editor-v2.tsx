@@ -2350,19 +2350,6 @@ export function RichTextEditorV2({
         <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
         <div className="flex h-8 shrink-0 items-center gap-0.5 whitespace-nowrap" role="group" aria-label="글자 크기 조절">
           <label className="sr-only" htmlFor="rich-editor-font-size">글자 크기</label>
-          <button
-            type="button"
-            aria-label="글자 크기 1px 줄이기"
-            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
-            disabled={currentFontSize <= MIN_EDITOR_FONT_SIZE}
-            onClick={() => {
-              const next = currentFontSize - 1;
-              setFontSizeDraft(String(next));
-              applyFontSize(`${next}px`);
-            }}
-          >
-            −
-          </button>
           <input
             id="rich-editor-font-size"
             aria-label="글자 크기"
@@ -2375,19 +2362,34 @@ export function RichTextEditorV2({
             onBlur={commitFontSize}
             onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commitFontSize(); } }}
           />
-          <button
-            type="button"
-            aria-label="글자 크기 1px 늘리기"
-            className="flex size-7 items-center justify-center rounded-md text-base font-medium text-graphite hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-blue/30 disabled:opacity-30"
-            disabled={currentFontSize >= MAX_EDITOR_FONT_SIZE}
-            onClick={() => {
-              const next = currentFontSize + 1;
-              setFontSizeDraft(String(next));
-              applyFontSize(`${next}px`);
-            }}
-          >
-            +
-          </button>
+          <span className="flex h-7 w-5 shrink-0 flex-col overflow-hidden rounded-md border border-stone-surface bg-white">
+            <button
+              type="button"
+              aria-label="글자 크기 1px 늘리기"
+              className="flex min-h-0 flex-1 items-center justify-center text-graphite hover:bg-parchment-card focus:outline-none focus:ring-1 focus:ring-inset focus:ring-sky-blue disabled:opacity-30"
+              disabled={currentFontSize >= MAX_EDITOR_FONT_SIZE}
+              onClick={() => {
+                const next = currentFontSize + 1;
+                setFontSizeDraft(String(next));
+                applyFontSize(`${next}px`);
+              }}
+            >
+              <ChevronUp className="size-3" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="글자 크기 1px 줄이기"
+              className="flex min-h-0 flex-1 items-center justify-center border-t border-stone-surface text-graphite hover:bg-parchment-card focus:outline-none focus:ring-1 focus:ring-inset focus:ring-sky-blue disabled:opacity-30"
+              disabled={currentFontSize <= MIN_EDITOR_FONT_SIZE}
+              onClick={() => {
+                const next = currentFontSize - 1;
+                setFontSizeDraft(String(next));
+                applyFontSize(`${next}px`);
+              }}
+            >
+              <ChevronDown className="size-3" aria-hidden="true" />
+            </button>
+          </span>
         </div>
         <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
         {markButton("굵게", <Bold className="size-4" aria-hidden="true" />, Boolean(editor?.isActive("bold")), () => run(() => editor?.chain().focus().toggleBold().run()))}
@@ -2426,7 +2428,7 @@ export function RichTextEditorV2({
         {markButton("들여쓰기", <Indent className="size-4" aria-hidden="true" />, false, () => changeParagraphIndent(1))}
         <span className={TOOLBAR_DIVIDER_CLASS} aria-hidden="true" />
         <div className="flex h-8 shrink-0 items-center gap-0.5 whitespace-nowrap" role="group" aria-label="줄간격 조절">
-          줄
+          <span className="text-xs font-medium text-graphite">줄간격</span>
           <label className="sr-only" htmlFor="rich-editor-line-height">줄간격</label>
           <input
             id="rich-editor-line-height"
@@ -2449,7 +2451,7 @@ export function RichTextEditorV2({
             </button>
           </span>
         </div>
-        <label className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1 text-[11px] font-semibold text-graphite hover:bg-white" htmlFor="rich-editor-paragraph-spacing">
+        <label className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1 text-xs font-medium text-graphite hover:bg-white" htmlFor="rich-editor-paragraph-spacing">
           문단
           <input
             id="rich-editor-paragraph-spacing"
