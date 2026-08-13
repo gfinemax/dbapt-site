@@ -34,6 +34,7 @@ export type FreeBoardPostListItem = {
   attachmentName: string | null;
   attachmentSize: number | null;
   socialImagePath: string | null;
+  youtubeVideoId: string | null;
   isPublicShareEnabled: boolean;
   publicShareEnabledAt: string | null;
   author: NewsUserView;
@@ -101,6 +102,7 @@ export function buildFreeBoardPostList(
         attachmentName: post.attachmentName ?? null,
         attachmentSize: post.attachmentSize ?? null,
         socialImagePath: post.socialImagePath ?? null,
+        youtubeVideoId: post.youtubeVideoId ?? null,
         isPublicShareEnabled: !!post.isPublicShareEnabled,
         publicShareEnabledAt: post.publicShareEnabledAt ?? null,
         author: { ...post.author, displayAuthorName: post.displayAuthorName },

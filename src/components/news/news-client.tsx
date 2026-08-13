@@ -75,6 +75,7 @@ import { FaqAccordion } from "./faq-accordion";
 import { CoopNewsletter } from "./coop-newsletter";
 import { DevelopmentLog } from "./development-log";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
+import { YouTubeVideoPlayer } from "./youtube-video-player";
 
 type NewsClientProps = {
   session?: NewsSessionView | null;
@@ -165,6 +166,7 @@ export function NewsClient({
   const [isEditingNotice, setIsEditingNotice] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editYouTubeUrl, setEditYouTubeUrl] = useState("");
   const [editAttachmentPath, setEditAttachmentPath] = useState<string | null>(null);
   const [editAttachmentName, setEditAttachmentName] = useState<string | null>(null);
   const [editAttachmentSize, setEditAttachmentSize] = useState<number | null>(null);
@@ -298,6 +300,7 @@ export function NewsClient({
     const draft = buildNoticeEditDraft(activeViewNotice);
     setEditTitle(draft.title);
     setEditContent(draft.content);
+    setEditYouTubeUrl(draft.youtubeUrl);
     setEditAttachmentPath(draft.attachmentPath);
     setEditAttachmentName(draft.attachmentName);
     setEditAttachmentSize(draft.attachmentSize);
@@ -352,6 +355,7 @@ export function NewsClient({
           registeredAt: editRegisteredAt,
           isStarred: editIsStarred,
           displayAuthorName: editDisplayAuthorName,
+          youtubeUrl: editYouTubeUrl,
         })),
       });
 
@@ -1004,6 +1008,22 @@ export function NewsClient({
                   </div>
 
                   <div className="space-y-1.5">
+                    <label htmlFor="edit-notice-youtube-url" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                      유튜브 동영상 주소 (선택)
+                    </label>
+                    <input
+                      id="edit-notice-youtube-url"
+                      type="url"
+                      inputMode="url"
+                      placeholder="https://youtu.be/..."
+                      value={editYouTubeUrl}
+                      onChange={(event) => setEditYouTubeUrl(event.target.value)}
+                      className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue"
+                    />
+                    <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
+                  </div>
+
+                  <div className="space-y-1.5">
                     <label htmlFor="edit-notice-registered-at" className="text-[11px] font-bold text-charcoal-primary font-mono block">
                       등록일
                     </label>
@@ -1189,6 +1209,7 @@ export function NewsClient({
                       />
                     )}
                     <NoticeRichContent content={activeViewNotice.content} />
+                    <YouTubeVideoPlayer videoId={activeViewNotice.youtubeVideoId} title={activeViewNotice.title} />
                   </div>
                   {activeViewNotice.attachmentPath && (
                     <a

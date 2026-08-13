@@ -6,6 +6,13 @@ import { parseNewsDisplayAuthorName } from "@/lib/news-display-author";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
+import { parseYouTubeVideoId } from "@/lib/news/youtube";
+
+function parseYouTubeInput(value: unknown) {
+  if (value === undefined || value === null || value === "") return { ok: true as const, value: null };
+  const videoId = parseYouTubeVideoId(value);
+  return videoId ? { ok: true as const, value: videoId } : { ok: false as const };
+}
 
 function normalizeFreePostAttachment(body: {
   attachmentPath?: unknown;
@@ -148,6 +155,7 @@ export async function POST(request: Request) {
       registeredAt,
       isPublicShareEnabled,
       socialImagePath,
+      youtubeUrl,
     } = body; // 만약 postId가 존재하면 댓글 추가로 판별
     const parsedDisplayAuthorName = session.role === "ADMIN"
       ? parseNewsDisplayAuthorName(displayAuthorName)
@@ -222,6 +230,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "카톡 미리보기 이미지는 관리자만 변경할 수 있습니다." }, { status: 403 });
       }
       const publicShareEnabled = session.role === "ADMIN" ? !!isPublicShareEnabled : false;
+      const parsedYouTube = parseYouTubeInput(youtubeUrl);
+      if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
 
       const post = await prisma.freePost.create({
         data: {
@@ -238,6 +248,7 @@ export async function POST(request: Request) {
             : {}),
           ...normalizeFreePostAttachment(body),
           ...(parsedRegisteredAt && session.role === "ADMIN" ? { registeredAt: parsedRegisteredAt } : {}),
+          youtubeVideoId: parsedYouTube.value,
         },
       });
 
@@ -304,7 +315,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { postId, commentId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled, socialImagePath } = body;
+    const { postId, commentId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled, socialImagePath, youtubeUrl } = body;
 
     if (commentId) {
       const commentContent = typeof content === "string" ? content.trim() : "";
@@ -405,6 +416,7 @@ export async function PATCH(request: Request) {
       isPublicShareEnabled?: boolean;
       publicShareEnabledAt?: Date | null;
       socialImagePath?: string | null;
+      youtubeVideoId?: string | null;
     } = {
       title,
       content,
@@ -412,6 +424,11 @@ export async function PATCH(request: Request) {
     };
     if (hasFreePostAttachmentPayload(body)) {
       Object.assign(updateData, normalizeFreePostAttachment(body));
+    }
+    if (youtubeUrl !== undefined) {
+      const parsedYouTube = parseYouTubeInput(youtubeUrl);
+      if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
+      updateData.youtubeVideoId = parsedYouTube.value;
     }
     if (session.role === "ADMIN") {
       const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);

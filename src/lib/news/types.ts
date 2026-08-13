@@ -46,6 +46,7 @@ export type CoopNewsView = {
   attachmentPath?: string | null;
   attachmentName?: string | null;
   attachmentSize?: number | null;
+  youtubeVideoId?: string | null;
   displayAuthorName?: string | null;
   registeredAt?: string;
   createdAt: string;
@@ -73,6 +74,7 @@ export type FreePostView = {
   attachmentPath?: string | null;
   attachmentName?: string | null;
   attachmentSize?: number | null;
+  youtubeVideoId?: string | null;
   registeredAt?: string;
   createdAt: string;
   updatedAt?: string;

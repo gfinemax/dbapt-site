@@ -15,6 +15,7 @@ export type NoticeEditDraft = {
   isStarred: boolean;
   displayAuthorName: NewsDisplayAuthorName;
   registeredAt: string;
+  youtubeUrl: string;
 };
 
 export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
@@ -37,6 +38,7 @@ export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
       displayAuthorName && NEWS_DISPLAY_AUTHOR_NAMES.includes(displayAuthorName as NewsDisplayAuthorName)
         ? (displayAuthorName as NewsDisplayAuthorName)
         : "운영자",
+    youtubeUrl: notice.youtubeVideoId ? `https://youtu.be/${notice.youtubeVideoId}` : "",
   };
 }
 

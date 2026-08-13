@@ -30,6 +30,7 @@ import { SocialPreviewCropper } from "@/components/social-preview-cropper";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
 import { ContentShareActions } from "./content-share-actions";
+import { YouTubeVideoPlayer } from "./youtube-video-player";
 
 type NoticeBoardProps = {
   isLoggedIn: boolean;
@@ -103,6 +104,7 @@ export function NoticeBoard({
   // Upload Form State
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadContent, setUploadContent] = useState("");
+  const [uploadYouTubeUrl, setUploadYouTubeUrl] = useState("");
   const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
   const [uploadSocialImageFile, setUploadSocialImageFile] = useState<File | null>(null);
   const [uploadSocialImageSourceFile, setUploadSocialImageSourceFile] = useState<File | null>(null);
@@ -157,6 +159,7 @@ export function NoticeBoard({
           attachmentSize,
           isStarred: uploadIsStarred,
           displayAuthorName: uploadDisplayAuthorName,
+          youtubeUrl: uploadYouTubeUrl,
         }),
       });
 
@@ -168,6 +171,7 @@ export function NoticeBoard({
 
       setUploadTitle("");
       setUploadContent("");
+      setUploadYouTubeUrl("");
       setUploadAttachmentFile(null);
       setUploadSocialImageFile(null);
       setUploadSocialImageSourceFile(null);
@@ -677,6 +681,7 @@ export function NoticeBoard({
                   />
                 )}
                 <NoticeRichContent content={activeViewNotice.content} />
+                <YouTubeVideoPlayer videoId={activeViewNotice.youtubeVideoId} title={activeViewNotice.title} />
               </div>
               {activeViewNotice.attachmentPath && (
                 <a
@@ -889,6 +894,22 @@ export function NoticeBoard({
                     선택된 미리보기 이미지: {uploadSocialImageFile.name}
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="notice-youtube-url" className="text-[11px] font-bold text-charcoal-primary font-mono block">
+                  유튜브 동영상 주소 (선택)
+                </label>
+                <input
+                  id="notice-youtube-url"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://youtu.be/..."
+                  value={uploadYouTubeUrl}
+                  onChange={(event) => setUploadYouTubeUrl(event.target.value)}
+                  className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs text-charcoal-primary outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue"
+                />
+                <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
               </div>
 
               <div className="space-y-1.5">

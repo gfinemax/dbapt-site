@@ -43,6 +43,7 @@ import {
 import { toKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
+import { YouTubeVideoPlayer } from "./youtube-video-player";
 import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
 import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
 import { formatViewCount, formatViewCountBaseline, formatViewCountNumber } from "@/lib/view-count";
@@ -290,6 +291,7 @@ export function FreeBoard({
   // New Post Form State
   const [writeTitle, setWriteTitle] = useState("");
   const [writeContent, setWriteContent] = useState("");
+  const [writeYouTubeUrl, setWriteYouTubeUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPost, setEditingPost] = useState<FreeBoardPostListItem | null>(null);
   const [writeIsStarred, setWriteIsStarred] = useState(false);
@@ -310,6 +312,7 @@ export function FreeBoard({
     setEditingPost(null);
     setWriteTitle("");
     setWriteContent("");
+    setWriteYouTubeUrl("");
     setWriteIsStarred(false);
     setWriteIsPublicShareEnabled(false);
     setWritePostType("FREE");
@@ -333,6 +336,7 @@ export function FreeBoard({
     Boolean(
       writeTitle.trim() ||
       getPlainNoticeText(writeContent).trim() ||
+      writeYouTubeUrl.trim() ||
       writeAttachmentPath ||
       writeSocialImagePath ||
       writeSocialImageFile ||
@@ -355,6 +359,7 @@ export function FreeBoard({
     setEditingPost(post);
     setWriteTitle(post.title);
     setWriteContent(post.content);
+    setWriteYouTubeUrl(post.youtubeVideoId ? `https://youtu.be/${post.youtubeVideoId}` : "");
     setWritePostType(normalizeFreePostType(post.postType, isAdmin));
     setWriteIsStarred(!!post.isStarred);
     setWriteIsPublicShareEnabled(!!post.isPublicShareEnabled);
@@ -537,6 +542,7 @@ export function FreeBoard({
             attachmentPath: writeAttachmentPath,
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
+            youtubeUrl: writeYouTubeUrl,
             socialImagePath,
             registeredAt: writeRegisteredAt,
             isPublicShareEnabled: writeIsPublicShareEnabled,
@@ -566,6 +572,7 @@ export function FreeBoard({
             attachmentPath: writeAttachmentPath,
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
+            youtubeUrl: writeYouTubeUrl,
             socialImagePath,
             registeredAt: writeRegisteredAt,
             isPublicShareEnabled: writeIsPublicShareEnabled,
@@ -857,6 +864,21 @@ export function FreeBoard({
         <p className="text-[10px] font-medium text-ash">
           이미지 버튼 또는 Ctrl+V로 본문에 이미지를 바로 넣고, 선택한 이미지는 크기를 조절할 수 있습니다.
         </p>
+        <div className="mt-4 space-y-1.5">
+          <label htmlFor="free-post-youtube-url" className="block text-[11px] font-bold text-charcoal-primary font-mono">
+            유튜브 동영상 주소 (선택)
+          </label>
+          <input
+            id="free-post-youtube-url"
+            type="url"
+            inputMode="url"
+            placeholder="https://youtu.be/..."
+            value={writeYouTubeUrl}
+            onChange={(event) => setWriteYouTubeUrl(event.target.value)}
+            className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue"
+          />
+          <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
+        </div>
       </section>
 
       <section
@@ -1373,6 +1395,7 @@ export function FreeBoard({
                   <span>•</span>
                   <span>댓글 {focusedPost.commentCount}개</span>
                 </div>
+                <YouTubeVideoPlayer videoId={focusedPost.youtubeVideoId} title={focusedPost.title} />
                 {focusedPost.attachmentPath && focusedPost.attachmentName && (
                   <div className="flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-sky-blue/20 bg-sky-blue/10 p-2 text-[11px] text-sky-blue">
                     <div className="flex min-w-0 flex-1 items-center gap-2 px-1 font-extrabold">
@@ -1758,6 +1781,22 @@ export function FreeBoard({
                         이미지 버튼 또는 Ctrl+V로 본문에 이미지를 바로 넣고, 선택한 이미지는 크기를 조절할 수 있습니다.
                       </p>
                     </section>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="free-post-create-youtube-url" className="block text-[11px] font-bold text-charcoal-primary font-mono">
+                        유튜브 동영상 주소 (선택)
+                      </label>
+                      <input
+                        id="free-post-create-youtube-url"
+                        type="url"
+                        inputMode="url"
+                        placeholder="https://youtu.be/..."
+                        value={writeYouTubeUrl}
+                        onChange={(event) => setWriteYouTubeUrl(event.target.value)}
+                        className="w-full rounded-xl border border-stone-surface bg-white px-4 py-2.5 text-xs outline-none focus:border-sky-blue focus:ring-1 focus:ring-sky-blue"
+                      />
+                      <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
+                    </div>
 
                     <section
                       aria-label="게시글 설정"

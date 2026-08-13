@@ -11,6 +11,7 @@ type NoticeEditPayloadInput = {
   isStarred: boolean;
   displayAuthorName: NewsDisplayAuthorName;
   registeredAt?: string;
+  youtubeUrl?: string;
 };
 
 export function buildNoticeEditPayload({
@@ -24,6 +25,7 @@ export function buildNoticeEditPayload({
   isStarred,
   displayAuthorName,
   registeredAt,
+  youtubeUrl,
 }: NoticeEditPayloadInput) {
   return {
     id,
@@ -34,8 +36,9 @@ export function buildNoticeEditPayload({
     attachmentPath,
     attachmentName,
     attachmentSize,
-    socialImagePath,
+    ...(socialImagePath !== undefined ? { socialImagePath } : {}),
     isStarred,
     displayAuthorName,
+    ...(youtubeUrl !== undefined ? { youtubeUrl: youtubeUrl || null } : {}),
   };
 }

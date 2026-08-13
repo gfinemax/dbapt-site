@@ -566,6 +566,7 @@ model CoopNews {
   attachmentPath        String? // 공지/조합뉴스 공개 첨부파일 경로
   attachmentName        String? // 공지/조합뉴스 공개 첨부파일 원본명
   attachmentSize        Int? // 공지/조합뉴스 공개 첨부파일 크기(bytes)
+  youtubeVideoId        String? // 검증된 YouTube 영상 ID
   displayAuthorName     String? // 공개 화면에 표시할 조직 작성자명
   registeredAt          DateTime               @default(now()) // 화면 표시 및 정렬용 등록일
   createdAt             DateTime               @default(now())
@@ -609,6 +610,7 @@ model FreePost {
   attachmentPath        String? // 공개 첨부파일 경로
   attachmentName        String? // 공개 첨부파일명
   attachmentSize        Int? // 공개 첨부파일 크기(byte)
+  youtubeVideoId        String? // 검증된 YouTube 영상 ID
   postType              String                 @default("FREE") // FREE, DISCUSSION, QUESTION, PROPOSAL, NOTICE
   displayAuthorName     String? // 관리자 작성글 공개 작성자명: 운영자, 사무국
   isStarred             Boolean                @default(false)

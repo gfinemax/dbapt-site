@@ -6,6 +6,13 @@ import { DEVELOPMENT_LOG_CATEGORIES } from "@/lib/news/development-log";
 import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
+import { parseYouTubeVideoId } from "@/lib/news/youtube";
+
+function parseYouTubeInput(value: unknown) {
+  if (value === undefined || value === null || value === "") return { ok: true as const, value: null };
+  const videoId = parseYouTubeVideoId(value);
+  return videoId ? { ok: true as const, value: videoId } : { ok: false as const };
+}
 
 function hasCreatedAtInput(body: Record<string, unknown>) {
   return Object.prototype.hasOwnProperty.call(body, "createdAt");
@@ -111,6 +118,7 @@ export async function POST(request: Request) {
       attachmentSize,
       displayAuthorName,
       registeredAt,
+      youtubeUrl,
     } = body;
 
     if (hasCreatedAtInput(body)) {
@@ -139,6 +147,8 @@ export async function POST(request: Request) {
     if (!parsedDisplayAuthorName.ok) {
       return NextResponse.json({ error: parsedDisplayAuthorName.error }, { status: 400 });
     }
+    const parsedYouTube = parseYouTubeInput(youtubeUrl);
+    if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
 
     const news = await prisma.coopNews.create({
       data: {
@@ -154,6 +164,7 @@ export async function POST(request: Request) {
         displayAuthorName: parsedDisplayAuthorName.value,
         ...(parsedRegisteredAt ? { registeredAt: parsedRegisteredAt } : {}),
         authorId: session.id,
+        youtubeVideoId: parsedYouTube.value,
       },
       include: {
         author: {
@@ -201,6 +212,7 @@ export async function PATCH(request: Request) {
       attachmentSize,
       displayAuthorName,
       registeredAt,
+      youtubeUrl,
     } = body;
 
     if (hasCreatedAtInput(body)) {
@@ -224,6 +236,8 @@ export async function PATCH(request: Request) {
     if (!parsedDisplayAuthorName.ok) {
       return NextResponse.json({ error: parsedDisplayAuthorName.error }, { status: 400 });
     }
+    const parsedYouTube = parseYouTubeInput(youtubeUrl);
+    if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
 
     const news = await prisma.coopNews.update({
       where: { id },
@@ -241,6 +255,7 @@ export async function PATCH(request: Request) {
         ...(displayAuthorName !== undefined
           ? { displayAuthorName: parsedDisplayAuthorName.value }
           : {}),
+        ...(youtubeUrl !== undefined ? { youtubeVideoId: parsedYouTube.value } : {}),
       },
       include: {
         author: {

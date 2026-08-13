@@ -11,6 +11,7 @@ type FreeBoardPostPayloadInput = {
   attachmentPath?: string | null;
   attachmentName?: string | null;
   attachmentSize?: number | null;
+  youtubeUrl?: string;
   socialImagePath?: string | null;
   registeredAt?: string;
   isPublicShareEnabled?: boolean;
@@ -50,6 +51,7 @@ export function buildFreeBoardPostCreatePayload({
   attachmentPath,
   attachmentName,
   attachmentSize,
+  youtubeUrl,
   socialImagePath,
   registeredAt,
   isPublicShareEnabled,
@@ -62,6 +64,7 @@ export function buildFreeBoardPostCreatePayload({
     attachmentPath: attachmentPath ?? null,
     attachmentName: attachmentName ?? null,
     attachmentSize: attachmentSize ?? null,
+    ...(youtubeUrl !== undefined ? { youtubeUrl: youtubeUrl || null } : {}),
     ...(isAdmin && socialImagePath !== undefined ? { socialImagePath: socialImagePath || null } : {}),
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),
@@ -80,6 +83,7 @@ export function buildFreeBoardPostUpdatePayload({
   attachmentPath,
   attachmentName,
   attachmentSize,
+  youtubeUrl,
   socialImagePath,
   registeredAt,
   isPublicShareEnabled,
@@ -93,6 +97,7 @@ export function buildFreeBoardPostUpdatePayload({
     attachmentPath: attachmentPath ?? null,
     attachmentName: attachmentName ?? null,
     attachmentSize: attachmentSize ?? null,
+    ...(youtubeUrl !== undefined ? { youtubeUrl: youtubeUrl || null } : {}),
     ...(isAdmin && socialImagePath !== undefined ? { socialImagePath: socialImagePath || null } : {}),
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),
