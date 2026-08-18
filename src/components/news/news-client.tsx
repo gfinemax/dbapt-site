@@ -1213,13 +1213,14 @@ export function NewsClient({
                   </div>
                   {activeViewNotice.attachmentPath && (
                     <a
-                      href={activeViewNotice.attachmentPath}
+                      href={`/api/news/${activeViewNotice.id}/attachment/download`}
+                      download={activeViewNotice.attachmentName || "attachment"}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center justify-between gap-3 rounded-2xl border border-stone-surface bg-white px-4 py-3 text-xs font-bold text-charcoal-primary hover:border-sky-blue"
                     >
-                      <span>첨부파일: {activeViewNotice.attachmentName || "다운로드"}</span>
-                      <span className="text-[10px] text-sky-blue">열기</span>
+                      <span>📎 첨부파일: {activeViewNotice.attachmentName || "다운로드"}</span>
+                      <span className="text-[10px] text-sky-blue">다운로드</span>
                     </a>
                   )}
 
