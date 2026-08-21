@@ -122,3 +122,11 @@
 - Explicitly excluded scope: Reprocessing existing stored images, changing notice content or permissions, Kakao SDK integration, and automatic Kakao posting.
 - Candidate governing specification: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`, with the user-approved Kakao-specific output follow-up below.
 - Unanswered decision: none.
+
+# Current Request: Full-Width Notice Reader
+
+- Requested feature slice: Replace the left-side notice detail drawer with a full-screen reading layer so long notices and large evidence images use the available viewport width.
+- Preserve: close behavior, list position, shared-link opening, sharing, editing, deletion, attachments, comments, and existing notice permissions.
+- Explicitly excluded scope: notice data/API changes, editor behavior changes, and newsletter/free-board detail layout changes.
+- Candidate governing plan: `docs/superpowers/plans/2026-08-21-notice-fullscreen-reader.md`.
+- Unanswered decision: none. The user explicitly approved implementation after selecting the full-screen reading direction.

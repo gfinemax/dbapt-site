@@ -989,6 +989,29 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+# UI Review: Full-Width Notice Reader
+
+## Reviewed Change
+- Feature: Replace the left-side notice drawer with a full-screen responsive reading layer and a centered 1200px document canvas.
+- Governing plan: `docs/superpowers/plans/2026-08-21-notice-fullscreen-reader.md`.
+- Files or pages reviewed: `NewsClient` notice detail, standalone `NoticeBoard` fallback, direct notice deep link, and desktop/mobile local renders.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Notice IDs, deep links, permissions, list state, body scroll lock, close behavior, sharing, editing, deletion, attachments, and comments remain on their existing handlers. Newsletter and free-board detail surfaces were not changed.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The reader continues to identify itself as official notice content and displays the same title, author, registration date, view count, body, and actions. No unavailable capability is implied.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: The surface is now an `aria-modal` dialog with an explicit accessible label and persistent header-level close button. Desktop rendering at 1440 x 1000 uses nearly the full viewport with the document centered at 1200px; mobile rendering uses the full viewport with compact padding and explicit horizontal-overflow containment. Reduced-motion users do not receive the zoom transition.
+
+## Outcome
+- Result: PASS
+- Required action: none
 ## 2026-08-13 Numeric control visibility follow-up
 
 - Feature: unobscured typography numeric inputs.

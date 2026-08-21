@@ -41,8 +41,6 @@ import {
 import {
   NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
   NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE,
-  NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
-  NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE,
 } from "@/lib/news/content-layout";
 import {
   buildActiveEditedNoticeView,
@@ -896,23 +894,22 @@ export function NewsClient({
 
       </div>
 
-      {/* 좌측 사이드 슬라이드 오버 (Drawer) 패널 - 공지사항 상세 열람 */}
+      {/* 전체 화면 공지사항 상세 열람 */}
       {mounted && activeViewNotice && createPortal(
         <>
           <div
             onClick={() => setActiveViewNotice(null)}
-            className="fixed inset-0 z-[120] bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+            className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in"
           />
 
           <div
-            className={cn(
-              "fixed inset-y-0 left-0 z-[130] w-full bg-warm-canvas border-r border-stone-surface shadow-2xl px-3 py-4 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 ease-out",
-              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
-            )}
-            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
-            aria-label="공지사항 상세 드로어"
+            role="dialog"
+            aria-modal="true"
+            aria-label="공지사항 전체 화면 열람"
+            data-notice-detail-overlay="true"
+            className="fixed inset-0 z-[130] flex min-w-0 w-full flex-col overflow-hidden bg-warm-canvas shadow-2xl animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none lg:inset-5 lg:w-auto lg:rounded-[28px] lg:border lg:border-stone-surface"
           >
-            <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
+            <div className="flex shrink-0 items-center justify-between border-b border-stone-surface bg-warm-canvas/95 px-4 py-4 backdrop-blur sm:px-8 sm:py-5">
               <div className="flex items-center gap-2">
                 <span className="flex size-7 items-center justify-center rounded-full bg-midnight text-xs font-semibold text-white">
                   📢
@@ -941,11 +938,12 @@ export function NewsClient({
             <div
               data-news-article-content={isEditingNotice ? "notice-edit" : "notice-read"}
               className={cn(
-                "mx-auto mt-6 w-full flex-1",
-                isEditingNotice ? "space-y-6" : "space-y-0",
-                NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+                "mx-auto min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto px-3 pb-10 pt-6 sm:px-8 sm:pb-14",
+                isEditingNotice
+                  ? cn("space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)
+                  : "max-w-[1200px] space-y-0",
               )}
-              style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
+              style={isEditingNotice ? { maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE } : undefined}
             >
               {isEditingNotice ? (
                 <form onSubmit={saveNoticeEdit} className="space-y-5">

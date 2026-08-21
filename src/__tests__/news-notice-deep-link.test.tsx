@@ -44,7 +44,7 @@ describe("news notice deep links", () => {
     mockSearchParams.value = "";
   });
 
-  it("opens the notice detail drawer from a shared notice URL", async () => {
+  it("opens the full-screen notice reader from a shared notice URL", async () => {
     mockSearchParams.value = "tab=notice&news=notice-1";
 
     render(
@@ -56,9 +56,9 @@ describe("news notice deep links", () => {
       />,
     );
 
-    const drawer = await screen.findByLabelText("공지사항 상세 드로어");
+    const drawer = await screen.findByRole("dialog", { name: "공지사항 전체 화면 열람" });
 
-    expect(drawer).toHaveClass("left-0");
+    expect(drawer).toHaveClass("inset-0", "lg:inset-5");
     expect(within(drawer).getByRole("heading", { name: "공지사항 열람" })).toBeInTheDocument();
     await waitFor(() => {
       expect(within(drawer).getByText("대방동 지역주택조합 공식 홈페이지 오픈 안내")).toBeInTheDocument();

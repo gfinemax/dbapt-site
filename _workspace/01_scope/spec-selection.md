@@ -104,3 +104,10 @@
 - Implementation boundary: Preserve existing social preview URLs and legacy 1200 x 628 metadata; generate only newly confirmed crops as 800 x 400 JPEGs; declare new dimensions from the new filename marker; update the crop frame to 2:1 with an inset safe-area guide.
 - Conflicts between request and approved basis: The original generic Open Graph 1.91:1 decision is superseded only for newly generated Kakao-specific images. Existing stored images remain compatible.
 - Planning may continue: yes.
+
+# Specification Selection: Full-Width Notice Reader
+
+- Selected approved basis: the user's explicit approval of a full-screen notice reading layer, extending the notice readability decisions in `docs/superpowers/plans/2026-07-10-notice-detail-mobile-readability.md`.
+- Implementation boundary: Change only notice detail presentation in `NewsClient` and the standalone `NoticeBoard` fallback; preserve all actions, access rules, data flows, and other news detail surfaces.
+- Conflicts: none.
+- Planning may continue: yes.

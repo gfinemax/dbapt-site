@@ -2053,7 +2053,7 @@ describe("news admin visible controls", () => {
     expect(screen.getByText("복사됨")).toBeInTheDocument();
   });
 
-  it("opens the notice detail drawer from the left side", () => {
+  it("opens notice details in a full-screen reading overlay", () => {
     render(
       <NewsClient
         session={null}
@@ -2065,22 +2065,16 @@ describe("news admin visible controls", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
 
-    const drawer = screen.getByLabelText("공지사항 상세 드로어");
-    expect(drawer).toHaveClass("left-0");
-    expect(drawer).toHaveClass("border-r");
-    expect(drawer).toHaveClass("max-w-[780px]");
-    expect(drawer).toHaveClass("px-3", "py-4", "sm:p-8");
-    expect(drawer).toHaveStyle({ maxWidth: "780px" });
-    expect(drawer).toHaveClass("slide-in-from-left");
-    expect(drawer).not.toHaveClass("p-6");
-    expect(drawer).not.toHaveClass("right-0");
-    expect(drawer).not.toHaveClass("max-w-2xl");
+    const drawer = screen.getByRole("dialog", { name: "공지사항 전체 화면 열람" });
+    expect(drawer).toHaveAttribute("data-notice-detail-overlay", "true");
+    expect(drawer).toHaveClass("inset-0", "overflow-hidden", "lg:inset-5", "lg:rounded-[28px]");
+    expect(drawer).not.toHaveClass("max-w-[780px]");
+    expect(drawer).not.toHaveClass("slide-in-from-left");
     expect(drawer).not.toHaveClass("slide-in-from-right");
 
     const contentColumn = drawer.querySelector('[data-news-article-content="notice-read"]');
-    expect(contentColumn).toHaveClass("mx-auto", "w-full", "max-w-[680px]");
-    expect(contentColumn).toHaveStyle({ maxWidth: "680px" });
-    expect(contentColumn).toHaveClass("space-y-0");
+    expect(contentColumn).toHaveClass("mx-auto", "min-w-0", "w-full", "max-w-[1200px]", "overflow-x-hidden", "overflow-y-auto");
+    expect(contentColumn).toHaveClass("space-y-0", "px-3", "sm:px-8");
     expect(contentColumn).not.toHaveClass("space-y-6");
     expect(within(drawer).getByRole("heading", { name: "실제 공지", level: 3 })).toHaveClass(
       "text-[19px]",
@@ -2126,9 +2120,8 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
-    const drawer = screen.getByLabelText("공지사항 상세 드로어");
-    expect(drawer).toHaveClass("max-w-[780px]");
-    expect(drawer).toHaveStyle({ maxWidth: "780px" });
+    const drawer = screen.getByRole("dialog", { name: "공지사항 전체 화면 열람" });
+    expect(drawer).toHaveClass("inset-0", "lg:inset-5");
     fireEvent.click(within(drawer).getByRole("button", { name: "수정" }));
 
     const editColumn = drawer.querySelector('[data-news-article-content="notice-edit"]');
@@ -2185,7 +2178,7 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
-    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    const drawer = screen.getByRole("dialog", { name: "공지사항 전체 화면 열람" });
     fireEvent.click(within(drawer).getByRole("button", { name: "수정" }));
     fireEvent.change(within(drawer).getByLabelText("카톡 미리보기 이미지 (선택)"), {
       target: { files: [new File(["preview"], "notice-kakao.png", { type: "image/png" })] },
@@ -2257,7 +2250,7 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
-    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    const drawer = screen.getByRole("dialog", { name: "공지사항 전체 화면 열람" });
 
     expect(within(drawer).getAllByText("운영자").length).toBeGreaterThan(0);
     fireEvent.change(within(drawer).getByLabelText("댓글 작성자"), { target: { value: "사무국" } });
@@ -2329,7 +2322,7 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
-    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    const drawer = screen.getByRole("dialog", { name: "공지사항 전체 화면 열람" });
 
     expect(within(drawer).getByText("확인했습니다.")).toBeInTheDocument();
     expect(within(drawer).getByText("확인 답글입니다.")).toBeInTheDocument();
@@ -2387,7 +2380,7 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
-    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    const drawer = screen.getByRole("dialog", { name: "공지사항 전체 화면 열람" });
 
     expect(within(drawer).getByRole("button", { name: "👍 리액션 2개 선택됨" })).toBeInTheDocument();
     fireEvent.click(within(drawer).getByRole("button", { name: "👏 리액션 추가" }));
@@ -2449,7 +2442,7 @@ describe("news admin visible controls", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "공지 읽기 →" }));
-    const drawer = screen.getByLabelText("공지사항 상세 드로어");
+    const drawer = screen.getByRole("dialog", { name: "공지사항 전체 화면 열람" });
 
     expect(within(drawer).getByText("확인했습니다.")).toBeInTheDocument();
     expect(within(drawer).queryByText("댓글과 답글 합계가 많을 때 숨겨질 공지 답글입니다.")).not.toBeInTheDocument();
@@ -2947,16 +2940,13 @@ describe("news admin visible controls", () => {
     fireEvent.click(screen.getByText("실제 공지"));
 
     const dialog = screen.getByRole("dialog", { name: "공지사항 상세 열람" });
-    expect(dialog).toHaveClass("max-w-[780px]");
-    expect(dialog).toHaveClass("px-3", "py-4", "sm:p-6.5");
-    expect(dialog).toHaveStyle({ maxWidth: "780px" });
-    expect(dialog).not.toHaveClass("max-w-xl");
-    expect(dialog).not.toHaveClass("p-6.5");
+    expect(dialog).toHaveAttribute("data-notice-detail-overlay", "true");
+    expect(dialog).toHaveClass("inset-0", "overflow-hidden", "lg:inset-5", "lg:rounded-[28px]");
+    expect(dialog).not.toHaveClass("max-w-[780px]");
 
     const contentColumn = dialog.querySelector('[data-news-article-content="notice-board-read"]');
-    expect(contentColumn).toHaveClass("mx-auto", "w-full", "max-w-[680px]");
-    expect(contentColumn).toHaveStyle({ maxWidth: "680px" });
-    expect(contentColumn).toHaveClass("space-y-0");
+    expect(contentColumn).toHaveClass("mx-auto", "min-w-0", "w-full", "max-w-[1200px]", "overflow-x-hidden", "overflow-y-auto");
+    expect(contentColumn).toHaveClass("space-y-0", "px-3", "sm:px-8");
     expect(contentColumn).not.toHaveClass("space-y-4");
     expect(within(dialog).getByRole("heading", { name: "실제 공지", level: 3 })).toHaveClass(
       "text-[19px]",

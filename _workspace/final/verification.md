@@ -2597,3 +2597,15 @@
 - Browser checks: Local Chrome rendered `/news` at 1440 x 1000 and 390 x 844 with HTTP 200 server evidence and without a framework error page. The environment did not provide the `agent-browser` executable, so headless Chrome was used as the documented fallback; crop-modal specifics are covered by the component test.
 - UI/access review: PASS.
 - Unresolved risks or follow-up specs: Existing stored social images are not reprocessed. Administrators must select and apply the preview image again after deployment to create the new 800 x 400 JPEG and then copy a newly versioned Kakao announcement link.
+
+# Verification: Full-Width Notice Reader
+
+- Implemented feature: Notice details now open as a full-screen responsive dialog instead of a 780px left drawer. Read content is centered in a 1200px canvas, the header and close action remain fixed above the scrolling document, and edit mode retains its established 680px form width.
+- Preserved behavior: shared notice URLs, list state, close handling, body scroll lock, sharing, editing, deletion, attachments, comments, and notice permissions.
+- Focused verification: PASS, 2 files and 111 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 657 tests.
+- `pnpm build`: PASS after stopping the development server and moving its stale generated `.next/dev` output out of the repository.
+- Browser checks: PASS. The real notice deep link rendered in local headless Chrome at 1440 x 1000 and 390 x 844. Desktop confirmed the former right-side dead space was removed and the long evidence image used the centered wide canvas; responsive overflow guards and mobile geometry are covered by focused assertions.
+- UI/access review: PASS.
+- Unresolved risks or follow-up specs: none.

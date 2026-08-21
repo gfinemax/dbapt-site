@@ -601,19 +601,16 @@ export function NoticeBoard({
 
       {/* 1. 공지사항 상세 열람 모달 */}
       {activeViewNotice && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-xs p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="absolute inset-0" onClick={() => setActiveViewNotice(null)} />
           <div
             role="dialog"
             aria-modal="true"
             aria-label="공지사항 상세 열람"
-            className={cn(
-              "relative w-full rounded-3xl bg-warm-canvas border border-stone-surface shadow-2xl px-3 py-4 text-left animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh] sm:p-6.5",
-              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
-            )}
-            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
+            data-notice-detail-overlay="true"
+            className="fixed inset-0 z-[111] flex min-w-0 w-full flex-col overflow-hidden bg-warm-canvas text-left shadow-2xl animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none lg:inset-5 lg:w-auto lg:rounded-[28px] lg:border lg:border-stone-surface"
           >
-            <div className="flex items-center justify-between pb-4 border-b border-stone-surface mb-4">
+            <div className="flex shrink-0 items-center justify-between border-b border-stone-surface bg-warm-canvas/95 px-4 py-4 backdrop-blur sm:px-8 sm:py-5">
               <span className="inline-flex rounded-full bg-sky-blue/10 px-3 py-1 text-[9px] font-bold text-sky-blue uppercase tracking-wider">
                 Official Notice
               </span>
@@ -627,8 +624,7 @@ export function NoticeBoard({
 
             <div
               data-news-article-content="notice-board-read"
-              className={cn("mx-auto w-full flex-1 overflow-y-auto space-y-0 pr-1", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)}
-              style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
+              className="mx-auto min-w-0 w-full max-w-[1200px] flex-1 overflow-x-hidden overflow-y-auto space-y-0 px-3 pb-10 pt-6 sm:px-8 sm:pb-14"
             >
               <h3 className="text-[19px] font-extrabold text-charcoal-primary leading-snug break-keep [overflow-wrap:anywhere] sm:text-xl">
                 {activeViewNotice.isStarred && (
