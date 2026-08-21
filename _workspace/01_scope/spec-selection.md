@@ -97,3 +97,10 @@
 - Implementation boundary: Preserve the existing 1200 x 628 cropped PNG and `socialImagePath` priority; version only generated short share URLs when a custom social image exists; keep legacy short URLs parseable; declare the actual 1200 x 628 Open Graph dimensions.
 - Conflicts between request and approved basis: none.
 - Planning may continue: yes. The current user explicitly approved implementation of the diagnosed cache issue, and this is a corrective follow-up within the existing approved plan rather than new product scope.
+
+# Specification Selection: Kakao 800 x 400 Safe-Area Preview
+
+- Selected approved basis: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md` plus the user's explicit approval to adopt the diagnosed Kakao-specific 800 x 400 output.
+- Implementation boundary: Preserve existing social preview URLs and legacy 1200 x 628 metadata; generate only newly confirmed crops as 800 x 400 JPEGs; declare new dimensions from the new filename marker; update the crop frame to 2:1 with an inset safe-area guide.
+- Conflicts between request and approved basis: The original generic Open Graph 1.91:1 decision is superseded only for newly generated Kakao-specific images. Existing stored images remain compatible.
+- Planning may continue: yes.

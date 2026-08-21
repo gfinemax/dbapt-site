@@ -1056,3 +1056,27 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+# UI Review: Kakao 800 x 400 Safe-Area Preview
+
+## Reviewed Change
+- Feature: Generate new Kakao preview images as 800 x 400 JPEGs and show a 2:1 crop frame with a 4% inset safe-area guide.
+- Governing spec: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`, approved Kakao 800 x 400 corrective follow-up.
+- Implementation plan: Same plan, `Approved Corrective Follow-up: Kakao 800 x 400 Safe Area`.
+- Files or pages reviewed: `src/components/social-preview-cropper.tsx`, `src/lib/social-preview-crop.ts`, `src/lib/social-preview-image.ts`, news/document metadata builders, focused component/utility tests, and local `/news` desktop/mobile renders.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The existing administrator-only upload entry points, stored `socialImagePath`, content visibility, and public redirect destinations are unchanged. Existing 1200 x 628 preview URLs remain supported.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The modal now states the actual generated ratio and dimensions (`2:1 · 800×400`) and labels the inset guide `안전영역`. It does not imply that Kakao controls are available beyond the image file being prepared.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: The existing warm canvas, dark primary action, modal spacing, keyboard-accessible crop target, and responsive control grid remain intact. The safe-area line is a restrained dashed white inset inside the existing crop overlay. A component test verifies the visible instructions and guide; local Chrome renders of `/news` completed at 1440 x 1000 and 390 x 844 without an error overlay or blank page. No new motion was introduced.
+
+## Outcome
+- Result: PASS
+- Required action: none

@@ -396,3 +396,11 @@ Recommended sequence:
 - Preserve the requested versioned path in `og:url` on the short share route.
 - Declare custom news/free-board social images as the actual generated size, `1200 x 628`.
 - Add focused regression coverage for legacy parsing, versioned parsing, announcement URLs, and Open Graph output.
+
+## Approved Corrective Follow-up: Kakao 800 x 400 Safe Area
+
+- Supersede the generic 1.91:1 output only for newly generated Kakao images.
+- Generate `800 x 400` (2:1) JPEG files named `kakao-preview-800x400-<timestamp>.jpg`.
+- Fill the canvas white before JPEG encoding so transparent source areas do not become black.
+- Show a 4% inset safe-area guide inside the crop frame and tell administrators to keep important text inside it.
+- Keep legacy `social-preview-*.png` metadata at `1200 x 628`; detect the new filename marker before declaring `800 x 400` in Open Graph metadata.

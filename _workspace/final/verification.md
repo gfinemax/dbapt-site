@@ -2585,3 +2585,15 @@
 - Browser checks: Not applicable because no rendered UI/layout changed; the affected surface is crawler metadata and copied URL text. Route-level Open Graph output is covered by metadata tests.
 - UI/access review: PASS.
 - Unresolved risks or follow-up specs: Existing Kakao cards already cached under old URLs remain stale; copying the announcement again after deployment generates the new versioned URL and forces a new crawl.
+
+# Verification: Kakao 800 x 400 Safe-Area Preview
+
+- Implemented feature: Newly confirmed social crops generate white-backed `800 x 400` JPEGs with a unique `kakao-preview-800x400-` filename marker. The crop modal uses a 2:1 frame and shows a 4% inset safe-area guide. Metadata declares 800 x 400 only for new marked files and preserves legacy 1200 x 628 declarations.
+- Changed files: shared preview-dimension helper, crop utility, cropper component, news/document metadata builders, focused utility/component/metadata tests, plan, and harness evidence.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 657 tests.
+- `pnpm build`: PASS, Next.js production build and TypeScript completed successfully.
+- Focused verification: PASS, initial six-file metadata/crop suite 27 tests; final utility/component/metadata suite 17 tests.
+- Browser checks: Local Chrome rendered `/news` at 1440 x 1000 and 390 x 844 with HTTP 200 server evidence and without a framework error page. The environment did not provide the `agent-browser` executable, so headless Chrome was used as the documented fallback; crop-modal specifics are covered by the component test.
+- UI/access review: PASS.
+- Unresolved risks or follow-up specs: Existing stored social images are not reprocessed. Administrators must select and apply the preview image again after deployment to create the new 800 x 400 JPEG and then copy a newly versioned Kakao announcement link.

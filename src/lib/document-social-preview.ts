@@ -1,4 +1,5 @@
 import { siteTitle, socialPreviewImage } from "@/lib/site-metadata";
+import { getSocialPreviewDimensions } from "@/lib/social-preview-image";
 
 type DocumentSocialPreviewInput = {
   id: string;
@@ -27,14 +28,15 @@ export function buildDocumentSocialPreview(document: DocumentSocialPreviewInput)
     document.socialImagePath && isSafeSocialImageSrc(document.socialImagePath)
       ? document.socialImagePath
       : socialPreviewImage.url;
+  const customImageDimensions = getSocialPreviewDimensions(imageUrl);
 
   return {
     title: document.title,
     description: document.description?.trim() || siteTitle,
     image: {
       url: imageUrl,
-      width: imageUrl === socialPreviewImage.url ? socialPreviewImage.width : 1200,
-      height: imageUrl === socialPreviewImage.url ? socialPreviewImage.height : 628,
+      width: imageUrl === socialPreviewImage.url ? socialPreviewImage.width : customImageDimensions.width,
+      height: imageUrl === socialPreviewImage.url ? socialPreviewImage.height : customImageDimensions.height,
       alt: document.title,
     },
   };

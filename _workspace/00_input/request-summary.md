@@ -115,3 +115,10 @@
 - Explicitly excluded scope: Kakao SDK integration, automatic Kakao posting, cropper layout redesign, storage schema changes, and changes to notice visibility or permissions.
 - Candidate governing specification: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`, especially Task 8 (Upload Naming And Kakao Cache Safety).
 - Unanswered decision: none.
+
+# Current Request: Kakao 800 x 400 Safe-Area Preview
+
+- Requested feature slice: Generate newly cropped Kakao preview images as 800 x 400 (2:1) JPEGs and show a safe-area guide so important text stays away from Kakao thumbnail edges.
+- Explicitly excluded scope: Reprocessing existing stored images, changing notice content or permissions, Kakao SDK integration, and automatic Kakao posting.
+- Candidate governing specification: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`, with the user-approved Kakao-specific output follow-up below.
+- Unanswered decision: none.

@@ -17,4 +17,14 @@ describe("document social preview", () => {
       alt: "대의원 회의록",
     });
   });
+
+  it("declares the Kakao-specific generated image at 800x400", () => {
+    const preview = buildDocumentSocialPreview({
+      id: "doc-2",
+      title: "이사회 회의록",
+      socialImagePath: "/uploads/kakao-preview-800x400-20260821-131500.jpg",
+    });
+
+    expect(preview.image).toMatchObject({ width: 800, height: 400 });
+  });
 });

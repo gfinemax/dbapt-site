@@ -1,6 +1,6 @@
 import { getPlainNoticeText } from "@/lib/news/rich-text";
 import { siteTitle, socialPreviewImage } from "@/lib/site-metadata";
-import { SOCIAL_PREVIEW_OUTPUT_HEIGHT, SOCIAL_PREVIEW_OUTPUT_WIDTH } from "@/lib/social-preview-crop";
+import { getSocialPreviewDimensions } from "@/lib/social-preview-image";
 
 type NewsPostSocialPreviewInput = {
   id: string;
@@ -53,14 +53,15 @@ export function buildNewsPostSocialPreview(post: NewsPostSocialPreviewInput): So
   const imageUrl = post.socialImagePath || getFirstRichTextImageSrc(post.content) || post.imagePath || socialPreviewImage.url;
   const safeImageUrl = isSafeSocialImageSrc(imageUrl) ? imageUrl : socialPreviewImage.url;
   const description = truncateDescription(getPlainNoticeText(post.content) || siteTitle);
+  const customImageDimensions = getSocialPreviewDimensions(safeImageUrl);
 
   return {
     title: post.title,
     description,
     image: {
       url: safeImageUrl,
-      width: safeImageUrl === socialPreviewImage.url ? socialPreviewImage.width : SOCIAL_PREVIEW_OUTPUT_WIDTH,
-      height: safeImageUrl === socialPreviewImage.url ? socialPreviewImage.height : SOCIAL_PREVIEW_OUTPUT_HEIGHT,
+      width: safeImageUrl === socialPreviewImage.url ? socialPreviewImage.width : customImageDimensions.width,
+      height: safeImageUrl === socialPreviewImage.url ? socialPreviewImage.height : customImageDimensions.height,
       alt: post.title,
     },
   };

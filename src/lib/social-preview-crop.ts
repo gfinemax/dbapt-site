@@ -1,5 +1,7 @@
-export const SOCIAL_PREVIEW_OUTPUT_WIDTH = 1200;
-export const SOCIAL_PREVIEW_OUTPUT_HEIGHT = 628;
+import { KAKAO_PREVIEW_OUTPUT_HEIGHT, KAKAO_PREVIEW_OUTPUT_WIDTH } from "@/lib/social-preview-image";
+
+export const SOCIAL_PREVIEW_OUTPUT_WIDTH = KAKAO_PREVIEW_OUTPUT_WIDTH;
+export const SOCIAL_PREVIEW_OUTPUT_HEIGHT = KAKAO_PREVIEW_OUTPUT_HEIGHT;
 export const SOCIAL_PREVIEW_ASPECT_RATIO = SOCIAL_PREVIEW_OUTPUT_WIDTH / SOCIAL_PREVIEW_OUTPUT_HEIGHT;
 
 export type SocialPreviewImageBounds = {
@@ -94,7 +96,7 @@ export function resizeSocialPreviewCrop(
 
 export function createSocialPreviewFileName(now = new Date()) {
   const stamp = now.toISOString().replace(/\D/g, "").slice(0, 14);
-  return `social-preview-${stamp.slice(0, 8)}-${stamp.slice(8, 14)}.png`;
+  return `kakao-preview-800x400-${stamp.slice(0, 8)}-${stamp.slice(8, 14)}.jpg`;
 }
 
 export async function createSocialPreviewFile(
@@ -111,6 +113,9 @@ export async function createSocialPreviewFile(
     throw new Error("이미지 자르기를 처리할 수 없습니다.");
   }
 
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, SOCIAL_PREVIEW_OUTPUT_WIDTH, SOCIAL_PREVIEW_OUTPUT_HEIGHT);
+
   context.drawImage(
     source,
     crop.x,
@@ -124,12 +129,12 @@ export async function createSocialPreviewFile(
   );
 
   const blob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob(resolve, "image/png", 0.92);
+    canvas.toBlob(resolve, "image/jpeg", 0.9);
   });
 
   if (!blob) {
     throw new Error("카톡 미리보기 이미지를 생성하지 못했습니다.");
   }
 
-  return new File([blob], fileName, { type: "image/png" });
+  return new File([blob], fileName, { type: "image/jpeg" });
 }

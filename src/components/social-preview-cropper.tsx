@@ -186,7 +186,7 @@ export function SocialPreviewCropper({
           <div>
             <h2 className="text-sm font-black text-charcoal-primary">{title}</h2>
             <p className="mt-1 text-[11px] font-medium text-graphite">
-              1.91:1 박스를 드래그해서 카톡에 보일 영역을 맞춰줘.
+              2:1 박스를 움직이고, 중요한 글자는 점선 안전영역 안에 맞춰줘.
             </p>
           </div>
           <button
@@ -224,7 +224,12 @@ export function SocialPreviewCropper({
                     style={cropStyle}
                   >
                     <span className="absolute left-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-bold text-white">
-                      1.91:1
+                      2:1 · 800×400
+                    </span>
+                    <span className="absolute inset-[4%] border border-dashed border-white/90">
+                      <span className="absolute bottom-1 right-1 rounded-full bg-black/65 px-2 py-0.5 text-[9px] font-bold text-white">
+                        안전영역
+                      </span>
                     </span>
                   </div>
                 </button>

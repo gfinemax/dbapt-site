@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   SOCIAL_PREVIEW_ASPECT_RATIO,
   SOCIAL_PREVIEW_OUTPUT_HEIGHT,
   SOCIAL_PREVIEW_OUTPUT_WIDTH,
   clampSocialPreviewCrop,
   createCenteredSocialPreviewCrop,
+  createSocialPreviewFile,
   createSocialPreviewFileName,
   moveSocialPreviewCrop,
   resizeSocialPreviewCrop,
@@ -12,18 +13,18 @@ import {
 
 describe("social preview crop", () => {
   it("uses the Kakao/Open Graph wide-card output size", () => {
-    expect(SOCIAL_PREVIEW_OUTPUT_WIDTH).toBe(1200);
-    expect(SOCIAL_PREVIEW_OUTPUT_HEIGHT).toBe(628);
-    expect(SOCIAL_PREVIEW_ASPECT_RATIO).toBeCloseTo(1200 / 628, 5);
+    expect(SOCIAL_PREVIEW_OUTPUT_WIDTH).toBe(800);
+    expect(SOCIAL_PREVIEW_OUTPUT_HEIGHT).toBe(400);
+    expect(SOCIAL_PREVIEW_ASPECT_RATIO).toBe(2);
   });
 
-  it("creates the largest centered 1.91:1 crop inside the source image", () => {
+  it("creates the largest centered 2:1 crop inside the source image", () => {
     const crop = createCenteredSocialPreviewCrop({ width: 1000, height: 1000 });
 
     expect(crop.width).toBeCloseTo(1000);
-    expect(crop.height).toBeCloseTo(523.33, 2);
+    expect(crop.height).toBeCloseTo(500, 2);
     expect(crop.x).toBeCloseTo(0);
-    expect(crop.y).toBeCloseTo(238.33, 2);
+    expect(crop.y).toBeCloseTo(250, 2);
   });
 
   it("clamps crop movement without changing the aspect ratio", () => {
@@ -56,14 +57,43 @@ describe("social preview crop", () => {
     const moved = moveSocialPreviewCrop(resized, bounds, { x: 100, y: 0 });
 
     expect(resized.width).toBeCloseTo(700);
-    expect(resized.height).toBeCloseTo(366.33, 2);
+    expect(resized.height).toBeCloseTo(350, 2);
     expect(resized.width / resized.height).toBeCloseTo(SOCIAL_PREVIEW_ASPECT_RATIO, 5);
     expect(moved.x).toBeGreaterThan(0);
   });
 
-  it("names cropped files as social-preview PNGs", () => {
+  it("names cropped files as Kakao-specific 800x400 JPEGs", () => {
     expect(createSocialPreviewFileName(new Date("2026-07-05T01:23:27+09:00"))).toBe(
-      "social-preview-20260704-162327.png",
+      "kakao-preview-800x400-20260704-162327.jpg",
     );
+  });
+
+  it("encodes a white-backed 800x400 JPEG", async () => {
+    const fillRect = vi.fn();
+    const drawImage = vi.fn();
+    const context = { fillStyle: "", fillRect, drawImage };
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn(() => context),
+      toBlob: vi.fn((callback: BlobCallback, type?: string) => {
+        callback(new Blob(["jpeg"], { type }));
+      }),
+    };
+    const createElementSpy = vi.spyOn(document, "createElement").mockReturnValue(canvas as unknown as HTMLCanvasElement);
+
+    const file = await createSocialPreviewFile(
+      {} as CanvasImageSource,
+      { x: 0, y: 0, width: 1000, height: 500 },
+      "kakao-preview-800x400-test.jpg",
+    );
+
+    expect(canvas).toMatchObject({ width: 800, height: 400 });
+    expect(context.fillStyle).toBe("#ffffff");
+    expect(fillRect).toHaveBeenCalledWith(0, 0, 800, 400);
+    expect(drawImage).toHaveBeenCalled();
+    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.9);
+    expect(file.type).toBe("image/jpeg");
+    createElementSpy.mockRestore();
   });
 });

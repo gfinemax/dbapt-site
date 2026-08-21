@@ -6,6 +6,17 @@ import {
 } from "@/lib/news/social-preview";
 
 describe("news social preview", () => {
+  it("declares newly generated Kakao preview images at 800x400", () => {
+    const preview = buildNewsPostSocialPreview({
+      id: "notice-kakao",
+      title: "카카오 공지",
+      content: "<p>공지 본문</p>",
+      socialImagePath: "/uploads/kakao-preview-800x400-20260821-131500.jpg",
+    });
+
+    expect(preview.image).toMatchObject({ width: 800, height: 400 });
+  });
+
   it("uses the first image embedded in a free-board post body", () => {
     const preview = buildFreePostSocialPreview({
       id: "free-1",
