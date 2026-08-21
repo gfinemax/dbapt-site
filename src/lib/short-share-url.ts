@@ -83,13 +83,30 @@ export function buildShortShareCode(kind: ShortShareKind, id: string) {
   return `${prefix}~${encodeFallbackId(id)}`;
 }
 
-export function parseShortShareCode(code: string): { kind: ShortShareKind; id: string } | null {
-  if (code.length < 2) return null;
+function buildShareCacheVersion(cacheKey: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < cacheKey.length; index += 1) {
+    hash ^= cacheKey.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
 
-  const kind = PREFIX_KIND[code[0]];
+export function buildVersionedShortShareCode(kind: ShortShareKind, id: string, cacheKey?: string | null) {
+  const code = buildShortShareCode(kind, id);
+  const normalizedCacheKey = cacheKey?.trim();
+  return normalizedCacheKey ? `${code}.${buildShareCacheVersion(normalizedCacheKey)}` : code;
+}
+
+export function parseShortShareCode(code: string): { kind: ShortShareKind; id: string } | null {
+  const [contentCode, version, ...extraParts] = code.split(".");
+  if (extraParts.length > 0 || (version !== undefined && !/^[A-Za-z0-9]+$/.test(version))) return null;
+  if (contentCode.length < 2) return null;
+
+  const kind = PREFIX_KIND[contentCode[0]];
   if (!kind) return null;
 
-  const payload = code.slice(1);
+  const payload = contentCode.slice(1);
   if (!payload) return null;
 
   if (payload.startsWith("~")) {
@@ -106,10 +123,10 @@ export function parseShortShareCode(code: string): { kind: ShortShareKind; id: s
   return id ? { kind, id } : null;
 }
 
-export function buildShortSharePath(kind: ShortShareKind, id: string) {
-  return `/s/${buildShortShareCode(kind, id)}`;
+export function buildShortSharePath(kind: ShortShareKind, id: string, cacheKey?: string | null) {
+  return `/s/${buildVersionedShortShareCode(kind, id, cacheKey)}`;
 }
 
-export function buildAbsoluteShortShareUrl(kind: ShortShareKind, id: string, siteUrl?: string) {
-  return `${normalizeBaseUrl(siteUrl)}${buildShortSharePath(kind, id)}`;
+export function buildAbsoluteShortShareUrl(kind: ShortShareKind, id: string, siteUrl?: string, cacheKey?: string | null) {
+  return `${normalizeBaseUrl(siteUrl)}${buildShortSharePath(kind, id, cacheKey)}`;
 }

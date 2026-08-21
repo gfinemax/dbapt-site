@@ -29,6 +29,18 @@ describe("short share URLs", () => {
     expect(parseShortShareCode(buildShortSharePath("document", id).replace("/s/", ""))).toEqual({ kind: "document", id });
   });
 
+  it("versions a short share path from its social image while preserving the content id", async () => {
+    const { buildShortSharePath, parseShortShareCode } = await import("@/lib/short-share-url");
+    const id = "11111111-2222-4333-8444-555555555555";
+    const firstPath = buildShortSharePath("notice", id, "/uploads/social-preview-first.png");
+    const secondPath = buildShortSharePath("notice", id, "/uploads/social-preview-second.png");
+
+    expect(firstPath).toMatch(/^\/s\/n[A-Za-z0-9]+\.[A-Za-z0-9]+$/);
+    expect(secondPath).not.toBe(firstPath);
+    expect(parseShortShareCode(firstPath.replace("/s/", ""))).toEqual({ kind: "notice", id });
+    expect(parseShortShareCode(secondPath.replace("/s/", ""))).toEqual({ kind: "notice", id });
+  });
+
   it("falls back to reversible safe codes for non-UUID ids", async () => {
     const { buildShortSharePath, parseShortShareCode } = await import("@/lib/short-share-url");
 

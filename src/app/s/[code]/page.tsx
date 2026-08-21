@@ -3,7 +3,7 @@ import { ShareRedirectPage } from "@/components/share/share-redirect-page";
 import { prisma } from "@/lib/db";
 import { buildDocumentSocialPreview } from "@/lib/document-social-preview";
 import { buildFreePostSocialPreview, buildNewsPostSocialPreview } from "@/lib/news/social-preview";
-import { buildShortSharePath, parseShortShareCode, type ShortShareKind } from "@/lib/short-share-url";
+import { parseShortShareCode, type ShortShareKind } from "@/lib/short-share-url";
 import { defaultSiteMetadata, siteTitle } from "@/lib/site-metadata";
 
 type ShortSharePageProps = {
@@ -13,6 +13,7 @@ type ShortSharePageProps = {
 };
 
 function metadataFromPreview(params: {
+  code: string;
   kind: ShortShareKind;
   id: string;
   title: string;
@@ -24,7 +25,7 @@ function metadataFromPreview(params: {
     alt: string;
   };
 }): Metadata {
-  const sharePath = buildShortSharePath(params.kind, params.id);
+  const sharePath = `/s/${params.code}`;
 
   return {
     metadataBase: defaultSiteMetadata.metadataBase,
@@ -72,6 +73,7 @@ export async function generateMetadata({ params }: ShortSharePageProps): Promise
       if (!post) return defaultSiteMetadata;
 
       return metadataFromPreview({
+        code,
         kind: parsed.kind,
         id: post.id,
         ...buildFreePostSocialPreview(post),
@@ -96,6 +98,7 @@ export async function generateMetadata({ params }: ShortSharePageProps): Promise
       if (!document) return defaultSiteMetadata;
 
       return metadataFromPreview({
+        code,
         kind: parsed.kind,
         id: document.id,
         ...buildDocumentSocialPreview(document),
@@ -120,6 +123,7 @@ export async function generateMetadata({ params }: ShortSharePageProps): Promise
     if (!news) return defaultSiteMetadata;
 
     return metadataFromPreview({
+      code,
       kind: parsed.kind,
       id: news.id,
       ...buildNewsPostSocialPreview(news),

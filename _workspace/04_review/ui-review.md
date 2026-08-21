@@ -1033,3 +1033,26 @@
 - Design and accessibility finding: PASS. `줄간격` uses Pretendard at 12px/500, arrow buttons are labeled and focusable, and the toolbar has no horizontal overflow.
 - Result: PASS.
 - Required action: none.
+# UI Review: Versioned Kakao Social Preview Links
+
+## Reviewed Change
+- Feature: Refresh Kakao/Open Graph cards when an administrator replaces a cropped social preview image.
+- Governing spec: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`, Task 8 and its approved corrective follow-up.
+- Implementation plan: Same plan, `Approved Corrective Follow-up: Versioned Kakao Share URL`.
+- Files or pages reviewed: `src/lib/short-share-url.ts`, `src/lib/notifications/openchat-announcements.ts`, `src/app/s/[code]/page.tsx`, `src/lib/news/social-preview.ts`, and focused metadata/share tests.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Existing public content identifiers, visibility checks, redirect destinations, and administrator-only announcement generation remain unchanged. Legacy short links remain parseable.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Generated announcement copy is unchanged except that a custom `socialImagePath` produces a deterministic versioned URL. The URL still resolves to the same real notice, newsletter, free-board post, or approved disclosure document.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: No rendered component, layout, typography, interaction, or motion changed. Browser desktop/mobile layout checks are not applicable to this metadata-only correction. Open Graph tests verify the preserved versioned path and actual 1200 x 628 image dimensions.
+
+## Outcome
+- Result: PASS
+- Required action: none

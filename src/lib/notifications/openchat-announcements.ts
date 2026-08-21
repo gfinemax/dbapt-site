@@ -6,6 +6,7 @@ type OpenChatAnnouncementDocument = {
   status: string;
   publishedAt?: Date | null;
   createdAt?: Date | null;
+  socialImagePath?: string | null;
 };
 
 type OpenChatAnnouncementNews = {
@@ -14,6 +15,7 @@ type OpenChatAnnouncementNews = {
   category: string;
   createdAt?: Date | null;
   attachmentPath?: string | null;
+  socialImagePath?: string | null;
 };
 
 type OpenChatAnnouncementFreePost = {
@@ -22,6 +24,7 @@ type OpenChatAnnouncementFreePost = {
   content?: string | null;
   postType?: string | null;
   createdAt?: Date | null;
+  socialImagePath?: string | null;
 };
 
 type OpenChatAnnouncementRecord = {
@@ -156,7 +159,7 @@ export function buildOpenChatAnnouncementMessage(params: {
   const { document } = params;
   const title = normalizeOneLine(document.title);
   const publishedAt = document.publishedAt ?? document.createdAt ?? params.now ?? new Date();
-  const disclosureUrl = buildAbsoluteShortShareUrl("document", document.id, params.siteUrl);
+  const disclosureUrl = buildAbsoluteShortShareUrl("document", document.id, params.siteUrl, document.socialImagePath);
 
   return [
     "[홈페이지 공개자료 안내]",
@@ -179,7 +182,7 @@ export function buildOpenChatNewsAnnouncementMessage(params: {
   const title = normalizeOneLine(news.title);
   const createdAt = news.createdAt ?? params.now ?? new Date();
   const meta = getCooperativeNewsAnnouncementMeta(news);
-  const newsUrl = buildAbsoluteShortShareUrl(meta.shareKind, news.id, params.siteUrl);
+  const newsUrl = buildAbsoluteShortShareUrl(meta.shareKind, news.id, params.siteUrl, news.socialImagePath);
 
   return [
     meta.heading,
@@ -201,7 +204,7 @@ export function buildOpenChatFreePostAnnouncementMessage(params: {
   const { post } = params;
   const title = normalizeOneLine(post.title);
   const createdAt = post.createdAt ?? params.now ?? new Date();
-  const freeBoardUrl = buildAbsoluteShortShareUrl("free", post.id, params.siteUrl);
+  const freeBoardUrl = buildAbsoluteShortShareUrl("free", post.id, params.siteUrl, post.socialImagePath);
 
   return [
     "[홈페이지 자유게시판 안내]",

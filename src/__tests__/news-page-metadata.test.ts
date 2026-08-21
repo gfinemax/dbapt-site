@@ -61,7 +61,7 @@ describe("news page metadata", () => {
       {
         url: "/uploads/notice-body.png",
         width: 1200,
-        height: 630,
+        height: 628,
         alt: "설명회 후기 공지",
       },
     ]);
@@ -86,7 +86,7 @@ describe("news page metadata", () => {
       {
         url: "/uploads/kakao-preview.png",
         width: 1200,
-        height: 630,
+        height: 628,
         alt: "카톡 대표 공지",
       },
     ]);
@@ -124,7 +124,7 @@ describe("news page metadata", () => {
       {
         url: "https://qhgxsafflybrjnhyxqzs.supabase.co/storage/v1/object/public/news/free-1.png",
         width: 1200,
-        height: 630,
+        height: 628,
         alt: "설명회 후기",
       },
     ]);

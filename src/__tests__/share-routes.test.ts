@@ -55,7 +55,7 @@ describe("short share routes", () => {
       {
         url: "/uploads/social-preview-free.png",
         width: 1200,
-        height: 630,
+        height: 628,
         alt: "설명회 후기",
       },
     ]);
@@ -122,7 +122,7 @@ describe("short share routes", () => {
       {
         url: "/uploads/social-preview-notice.png",
         width: 1200,
-        height: 630,
+        height: 628,
         alt: "공지사항",
       },
     ]);
@@ -134,6 +134,35 @@ describe("short share routes", () => {
 
     expect(shortMetadata.openGraph?.url).toBe(buildShortSharePath("notice", id));
     expect(shortMetadata.openGraph?.images).toEqual(metadata.openGraph?.images);
+  });
+
+  it("preserves a social-image-versioned notice path in Open Graph metadata", async () => {
+    const { buildShortSharePath } = await import("@/lib/short-share-url");
+    const id = "11111111-2222-4333-8444-555555555555";
+    const socialImagePath = "/uploads/social-preview-notice-v2.png";
+    const path = buildShortSharePath("notice", id, socialImagePath);
+    mockPrisma.coopNews.findFirst.mockResolvedValue({
+      id,
+      title: "수정 공지사항",
+      content: "<p>수정 공지 본문</p>",
+      imagePath: null,
+      socialImagePath,
+    });
+
+    const { generateMetadata } = await import("@/app/s/[code]/page");
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ code: path.replace("/s/", "") }),
+    });
+
+    expect(metadata.openGraph?.url).toBe(path);
+    expect(metadata.openGraph?.images).toEqual([
+      {
+        url: socialImagePath,
+        width: 1200,
+        height: 628,
+        alt: "수정 공지사항",
+      },
+    ]);
   });
 
   it("uses newsletter social preview metadata on a short public share URL", async () => {
@@ -170,7 +199,7 @@ describe("short share routes", () => {
       {
         url: "/uploads/social-preview-newsletter.png",
         width: 1200,
-        height: 630,
+        height: 628,
         alt: "조합소식",
       },
     ]);

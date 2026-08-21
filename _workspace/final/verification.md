@@ -2574,3 +2574,14 @@
 - Checks: `pnpm lint` passed; focused editor tests passed (66 tests); `pnpm test` passed (101 files, 647 tests); `pnpm build` passed.
 - Browser checks: font size changed 14 to 15 and back to 14; `줄간격` rendered in Pretendard 12px/500; no horizontal overflow.
 - Unresolved risks: none currently identified.
+# Verification: Kakao Social Preview Cache Refresh
+
+- Implemented feature: Custom social preview paths now version generated `/s/...` share URLs, causing Kakao to fetch a new card when an image changes while preserving legacy links and redirect behavior. News and free-board Open Graph dimensions now match the generated 1200 x 628 PNG.
+- Changed files: short share URL builder/parser, open-chat announcement URL generation, short-share metadata route, news social-preview dimensions, focused tests, and harness evidence.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 102 files and 653 tests.
+- `pnpm build`: PASS, Next.js production build and TypeScript completed successfully.
+- Focused verification: PASS, 5 files and 32 tests for short URLs, share metadata, announcements, news previews, and document previews; follow-up focused suite also passed 29 tests.
+- Browser checks: Not applicable because no rendered UI/layout changed; the affected surface is crawler metadata and copied URL text. Route-level Open Graph output is covered by metadata tests.
+- UI/access review: PASS.
+- Unresolved risks or follow-up specs: Existing Kakao cards already cached under old URLs remain stale; copying the announcement again after deployment generates the new versioned URL and forces a new crawl.

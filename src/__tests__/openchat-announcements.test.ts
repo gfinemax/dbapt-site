@@ -189,6 +189,24 @@ describe("openchat announcements", () => {
     await expectShortUrl(message, "notice", noticeNews.id);
   });
 
+  it("versions the cooperative news share URL when a social preview image exists", async () => {
+    const { buildOpenChatNewsAnnouncementMessage } = await import("@/lib/notifications/openchat-announcements");
+    const { buildAbsoluteShortShareUrl } = await import("@/lib/short-share-url");
+    const socialImagePath = "/uploads/social-preview-notice-v2.png";
+
+    const message = buildOpenChatNewsAnnouncementMessage({
+      news: {
+        ...noticeNews,
+        socialImagePath,
+      },
+      siteUrl: "https://dbapt.example",
+    });
+
+    expect(message).toContain(
+      buildAbsoluteShortShareUrl("notice", noticeNews.id, "https://dbapt.example", socialImagePath),
+    );
+  });
+
   it("creates an announcement message for free-board posts without body content", async () => {
     const { upsertOpenChatAnnouncementForFreePost } = await import("@/lib/notifications/openchat-announcements");
     const prisma = createMockPrisma();

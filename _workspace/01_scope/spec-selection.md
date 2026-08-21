@@ -91,3 +91,9 @@
 - Boundary: visual and interaction consistency of existing typography controls only.
 - Conflicts: none.
 - Planning may continue: yes, under the existing approved implementation plan.
+# Specification Selection: Kakao Social Preview Cache Refresh
+
+- Selected approved basis: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md` (approved social-preview design decisions and Task 8 cache-safety requirement).
+- Implementation boundary: Preserve the existing 1200 x 628 cropped PNG and `socialImagePath` priority; version only generated short share URLs when a custom social image exists; keep legacy short URLs parseable; declare the actual 1200 x 628 Open Graph dimensions.
+- Conflicts between request and approved basis: none.
+- Planning may continue: yes. The current user explicitly approved implementation of the diagnosed cache issue, and this is a corrective follow-up within the existing approved plan rather than new product scope.

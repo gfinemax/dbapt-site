@@ -109,3 +109,9 @@
 - Explicitly excluded scope: formatting behavior and stored HTML.
 - Candidate governing specification: `docs/superpowers/specs/2026-08-13-news-editor-typography-consistency-design.md`.
 - Unanswered decision: none.
+# Current Request: Kakao Social Preview Cache Refresh
+
+- Requested feature slice: Fix notice Kakao preview links so a newly cropped 1.91:1 social image is fetched instead of a previously cached card image, and align Open Graph dimensions with the generated 1200 x 628 PNG.
+- Explicitly excluded scope: Kakao SDK integration, automatic Kakao posting, cropper layout redesign, storage schema changes, and changes to notice visibility or permissions.
+- Candidate governing specification: `docs/superpowers/plans/2026-07-05-social-preview-cropper.md`, especially Task 8 (Upload Naming And Kakao Cache Safety).
+- Unanswered decision: none.

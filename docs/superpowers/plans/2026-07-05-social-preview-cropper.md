@@ -388,3 +388,11 @@ Recommended sequence:
 - Kakao/Open Graph metadata uses cropped image first.
 - Member/non-admin users cannot set or see admin-only preview controls.
 - `pnpm lint`, `pnpm test`, and `pnpm build` pass.
+
+## Approved Corrective Follow-up: Versioned Kakao Share URL
+
+- Keep old `/s/<code>` links valid.
+- When a saved `socialImagePath` exists, append a deterministic image-version suffix to newly generated short share codes so Kakao treats a replacement image as a new card URL.
+- Preserve the requested versioned path in `og:url` on the short share route.
+- Declare custom news/free-board social images as the actual generated size, `1200 x 628`.
+- Add focused regression coverage for legacy parsing, versioned parsing, announcement URLs, and Open Graph output.
