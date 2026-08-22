@@ -2444,7 +2444,7 @@
 
 # Verification - Collapsible Contribution Ledger
 
-- Implemented: 기본 접힌 `최근 납부 거래` 요약, 건수·합계, 펼쳐보기/접기 상태, 전체 거래 행, 데스크톱 표/모바일 세로 배치.
+- Implemented: 기본 접힌 `최근 납부 거래` 요약, 건수·합계, 펼쳐보기/접기 상태, 전체 거래 행, 좁은 드로어에서도 읽히는 2행 거래 배치.
 - Terminology: 거래 출처 `ERP 반영`을 `회계원장 반영`으로 변경.
 - Focused checks: contribution dashboard component/view/API 10 tests passed.
 - Accessibility: native details/summary, visible focus outline, 전체 거래내역 ordered-list label.

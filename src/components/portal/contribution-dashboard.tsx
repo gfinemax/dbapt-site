@@ -209,19 +209,13 @@ export function ContributionDashboard({ dashboard, paymentNotices = [], hideSele
                 </summary>
 
                 <div className="mt-4 overflow-hidden rounded-[10px] bg-parchment-card">
-                  <div className="hidden grid-cols-[110px_minmax(0,1fr)_150px_130px] gap-3 border-b border-stone-surface px-4 py-2 text-[11px] font-semibold text-ash md:grid">
-                    <span>납부일</span>
-                    <span>납부항목</span>
-                    <span className="text-right">금액</span>
-                    <span className="text-right">반영 출처</span>
-                  </div>
                   <ol aria-label="전체 납부 거래내역" className="divide-y divide-stone-surface">
                     {dashboard.ledgerEntries.map((entry) => (
-                      <li key={entry.id} className="grid gap-2 px-4 py-3 text-xs md:grid-cols-[110px_minmax(0,1fr)_150px_130px] md:items-center md:gap-3">
+                      <li key={entry.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-4 py-3 text-xs">
+                        <span className="min-w-0 break-keep font-semibold text-charcoal-primary">{entry.label}</span>
+                        <span className="whitespace-nowrap font-semibold text-graphite">{formatMoney(entry.amount)}</span>
                         <time className="text-ash" dateTime={entry.paidAt}>{formatDate(entry.paidAt)}</time>
-                        <span className="font-semibold text-charcoal-primary">{entry.label}</span>
-                        <span className="font-semibold text-graphite md:text-right">{formatMoney(entry.amount)}</span>
-                        <span className="text-ash md:text-right">{entry.sourceLabel}</span>
+                        <span className="whitespace-nowrap text-right text-ash">{entry.sourceLabel}</span>
                       </li>
                     ))}
                   </ol>

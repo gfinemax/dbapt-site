@@ -20,7 +20,7 @@
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: native `details`/`summary`로 키보드 조작과 상태 의미를 제공하고, 데스크톱은 4열 표·모바일은 세로 행으로 전환한다. 기존 카드 색상·간격·Pretendard를 유지한다.
+- Evidence: native `details`/`summary`로 키보드 조작과 상태 의미를 제공하고, 각 거래는 항목·금액과 날짜·출처의 2행 구조로 좁은 드로어에서도 줄바꿈 없이 읽힌다. 기존 카드 색상·간격·Pretendard를 유지한다.
 
 ## Outcome
 - Result: PASS
