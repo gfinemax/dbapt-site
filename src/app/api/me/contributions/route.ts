@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { serializeContributionDashboard, serializeContributionSummary, serializePaymentNotices } from "@/lib/contribution-serializer";
+import { serializeContributionSummary, serializePaymentNotices } from "@/lib/contribution-serializer";
+import { loadContributionDashboardData } from "@/lib/contribution-dashboard-data";
 
 type ContributionSession = {
   id: string;
@@ -17,7 +18,7 @@ export async function GET(request?: Request) {
   }
 
   try {
-    const [summaryRecord, notices, profile, ledgerEntries] = await Promise.all([
+    const [summaryRecord, notices] = await Promise.all([
       prisma.contributionSummary.findUnique({
         where: { userId: session.id },
       }),
@@ -27,28 +28,6 @@ export async function GET(request?: Request) {
           status: { in: ["DRAFT", "APPROVED"] },
         },
         orderBy: { createdAt: "desc" },
-      }),
-      prisma.memberContributionProfile.findUnique({
-        where: { userId: session.id },
-        include: {
-          paymentPlan: {
-            include: {
-              stages: {
-                orderBy: { sortOrder: "asc" },
-              },
-            },
-          },
-        },
-      }),
-      prisma.contributionLedgerEntry.findMany({
-        where: { userId: session.id },
-        include: {
-          stage: {
-            select: { label: true },
-          },
-        },
-        orderBy: { paidAt: "desc" },
-        take: 20,
       }),
     ]);
 
@@ -63,10 +42,22 @@ export async function GET(request?: Request) {
     }).catch(() => undefined);
 
     const summary = serializeContributionSummary(summaryRecord);
-    const dashboard = serializeContributionDashboard(summary, profile, ledgerEntries);
+    const dashboard = await loadContributionDashboardData(session.id, summary, session.role);
+
+    const liveSummary = dashboard.dataStatus === "SYNCED" ? {
+      totalDue: dashboard.totalPlannedAmount ?? 0,
+      totalPaid: dashboard.totalPaid ?? 0,
+      unpaidAmount: dashboard.unpaidAmount ?? 0,
+      overdueAmount: dashboard.overdueAmount ?? 0,
+      lateFee: dashboard.lateFee ?? 0,
+      nextDueDate: dashboard.nextDueDate,
+      status: (dashboard.overdueAmount ?? 0) > 0 ? "OVERDUE" : (dashboard.unpaidAmount ?? 0) > 0 ? "UNPAID" : "NORMAL",
+      noticeMessage: dashboard.noticeMessage,
+      updatedAt: new Date().toISOString(),
+    } : summary;
 
     return NextResponse.json({
-      summary,
+      summary: liveSummary,
       dashboard,
       notices: serializePaymentNotices(notices),
     });

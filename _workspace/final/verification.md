@@ -2440,6 +2440,17 @@
 - none
 # Verification - Free Board Wide Editor
 
+# Verification - Live Contribution Ledger Integration
+
+- Implemented: dbapt-ledger 읽기 전용 연동 API, HTTPS, 전용 서비스 키, 홈페이지 서버 측 조회, 회계 `member_id` 고정 연결, 84㎡ 신청평형, 단계별 배분 및 최근 납부 원장.
+- Privacy: 환불조합원은 신청평형을 조회 응답·홈페이지 프로필·화면에서 모두 숨긴다.
+- Ledger checks: focused 26 tests passed; full suite 506 passed with 7 pre-existing static-UI assertion failures unrelated to this change.
+- Site checks: `pnpm lint` PASS, `pnpm test` PASS (103 files, 658 tests), `pnpm build` PASS.
+- Operating API: HTTPS authenticated request for ledger member 56 returned external ID 56, 84㎡, planned 1,000,000,000원, paid 194,000,000원, and 13 allocated ledger entries.
+- UI/access review: PASS.
+
+---
+
 ## Implemented Feature
 
 - Replaced the narrow free-board create/edit right drawer with a wide responsive editing dialog.

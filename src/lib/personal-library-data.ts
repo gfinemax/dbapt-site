@@ -214,7 +214,22 @@ export async function loadPersonalLibraryData(
   ]);
   data.contributionSummary = serializeContributionSummary(summary);
   data.paymentNotices = serializePaymentNotices(notices);
-  data.contributionDashboard = await loadContributionDashboardData(session.id, data.contributionSummary);
+  data.contributionDashboard = await loadContributionDashboardData(session.id, data.contributionSummary, session.role);
+  if (data.contributionDashboard?.dataStatus === "SYNCED") {
+    data.contributionSummary = {
+      totalDue: data.contributionDashboard.totalPlannedAmount ?? 0,
+      totalPaid: data.contributionDashboard.totalPaid ?? 0,
+      unpaidAmount: data.contributionDashboard.unpaidAmount ?? 0,
+      overdueAmount: data.contributionDashboard.overdueAmount ?? 0,
+      lateFee: data.contributionDashboard.lateFee ?? 0,
+      nextDueDate: data.contributionDashboard.nextDueDate,
+      status: (data.contributionDashboard.overdueAmount ?? 0) > 0
+        ? "OVERDUE"
+        : (data.contributionDashboard.unpaidAmount ?? 0) > 0 ? "UNPAID" : "NORMAL",
+      noticeMessage: data.contributionDashboard.noticeMessage,
+      updatedAt: new Date().toISOString(),
+    };
+  }
 
   if (data.documents.length > 0) {
     const documentIds = data.documents.map((doc) => doc.id);

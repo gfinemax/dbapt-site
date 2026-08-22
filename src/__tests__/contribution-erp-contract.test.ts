@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapErpLedgerSnapshotToContributionRecords } from "@/lib/contributions/erp-contract";
+import { buildDashboardFromErpSnapshot, mapErpLedgerSnapshotToContributionRecords } from "@/lib/contributions/erp-contract";
 
 describe("ERP contribution contract", () => {
   it("maps ERP ledger snapshots into the internal contribution plan shape", () => {
@@ -64,5 +64,32 @@ describe("ERP contribution contract", () => {
       externalId: "ledger-application-1",
       stageExternalId: "stage-application",
     });
+  });
+
+  it("builds paid stage totals and the live contribution summary", () => {
+    const live = buildDashboardFromErpSnapshot({
+      externalMemberId: "56",
+      selectedUnitLabel: "84㎡",
+      unitAreaM2: 84,
+      totalPlannedAmount: 1_000_000_000,
+      totalPaid: 90_000_000,
+      unpaidAmount: 910_000_000,
+      overdueAmount: 0,
+      lateFee: 0,
+      nextDueDate: null,
+      memberStatus: "조합원",
+      syncedAt: "2026-08-23T00:00:00.000Z",
+      plan: {
+        externalPlanId: "84sqm-v1",
+        name: "84㎡ 분담금 납부계획",
+        version: "v1",
+        stages: [{ externalStageId: "application", label: "신청금(가입필증)", category: "APPLICATION_CERTIFICATE_FEE", amount: 30_000_000, dueDate: null, sortOrder: 1, scope: "COMMON" }],
+      },
+      ledgerEntries: [{ externalId: "bank:1:application", stageExternalId: "application", label: "신청금(가입필증)", amount: 30_000_000, paidAt: "2026-01-10", method: "조합계좌", memo: null }],
+    });
+
+    expect(live.summary.totalPaid).toBe(90_000_000);
+    expect(live.profile.selectedUnitLabel).toBe("84㎡");
+    expect(live.stages[0]).toMatchObject({ paidAmount: 30_000_000, status: "PAID" });
   });
 });

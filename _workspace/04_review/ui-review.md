@@ -1,5 +1,31 @@
 # UI Review - Dedicated Security Audit History (2026-07-22)
 
+# UI Review - Live Contribution Ledger Integration (2026-08-23)
+
+## Reviewed Change
+- Feature: 회계 원장 기반 내 분담금 현황 및 신청평형 연동
+- Governing spec: `docs/superpowers/plans/2026-06-14-contribution-dashboard-mvp.md`
+- Implementation plan: 기존 ERP adapter 계약을 실제 서버 간 조회로 완성
+- Files or pages reviewed: 개인자료실 `내 분담금 현황`, `/api/me/contributions`, 환불조합원 역할 처리
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 브라우저에서 회계 API를 직접 호출하지 않고 로그인 세션의 서버 loader만 전용 키로 조회한다. 이름으로 자동 연결하지 않으며 회계 `member_id`를 고정 저장한다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 확정된 회계 원장의 총 납부액과 실제 원장 행만 표시하고, 확정 일정이 없는 다음 납부일은 `대기`로 유지한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 기존 Pretendard·stone card·반응형 카드 구조와 아이콘을 그대로 유지하고 데이터 상태만 실값으로 전환한다. 환불조합원 화면에는 평형을 렌더링하지 않는다.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 ## Reviewed Change
 - Feature: 관리자 전용 보안 감사 페이지와 파일 단위 열람·다운로드 기록
 - Pages: `/portal/admin/audit-logs`, `/portal/admin`

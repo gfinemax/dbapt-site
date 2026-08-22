@@ -118,3 +118,11 @@
 - Implementation boundary: Change only the selected free-board post reading shell; preserve its existing state, actions, permissions, public-share behavior, and the narrow edit form. Keep new-post creation as its current right-side drawer.
 - Conflicts: none.
 - Planning may continue: yes.
+
+# Specification Selection: Live Contribution Ledger Integration
+
+- Selected approved basis: `docs/superpowers/plans/2026-06-14-contribution-dashboard-mvp.md`의 ERP adapter 및 개인별 대시보드 구조와 사용자의 명시적 실연동 요청.
+- Implementation boundary: 기존 로그인·역할·개인자료실 UI를 유지하고 서버 측 읽기 전용 연동만 활성화한다. 회계 원본 거래와 조합원 귀속은 변경하지 않는다.
+- Approved extension: 회계 `member_id` 고정 연결, 실시간 합산 납부액·단계·최근 원장 반영, 84㎡ 신청평형 표시, 환불조합원 평형 비노출.
+- Conflicts: none.
+- Planning may continue: yes.

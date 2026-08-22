@@ -138,3 +138,11 @@
 - Explicitly excluded scope: new-post writing layout, stored post data/API changes, and notice/newsletter/development-log layouts.
 - Candidate governing plan: `docs/superpowers/plans/2026-08-22-free-board-fullscreen-reader.md`.
 - Unanswered decision: none. The user explicitly requested implementation using the notice reader as the reference.
+
+# Current Request: Live Contribution Ledger Integration
+
+- Requested feature slice: 로그인 조합원의 `내 분담금 현황`을 dbapt-ledger의 확정 납부 원장과 서버 간 연동하고 신청평형을 표시한다.
+- Required exception: 환불조합원 화면과 저장 프로필에는 신청평형을 노출하지 않는다.
+- Identity boundary: 이름 자동 병합은 금지하고, 최초 검증 전화번호 단일 일치 후 회계 `member_id`를 `externalMemberId`로 고정한다.
+- Security boundary: 로그인 사용자 본인 화면에서만 표시하며, 회계 연동 API는 전용 Bearer 키와 HTTPS를 요구한다.
+- Unanswered decision: none.

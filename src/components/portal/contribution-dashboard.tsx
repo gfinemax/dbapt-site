@@ -5,6 +5,7 @@ import type { ContributionDashboardView, PaymentNoticeView } from "@/lib/contrib
 type ContributionDashboardProps = {
   dashboard: ContributionDashboardView;
   paymentNotices?: PaymentNoticeView[];
+  hideSelectedUnit?: boolean;
 };
 
 const formatMoney = (value: number | null) => {
@@ -35,7 +36,7 @@ const commonStageHints = [
   { fullLabel: "초반 납입금 · 중도금 · 잔금", title: "초반 납입금", detail: "중도금 · 잔금" },
 ];
 
-export function ContributionDashboard({ dashboard, paymentNotices = [] }: ContributionDashboardProps) {
+export function ContributionDashboard({ dashboard, paymentNotices = [], hideSelectedUnit = false }: ContributionDashboardProps) {
   const progress = dashboard.paymentProgress;
   const isPending = progress === null;
 
@@ -61,7 +62,8 @@ export function ContributionDashboard({ dashboard, paymentNotices = [] }: Contri
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className={cn("grid grid-cols-2 gap-3", hideSelectedUnit ? "md:grid-cols-3" : "md:grid-cols-4")}>
+          {!hideSelectedUnit && (
           <div className="rounded-[10px] bg-parchment-card px-4 py-3">
             <div className="flex items-center gap-2 whitespace-nowrap text-xs font-semibold text-ash">
               <Home className="size-4" aria-hidden="true" />
@@ -69,6 +71,7 @@ export function ContributionDashboard({ dashboard, paymentNotices = [] }: Contri
             </div>
             <div className="mt-1.5 text-base font-semibold text-charcoal-primary">{formatPendingText(dashboard.selectedUnitLabel)}</div>
           </div>
+          )}
           <div className="rounded-[10px] bg-parchment-card px-4 py-3">
             <div className="flex items-center gap-2 whitespace-nowrap text-xs font-semibold text-ash">
               <WalletCards className="size-4" aria-hidden="true" />
