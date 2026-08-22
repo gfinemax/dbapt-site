@@ -508,23 +508,23 @@ export function PortalShell({
         </nav>
       )}
 
-      <div className={cn(isDrawerMode ? "w-full py-2" : "site-container py-10 sm:py-14")}>
+      <div className={cn(isDrawerMode ? "w-full px-5 py-5 sm:px-7 sm:py-6" : "site-container py-10 sm:py-14")}>
         {/* Top Badge */}
-        <p className="inline-flex rounded-full bg-parchment-card px-4 py-2 text-sm font-medium text-ember-orange">
+        <p className={cn("inline-flex rounded-full bg-parchment-card font-medium text-ember-orange", isDrawerMode && role === "member" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm")}>
           {isLoggedIn ? "조합원 전용 서비스" : "포털 화면 미리보기"}
         </p>
 
-        <h1 className="mt-6 max-w-3xl text-4xl leading-tight sm:text-[3rem]">
+        <h1 className={cn("max-w-3xl leading-tight", isDrawerMode && role === "member" ? "mt-4 text-2xl sm:text-[2rem]" : "mt-6 text-4xl sm:text-[3rem]")}>
           {isLoggedIn ? `${session.name}님 환영합니다` : profile.title}
         </h1>
-        <p className="mt-5 max-w-2xl text-base leading-8 text-graphite">
+        <p className={cn("max-w-2xl text-graphite", isDrawerMode && role === "member" ? "mt-1.5 text-sm leading-6" : "mt-5 text-base leading-8")}>
           {isLoggedIn
             ? `현재 ${getRoleLabel(session.role)} 권한으로 로그인 중입니다. 아래에서 본인 계정 정보 및 조합의 정보공개 문서를 안전하게 확인해 보실 수 있습니다.`
             : profile.description}
         </p>
 
         {/* Informational Panel */}
-        <section className="soft-panel mt-9 p-5 sm:p-6" aria-label="이용 안내">
+        {!(isDrawerMode && role === "member") && <section className="soft-panel mt-9 p-5 sm:p-6" aria-label="이용 안내">
           {isLoggedIn ? (
             <>
               <p className="font-semibold text-midnight">
@@ -544,7 +544,7 @@ export function PortalShell({
               </p>
             </>
           )}
-        </section>
+        </section>}
 
         {/* Role Previews switcher (only visible when NOT logged in) */}
         {!isLoggedIn && (
@@ -574,12 +574,12 @@ export function PortalShell({
 
         {/* Logged-In Specific Dynamic Content Areas */}
         {isLoggedIn ? (
-          <div className="mt-10 flex flex-col gap-10">
+          <div className={cn("flex flex-col gap-10", isDrawerMode && role === "member" ? "mt-5" : "mt-10")}>
             {/* 1. Account Specific Status Cards */}
             <section className="grid gap-6 md:grid-cols-2">
               {role === "member" && (
                 <div className="md:col-span-2">
-                  <ContributionDashboard dashboard={resolvedContributionDashboard} paymentNotices={paymentNotices} />
+                  <ContributionDashboard dashboard={resolvedContributionDashboard} paymentNotices={paymentNotices} compact={isDrawerMode} />
                 </div>
               )}
 

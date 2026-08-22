@@ -307,7 +307,8 @@ describe("public landing page", () => {
       />,
     );
 
-    expect(screen.getByText("내 분담금 현황")).toBeInTheDocument();
+    expect(screen.getAllByText("내가 납부한 금액").length).toBeGreaterThan(0);
+    expect(screen.getByRole("navigation", { name: "개인 자료실 메뉴" })).toBeInTheDocument();
     expect(screen.getByText("95,000,000 원")).toBeInTheDocument();
     expect(screen.queryByText("120,000,000 원")).not.toBeInTheDocument();
 

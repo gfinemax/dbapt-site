@@ -9,6 +9,7 @@ import { SiteFooter } from "./site-footer";
 import { AboutClient } from "@/components/about/about-client";
 import { DisclosureClient } from "@/components/disclosure/disclosure-client";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { PersonalLibraryNavigation } from "@/components/portal/personal-library-navigation";
 import { type Document } from "@/components/portal/document-table";
 import { PdfViewerModal } from "@/components/portal/pdf-viewer-modal";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
@@ -215,13 +216,13 @@ export function HomeClient({
       {/* 드로어 컨테이너 (DESIGN.md 규격: Stone surface border, Warm Canvas 배경, Drawer transition) */}
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-full max-w-3xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto",
+          "fixed inset-y-0 right-0 z-50 w-full max-w-[1040px] bg-warm-canvas border-l border-stone-surface shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform overflow-hidden",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
         aria-label={`${personalLibraryLabel} 드로어`}
       >
         {/* 드로어 상단 헤더 */}
-        <div className="flex items-center justify-between pb-6 border-b border-stone-surface">
+        <div className="flex items-center justify-between border-b border-stone-surface bg-white px-5 py-4 md:hidden">
           <div className="flex items-center gap-2">
             <span className="flex size-7 items-center justify-center rounded-full bg-sky-blue text-xs font-semibold text-white">
               D
@@ -247,7 +248,9 @@ export function HomeClient({
         </div>
 
         {/* 드로어 바디 (isDrawerMode={true}로 포털 셸 인라인 렌더링) */}
-        <div className="flex-1 mt-6">
+        <div className="grid min-h-0 flex-1 md:grid-cols-[168px_minmax(0,1fr)]">
+          <PersonalLibraryNavigation />
+          <div className="min-w-0 overflow-y-auto px-5 pb-20 pt-6 sm:px-8">
           {session ? (
             <PortalShell
               role={getPortalRole(session.role)}
@@ -273,6 +276,7 @@ export function HomeClient({
               </p>
             </div>
           )}
+          </div>
         </div>
       </div>
 

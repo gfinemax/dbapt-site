@@ -17,7 +17,7 @@ describe("ContributionDashboard", () => {
     expect(screen.getByRole("heading", { name: "내 분담금 현황" })).toBeInTheDocument();
     expect(screen.getAllByText("자료 대기")).toHaveLength(1);
     expect(screen.getByText("ERP 연동 예정")).toBeInTheDocument();
-    expect(screen.getByText("납부계획 반영 대기")).toBeInTheDocument();
+    expect(screen.getAllByText("일정 대기")).toHaveLength(5);
     expect(screen.getByLabelText("초반 납입금 · 중도금 · 잔금")).toBeInTheDocument();
     expect(screen.queryByText("0 원")).not.toBeInTheDocument();
   });
@@ -122,10 +122,11 @@ describe("ContributionDashboard", () => {
     expect(screen.queryByText("총 예정액")).not.toBeInTheDocument();
     expect(screen.queryByText("미납액")).not.toBeInTheDocument();
     expect(screen.getAllByText("30,000,000 원").length).toBeGreaterThan(0);
-    expect(screen.getByText("신청금(가입필증)")).toBeInTheDocument();
+    expect(screen.getAllByText("신청금(가입필증)").length).toBeGreaterThan(0);
     expect(screen.getByText("회계원장 반영")).toBeInTheDocument();
-    expect(screen.getByText("최근 납부내역")).toBeInTheDocument();
-    expect(screen.getByText("1건 · 합계 30,000,000 원")).toBeInTheDocument();
+    expect(screen.getByText("최근 납부 내역")).toBeInTheDocument();
+    expect(screen.getAllByText("총 1건").length).toBeGreaterThan(0);
+    expect(screen.getByText("합계 30,000,000 원")).toBeInTheDocument();
 
     const disclosure = screen.getByTestId("contribution-ledger-disclosure");
     expect(disclosure).not.toHaveAttribute("open");

@@ -1122,6 +1122,16 @@
 - Design and accessibility finding: PASS. At 516px and 1440px, all three controls retain 64px width, display `14`, `1.6`, and `12` unobscured, and produce no horizontal page overflow. Font size also exposes keyboard-focusable minus/plus controls.
 - Result: PASS.
 - Required action: none.
+
+# UI Review: Member Contribution Reference-Layout Correction
+
+- Reviewed change: Rebuilt the member personal-service drawer around the selected reference layout.
+- Boundary review: PASS. Existing authentication, self-only contribution loading, document access, links, and ledger disclosure behavior remain unchanged.
+- Truthful presentation: PASS. `내가 납부한 금액` is primary; undecided total contribution, unpaid balance, and progress percentage are not rendered. Pending accounts continue to show pending copy instead of illustrative figures.
+- Design and accessibility: PASS. The panel now uses a 1040px maximum width, labeled desktop navigation, compact welcome block, receipt-style summary, connected five-stage timeline, and responsive recent-payment table. Navigation and disclosure retain semantic labels and keyboard behavior.
+- Validation: focused component/integration tests, full 658-test suite, lint, and production build passed.
+- Result: PASS.
+- Required action: none.
 ## 2026-08-14 Compact toolbar follow-up
 
 - Feature: freely editable paragraph metrics and Google Docs-inspired compact grouping.
