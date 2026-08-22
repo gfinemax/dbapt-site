@@ -2631,6 +2631,18 @@
 - UI/access review: PASS.
 - Unresolved risks or follow-up specs: none.
 
+# Verification - 2026-08-23 Member Contribution Payment-First Redesign
+
+- Implemented: Replaced planned-total/progress emphasis with `내가 납부한 금액`; removed total planned amount, unpaid amount, progress, and percentage from the dashboard UI while preserving compatibility data; retained unit, next due date, stages, notices, and complete ledger disclosure.
+- Width: Personal-library drawers now use `max-w-3xl` (768px) instead of `max-w-2xl` (672px) across the landing, about, disclosure, and shared drawer host surfaces.
+- Tests: Updated focused and integration assertions to verify actual paid amount and absence of planned-total presentation.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 658 tests.
+- `pnpm build`: PASS after moving corrupted transient `.next/dev/types` output out of the TypeScript include path.
+- Browser: Authenticated desktop and mobile PASS; mobile `scrollWidth === clientWidth`; landing personal drawer opened and measured at 767.997px; console errors none.
+- Evidence: Temporary desktop, mobile, drawer, and side-by-side comparison captures were opened for review and removed afterward so generated binaries are not committed.
+- Residual risk: The current authenticated browser account has no approved contribution ledger data, so populated rendering was verified by component and integration tests without altering local account data.
+
 # Verification: Full-Width Free-Board Reader
 
 - Implemented feature: Selected free-board posts now open as a full-screen responsive dialog instead of a 780px left drawer. Read content uses a centered 1200px canvas, the header stays outside the scrolling document, and edit mode retains its existing 680px form width.

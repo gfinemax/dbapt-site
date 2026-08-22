@@ -308,7 +308,8 @@ describe("public landing page", () => {
     );
 
     expect(screen.getByText("내 분담금 현황")).toBeInTheDocument();
-    expect(screen.getByText("120,000,000 원")).toBeInTheDocument();
+    expect(screen.getByText("95,000,000 원")).toBeInTheDocument();
+    expect(screen.queryByText("120,000,000 원")).not.toBeInTheDocument();
 
     await act(async () => {
       vi.advanceTimersByTime(450);

@@ -152,3 +152,9 @@
 - Requested feature slice: 최근 납부 원장을 기본 접힘 상태의 거래내역으로 바꾸고 전체 내역을 필요할 때 펼쳐 본다.
 - Terminology: 거래별 `ERP 반영` 표기를 `회계원장 반영`으로 교체한다.
 - Preserve: 실제 회계 원장 값, 신청평형, 납부 단계, 역할·로그인 경계와 반응형 카드 디자인.
+# 2026-08-23 Member Contribution Payment-First Redesign
+
+- Requested feature slice: Redesign the logged-in member `내 분담금 현황` around `내가 납부한 금액`, using the selected receipt-board visual direction, and make the personal-library surface slightly wider.
+- Explicitly excluded scope: No backend/model changes, no fabricated totals, no display of total planned amount, unpaid amount, payment progress, or percentage; no public exposure.
+- Candidate governing specification: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`, narrowed by the user's 2026-08-23 display decision.
+- Unanswered decision: none.

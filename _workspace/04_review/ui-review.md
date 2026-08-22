@@ -26,6 +26,30 @@
 - Result: PASS
 - Required action: none
 
+# UI Review - 2026-08-23 Member Contribution Payment-First Redesign
+
+## Reviewed Change
+- Feature: Logged-in member contribution payment-first redesign and personal-library drawer width increase.
+- Governing spec: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`, narrowed by the user's 2026-08-23 display decision.
+- Implementation plan: `docs/superpowers/plans/2026-08-23-member-contribution-payment-first-redesign.md`.
+- Files or pages reviewed: contribution dashboard, personal-library drawers on landing/about/disclosure/shared host, `/portal/member`, desktop and mobile captures.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change stays inside authenticated member presentation. Public navigation and access rules are unchanged; self-only contribution API and ledger behavior are untouched.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The current member without approved contribution data sees `납부자료 반영 대기`; no example balance is fabricated. Planned total, unpaid total, progress, and percentage are not rendered in the contribution dashboard.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: Pretendard, warm canvas, restrained stone outlines, semantic accents, and native disclosure focus behavior remain intact. Desktop and mobile checks found no horizontal overflow. The personal drawer measures 768px instead of 672px.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
 ---
 
 ## Reviewed Change

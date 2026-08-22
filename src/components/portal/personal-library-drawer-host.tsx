@@ -130,7 +130,7 @@ export function PersonalLibraryDrawerHost({
           />
 
           <div
-            className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto"
+            className="fixed inset-y-0 right-0 z-50 w-full max-w-3xl bg-warm-canvas border-l border-stone-surface shadow-2xl pt-6 px-6 pb-20 sm:p-8 flex flex-col transition-transform duration-300 ease-in-out transform overflow-y-auto"
             aria-label={`${personalLibraryLabel} 드로어`}
           >
             <div className="flex items-center justify-between pb-6 border-b border-stone-surface">

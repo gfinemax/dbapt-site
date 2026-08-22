@@ -22,7 +22,7 @@ describe("ContributionDashboard", () => {
     expect(screen.queryByText("0 원")).not.toBeInTheDocument();
   });
 
-  it("uses a low-emphasis pending progress panel and ordered stage flow", () => {
+  it("uses a payment-first pending hero and ordered stage flow", () => {
     const dashboard = buildContributionDashboardView({
       summary: null,
       profile: null,
@@ -32,9 +32,12 @@ describe("ContributionDashboard", () => {
 
     render(<ContributionDashboard dashboard={dashboard} paymentNotices={[]} />);
 
-    expect(screen.getByTestId("contribution-dashboard-layout")).toHaveClass("space-y-6");
-    expect(screen.getByTestId("contribution-progress-panel")).toHaveClass("bg-parchment-card");
+    expect(screen.getByTestId("contribution-dashboard-layout")).toHaveClass("space-y-7");
+    expect(screen.getByTestId("contribution-payment-hero")).toHaveClass("bg-parchment-card");
     expect(screen.getByText("납부자료 반영 대기")).toBeInTheDocument();
+    expect(screen.queryByText("총 예정액")).not.toBeInTheDocument();
+    expect(screen.queryByText("미납액")).not.toBeInTheDocument();
+    expect(screen.queryByText("납부 진행률")).not.toBeInTheDocument();
 
     const flow = screen.getByLabelText("예상 납부 단계");
     expect(flow).toHaveClass("md:grid-cols-5");
@@ -68,7 +71,7 @@ describe("ContributionDashboard", () => {
     expect(screen.getByText("중도금 · 잔금")).toBeInTheDocument();
   });
 
-  it("renders selected unit, progress, stages, and ledger entries when data exists", () => {
+  it("renders selected unit, paid amount, stages, and ledger entries when data exists", () => {
     const dashboard = buildContributionDashboardView({
       summary: {
         totalDue: 120_000_000,
@@ -114,16 +117,19 @@ describe("ContributionDashboard", () => {
     render(<ContributionDashboard dashboard={dashboard} paymentNotices={[]} />);
 
     expect(screen.getByText("30평형")).toBeInTheDocument();
-    expect(screen.getByText("75%")).toBeInTheDocument();
+    expect(screen.getAllByText("내가 납부한 금액").length).toBeGreaterThan(0);
+    expect(screen.queryByText("75%")).not.toBeInTheDocument();
+    expect(screen.queryByText("총 예정액")).not.toBeInTheDocument();
+    expect(screen.queryByText("미납액")).not.toBeInTheDocument();
     expect(screen.getAllByText("30,000,000 원").length).toBeGreaterThan(0);
     expect(screen.getByText("신청금(가입필증)")).toBeInTheDocument();
     expect(screen.getByText("회계원장 반영")).toBeInTheDocument();
-    expect(screen.getByText("최근 납부 거래")).toBeInTheDocument();
+    expect(screen.getByText("최근 납부내역")).toBeInTheDocument();
     expect(screen.getByText("1건 · 합계 30,000,000 원")).toBeInTheDocument();
 
     const disclosure = screen.getByTestId("contribution-ledger-disclosure");
     expect(disclosure).not.toHaveAttribute("open");
-    fireEvent.click(screen.getByText("펼쳐보기"));
+    fireEvent.click(screen.getByText("전체 납부내역 보기"));
     expect(disclosure).toHaveAttribute("open");
     expect(screen.getByLabelText("전체 납부 거래내역")).toBeInTheDocument();
   });

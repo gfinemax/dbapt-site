@@ -126,3 +126,9 @@
 - Approved extension: 회계 `member_id` 고정 연결, 실시간 합산 납부액·단계·최근 원장 반영, 84㎡ 신청평형 표시, 환불조합원 평형 비노출.
 - Conflicts: none.
 - Planning may continue: yes.
+# 2026-08-23 Spec Selection
+
+- Selected approved spec: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`.
+- Implementation boundary: Logged-in member contribution presentation only; preserve current approved ledger data, API, access controls, and pending-state truthfulness.
+- Conflict: The original spec permits planned amount, unpaid amount, and progress when data exists. The user's later explicit direction supersedes that visible presentation only; compatibility fields remain in the view model and API.
+- Planning may continue: yes. The user selected visual option 1 and explicitly requested implementation.

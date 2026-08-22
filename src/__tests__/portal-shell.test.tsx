@@ -165,8 +165,9 @@ describe("portal shell", () => {
     );
 
     expect(screen.getByText("연체 주의")).toBeInTheDocument();
-    expect(screen.getByText("120,000,000 원")).toBeInTheDocument();
-    expect(screen.getByText("25,000,000 원")).toBeInTheDocument();
+    expect(screen.getByText("95,000,000 원")).toBeInTheDocument();
+    expect(screen.queryByText("120,000,000 원")).not.toBeInTheDocument();
+    expect(screen.queryByText("25,000,000 원")).not.toBeInTheDocument();
     expect(screen.getByText("연체 미납금 납부 안내")).toBeInTheDocument();
   });
 
