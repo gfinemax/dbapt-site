@@ -3423,7 +3423,7 @@ describe("news admin visible controls", () => {
     expect(within(panel).queryByText(/Google Name/)).not.toBeInTheDocument();
   });
 
-  it("opens a left focus panel from the free board list and keeps the post URL addressable", () => {
+  it("opens a full-screen reader from the free board list and keeps the post URL addressable", () => {
     window.history.pushState({}, "", "/news?tab=free");
 
     render(
@@ -3438,16 +3438,12 @@ describe("news admin visible controls", () => {
 
     const panel = screen.getByLabelText("토론 집중 패널");
     expect(panel).toBeInTheDocument();
-    expect(panel).toHaveClass("left-0");
-    expect(panel).toHaveClass("max-w-[780px]");
-    expect(panel).toHaveClass("px-3", "py-4", "sm:p-8");
-    expect(panel).toHaveStyle({ maxWidth: "780px" });
-    expect(panel).toHaveClass("slide-in-from-left");
-    expect(panel).not.toHaveClass("p-6");
-    expect(panel).not.toHaveClass("right-0");
-    expect(panel).not.toHaveClass("max-w-[920px]");
-    expect(panel).not.toHaveClass("max-w-2xl");
-    expect(panel).not.toHaveClass("max-w-3xl");
+    expect(panel).toHaveAttribute("role", "dialog");
+    expect(panel).toHaveAttribute("aria-modal", "true");
+    expect(panel).toHaveAttribute("data-free-board-detail-overlay", "true");
+    expect(panel).toHaveClass("inset-0", "overflow-hidden", "lg:inset-5", "lg:rounded-[28px]");
+    expect(panel).not.toHaveClass("max-w-[780px]");
+    expect(panel).not.toHaveClass("slide-in-from-left");
     expect(within(panel).getByRole("heading", { name: "자유게시판 글 열람" })).toBeInTheDocument();
     expect(within(panel).getByRole("heading", { name: "실제 자유게시글" })).toBeInTheDocument();
     expect(within(panel).getByText("실제 자유게시글 내용")).toBeInTheDocument();
@@ -3459,8 +3455,7 @@ describe("news admin visible controls", () => {
     expect(richContent).not.toHaveClass("text-xs");
     expect(richContent).not.toHaveClass("leading-8");
     const documentFlow = richContent?.closest('[data-free-board-document="focused-post"]');
-    expect(documentFlow).toHaveClass("mx-auto", "w-full", "max-w-[680px]");
-    expect(documentFlow).toHaveStyle({ maxWidth: "680px" });
+    expect(documentFlow).toHaveClass("mx-auto", "min-w-0", "w-full", "max-w-[1200px]", "overflow-x-hidden", "overflow-y-auto");
     expect(documentFlow).toHaveClass("space-y-0");
     expect(documentFlow).not.toHaveClass("space-y-6");
     expect(documentFlow).not.toHaveClass("max-w-[820px]");
@@ -3813,10 +3808,8 @@ describe("news admin visible controls", () => {
     const panel = screen.getByLabelText("토론 집중 패널");
     const documentColumn = panel.querySelector('[data-free-board-document="focused-post"]');
 
-    expect(panel).toHaveClass("max-w-[780px]");
-    expect(panel).toHaveStyle({ maxWidth: "780px" });
-    expect(panel).not.toHaveClass("max-w-[920px]");
-    expect(panel).not.toHaveClass("max-w-[1040px]");
+    expect(panel).toHaveClass("inset-0", "lg:inset-5");
+    expect(panel).not.toHaveClass("max-w-[780px]");
     expect(documentColumn).toHaveClass("max-w-[680px]");
     expect(documentColumn).toHaveStyle({ maxWidth: "680px" });
     expect(screen.queryByRole("dialog", { name: "게시글 수정 편집 모달" })).not.toBeInTheDocument();

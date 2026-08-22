@@ -111,3 +111,10 @@
 - Implementation boundary: Change only notice detail presentation in `NewsClient` and the standalone `NoticeBoard` fallback; preserve all actions, access rules, data flows, and other news detail surfaces.
 - Conflicts: none.
 - Planning may continue: yes.
+
+# Specification Selection: Full-Width Free-Board Reader
+
+- Selected approved basis: the user's explicit request to reuse the implemented notice full-screen reader pattern, governed by `docs/superpowers/plans/2026-08-21-notice-fullscreen-reader.md` and the free-board reading decisions in `docs/superpowers/plans/2026-07-02-free-board-side-edit.md`.
+- Implementation boundary: Change only the selected free-board post reading shell; preserve its existing state, actions, permissions, public-share behavior, and the narrow edit form. Keep new-post creation as its current right-side drawer.
+- Conflicts: none.
+- Planning may continue: yes.

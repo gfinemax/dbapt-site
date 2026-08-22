@@ -1012,6 +1012,29 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+# UI Review: Full-Width Free-Board Reader
+
+## Reviewed Change
+- Feature: Replace the selected free-board post left drawer with the same full-screen responsive reader used by notices.
+- Governing plan: `docs/superpowers/plans/2026-08-22-free-board-fullscreen-reader.md`.
+- Files or pages reviewed: `FreeBoard` focused-post reader, authenticated post list opening, direct post URL state, and desktop/mobile local renders.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: Existing login and public-share boundaries are unchanged. Post IDs, URL state, bookmarks, sharing, editing, deletion, attachments, comments, replies, reactions, and permissions retain their existing handlers. New-post writing remains a separate right-side drawer.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: The reader displays the same real post title, author, date, view count, reactions, body, attachments, and discussion state. No new operational capability or public access is implied.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: The surface is now an `aria-modal` dialog with the existing accessible label and a persistent header-level `목록으로` control. Desktop verification showed a centered 1200px document canvas without the former right-side dead space. Mobile verification showed a viewport-filling panel, no document-level horizontal overflow, and the close control within the viewport. Reduced-motion users do not receive the zoom transition.
+
+## Outcome
+- Result: PASS
+- Required action: none
 ## 2026-08-13 Numeric control visibility follow-up
 
 - Feature: unobscured typography numeric inputs.

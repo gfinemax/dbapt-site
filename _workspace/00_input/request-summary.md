@@ -130,3 +130,11 @@
 - Explicitly excluded scope: notice data/API changes, editor behavior changes, and newsletter/free-board detail layout changes.
 - Candidate governing plan: `docs/superpowers/plans/2026-08-21-notice-fullscreen-reader.md`.
 - Unanswered decision: none. The user explicitly approved implementation after selecting the full-screen reading direction.
+
+# Current Request: Full-Width Free-Board Reader
+
+- Requested feature slice: Apply the same full-screen reading experience used by notices to free-board post details.
+- Preserve: post deep links, list state, public read-only sharing, close behavior, bookmarks, sharing, editing, deletion, attachments, comments, replies, reactions, and permissions.
+- Explicitly excluded scope: new-post writing layout, stored post data/API changes, and notice/newsletter/development-log layouts.
+- Candidate governing plan: `docs/superpowers/plans/2026-08-22-free-board-fullscreen-reader.md`.
+- Unanswered decision: none. The user explicitly requested implementation using the notice reader as the reference.

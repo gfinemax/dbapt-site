@@ -2609,3 +2609,15 @@
 - Browser checks: PASS. The real notice deep link rendered in local headless Chrome at 1440 x 1000 and 390 x 844. Desktop confirmed the former right-side dead space was removed and the long evidence image used the centered wide canvas; responsive overflow guards and mobile geometry are covered by focused assertions.
 - UI/access review: PASS.
 - Unresolved risks or follow-up specs: none.
+
+# Verification: Full-Width Free-Board Reader
+
+- Implemented feature: Selected free-board posts now open as a full-screen responsive dialog instead of a 780px left drawer. Read content uses a centered 1200px canvas, the header stays outside the scrolling document, and edit mode retains its existing 680px form width.
+- Preserved behavior: post deep links and list state, public read-only sharing, close handling, body scroll lock, bookmarks, sharing, editing, deletion, attachments, comments, replies, reactions, and permissions. New-post writing remains unchanged.
+- Focused verification: PASS, 3 files and 120 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 657 tests.
+- `pnpm build`: PASS after stopping the development server and moving its generated `.next/dev` output out of the repository.
+- Browser checks: PASS. An authenticated real free-board post was opened locally. Desktop geometry confirmed the wide 1200px document canvas; mobile geometry confirmed the panel filled the viewport, document `scrollWidth` equaled `clientWidth`, and `목록으로` remained visible.
+- UI/access review: PASS.
+- Unresolved risks or follow-up specs: none.

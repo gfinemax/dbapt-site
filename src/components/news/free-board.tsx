@@ -1236,22 +1236,21 @@ export function FreeBoard({
         </div>
       </div>
 
-      {/* 토론 집중 패널 */}
+      {/* 자유게시판 전체 화면 열람 */}
       {mounted && focusedPost && createPortal(
         <>
           <div
             onClick={closeFocusedPost}
-            className="fixed inset-0 z-[120] bg-black/30 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+            className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in"
           />
-          <aside
+          <div
+            role="dialog"
+            aria-modal="true"
             aria-label="토론 집중 패널"
-            className={cn(
-              "fixed inset-y-0 left-0 z-[130] flex w-full flex-col overflow-y-auto border-r border-stone-surface bg-warm-canvas px-3 py-4 shadow-2xl animate-in slide-in-from-left duration-300 ease-out sm:p-8",
-              NEWS_ARTICLE_SHELL_MAX_WIDTH_CLASS,
-            )}
-            style={{ maxWidth: NEWS_ARTICLE_SHELL_MAX_WIDTH_STYLE }}
+            data-free-board-detail-overlay="true"
+            className="fixed inset-0 z-[130] flex min-w-0 w-full flex-col overflow-hidden bg-warm-canvas shadow-2xl animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none lg:inset-5 lg:w-auto lg:rounded-[28px] lg:border lg:border-stone-surface"
           >
-            <div className="flex items-center justify-between gap-4 border-b border-stone-surface pb-6">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-stone-surface bg-warm-canvas/95 px-4 py-4 backdrop-blur sm:px-8 sm:py-5">
               <div className="flex items-center gap-2">
                 <span className="flex size-7 items-center justify-center rounded-full bg-midnight text-xs font-semibold text-white">
                   💬
@@ -1280,11 +1279,12 @@ export function FreeBoard({
             <div
               data-free-board-document="focused-post"
               className={cn(
-                "mx-auto mt-6 w-full flex-1",
-                isEditingFocusedPost ? "space-y-6" : "space-y-0",
-                NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS,
+                "mx-auto min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto px-3 pb-10 pt-6 sm:px-8 sm:pb-14",
+                isEditingFocusedPost
+                  ? cn("space-y-6", NEWS_ARTICLE_CONTENT_MAX_WIDTH_CLASS)
+                  : "max-w-[1200px] space-y-0",
               )}
-              style={{ maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE }}
+              style={isEditingFocusedPost ? { maxWidth: NEWS_ARTICLE_CONTENT_MAX_WIDTH_STYLE } : undefined}
             >
               {isEditingFocusedPost ? (
                 <form onSubmit={handleCreatePost} className="space-y-5">
@@ -1708,7 +1708,7 @@ export function FreeBoard({
               </>
               )}
             </div>
-          </aside>
+          </div>
         </>,
         document.body,
       )}
