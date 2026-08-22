@@ -64,7 +64,7 @@ const getErpStatusLabel = (dataStatus: ContributionDataStatus, syncedAt: string 
 const getSourceLabel = (source: ContributionLedgerEntryView["source"]) => {
   switch (source) {
     case "ERP":
-      return "ERP 반영";
+      return "회계원장 반영";
     case "IMPORT":
       return "승인 자료 반영";
     case "MANUAL":

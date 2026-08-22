@@ -145,7 +145,7 @@ describe("contribution payment APIs", () => {
     expect(body.dashboard.selectedUnitLabel).toBe("30평형");
     expect(body.dashboard.paymentProgress).toBe(79);
     expect(body.dashboard.stageSummary[0].label).toBe("신청금(가입필증)");
-    expect(body.dashboard.ledgerEntries[0].sourceLabel).toBe("ERP 반영");
+    expect(body.dashboard.ledgerEntries[0].sourceLabel).toBe("회계원장 반영");
     expect(body.notices).toHaveLength(1);
   });
 

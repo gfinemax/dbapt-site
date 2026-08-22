@@ -2,6 +2,32 @@
 
 # UI Review - Live Contribution Ledger Integration (2026-08-23)
 
+# UI Review - Collapsible Contribution Ledger (2026-08-23)
+
+## Reviewed Change
+- Feature: 최근 납부 거래 접기/펼치기와 회계원장 출처 표기
+- Governing spec: `docs/superpowers/plans/2026-06-14-contribution-dashboard-mvp.md`
+- Implementation plan: 기존 최근 원장 카드만 native details/summary 기반 전체 거래 목록으로 교체
+- Files or pages reviewed: 개인자료실 `내 분담금 현황` 최근 납부 거래 영역
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 기존 로그인 조합원 개인자료실 안에서만 동일한 본인 거래를 표시하며 공개 범위나 API 권한은 바뀌지 않는다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 접힌 요약의 건수·합계와 펼친 목록 모두 연동된 전체 회계 원장 배열에서 계산하고 출처는 `회계원장 반영`으로 명확히 표현한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: native `details`/`summary`로 키보드 조작과 상태 의미를 제공하고, 데스크톱은 4열 표·모바일은 세로 행으로 전환한다. 기존 카드 색상·간격·Pretendard를 유지한다.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
 ## Reviewed Change
 - Feature: 회계 원장 기반 내 분담금 현황 및 신청평형 연동
 - Governing spec: `docs/superpowers/plans/2026-06-14-contribution-dashboard-mvp.md`

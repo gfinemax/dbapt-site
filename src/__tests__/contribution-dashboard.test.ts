@@ -89,6 +89,6 @@ describe("contribution dashboard view model", () => {
     expect(dashboard.nextDueDate).toBe("2026-06-30T00:00:00.000Z");
     expect(dashboard.stageSummary).toHaveLength(2);
     expect(dashboard.stageSummary[1].statusLabel).toBe("미납");
-    expect(dashboard.ledgerEntries[0].sourceLabel).toBe("ERP 반영");
+    expect(dashboard.ledgerEntries[0].sourceLabel).toBe("회계원장 반영");
   });
 });

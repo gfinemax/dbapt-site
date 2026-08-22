@@ -1,4 +1,4 @@
-import { CalendarClock, Database, Home, Layers3, ReceiptText, WalletCards } from "lucide-react";
+import { CalendarClock, ChevronDown, Database, Home, Layers3, ReceiptText, WalletCards } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ContributionDashboardView, PaymentNoticeView } from "@/lib/contribution-types";
 
@@ -39,6 +39,7 @@ const commonStageHints = [
 export function ContributionDashboard({ dashboard, paymentNotices = [], hideSelectedUnit = false }: ContributionDashboardProps) {
   const progress = dashboard.paymentProgress;
   const isPending = progress === null;
+  const ledgerTotal = dashboard.ledgerEntries.reduce((sum, entry) => sum + entry.amount, 0);
 
   return (
     <article className="stone-card bg-white p-5 sm:p-7">
@@ -191,29 +192,47 @@ export function ContributionDashboard({ dashboard, paymentNotices = [], hideSele
           )}
 
           <div className="rounded-[10px] bg-white p-4 shadow-[inset_0_0_0_1px_#f2f0ed]">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="text-sm font-semibold text-charcoal-primary">최근 납부 원장</h3>
-              {dashboard.ledgerEntries.length === 0 && (
-                <p className="text-xs text-ash">승인 자료 반영 후 표시</p>
-              )}
-            </div>
             {dashboard.ledgerEntries.length > 0 ? (
-              <div className="mt-3 grid gap-2 md:grid-cols-3">
-                {dashboard.ledgerEntries.slice(0, 3).map((entry) => (
-                  <div key={entry.id} className="rounded-[10px] bg-parchment-card px-3 py-2 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-charcoal-primary">{entry.label}</span>
-                      <span className="font-semibold text-graphite">{formatMoney(entry.amount)}</span>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between gap-2 text-ash">
-                      <span>{formatDate(entry.paidAt)}</span>
-                      <span>{entry.sourceLabel}</span>
-                    </div>
+              <details data-testid="contribution-ledger-disclosure" className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[10px] px-1 py-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-midnight [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0">
+                    <h3 className="text-sm font-semibold text-charcoal-primary">최근 납부 거래</h3>
+                    <span className="mt-1 block text-xs text-ash">
+                      {dashboard.ledgerEntries.length}건 · 합계 {formatMoney(ledgerTotal)}
+                    </span>
+                  </span>
+                  <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-graphite">
+                    <span className="group-open:hidden">펼쳐보기</span>
+                    <span className="hidden group-open:inline">접기</span>
+                    <ChevronDown className="size-4 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
+                  </span>
+                </summary>
+
+                <div className="mt-4 overflow-hidden rounded-[10px] bg-parchment-card">
+                  <div className="hidden grid-cols-[110px_minmax(0,1fr)_150px_130px] gap-3 border-b border-stone-surface px-4 py-2 text-[11px] font-semibold text-ash md:grid">
+                    <span>납부일</span>
+                    <span>납부항목</span>
+                    <span className="text-right">금액</span>
+                    <span className="text-right">반영 출처</span>
                   </div>
-                ))}
-              </div>
+                  <ol aria-label="전체 납부 거래내역" className="divide-y divide-stone-surface">
+                    {dashboard.ledgerEntries.map((entry) => (
+                      <li key={entry.id} className="grid gap-2 px-4 py-3 text-xs md:grid-cols-[110px_minmax(0,1fr)_150px_130px] md:items-center md:gap-3">
+                        <time className="text-ash" dateTime={entry.paidAt}>{formatDate(entry.paidAt)}</time>
+                        <span className="font-semibold text-charcoal-primary">{entry.label}</span>
+                        <span className="font-semibold text-graphite md:text-right">{formatMoney(entry.amount)}</span>
+                        <span className="text-ash md:text-right">{entry.sourceLabel}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </details>
             ) : (
               <div className="mt-3 text-xs leading-5 text-graphite">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <h3 className="text-sm font-semibold text-charcoal-primary">최근 납부 거래</h3>
+                  <p className="text-xs text-ash">승인 자료 반영 후 표시</p>
+                </div>
                 <p className="font-semibold text-charcoal-primary">승인된 납부 내역이 아직 없습니다.</p>
                 <p className="mt-1">ERP 또는 관리자 승인 자료가 반영되면 최근 납부 내역이 표시됩니다.</p>
               </div>

@@ -2442,6 +2442,16 @@
 
 # Verification - Live Contribution Ledger Integration
 
+# Verification - Collapsible Contribution Ledger
+
+- Implemented: 기본 접힌 `최근 납부 거래` 요약, 건수·합계, 펼쳐보기/접기 상태, 전체 거래 행, 데스크톱 표/모바일 세로 배치.
+- Terminology: 거래 출처 `ERP 반영`을 `회계원장 반영`으로 변경.
+- Focused checks: contribution dashboard component/view/API 10 tests passed.
+- Accessibility: native details/summary, visible focus outline, 전체 거래내역 ordered-list label.
+- UI/access review: PASS.
+
+---
+
 - Implemented: dbapt-ledger 읽기 전용 연동 API, HTTPS, 전용 서비스 키, 홈페이지 서버 측 조회, 회계 `member_id` 고정 연결, 84㎡ 신청평형, 단계별 배분 및 최근 납부 원장.
 - Privacy: 환불조합원은 신청평형을 조회 응답·홈페이지 프로필·화면에서 모두 숨긴다.
 - Ledger checks: focused 26 tests passed; full suite 506 passed with 7 pre-existing static-UI assertion failures unrelated to this change.

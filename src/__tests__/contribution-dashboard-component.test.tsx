@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ContributionDashboard } from "@/components/portal/contribution-dashboard";
 import { buildContributionDashboardView } from "@/lib/contribution-dashboard";
@@ -117,6 +117,14 @@ describe("ContributionDashboard", () => {
     expect(screen.getByText("75%")).toBeInTheDocument();
     expect(screen.getAllByText("30,000,000 원").length).toBeGreaterThan(0);
     expect(screen.getByText("신청금(가입필증)")).toBeInTheDocument();
-    expect(screen.getByText("ERP 반영")).toBeInTheDocument();
+    expect(screen.getByText("회계원장 반영")).toBeInTheDocument();
+    expect(screen.getByText("최근 납부 거래")).toBeInTheDocument();
+    expect(screen.getByText("1건 · 합계 30,000,000 원")).toBeInTheDocument();
+
+    const disclosure = screen.getByTestId("contribution-ledger-disclosure");
+    expect(disclosure).not.toHaveAttribute("open");
+    fireEvent.click(screen.getByText("펼쳐보기"));
+    expect(disclosure).toHaveAttribute("open");
+    expect(screen.getByLabelText("전체 납부 거래내역")).toBeInTheDocument();
   });
 });

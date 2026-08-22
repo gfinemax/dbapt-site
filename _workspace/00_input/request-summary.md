@@ -146,3 +146,9 @@
 - Identity boundary: 이름 자동 병합은 금지하고, 최초 검증 전화번호 단일 일치 후 회계 `member_id`를 `externalMemberId`로 고정한다.
 - Security boundary: 로그인 사용자 본인 화면에서만 표시하며, 회계 연동 API는 전용 Bearer 키와 HTTPS를 요구한다.
 - Unanswered decision: none.
+
+## 2026-08-23 Collapsible Ledger Follow-up
+
+- Requested feature slice: 최근 납부 원장을 기본 접힘 상태의 거래내역으로 바꾸고 전체 내역을 필요할 때 펼쳐 본다.
+- Terminology: 거래별 `ERP 반영` 표기를 `회계원장 반영`으로 교체한다.
+- Preserve: 실제 회계 원장 값, 신청평형, 납부 단계, 역할·로그인 경계와 반응형 카드 디자인.
