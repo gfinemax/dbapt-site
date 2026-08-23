@@ -225,7 +225,11 @@ export function HomeClient({
           
           {/* 닫기 버튼 (DESIGN.md 규격: Pill Light 스타일 응용) */}
           <div className="flex items-center gap-2">
-            <Link href="/" className="rounded-full bg-midnight px-3 py-1.5 text-xs font-semibold text-white">
+            <Link
+              href="/"
+              onClick={() => window.dispatchEvent(new CustomEvent("close-portal"))}
+              className="rounded-full bg-midnight px-3 py-1.5 text-xs font-semibold text-white"
+            >
               홈으로
             </Link>
             <button

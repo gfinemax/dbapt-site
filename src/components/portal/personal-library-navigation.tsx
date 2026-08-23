@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Bell, FileText, House, MessageCircle, ReceiptText, UserRound } from "lucide-react";
 
@@ -29,7 +31,11 @@ export function PersonalLibraryNavigation({ name, role }: PersonalLibraryNavigat
         <span className="flex size-8 items-center justify-center rounded-[10px] bg-ember-orange text-sm font-semibold text-white">D</span>
         <span className="text-sm font-semibold leading-5 text-charcoal-primary">{memberLabel}<span className="block text-xs font-normal text-ash">조합원 전용 서비스</span></span>
       </div>
-      <Link href="/" className="mb-3 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold text-charcoal-primary ring-1 ring-inset ring-stone-surface transition-colors hover:bg-parchment-card">
+      <Link
+        href="/"
+        onClick={() => window.dispatchEvent(new CustomEvent("close-portal"))}
+        className="mb-3 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold text-charcoal-primary ring-1 ring-inset ring-stone-surface transition-colors hover:bg-parchment-card"
+      >
         <House className="size-4" aria-hidden="true" />
         홈으로
       </Link>

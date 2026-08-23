@@ -2674,3 +2674,12 @@
 - `pnpm build`: PASS.
 - Browser: PASS at desktop and mobile responsive viewport; no horizontal overflow; `서류발급` navigated to populated `/library` content.
 - Residual risk: none.
+
+## Home Action Follow-up
+
+- Fixed the same-route `/` no-op by dispatching the shared `close-portal` event before desktop/mobile home navigation.
+- Focused test: PASS, 3 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 659 tests.
+- `pnpm build`: PASS.
+- Local browser: PASS. The full-screen service visibly closed after clicking `홈으로`; `서류발급` navigated to `/library`.

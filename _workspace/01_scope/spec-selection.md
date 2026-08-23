@@ -139,3 +139,8 @@
 - Implementation boundary: authenticated personal-service presentation only; preserve stored role values and existing protected data/destinations.
 - Conflicts: none.
 - Planning may continue: yes.
+
+## Home Action Follow-up
+
+- Boundary: interaction repair only; use the existing `close-portal` contract and preserve all access/data behavior.
+- Conflicts: none.

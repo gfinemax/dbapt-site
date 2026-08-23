@@ -42,6 +42,13 @@
 - Result: PASS
 - Required action: none
 
+## Home Action Follow-up Review
+
+- Boundary: PASS. No access or data presentation changed.
+- Truthful presentation: PASS. `홈으로` now performs the close action its label promises even when the current route is already `/`.
+- Design and accessibility: PASS. Existing link semantics and visible focus styling remain; desktop click verification returned to the underlying home screen.
+- Result: PASS
+
 # UI Review - 2026-08-23 Member Contribution Payment-First Redesign
 
 ## Reviewed Change

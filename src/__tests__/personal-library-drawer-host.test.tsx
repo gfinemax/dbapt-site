@@ -43,9 +43,7 @@ describe("personal library drawer host", () => {
     expect(within(drawer).getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/news?tab=free");
     expect(within(drawer).queryByText("고객센터")).not.toBeInTheDocument();
 
-    act(() => {
-      window.dispatchEvent(new CustomEvent("close-portal"));
-    });
+    fireEvent.click(within(drawer).getAllByRole("link", { name: "홈으로" })[0]);
 
     expect(screen.queryByLabelText("이조합 (정식조합원) 개인 자료실 드로어")).not.toBeInTheDocument();
     expect(within(document.body).getByText("사업현황")).toBeInTheDocument();

@@ -30,6 +30,11 @@
 - Candidate governing specification: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`.
 - Unanswered decision: none.
 
+## Home Action Follow-up
+
+- Requested fix: make the visible `홈으로` action actually close the full-screen member service when it is already open over `/`.
+- Preserve: current authenticated content, shortcut destinations, role labels, and responsive layout.
+
 ---
 
 # Request Summary - Continuous Mobile PDF Viewer
