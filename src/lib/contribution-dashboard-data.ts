@@ -99,6 +99,24 @@ export async function loadContributionDashboardData(
             syncedAt: new Date(snapshot.syncedAt),
           },
         });
+        if (snapshot.peopleOnMemberId) {
+          try {
+            await prisma.memberPersonalProfile.upsert({
+              where: { userId },
+              create: {
+                userId,
+                peopleOnMemberId: snapshot.peopleOnMemberId,
+                peopleOnSyncedAt: new Date(snapshot.syncedAt),
+              },
+              update: {
+                peopleOnMemberId: snapshot.peopleOnMemberId,
+                peopleOnSyncedAt: new Date(snapshot.syncedAt),
+              },
+            });
+          } catch (error) {
+            console.error("PeopleON member identity link failed:", error);
+          }
+        }
         return buildContributionDashboardView({
           summary: live.summary,
           profile: role === "REFUND" ? { ...live.profile, selectedUnitLabel: null, unitAreaM2: null } : live.profile,

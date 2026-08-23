@@ -26,6 +26,7 @@ export type ErpContributionLedgerEntry = {
 
 export type ErpContributionLedgerSnapshot = {
   externalMemberId: string;
+  peopleOnMemberId?: string | null;
   selectedUnitLabel: string | null;
   unitAreaM2: number | null;
   totalPlannedAmount: number | null;

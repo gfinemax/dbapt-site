@@ -2765,3 +2765,10 @@
 - Authenticated browser: PASS. Existing local fixture without an external ID correctly retained homepage fallback; responsive mobile rendered five cards in one column with no horizontal overflow.
 - UI/access review: PASS.
 - Residual risk: local authenticated fixture has no PeopleON ID, so populated production-account values require post-deployment verification on the linked member account.
+
+### Authoritative identity bridge correction
+
+- Production diagnosis: the website stored accounting member ID `56`, while PeopleON uses UUID identifiers, so direct comparison correctly returned no match.
+- Implemented bridge: the ledger contribution API now returns its already-approved `peopleon_member_id`; dbapt-site persists that identifier to the member personal profile before requesting PeopleON data.
+- Identity verification: production ledger member `56` returned one UUID PeopleON link and preserved the approved paid total of 194,000,000원. No name-based persistence or merge was used.
+- Ledger validation: focused integration tests 2 passed; Oracle Cloud deployment workflow completed successfully for ledger commit `932b2c8`.
