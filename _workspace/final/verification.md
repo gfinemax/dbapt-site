@@ -2696,3 +2696,16 @@
 - Browser layout: PASS. Authenticated desktop and 390 x 844 mobile renders had no framework error overlay; mobile `scrollWidth === clientWidth`.
 - UI/access review: PASS.
 - Residual risk: none.
+
+## Member-Service Interaction Containment Follow-up
+
+- Implemented: contained personal curation tab/load-more clicks, isolated full-screen service click propagation, raised every personal-service host above the global mobile navigation, and replaced shortcut router/close races with deterministic full-page navigation.
+- Reproduced cause: the full-screen service used `z-50` while the mobile home navigation used `z-55`; the previous shortcut handler also closed the service immediately after requesting client routing, and the notice route was observed once remaining on `/`.
+- Focused tests: PASS, 3 files and 31 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 665 tests.
+- `pnpm build`: PASS after moving generated `.next/dev` output to a temporary quarantine before the clean production build.
+- Authenticated desktop browser: PASS. `내 즐겨찾기` produced zero `close-portal` events, kept the service open, and retained selected styling. Consecutive shortcuts reached `/library`, `/news?tab=notice`, and `/news?tab=free`.
+- Authenticated mobile browser: PASS at 390 x 844. Hit testing selected the curation button rather than the underlying home link; service z-index was 70, no horizontal overflow occurred, and the drawer remained open.
+- UI/access review: PASS.
+- Residual risk: none.

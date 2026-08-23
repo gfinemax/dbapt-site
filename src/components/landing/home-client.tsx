@@ -206,8 +206,9 @@ export function HomeClient({
       {/* 백드롭 오버레이 (Dim & Blur) */}
       {/* 드로어 컨테이너 (DESIGN.md 규격: Stone surface border, Warm Canvas 배경, Drawer transition) */}
       <div
+        onClick={(event) => event.stopPropagation()}
         className={cn(
-          "fixed inset-0 z-50 w-full bg-warm-canvas flex flex-col transition-transform duration-300 ease-in-out transform overflow-hidden",
+          "fixed inset-0 z-[70] w-full bg-warm-canvas flex flex-col transition-transform duration-300 ease-in-out transform overflow-hidden",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
         aria-label={`${personalLibraryLabel} 드로어`}

@@ -151,3 +151,10 @@
 - Implementation boundary: authenticated member-service navigation and focus targets only; reuse the existing contribution, personal-curation, library, notice, and free-board surfaces.
 - Conflicts: none. Stored roles, data, bookmarks, and route permissions remain unchanged.
 - Planning may continue: yes.
+
+## Member-Service Interaction Containment Follow-up
+
+- Selected approved basis: `docs/superpowers/plans/2026-08-23-member-service-fullscreen-navigation.md` plus the user's explicit defect report.
+- Implementation boundary: event containment, stacking order, and shortcut transition behavior across existing personal-service hosts only.
+- Conflicts: none. Explicit home/close actions and all stored data/access behavior remain unchanged.
+- Planning may continue: yes.

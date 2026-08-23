@@ -49,6 +49,29 @@
 - Result: PASS.
 - Required action: none.
 
+# UI Review: Member-Service Interaction Containment
+
+## Reviewed Change
+- Feature: Prevent personal curation and shortcut clicks from exposing the underlying home page.
+- Governing plan: `docs/superpowers/plans/2026-08-23-member-service-fullscreen-navigation.md`, `In-Service Interaction Containment Follow-up`.
+- Files or pages reviewed: personal curation tabs/actions, shared sidebar shortcuts, home/shared personal-service hosts, authenticated desktop and 390 x 844 mobile renders.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The fix changes event containment, stacking order, and navigation delivery only. Documents, bookmark APIs, contribution data, roles, and access controls are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: `내 즐겨찾기` and `보관한 게시글` continue to display the same real stored items. Sidebar shortcuts still name and open their existing destinations without introducing new service claims.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: The visible layout and hierarchy remain unchanged. The full-screen service now has a stacking level above the global mobile navigation, so hit testing reaches the intended curation controls instead of the underlying home tab. Authenticated mobile verification found no horizontal overflow; selected-tab state remained visible and the service stayed open.
+
+## Outcome
+- Result: PASS.
+- Required action: none.
+
 # 2026-08-23 Member Service Full-Screen Navigation Review
 
 ## Reviewed Change

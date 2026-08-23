@@ -172,6 +172,14 @@
 - Required external destinations: `서류발급`, `공지사항`, and `문의하기` must close the full-screen service and open their existing populated pages.
 - Preserve: existing authenticated access, contribution data, bookmark behavior, role labels, and public route permissions.
 - Unanswered decision: none.
+
+# Current Request: Prevent Member-Service Home Bounce
+
+- Requested feature slice: Stop `내 즐겨찾기` and other member-service interactions from closing the full-screen service or exposing the home page unexpectedly.
+- Required interaction boundary: Personal curation tabs, bookmarks, document cards, and load-more controls stay in the current service; only explicit home/close actions may reveal the home page.
+- Required navigation boundary: Sidebar shortcuts must complete their real route navigation without a router/unmount race.
+- Preserve: existing tab contents, bookmark persistence, document viewer, protected access, and intended explicit home/close behavior.
+- Unanswered decision: none.
 # 2026-08-23 Member Contribution Payment-First Redesign
 
 - Requested feature slice: Redesign the logged-in member `내 분담금 현황` around `내가 납부한 금액`, using the selected receipt-board visual direction, and make the personal-library surface slightly wider.

@@ -206,7 +206,7 @@ export function DisclosurePageClientShell({
 
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-full max-w-[1040px] bg-warm-canvas border-l border-stone-surface shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform overflow-hidden",
+          "fixed inset-y-0 right-0 z-[70] w-full max-w-[1040px] bg-warm-canvas border-l border-stone-surface shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform overflow-hidden",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
         aria-label={`${personalLibraryLabel} 드로어`}

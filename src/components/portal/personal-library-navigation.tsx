@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import {
   Bell,
   FileHeart,
@@ -35,7 +34,6 @@ type PersonalLibraryNavigationProps = {
 const baseItemClassName = "flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-left text-sm transition-colors";
 
 export function PersonalLibraryNavigation({ name, role }: PersonalLibraryNavigationProps) {
-  const router = useRouter();
   const [activeSection, setActiveSection] = useState<SectionKey>("profile");
   const normalizedRole = role?.trim().toUpperCase();
   const cleanName = name?.trim().replace(/\s*\((?:정식조합원|환불조합원|탈퇴조합원)\)\s*$/, "");
@@ -58,12 +56,6 @@ export function PersonalLibraryNavigation({ name, role }: PersonalLibraryNavigat
     setActiveSection(key);
     target.scrollIntoView({ behavior: "smooth", block: "start" });
     target.focus({ preventScroll: true });
-  };
-
-  const openShortcut = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
-    event.preventDefault();
-    router.push(href);
-    window.dispatchEvent(new CustomEvent("close-portal"));
   };
 
   return (
@@ -103,15 +95,19 @@ export function PersonalLibraryNavigation({ name, role }: PersonalLibraryNavigat
           <p className="px-3 pb-1.5 text-[11px] font-semibold text-ash">바로가기</p>
           <div className="space-y-1">
             {shortcutItems.map(({ label, href, icon: Icon }) => (
-              <Link
+              <a
                 key={label}
                 href={href}
-                onClick={(event) => openShortcut(event, href)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  window.location.assign(href);
+                }}
                 className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}
               >
                 <Icon className="size-4" aria-hidden="true" />
                 {label}
-              </Link>
+              </a>
             ))}
           </div>
         </div>

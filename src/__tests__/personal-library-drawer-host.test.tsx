@@ -2,12 +2,10 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 
-const { mockRouterPush } = vi.hoisted(() => ({ mockRouterPush: vi.fn() }));
-
 vi.mock("next/navigation", () => ({
   useRouter() {
     return {
-      push: mockRouterPush,
+      push: vi.fn(),
       refresh: vi.fn(),
     };
   },
@@ -36,7 +34,7 @@ describe("personal library drawer host", () => {
 
     const drawer = screen.getByLabelText("이조합 (정식조합원) 개인 자료실 드로어");
     expect(drawer).toBeInTheDocument();
-    expect(drawer).toHaveClass("inset-0", "w-full");
+    expect(drawer).toHaveClass("inset-0", "w-full", "z-[70]");
     expect(drawer).not.toHaveClass("max-w-[1040px]");
     expect(within(drawer).getByText("이조합 조합원")).toBeInTheDocument();
     expect(within(drawer).getAllByRole("link", { name: "홈으로" }).every((link) => link.getAttribute("href") === "/")).toBe(true);
@@ -92,8 +90,7 @@ describe("personal library drawer host", () => {
     ["서류발급", "/library"],
     ["공지사항", "/news?tab=notice"],
     ["문의하기", "/news?tab=free"],
-  ])("closes the service and opens the %s destination", (label, href) => {
-    mockRouterPush.mockReset();
+  ])("exposes the deterministic %s destination link", (label, href) => {
     render(
       <PersonalLibraryDrawerHost
         session={{ id: "member-1", loginId: "member", name: "이조합", role: "MEMBER" }}
@@ -105,10 +102,8 @@ describe("personal library drawer host", () => {
     act(() => window.dispatchEvent(new CustomEvent("open-portal")));
     const drawer = screen.getByLabelText("이조합 개인 자료실 드로어");
 
-    fireEvent.click(within(drawer).getByRole("link", { name: label }));
-
-    expect(mockRouterPush).toHaveBeenCalledWith(href);
-    expect(screen.queryByLabelText("이조합 개인 자료실 드로어")).not.toBeInTheDocument();
+    const shortcut = within(drawer).getByRole("link", { name: label });
+    expect(shortcut).toHaveAttribute("href", href);
   });
 
   it("labels withdrawn members as refund members", () => {

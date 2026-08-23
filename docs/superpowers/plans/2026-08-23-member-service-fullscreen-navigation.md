@@ -23,3 +23,11 @@
 - [x] Add the missing personal curation shortcut for recommended, bookmarked, and saved content.
 - [x] Close the full-screen service and explicitly route `서류발급`, `공지사항`, and `문의하기` to their populated pages.
 - [x] Add interaction regression coverage, then run focused tests, lint, the full suite, build, and desktop/mobile browser verification.
+
+## In-Service Interaction Containment Follow-up
+
+- [x] Keep personal curation tabs, bookmark controls, cards, and load-more actions inside the open member-service layer without emitting a home/close action.
+- [x] Raise every full-screen personal-service layer above the global mobile navigation so clicks cannot land on the underlying home tab.
+- [x] Replace shortcut router/close races with deterministic full-page shortcut navigation.
+- [x] Add integrated home and shared-host regression coverage for drawer persistence and shortcut behavior.
+- [x] Run focused tests, lint, the full suite, build, UI review, and authenticated desktop/mobile browser verification.

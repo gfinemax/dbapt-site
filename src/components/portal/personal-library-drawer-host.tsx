@@ -124,7 +124,8 @@ export function PersonalLibraryDrawerHost({
       {isDrawerOpen && (
         <>
           <div
-            className="fixed inset-0 z-50 flex w-full flex-col overflow-hidden bg-warm-canvas"
+            onClick={(event) => event.stopPropagation()}
+            className="fixed inset-0 z-[70] flex w-full flex-col overflow-hidden bg-warm-canvas"
             aria-label={`${personalLibraryLabel} 드로어`}
           >
             <div className="flex items-center justify-between border-b border-stone-surface bg-white px-5 py-4 md:hidden">

@@ -114,6 +114,31 @@ describe("PersonalDocumentHub", () => {
     expect(within(stash).queryByText("1.0 KB")).not.toBeInTheDocument();
   });
 
+  it("contains personal tab clicks inside the curation surface", () => {
+    const parentClick = vi.fn();
+
+    render(
+      <div onClick={parentClick}>
+        <PersonalDocumentHub
+          documents={[
+            baseDoc({
+              id: "saved-contained",
+              title: "개인 보관 문서",
+              isViewedByCurrentUser: true,
+              isBookmarkedByCurrentUser: true,
+            }),
+          ]}
+          role="member"
+        />
+      </div>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "내 즐겨찾기 1" }));
+
+    expect(parentClick).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("내 즐겨찾기 목록")).toBeInTheDocument();
+  });
+
   it("does not duplicate the recommendation and stash counts in the header", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-14T12:00:00.000Z"));

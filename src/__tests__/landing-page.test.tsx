@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HomeClient } from "@/components/landing/home-client";
 import { featureLinks, megaMenuNavigation, publicNavigation } from "@/content/landing";
@@ -319,5 +319,49 @@ describe("public landing page", () => {
     expect(screen.getByText("내 분담금 요약")).toBeInTheDocument();
     expect(screen.getAllByText("25,000,000 원").length).toBeGreaterThan(0);
     expect(screen.getAllByText("연체 미납금 납부 안내").length).toBeGreaterThan(0);
+  });
+
+  it("keeps the full-screen member service open when personal curation tabs change", () => {
+    localStorage.setItem("dbapt_announce_popup_dismissed_until", String(Date.now() + 60_000));
+    const closeListener = vi.fn();
+    window.addEventListener("close-portal", closeListener, { once: true });
+
+    render(
+      <HomeClient
+        session={{
+          id: "member-1",
+          loginId: "member1",
+          name: "이조합",
+          role: "MEMBER",
+        }}
+        documents={[
+          {
+            id: "saved-home-doc",
+            title: "홈에서 보관한 공개자료",
+            description: null,
+            category: "DISCLOSURE",
+            fileName: "saved-home.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            isViewedByCurrentUser: true,
+            isBookmarkedByCurrentUser: true,
+            publishedAt: "2026-08-20T00:00:00.000Z",
+            createdAt: "2026-08-20T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    act(() => window.dispatchEvent(new CustomEvent("open-portal")));
+    const drawer = screen.getByLabelText("이조합 개인 자료실 드로어");
+    expect(drawer).toHaveClass("translate-x-0", "z-[70]");
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "내 즐겨찾기 1" }));
+
+    expect(closeListener).not.toHaveBeenCalled();
+    expect(drawer).toHaveClass("translate-x-0");
+    expect(within(drawer).getByLabelText("내 즐겨찾기 목록")).toBeInTheDocument();
+    expect(within(drawer).getByText("홈에서 보관한 공개자료")).toBeInTheDocument();
+    window.removeEventListener("close-portal", closeListener);
   });
 });

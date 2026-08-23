@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 import type { Document } from "./document-table";
 import { DocumentBookmarkButton } from "./document-bookmark-button";
@@ -158,6 +158,18 @@ export function PersonalDocumentHub({
     if (!nextBookmarked && activeTab === "saved" && savedDocs.length === 1) {
       setActiveTab("recommended");
     }
+  };
+
+  const handleTabChange = (event: MouseEvent<HTMLButtonElement>, nextTab: ActiveTab) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveTab(nextTab);
+  };
+
+  const handleRevealAll = (event: MouseEvent<HTMLButtonElement>, reveal: () => void) => {
+    event.preventDefault();
+    event.stopPropagation();
+    reveal();
   };
 
   const renderCard = (doc: Document) => {
@@ -334,6 +346,7 @@ export function PersonalDocumentHub({
     <section
       id={sectionId}
       tabIndex={-1}
+      onClick={(event) => event.stopPropagation()}
       className={cn(
         "scroll-mt-6 w-full min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white p-5 shadow-[inset_0_0_0_1px_#f2f0ed] focus:outline-none sm:max-w-none",
         isDrawerMode ? "space-y-4" : "space-y-5 sm:p-6",
@@ -355,7 +368,7 @@ export function PersonalDocumentHub({
       <div className="flex flex-wrap gap-2 border-b border-stone-surface pb-3">
         <button
           type="button"
-          onClick={() => setActiveTab("recommended")}
+          onClick={(event) => handleTabChange(event, "recommended")}
           className={cn(
             "rounded-full px-4 py-2 text-xs font-bold transition-colors",
             activeTab === "recommended"
@@ -367,7 +380,7 @@ export function PersonalDocumentHub({
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("saved")}
+          onClick={(event) => handleTabChange(event, "saved")}
           className={cn(
             "rounded-full px-4 py-2 text-xs font-bold transition-colors",
             activeTab === "saved"
@@ -379,7 +392,7 @@ export function PersonalDocumentHub({
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("content")}
+          onClick={(event) => handleTabChange(event, "content")}
           className={cn(
             "rounded-full px-4 py-2 text-xs font-bold transition-colors",
             activeTab === "content"
@@ -413,7 +426,7 @@ export function PersonalDocumentHub({
             {visibleContentCount < contentBookmarks.length && (
               <button
                 type="button"
-                onClick={() => setVisibleContentCount(contentBookmarks.length)}
+                onClick={(event) => handleRevealAll(event, () => setVisibleContentCount(contentBookmarks.length))}
                 className="mt-1 rounded-full bg-parchment-card px-4 py-2 text-xs font-bold text-graphite transition-colors hover:bg-stone-surface"
               >
                 게시글 더보기 ({contentBookmarks.length - visibleContentCount})
@@ -444,7 +457,7 @@ export function PersonalDocumentHub({
           {activeTab === "saved" && visibleSavedCount < savedDocs.length && (
             <button
               type="button"
-              onClick={() => setVisibleSavedCount(savedDocs.length)}
+              onClick={(event) => handleRevealAll(event, () => setVisibleSavedCount(savedDocs.length))}
               className="mt-1 rounded-full bg-parchment-card px-4 py-2 text-xs font-bold text-graphite transition-colors hover:bg-stone-surface"
             >
               문서 더보기 ({savedDocs.length - visibleSavedCount})
