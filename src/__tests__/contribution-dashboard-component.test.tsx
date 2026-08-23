@@ -124,7 +124,8 @@ describe("ContributionDashboard", () => {
     expect(screen.getAllByText("30,000,000 원").length).toBeGreaterThan(0);
     expect(screen.getAllByText("신청금(가입필증)").length).toBeGreaterThan(0);
     expect(screen.getByText("회계원장 반영")).toBeInTheDocument();
-    expect(screen.getByText("최근 납부 내역")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "납부내역" })).toBeInTheDocument();
+    expect(screen.getByText("최근 승인 내역 · 총 1건")).toBeInTheDocument();
     expect(screen.getAllByText("총 1건").length).toBeGreaterThan(0);
     expect(screen.getByText("합계 30,000,000 원")).toBeInTheDocument();
 

@@ -2,10 +2,12 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
 
+const { mockRouterPush } = vi.hoisted(() => ({ mockRouterPush: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   useRouter() {
     return {
-      push: vi.fn(),
+      push: mockRouterPush,
       refresh: vi.fn(),
     };
   },
@@ -38,6 +40,7 @@ describe("personal library drawer host", () => {
     expect(drawer).not.toHaveClass("max-w-[1040px]");
     expect(within(drawer).getByText("이조합 조합원")).toBeInTheDocument();
     expect(within(drawer).getAllByRole("link", { name: "홈으로" }).every((link) => link.getAttribute("href") === "/")).toBe(true);
+    expect(within(drawer).getByRole("button", { name: "개인자료" })).toBeInTheDocument();
     expect(within(drawer).getByRole("link", { name: "서류발급" })).toHaveAttribute("href", "/library");
     expect(within(drawer).getByRole("link", { name: "공지사항" })).toHaveAttribute("href", "/news?tab=notice");
     expect(within(drawer).getByRole("link", { name: "문의하기" })).toHaveAttribute("href", "/news?tab=free");
@@ -47,6 +50,65 @@ describe("personal library drawer host", () => {
 
     expect(screen.queryByLabelText("이조합 (정식조합원) 개인 자료실 드로어")).not.toBeInTheDocument();
     expect(within(document.body).getByText("사업현황")).toBeInTheDocument();
+  });
+
+  it("moves to exact member-service sections and updates the selected menu", () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(
+      <PersonalLibraryDrawerHost
+        session={{ id: "member-1", loginId: "member", name: "이조합", role: "MEMBER" }}
+      >
+        <main>사업현황</main>
+      </PersonalLibraryDrawerHost>,
+    );
+
+    act(() => window.dispatchEvent(new CustomEvent("open-portal")));
+
+    const drawer = screen.getByLabelText("이조합 개인 자료실 드로어");
+    const profileButton = within(drawer).getByRole("button", { name: "내정보" });
+    const ledgerButton = within(drawer).getByRole("button", { name: "납부내역" });
+    const personalButton = within(drawer).getByRole("button", { name: "개인자료" });
+
+    expect(profileButton).toHaveAttribute("aria-current", "location");
+
+    fireEvent.click(ledgerButton);
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: "smooth", block: "start" });
+    expect(document.activeElement).toHaveAttribute("id", "member-ledger");
+    expect(ledgerButton).toHaveAttribute("aria-current", "location");
+    expect(profileButton).not.toHaveAttribute("aria-current");
+
+    fireEvent.click(personalButton);
+    expect(document.activeElement).toHaveAttribute("id", "member-personal-library");
+    expect(personalButton).toHaveAttribute("aria-current", "location");
+    expect(ledgerButton).not.toHaveAttribute("aria-current");
+  });
+
+  it.each([
+    ["서류발급", "/library"],
+    ["공지사항", "/news?tab=notice"],
+    ["문의하기", "/news?tab=free"],
+  ])("closes the service and opens the %s destination", (label, href) => {
+    mockRouterPush.mockReset();
+    render(
+      <PersonalLibraryDrawerHost
+        session={{ id: "member-1", loginId: "member", name: "이조합", role: "MEMBER" }}
+      >
+        <main>사업현황</main>
+      </PersonalLibraryDrawerHost>,
+    );
+
+    act(() => window.dispatchEvent(new CustomEvent("open-portal")));
+    const drawer = screen.getByLabelText("이조합 개인 자료실 드로어");
+
+    fireEvent.click(within(drawer).getByRole("link", { name: label }));
+
+    expect(mockRouterPush).toHaveBeenCalledWith(href);
+    expect(screen.queryByLabelText("이조합 개인 자료실 드로어")).not.toBeInTheDocument();
   });
 
   it("labels withdrawn members as refund members", () => {

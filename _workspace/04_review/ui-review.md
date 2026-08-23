@@ -26,6 +26,29 @@
 - Result: PASS
 - Required action: none
 
+# UI Review: Precise Member-Service Sidebar Navigation
+
+## Reviewed Change
+- Feature: Split the full-screen member sidebar into exact in-service section navigation and external shortcuts, including the missing personal curation destination.
+- Governing plan: `docs/superpowers/plans/2026-08-23-member-service-fullscreen-navigation.md`, `Precise Sidebar Navigation Follow-up`.
+- Files or pages reviewed: `personal-library-navigation.tsx`, contribution ledger focus target, personal document hub focus target, authenticated `/`, `/library`, and `/news` at desktop and mobile widths.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only coordinates existing authenticated sections and existing public destinations. Role codes, contribution values, bookmark state, APIs, and route permissions are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: `납부내역` now lands on the real approved-ledger panel, `개인자료` lands on the existing recommended/bookmarked/saved-content curation, and the three shortcuts open the existing library, notice, and free-board pages. No new issuance or messaging capability is implied inside the member-service overlay.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: `내 서비스` and `바로가기` are visually grouped without changing the established warm-canvas system. The selected internal item alone exposes `aria-current="location"`; each scroll target is programmatically focusable; authenticated desktop verification placed both selected targets at 24px from the viewport top. Authenticated 390 x 844 verification had no horizontal overflow or framework error overlay.
+
+## Outcome
+- Result: PASS.
+- Required action: none.
+
 # 2026-08-23 Member Service Full-Screen Navigation Review
 
 ## Reviewed Change

@@ -31,7 +31,7 @@ export function ContributionDashboard({ dashboard, paymentNotices = [], hideSele
   const latestLedgerEntry = dashboard.ledgerEntries.slice().sort((a, b) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime())[0];
 
   return (
-    <article id="member-contribution" className={cn("overflow-hidden", compact ? "bg-transparent" : "stone-card bg-white p-5 sm:p-7 lg:p-8")}>
+    <article id="member-contribution" tabIndex={-1} className={cn("scroll-mt-6 overflow-hidden focus:outline-none", compact ? "bg-transparent" : "stone-card bg-white p-5 sm:p-7 lg:p-8")}>
       <div data-testid="contribution-dashboard-layout" className="space-y-7">
         <header className={cn("space-y-4", compact && "flex justify-end")}>
           {!compact && <div className="max-w-3xl">
@@ -103,10 +103,10 @@ export function ContributionDashboard({ dashboard, paymentNotices = [], hideSele
             </div>
           )}
 
-          <div id="member-ledger" className="rounded-[10px] bg-white p-4 shadow-[inset_0_0_0_1px_#f2f0ed]">
+          <div id="member-ledger" tabIndex={-1} aria-labelledby="member-ledger-title" className="scroll-mt-6 rounded-[10px] bg-white p-4 shadow-[inset_0_0_0_1px_#f2f0ed] focus:outline-none">
             {dashboard.ledgerEntries.length > 0 ? (
               <div>
-                <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-semibold text-charcoal-primary">최근 납부 내역</h3><span className="text-xs text-ash">총 {dashboard.ledgerEntries.length}건</span></div>
+                <div className="mb-3 flex items-center justify-between"><h3 id="member-ledger-title" className="text-sm font-semibold text-charcoal-primary">납부내역</h3><span className="text-xs text-ash">최근 승인 내역 · 총 {dashboard.ledgerEntries.length}건</span></div>
                 <div className="overflow-x-auto rounded-[10px] border border-stone-surface">
                   <table className="w-full min-w-[560px] text-left text-xs">
                     <thead className="bg-parchment-card text-ash"><tr><th className="px-3 py-2 font-medium">납부일</th><th className="px-3 py-2 font-medium">구분</th><th className="px-3 py-2 text-right font-medium">납부 금액</th><th className="px-3 py-2 text-right font-medium">상태</th></tr></thead>
@@ -122,7 +122,7 @@ export function ContributionDashboard({ dashboard, paymentNotices = [], hideSele
               </details>
               </div>
             ) : (
-              <div className="text-xs leading-5 text-graphite"><div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"><h3 className="text-sm font-semibold text-charcoal-primary">최근 납부내역</h3><p className="text-xs text-ash">승인 자료 반영 후 표시</p></div><p className="font-semibold text-charcoal-primary">승인된 납부 내역이 아직 없습니다.</p><p className="mt-1">ERP 또는 관리자 승인 자료가 반영되면 최근 납부 내역이 표시됩니다.</p></div>
+              <div className="text-xs leading-5 text-graphite"><div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"><h3 id="member-ledger-title" className="text-sm font-semibold text-charcoal-primary">납부내역</h3><p className="text-xs text-ash">승인 자료 반영 후 표시</p></div><p className="font-semibold text-charcoal-primary">승인된 납부 내역이 아직 없습니다.</p><p className="mt-1">ERP 또는 관리자 승인 자료가 반영되면 최근 납부 내역이 표시됩니다.</p></div>
             )}
           </div>
           {paymentNotices.length > 0 && <div className="rounded-[10px] bg-white p-3 text-xs text-graphite shadow-[inset_0_0_0_1px_#f2f0ed]"><p className="font-semibold text-charcoal-primary">{paymentNotices[0].title}</p><p className="mt-1">미확인 납부 안내 {paymentNotices.length}건이 있습니다.</p></div>}

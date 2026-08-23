@@ -896,7 +896,7 @@ export function PortalShell({
               role={role}
               isDrawerMode={isDrawerMode}
               onOpenDocument={handleOpenDocument}
-              sectionId={role === "admin" ? "portal-personal-library-section" : undefined}
+              sectionId={role === "admin" ? "portal-personal-library-section" : "member-personal-library"}
             />
 
             {/* 3. Document list for Admin */}

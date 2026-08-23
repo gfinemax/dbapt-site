@@ -333,8 +333,9 @@ export function PersonalDocumentHub({
   return (
     <section
       id={sectionId}
+      tabIndex={-1}
       className={cn(
-        "w-full min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white p-5 shadow-[inset_0_0_0_1px_#f2f0ed] sm:max-w-none",
+        "scroll-mt-6 w-full min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white p-5 shadow-[inset_0_0_0_1px_#f2f0ed] focus:outline-none sm:max-w-none",
         isDrawerMode ? "space-y-4" : "space-y-5 sm:p-6",
       )}
     >

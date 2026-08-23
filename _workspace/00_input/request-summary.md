@@ -164,6 +164,14 @@
 - Requested feature slice: 최근 납부 원장을 기본 접힘 상태의 거래내역으로 바꾸고 전체 내역을 필요할 때 펼쳐 본다.
 - Terminology: 거래별 `ERP 반영` 표기를 `회계원장 반영`으로 교체한다.
 - Preserve: 실제 회계 원장 값, 신청평형, 납부 단계, 역할·로그인 경계와 반응형 카드 디자인.
+
+# Current Request: Precise Member-Service Sidebar Navigation
+
+- Requested feature slice: Make each left-sidebar action visibly and functionally distinct inside the full-screen member service.
+- Required internal destinations: `내정보` to the contribution overview, `납부내역` to the actual ledger table, and a new `개인자료` item to the personal curation section.
+- Required external destinations: `서류발급`, `공지사항`, and `문의하기` must close the full-screen service and open their existing populated pages.
+- Preserve: existing authenticated access, contribution data, bookmark behavior, role labels, and public route permissions.
+- Unanswered decision: none.
 # 2026-08-23 Member Contribution Payment-First Redesign
 
 - Requested feature slice: Redesign the logged-in member `내 분담금 현황` around `내가 납부한 금액`, using the selected receipt-board visual direction, and make the personal-library surface slightly wider.

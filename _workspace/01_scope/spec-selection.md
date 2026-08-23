@@ -144,3 +144,10 @@
 
 - Boundary: interaction repair only; use the existing `close-portal` contract and preserve all access/data behavior.
 - Conflicts: none.
+
+## Precise Sidebar Navigation Follow-up
+
+- Selected approved basis: the existing member-service full-screen navigation plan plus the user's explicit request for precise, working section navigation.
+- Implementation boundary: authenticated member-service navigation and focus targets only; reuse the existing contribution, personal-curation, library, notice, and free-board surfaces.
+- Conflicts: none. Stored roles, data, bookmarks, and route permissions remain unchanged.
+- Planning may continue: yes.

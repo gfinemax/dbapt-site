@@ -2683,3 +2683,16 @@
 - `pnpm test`: PASS, 103 files and 659 tests.
 - `pnpm build`: PASS.
 - Local browser: PASS. The full-screen service visibly closed after clicking `홈으로`; `서류발급` navigated to `/library`.
+
+## Precise Sidebar Navigation Follow-up
+
+- Implemented: grouped `내정보`, `납부내역`, and new `개인자료` under `내 서비스`; grouped the existing route links under `바로가기`; added selected-state, smooth scrolling, and focus transfer to exact section starts.
+- Internal interaction verification: PASS. Authenticated desktop clicks set `aria-current="location"`, focused `member-ledger` / `member-personal-library`, and aligned each target at 24px from the viewport top.
+- External interaction verification: PASS. Authenticated browser navigation reached `/library`, `/news?tab=notice`, and `/news?tab=free`; the full-screen service closed before each destination was shown.
+- Focused tests: PASS, 2 files and 11 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 663 tests.
+- `pnpm build`: PASS. The first type-check attempt encountered corrupted generated `.next/dev/types` output from the prior development server; that generated folder was moved to a temporary quarantine and the clean rebuild passed.
+- Browser layout: PASS. Authenticated desktop and 390 x 844 mobile renders had no framework error overlay; mobile `scrollWidth === clientWidth`.
+- UI/access review: PASS.
+- Residual risk: none.
