@@ -11,6 +11,7 @@ import { DocumentTable, type Document } from "./document-table";
 import { PersonalDocumentHub } from "./personal-document-hub";
 import { PdfViewerModal } from "./pdf-viewer-modal";
 import { ContributionDashboard } from "./contribution-dashboard";
+import { PersonalInformationPanel } from "./personal-information-panel";
 import { type LogEntry } from "./audit-logs-table";
 import { ContributionSummaryMini } from "./contribution-summary-mini";
 import { PortalHamburger } from "./portal-hamburger";
@@ -575,6 +576,7 @@ export function PortalShell({
         {/* Logged-In Specific Dynamic Content Areas */}
         {isLoggedIn ? (
           <div className={cn("flex flex-col gap-10", isDrawerMode && role === "member" ? "mt-5" : "mt-10")}>
+            {["member", "refund"].includes(role) && <PersonalInformationPanel />}
             {/* 1. Account Specific Status Cards */}
             <section className="grid gap-6 md:grid-cols-2">
               {role === "member" && (

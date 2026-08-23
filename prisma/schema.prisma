@@ -43,6 +43,10 @@ model User {
   contributionProfile              MemberContributionProfile?
   contributionLedgerEntries        ContributionLedgerEntry[]
   contributionViewLogs             ContributionViewLog[]
+  personalProfile                  MemberPersonalProfile?
+  personalInfoChangeRequests       PersonalInfoChangeRequest[]       @relation("PersonalInfoRequestUser")
+  resolvedPersonalInfoRequests     PersonalInfoChangeRequest[]       @relation("PersonalInfoRequestResolver")
+  personalInfoChangeEvents         PersonalInfoChangeEvent[]         @relation("PersonalInfoEventActor")
   contributionSyncRunsStarted      ContributionSyncRun[]             @relation("ContributionSyncStartedBy")
   paymentNotices                   PaymentNotice[]
   createdPaymentImportBatches      PaymentImportBatch[]              @relation("PaymentImportCreatedBy")
@@ -55,6 +59,69 @@ model User {
   notificationGroupMembers         NotificationGroupMember[]
   disclosureNotificationRecipients DisclosureNotificationRecipient[]
   coopNewsComments                 CoopNewsComment[]
+}
+
+// 1.1. 조합원 개인정보와 PeopleON 연결 상태
+model MemberPersonalProfile {
+  id                      String    @id @default(uuid())
+  userId                  String    @unique
+  peopleOnMemberId        String?   @unique
+  addressEncrypted        String?
+  mailingAddressEncrypted String?
+  birthDateEncrypted      String?
+  coOwnerEncrypted        String?
+  refundAccountEncrypted  String?
+  notificationSmsOptIn    Boolean   @default(false)
+  notificationEmailOptIn  Boolean   @default(false)
+  buildingUnitLabel       String?
+  lastConfirmedAt         DateTime?
+  peopleOnSyncedAt        DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// 1.2. 항목 단위 개인정보 수정 요청
+model PersonalInfoChangeRequest {
+  id                      String    @id @default(uuid())
+  userId                  String
+  field                   String
+  previousValueEncrypted  String?
+  requestedValueEncrypted String
+  status                  String    @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  publicMemo              String?
+  adminMemo               String?
+  peopleOnStatus          String    @default("PENDING") // NOT_REQUIRED, PENDING, COMPLETED, FAILED
+  peopleOnError           String?
+  resolvedById            String?
+  resolvedAt              DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  user       User                      @relation("PersonalInfoRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  resolvedBy User?                     @relation("PersonalInfoRequestResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  events     PersonalInfoChangeEvent[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([peopleOnStatus, createdAt])
+}
+
+// 1.3. 삭제할 수 없는 개인정보 처리 이벤트
+model PersonalInfoChangeEvent {
+  id        String   @id @default(uuid())
+  requestId String
+  actorId   String?
+  eventType String
+  message   String?
+  createdAt DateTime @default(now())
+
+  request PersonalInfoChangeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  actor   User?                     @relation("PersonalInfoEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([requestId, createdAt])
+  @@index([actorId, createdAt])
 }
 
 // 2. 정보공개 및 회계 보고 문서
@@ -631,17 +698,17 @@ model FreePost {
 
 // 8. 자유게시판 댓글
 model FreeComment {
-  id                String        @id @default(uuid())
+  id                String            @id @default(uuid())
   content           String
   displayAuthorName String? // 관리자 댓글 공개 작성자명: 운영자, 사무국
-  createdAt         DateTime      @default(now())
+  createdAt         DateTime          @default(now())
   postId            String
-  post              FreePost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post              FreePost          @relation(fields: [postId], references: [id], onDelete: Cascade)
   parentId          String?
-  parent            FreeComment?  @relation("FreeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies           FreeComment[] @relation("FreeCommentReplies")
+  parent            FreeComment?      @relation("FreeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies           FreeComment[]     @relation("FreeCommentReplies")
   authorId          String
-  author            User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author            User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
   reactions         CommentReaction[]
 
   @@index([postId, parentId])
@@ -649,10 +716,10 @@ model FreeComment {
 
 // 8.1. 댓글/답글 이모지 리액션
 model CommentReaction {
-  id                String           @id @default(uuid())
+  id                String   @id @default(uuid())
   emoji             String
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   userId            String
   coopNewsCommentId String?
   freeCommentId     String?

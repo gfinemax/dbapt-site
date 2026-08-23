@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 const sectionItems = [
-  { key: "profile", label: "내정보", targetId: "member-contribution", icon: UserRound },
+  { key: "profile", label: "내정보", targetId: "member-profile", icon: UserRound },
   { key: "ledger", label: "납부내역", targetId: "member-ledger", icon: ReceiptText },
   { key: "personal", label: "개인자료", targetId: "member-personal-library", icon: FileHeart },
 ] as const;

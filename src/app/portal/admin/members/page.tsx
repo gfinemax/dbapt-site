@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MemberManagementDashboard } from "@/components/portal/member-management-dashboard";
+import { PersonalInformationAdminPanel } from "@/components/portal/personal-information-admin-panel";
 import {
   buildMemberManagementSnapshot,
   fetchPeopleOnMemberRows,
@@ -114,11 +115,16 @@ export default async function AdminMemberManagementPage() {
   });
 
   return (
-    <MemberManagementDashboard
-      snapshot={snapshot}
-      syncError={syncError}
-      isConfigured={isConfigured}
-      approvedSocialUsers={approvedSocialUsers}
-    />
+    <div className="space-y-8 bg-warm-canvas pb-12">
+      <MemberManagementDashboard
+        snapshot={snapshot}
+        syncError={syncError}
+        isConfigured={isConfigured}
+        approvedSocialUsers={approvedSocialUsers}
+      />
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <PersonalInformationAdminPanel />
+      </div>
+    </div>
   );
 }

@@ -2675,6 +2675,19 @@
 - Browser: PASS at desktop and mobile responsive viewport; no horizontal overflow; `서류발급` navigated to populated `/library` content.
 - Residual risk: none.
 
+# Member Personal Information Management Verification
+
+- Implemented encrypted profile fields, dated requests/events, member correction/history UI, administrator approval/rejection, and separate manual PeopleON reflection states.
+- Prisma migration `20260823170000_add_personal_information_management`: applied successfully.
+- Focused tests: 2 files, 7 tests passed.
+- Full suite: 105 files, 672 tests passed.
+- `pnpm lint`: PASS.
+- `pnpm build`: PASS, including all new API routes.
+- `git diff --check`: PASS.
+- Browser: authenticated desktop and 433px mobile profile views had no horizontal overflow; mobile dialog fit within viewport; console had no errors.
+- Cleanup: two temporary validation accounts deleted, zero remain; local development server stopped.
+- Residual risk: PeopleON reflection remains administrator-confirmed until a supported write API is approved and verified.
+
 ## Home Action Follow-up
 
 - Fixed the same-route `/` no-op by dispatching the shared `close-portal` event before desktop/mobile home navigation.

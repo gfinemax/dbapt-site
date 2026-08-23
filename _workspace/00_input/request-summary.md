@@ -23,6 +23,14 @@
 - Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Unanswered decision: none.
 
+# Current Request: Member Personal Information Management
+
+- Requested feature slice: authenticated members can request changes to personal information, retain dated before/after history and notes, and track homepage and PeopleON reflection separately.
+- Included: profile display, field-specific requests, administrator approval/rejection, immutable events, masking, manual PeopleON reflection tracking, and responsive UI.
+- Excluded: resident-registration-number storage, name-based external matching, unverified immediate phone changes, and unsupported PeopleON writes.
+- Governing specification: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`.
+- Unanswered decision: none; manual PeopleON reflection is the approved fallback.
+
 # 2026-08-23 Member Service Full-Screen Navigation
 
 - Requested feature slice: remove excess personal-service space, use member/refund-member labels, repair the populated shortcut destinations, remove the customer-center card, and add a full-screen home action.

@@ -165,3 +165,10 @@
 - Implementation boundary: coordinate only the authenticated sidebar section selection with the existing native payment-ledger disclosure; preserve all stored values, access rules, API contracts, and manual disclosure controls.
 - Conflicts: none.
 - Planning may continue: yes. The user explicitly requested implementation.
+
+## Member Personal Information Management
+
+- Selected spec: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`.
+- Implementation boundary: users view their own masked profile, submit corrections, and view history; administrators approve/reject and record PeopleON reflection.
+- Existing-spec conflict: the 2026-06-17 PeopleON MVP excludes writes, so this implementation preserves read-only integration and records manual reflection only.
+- Planning may continue: yes. The user approved the plan and requested implementation.

@@ -26,6 +26,15 @@
 - Result: PASS
 - Required action: none
 
+# UI Review: Member Personal Information Management
+
+- Governing spec: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-23-member-personal-information-management.md`
+- Boundary: PASS. Profile/history remain login-gated and no public navigation was added.
+- Truthful presentation: PASS. Missing values use `등록되지 않음`; PeopleON is shown as manual reflection tracking, not an unsupported automatic write.
+- Design/accessibility: PASS. Authenticated desktop and mobile `/portal/member` had no horizontal overflow; the mobile correction dialog remained within the viewport; accessible button/dialog names and visible focus styles are present. Administrator actions have focused component coverage.
+- Outcome: PASS. Required action: none.
+
 # UI Review: Precise Member-Service Sidebar Navigation
 
 ## Reviewed Change
