@@ -192,7 +192,7 @@ export function PersonalInformationPanel({ documents = [], contributionDashboard
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             <InfoCard icon={<UserRound className="size-4" />} title="조합원 정보" description="조합원 원장을 기준으로 확인하는 정보예요." action={actionButton("정보 정정 요청", memberFields)}>
               <InfoRow label="조합원명" value={value("name")} pending={pending("name")} />
-              <InfoRow label="조합원 번호" value={data.profile.peopleOn.memberNumber || (peopleOnConnected ? "원장 번호 미등록" : "사무국 확인 대기")} />
+              <InfoRow label="조합원 번호" value={data.profile.peopleOn.memberNumber && !/^[0-9a-f-]{36}$/i.test(data.profile.peopleOn.memberNumber) ? data.profile.peopleOn.memberNumber : peopleOnConnected ? "PeopleON 원장 연결 완료" : "사무국 확인 대기"} />
               <InfoRow label={data.profile.peopleOn.joinedAt ? "가입일" : "홈페이지 가입일"} value={formatDate(data.profile.peopleOn.joinedAt || data.profile.accountCreatedAt)} />
               <InfoRow label="조합원 상태" value={value("memberStatus")} pending={pending("memberStatus")} />
               <InfoRow label="공동명의 여부" value={value("coOwner", "등록된 공동명의 없음")} pending={pending("coOwner")} />

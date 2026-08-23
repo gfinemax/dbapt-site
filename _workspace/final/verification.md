@@ -2772,3 +2772,4 @@
 - Implemented bridge: the ledger contribution API now returns its already-approved `peopleon_member_id`; dbapt-site persists that identifier to the member personal profile before requesting PeopleON data.
 - Identity verification: production ledger member `56` returned one UUID PeopleON link and preserved the approved paid total of 194,000,000원. No name-based persistence or merge was used.
 - Ledger validation: focused integration tests 2 passed; Oracle Cloud deployment workflow completed successfully for ledger commit `932b2c8`.
+- Production member verification: PASS. The linked account resolved to PeopleON and returned the member name, masked phone, masked legal address, status, 84㎡ unit, certificate status, and related-name data. Internal UUID display was replaced with a connection label, numeric unit groups are normalized with `㎡`, certificate suffixes use digits only, and only explicit co-owner relationships affect 공동명의 표시.

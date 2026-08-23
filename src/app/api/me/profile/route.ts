@@ -71,13 +71,18 @@ export async function GET() {
     if (peopleOn.phone) peopleOnOverrides.phone = peopleOn.phone;
     if (peopleOn.address) peopleOnOverrides.address = peopleOn.address;
     if (peopleOn.birth_date) peopleOnOverrides.birthDate = peopleOn.birth_date;
-    if (peopleOn.related_names.length) {
-      peopleOnOverrides.coOwner = peopleOn.related_names.map((item) => `${item.name} ${item.relation}`).join(", ");
+    const coOwners = peopleOn.related_names.filter((item) => /공동(?:명의|소유)?/.test(item.relation));
+    if (coOwners.length) {
+      peopleOnOverrides.coOwner = coOwners.map((item) => `${item.name} ${item.relation}`).join(", ");
     }
     if (peopleOn.refund_account) {
       peopleOnOverrides.refundAccount = `${peopleOn.refund_account.bank_name} ${peopleOn.refund_account.account_number}`;
     }
-    if (peopleOn.unit_group) peopleOnOverrides.selectedUnit = peopleOn.unit_group;
+    if (peopleOn.unit_group) {
+      peopleOnOverrides.selectedUnit = /^\d+(?:\.\d+)?$/.test(peopleOn.unit_group)
+        ? `${peopleOn.unit_group}㎡`
+        : peopleOn.unit_group;
+    }
     if (peopleOn.display_status || peopleOn.status) {
       peopleOnOverrides.memberStatus = peopleOn.display_status || peopleOn.status || "";
     }
@@ -104,7 +109,7 @@ export async function GET() {
         memberNumber: peopleOn?.member_id || null,
         joinedAt: peopleOn?.joined_at || null,
         certificateStatus: peopleOn?.certificate_display ? "발급 완료" : "발급 상태 확인 대기",
-        certificateNumberSuffix: peopleOn?.certificate_numbers?.[0]?.slice(-4) || null,
+        certificateNumberSuffix: peopleOn?.certificate_numbers?.[0]?.replace(/\D/g, "").slice(-4) || null,
       },
     },
     requests: requests.map((request) => ({
