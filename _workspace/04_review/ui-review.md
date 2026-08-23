@@ -49,6 +49,30 @@
 - Result: PASS
 - Required action: none
 
+# UI Review: PeopleON 내정보 읽기 연동
+
+## Reviewed Change
+- Feature: 저장된 PeopleON 고유 ID로 원장 프로필을 읽어 내정보 다섯 카드에 채우기.
+- Governing spec: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`의 `PeopleON 원장 읽기 연동`.
+- Implementation plan: `docs/superpowers/plans/2026-08-23-member-personal-information-management.md`의 `후속: PeopleON 원장 값 채우기`.
+- Files or pages reviewed: PeopleON 조회 모듈, `/api/me/profile`, `personal-information-panel.tsx`, 인증된 `/portal/member` 데스크톱·모바일 화면.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: API 키는 서버 전용이며 고유 ID 정확 일치만 허용한다. 읽기 호출만 추가했고 기존 정정 요청, 관리자 승인, PeopleON 수동 반영 기록, 납부·문서 접근권한은 변경하지 않았다.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: 원격 응답이 없거나 계정에 고유 ID가 없을 때 PeopleON 연결 완료로 표현하지 않고 홈페이지 fallback과 연결 확인 안내를 표시한다. 원장 값이 있을 때만 가입일, 조합원 번호, 필증 상태를 제공한다.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: 기존 다섯 카드 위계와 warm canvas/inset stone 스타일을 유지했다. 주소 행 추가 후에도 데스크톱 2열·모바일 1열이며 모바일 가로 넘침이 없고, 새로운 동작이나 모션은 추가하지 않았다.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
 # UI Review: Member Personal Information Management
 
 - Governing spec: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`

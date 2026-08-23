@@ -179,3 +179,10 @@
 - Boundary: presentation and truthful summary data only; reuse existing mutation and audit contracts without schema changes.
 - Conflicts: none.
 - Planning may continue: yes. The user explicitly requested implementation of the selected first composition.
+
+### PeopleON Profile Read Follow-up
+
+- Selected contract: authenticated `GET /api/integrations/ledger/members`, narrowed in dbapt-site by the saved PeopleON identifier.
+- Identity boundary: prefer exact `peopleon_id`; accept legacy `member_id` only when exactly one row matches. Names are display values, never identity keys.
+- Presentation boundary: mask phone, address, birth date, account, and certificate number before returning them to the browser.
+- Failure boundary: retain current website values and show a temporary connection-check state without failing the member portal.

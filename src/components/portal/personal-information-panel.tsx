@@ -40,6 +40,13 @@ type ProfilePayload = {
     updatedAt: string | null;
     peopleOnSyncedAt: string | null;
     hasPeopleOnBinding: boolean;
+    peopleOn: {
+      status: "CONNECTED" | "NOT_CONFIGURED" | "NOT_FOUND" | "UNAVAILABLE";
+      memberNumber: string | null;
+      joinedAt: string | null;
+      certificateStatus: string;
+      certificateNumberSuffix: string | null;
+    };
   };
   requests: ChangeRequest[];
 };
@@ -54,7 +61,7 @@ const peopleOnLabel: Record<string, string> = {
 const booleanFields = new Set(["notificationSmsOptIn", "notificationEmailOptIn"]);
 const memberFields = ["name", "coOwner", "memberStatus"];
 const housingFields = ["selectedUnit", "buildingUnit"];
-const contactFields = ["phone", "email", "mailingAddress", "notificationSmsOptIn", "notificationEmailOptIn"];
+const contactFields = ["phone", "email", "address", "mailingAddress", "notificationSmsOptIn", "notificationEmailOptIn"];
 
 function formatDate(value: string | null, withTime = false) {
   if (!value) return "기록 없음";
@@ -146,6 +153,8 @@ export function PersonalInformationPanel({ documents = [], contributionDashboard
   const value = (name: string, fallback = "등록되지 않음") => field(name)?.value || fallback;
   const pending = (name: string) => Boolean(data?.requests.some((item) => item.field === name && item.status === "PENDING"));
   const pendingCount = data?.requests.filter((item) => item.status === "PENDING").length || 0;
+  const peopleOnConnected = data?.profile.peopleOn.status === "CONNECTED";
+  const needsConnectionCheck = Boolean(data && !peopleOnConnected);
   const openPicker = (fields: string[]) => setPickerFields(fields.filter((name) => field(name)));
   const actionButton = (label: string, fields: string[]) => (
     <button type="button" onClick={() => openPicker(fields)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-ember-orange focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40">
@@ -158,14 +167,14 @@ export function PersonalInformationPanel({ documents = [], contributionDashboard
       <div className="rounded-[22px] bg-parchment-card p-5 sm:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <CircleCheckBig className={`mt-0.5 size-6 shrink-0 ${pendingCount ? "text-deep-amber" : "text-safe-green"}`} aria-hidden="true" />
+            <CircleCheckBig className={`mt-0.5 size-6 shrink-0 ${pendingCount || needsConnectionCheck ? "text-deep-amber" : "text-safe-green"}`} aria-hidden="true" />
             <div>
               <p className="text-xs font-semibold text-ash">내 정보</p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight text-midnight sm:text-2xl">
-                {pendingCount ? "요청한 정보 변경을 확인하고 있어요" : "조합원 정보가 정상적으로 등록되어 있어요"}
+                {pendingCount ? "요청한 정보 변경을 확인하고 있어요" : needsConnectionCheck ? "PeopleON 정보를 확인하고 있어요" : "조합원 정보가 정상적으로 등록되어 있어요"}
               </h2>
               <p className="mt-2 text-sm leading-6 text-graphite">
-                {pendingCount ? `${pendingCount}건을 사무국에서 확인 중이며 처리 결과는 변경 이력에 남아요.` : "필요한 정보만 항목별로 확인하고, 달라진 내용이 있을 때 요청해 주세요."}
+                {pendingCount ? `${pendingCount}건을 사무국에서 확인 중이며 처리 결과는 변경 이력에 남아요.` : needsConnectionCheck ? data?.profile.hasPeopleOnBinding ? "원장 연결을 일시적으로 확인하지 못했어요. 홈페이지에 저장된 정보는 그대로 유지됩니다." : "연결된 PeopleON 고유 ID가 없어 홈페이지에 저장된 정보를 우선 보여드려요." : "PeopleON 원장과 홈페이지 정보를 함께 확인하고, 달라진 내용이 있을 때 요청해 주세요."}
               </p>
             </div>
           </div>
@@ -183,8 +192,8 @@ export function PersonalInformationPanel({ documents = [], contributionDashboard
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             <InfoCard icon={<UserRound className="size-4" />} title="조합원 정보" description="조합원 원장을 기준으로 확인하는 정보예요." action={actionButton("정보 정정 요청", memberFields)}>
               <InfoRow label="조합원명" value={value("name")} pending={pending("name")} />
-              <InfoRow label="조합원 번호" value={data.profile.hasPeopleOnBinding ? "원장 연결 완료" : "사무국 확인 대기"} />
-              <InfoRow label="홈페이지 가입일" value={formatDate(data.profile.accountCreatedAt)} />
+              <InfoRow label="조합원 번호" value={data.profile.peopleOn.memberNumber || (peopleOnConnected ? "원장 번호 미등록" : "사무국 확인 대기")} />
+              <InfoRow label={data.profile.peopleOn.joinedAt ? "가입일" : "홈페이지 가입일"} value={formatDate(data.profile.peopleOn.joinedAt || data.profile.accountCreatedAt)} />
               <InfoRow label="조합원 상태" value={value("memberStatus")} pending={pending("memberStatus")} />
               <InfoRow label="공동명의 여부" value={value("coOwner", "등록된 공동명의 없음")} pending={pending("coOwner")} />
             </InfoCard>
@@ -199,6 +208,7 @@ export function PersonalInformationPanel({ documents = [], contributionDashboard
             <InfoCard icon={<Phone className="size-4" />} title="연락처" description="조합 안내를 받을 연락처와 수신 설정이에요." action={actionButton("연락처 변경", contactFields)}>
               <InfoRow label="휴대전화" value={value("phone")} pending={pending("phone")} />
               <InfoRow label="이메일" value={value("email")} pending={pending("email")} />
+              <InfoRow label="주소" value={value("address")} pending={pending("address")} />
               <InfoRow label="우편물 수령지" value={value("mailingAddress")} pending={pending("mailingAddress")} />
               <InfoRow label="안내 수신" value={`문자 ${value("notificationSmsOptIn")} · 이메일 ${value("notificationEmailOptIn")}`} />
               <InfoRow label="최근 연락처 변경" value={formatDate(data.profile.updatedAt)} />
@@ -207,7 +217,7 @@ export function PersonalInformationPanel({ documents = [], contributionDashboard
             <InfoCard icon={<FileCheck2 className="size-4" />} title="서류 및 신청 현황" description="발급 문서와 진행 중인 요청을 확인하세요." action={<Link href="/library" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ember-orange">서류발급으로 이동<ChevronRight className="size-4" aria-hidden="true" /></Link>}>
               <InfoRow label="확인 가능한 문서" value={`${documents.length}건`} />
               <InfoRow label="최근 문서" value={documents[0]?.title || "등록된 문서 없음"} />
-              <InfoRow label="가입신청필증" value="발급 상태 확인 대기" />
+              <InfoRow label="가입신청필증" value={`${data.profile.peopleOn.certificateStatus}${data.profile.peopleOn.certificateNumberSuffix ? ` · 끝 ${data.profile.peopleOn.certificateNumberSuffix}` : ""}`} />
               <InfoRow label="진행 중인 정정·변경" value={pendingCount ? `${pendingCount}건 확인 중` : "없음"} />
             </InfoCard>
 

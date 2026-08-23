@@ -12,6 +12,7 @@ import {
   personalInfoFieldLabels,
   requiresPeopleOnReflection,
 } from "@/lib/personal-information";
+import { fetchPeopleOnMemberProfile, type PeopleOnMemberProfile } from "@/lib/peopleon/member-profile";
 
 type SessionPayload = { id?: string; role?: string };
 
@@ -45,21 +46,47 @@ export async function GET() {
   const userId = await currentUserId();
   if (!userId) return NextResponse.json({ error: "인증되지 않은 사용자입니다." }, { status: 401 });
 
-  const [source, requests] = await Promise.all([
-    loadProfileSource(userId),
+  const source = await loadProfileSource(userId);
+  if (!source) return NextResponse.json({ error: "사용자 정보를 찾을 수 없습니다." }, { status: 404 });
+
+  const externalMemberId = source.profile?.peopleOnMemberId || source.user.contributionProfile?.externalMemberId || "";
+  const [requests, peopleOnResult] = await Promise.all([
     prisma.personalInfoChangeRequest.findMany({
       where: { userId },
       include: { events: { orderBy: { createdAt: "asc" } } },
       orderBy: { createdAt: "desc" },
       take: 30,
     }),
+    fetchPeopleOnMemberProfile({ externalMemberId }).catch(() => ({
+      member: null as PeopleOnMemberProfile | null,
+      generatedAt: null,
+      status: "UNAVAILABLE" as const,
+    })),
   ]);
-  if (!source) return NextResponse.json({ error: "사용자 정보를 찾을 수 없습니다." }, { status: 404 });
+
+  const peopleOn = peopleOnResult.member;
+  const peopleOnOverrides: Partial<Record<(typeof PERSONAL_INFO_FIELDS)[number], string>> = {};
+  if (peopleOn) {
+    if (peopleOn.name) peopleOnOverrides.name = peopleOn.name;
+    if (peopleOn.phone) peopleOnOverrides.phone = peopleOn.phone;
+    if (peopleOn.address) peopleOnOverrides.address = peopleOn.address;
+    if (peopleOn.birth_date) peopleOnOverrides.birthDate = peopleOn.birth_date;
+    if (peopleOn.related_names.length) {
+      peopleOnOverrides.coOwner = peopleOn.related_names.map((item) => `${item.name} ${item.relation}`).join(", ");
+    }
+    if (peopleOn.refund_account) {
+      peopleOnOverrides.refundAccount = `${peopleOn.refund_account.bank_name} ${peopleOn.refund_account.account_number}`;
+    }
+    if (peopleOn.unit_group) peopleOnOverrides.selectedUnit = peopleOn.unit_group;
+    if (peopleOn.display_status || peopleOn.status) {
+      peopleOnOverrides.memberStatus = peopleOn.display_status || peopleOn.status || "";
+    }
+  }
 
   const fields = PERSONAL_INFO_FIELDS
     .filter((field) => !(source.user.role === "REFUND" && field === "selectedUnit"))
     .map((field) => {
-      const value = getCurrentPersonalInfoValue(field, source);
+      const value = peopleOnOverrides[field] ?? getCurrentPersonalInfoValue(field, source);
       return { field, label: personalInfoFieldLabels[field], value: maskPersonalInfo(field, value) };
     });
 
@@ -70,8 +97,15 @@ export async function GET() {
       memberStatus: source.user.role,
       lastConfirmedAt: source.profile?.lastConfirmedAt?.toISOString() || null,
       updatedAt: source.profile?.updatedAt?.toISOString() || null,
-      peopleOnSyncedAt: source.profile?.peopleOnSyncedAt?.toISOString() || null,
-      hasPeopleOnBinding: Boolean(source.profile?.peopleOnMemberId || source.user.contributionProfile?.externalMemberId),
+      peopleOnSyncedAt: peopleOnResult.generatedAt || source.profile?.peopleOnSyncedAt?.toISOString() || null,
+      hasPeopleOnBinding: Boolean(externalMemberId),
+      peopleOn: {
+        status: peopleOnResult.status,
+        memberNumber: peopleOn?.member_id || null,
+        joinedAt: peopleOn?.joined_at || null,
+        certificateStatus: peopleOn?.certificate_display ? "발급 완료" : "발급 상태 확인 대기",
+        certificateNumberSuffix: peopleOn?.certificate_numbers?.[0]?.slice(-4) || null,
+      },
     },
     requests: requests.map((request) => ({
       id: request.id,

@@ -18,6 +18,13 @@ describe("personal information panels", () => {
           updatedAt: null,
           peopleOnSyncedAt: null,
           hasPeopleOnBinding: true,
+          peopleOn: {
+            status: "CONNECTED",
+            memberNumber: "56",
+            joinedAt: "2009-07-13",
+            certificateStatus: "발급 완료",
+            certificateNumberSuffix: "1234",
+          },
         },
         requests: [],
       }),

@@ -209,3 +209,10 @@
 - Explicitly excluded scope: contribution API/model changes, ledger data mutation, new payment states, and public exposure.
 - Candidate governing basis: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md` and `docs/superpowers/plans/2026-08-23-member-service-fullscreen-navigation.md`.
 - Unanswered decision: none.
+
+# Current Request: PeopleON Profile Read Integration
+
+- Populate the member information home from the authenticated PeopleON ledger API when an exact saved `peopleOnMemberId` or `externalMemberId` match exists.
+- Read member number, name, phone, legal address, joined date, member status, unit group, certificate status, related-name presence, birth date, and masked refund-account metadata.
+- Never match or merge by name. Keep website values as the fallback when the API key, remote service, or exact external ID is unavailable.
+- Keep corrections in the existing website approval and PeopleON reflection workflow; this slice does not call a PeopleON write API.

@@ -2750,3 +2750,18 @@
 - Authenticated mobile browser: PASS at responsive mobile viewport. 카드가 1열로 전환됐고 가로 넘침이 없었다.
 - UI/access review: PASS.
 - Residual risk: 연락처 본인인증과 실시간 PeopleON API 동기화는 현재 연결되지 않아 기존 관리자 확인 흐름으로 유지되며 화면에 다음 단계임을 명시했다.
+
+## PeopleON Member Profile Read Follow-up
+
+- Implemented: 서버 전용 PeopleON API 키와 저장된 외부 고유 ID를 사용해 이름, 연락처, 법정주소, 가입일, 상태, 신청 평형, 필증, 공동명의, 생년월일, 환불계좌 정보를 내정보 응답에 읽기 전용으로 합성한다.
+- Identity safety: `peopleon_id` 정확 일치를 우선하고 레거시 `member_id`는 단일 정확 일치만 허용한다. 이름 자동 매칭은 하지 않는다.
+- Privacy: 전화·주소·생년월일·계좌·필증 번호는 브라우저 응답 전에 마스킹한다.
+- Failure behavior: 키 미설정, 외부 장애, ID 미일치 시 홈페이지 저장값을 유지하고 연결 확인 상태를 표시한다.
+- Live API contract: PASS. Production PeopleON ledger endpoint returned success with 456 members using the current server key; secret material was not logged or committed.
+- Vercel environment: `PEOPLEON_MEMBERS_API_KEY` added as a sensitive Production-only variable for `dbapt-site`.
+- Tests: PASS, 106 files and 675 tests; focused PeopleON/profile tests 3 files and 10 tests.
+- `pnpm lint`: PASS.
+- `pnpm build`: PASS.
+- Authenticated browser: PASS. Existing local fixture without an external ID correctly retained homepage fallback; responsive mobile rendered five cards in one column with no horizontal overflow.
+- UI/access review: PASS.
+- Residual risk: local authenticated fixture has no PeopleON ID, so populated production-account values require post-deployment verification on the linked member account.
