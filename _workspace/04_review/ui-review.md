@@ -26,6 +26,29 @@
 - Result: PASS
 - Required action: none
 
+# UI Review: 내정보 1차 5카드 구성
+
+## Reviewed Change
+- Feature: 조합원 내정보 첫 화면을 확인 중심의 다섯 카드로 재구성.
+- Governing spec: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`의 `1차 정보 홈 후속 승인 범위`.
+- Files or pages reviewed: `personal-information-panel.tsx`, `/portal/member`, 개인정보 API와 패널 테스트.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: 조합원·환불 조합원 접근 범위, 관리자 승인, PeopleON 반영 상태 기록, 납부 대시보드와 문서 접근 권한은 변경하지 않았다. 환불 조합원에게 신청 평형을 제공하지 않는 API 규칙도 유지했다.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: 조합원 번호, 가입신청필증, 최근 로그인과 기기 관리처럼 현재 원천 데이터가 없는 값은 만들지 않고 `사무국 확인 대기`, `발급 상태 확인 대기`, `보호된 현재 세션`으로 표시했다. 계정 생성일은 법적 가입일과 혼동되지 않도록 `홈페이지 가입일`로 표기했다.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: 항목마다 있던 수정 아이콘을 제거하고 카드당 대표 동작 하나만 제공했다. 변경 이력은 기본 접힘이며, 데스크톱 2열·모바일 1열에서 가로 넘침이 없었다. 제목 구조, 버튼 이름, 대화상자 이름을 테스트로 확인했다.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
 # UI Review: Member Personal Information Management
 
 - Governing spec: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`

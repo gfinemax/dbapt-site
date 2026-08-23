@@ -576,7 +576,12 @@ export function PortalShell({
         {/* Logged-In Specific Dynamic Content Areas */}
         {isLoggedIn ? (
           <div className={cn("flex flex-col gap-10", isDrawerMode && role === "member" ? "mt-5" : "mt-10")}>
-            {["member", "refund"].includes(role) && <PersonalInformationPanel />}
+            {["member", "refund"].includes(role) && (
+              <PersonalInformationPanel
+                documents={managedDocs}
+                contributionDashboard={resolvedContributionDashboard}
+              />
+            )}
             {/* 1. Account Specific Status Cards */}
             <section className="grid gap-6 md:grid-cols-2">
               {role === "member" && (

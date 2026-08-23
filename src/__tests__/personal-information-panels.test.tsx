@@ -12,6 +12,8 @@ describe("personal information panels", () => {
       json: async () => ({
         profile: {
           fields: [{ field: "phone", label: "휴대전화", value: "010-****-5678" }],
+          accountCreatedAt: "2026-08-01T00:00:00.000Z",
+          memberStatus: "MEMBER",
           lastConfirmedAt: null,
           updatedAt: null,
           peopleOnSyncedAt: null,
@@ -22,9 +24,16 @@ describe("personal information panels", () => {
     }));
     render(<PersonalInformationPanel />);
     expect(await screen.findByText("010-****-5678")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "휴대전화 수정 요청" }));
+    expect(screen.getByRole("heading", { name: "조합원 정보" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "주택 신청 정보" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "연락처" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "서류 및 신청 현황" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "보안 설정" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "휴대전화 수정 요청" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "연락처 변경" }));
+    fireEvent.click(screen.getByRole("button", { name: /휴대전화/ }));
     expect(screen.getByRole("dialog", { name: "휴대전화" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "수정 요청 접수" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "변경 요청 접수" })).toBeInTheDocument();
   });
 
   it("renders administrator approval and separate PeopleON reflection actions", async () => {

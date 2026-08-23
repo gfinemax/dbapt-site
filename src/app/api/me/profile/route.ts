@@ -28,6 +28,7 @@ async function loadProfileSource(userId: string) {
       phone: true,
       email: true,
       role: true,
+      createdAt: true,
       personalProfile: true,
       contributionProfile: { select: { selectedUnitLabel: true, externalMemberId: true } },
     },
@@ -65,6 +66,8 @@ export async function GET() {
   return NextResponse.json({
     profile: {
       fields,
+      accountCreatedAt: source.user.createdAt.toISOString(),
+      memberStatus: source.user.role,
       lastConfirmedAt: source.profile?.lastConfirmedAt?.toISOString() || null,
       updatedAt: source.profile?.updatedAt?.toISOString() || null,
       peopleOnSyncedAt: source.profile?.peopleOnSyncedAt?.toISOString() || null,

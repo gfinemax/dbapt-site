@@ -31,6 +31,13 @@
 - Governing specification: `docs/superpowers/specs/2026-08-23-member-personal-information-management-design.md`.
 - Unanswered decision: none; manual PeopleON reflection is the approved fallback.
 
+## Follow-up: Five-card Information Home
+
+- Requested feature slice: replace the burdensome all-fields edit grid with five calm summary cards for member, housing, contact, documents/applications, and security information.
+- Preserve: existing correction persistence, approval/history, PeopleON manual reflection, payment dashboard, navigation, and refund-member unit privacy.
+- Excluded: fabricated member numbers, contract/certificate data, device management, or direct contact mutation without verification.
+- Unanswered decision: none; the user explicitly selected the original five-card proposal as the first composition.
+
 # 2026-08-23 Member Service Full-Screen Navigation
 
 - Requested feature slice: remove excess personal-service space, use member/refund-member labels, repair the populated shortcut destinations, remove the customer-center card, and add a full-screen home action.

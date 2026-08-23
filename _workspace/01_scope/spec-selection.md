@@ -172,3 +172,10 @@
 - Implementation boundary: users view their own masked profile, submit corrections, and view history; administrators approve/reject and record PeopleON reflection.
 - Existing-spec conflict: the 2026-06-17 PeopleON MVP excludes writes, so this implementation preserves read-only integration and records manual reflection only.
 - Planning may continue: yes. The user approved the plan and requested implementation.
+
+### Five-card Information Home Follow-up
+
+- Selected basis: the approved personal-information spec plus its `1차 정보 홈 후속 승인 범위` section.
+- Boundary: presentation and truthful summary data only; reuse existing mutation and audit contracts without schema changes.
+- Conflicts: none.
+- Planning may continue: yes. The user explicitly requested implementation of the selected first composition.

@@ -2737,3 +2737,16 @@
 - Fixture boundary: The local authenticated fixture has no approved ledger entries, so the populated disclosure's automatic open/close sequence is covered by the integrated drawer test without altering account data.
 - UI/access review: PASS.
 - Residual risk: none.
+
+## Member Information Five-Card Follow-up
+
+- Implemented: 내정보 상단을 전체 상태 안내로 단순화하고 `조합원 정보`, `주택 신청 정보`, `연락처`, `서류 및 신청 현황`, `보안 설정` 다섯 카드로 구성했다.
+- Preserved: 기존 개인정보 변경 요청, 관리자 승인, 처리 날짜·이전 값 이력, PeopleON 반영 상태, 납부 대시보드, 환불 조합원 신청 평형 비노출.
+- Focused tests: PASS, 2 files and 7 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 105 files and 672 tests.
+- `pnpm build`: PASS. 실행 중인 개발 서버의 생성 타입 파일 충돌을 분리한 뒤 깨끗한 production build를 확인했다.
+- Authenticated desktop browser: PASS. 다섯 카드, 2열 배치, 실제 계정의 마스킹/대기 상태를 확인했고 가로 넘침이 없었다.
+- Authenticated mobile browser: PASS at responsive mobile viewport. 카드가 1열로 전환됐고 가로 넘침이 없었다.
+- UI/access review: PASS.
+- Residual risk: 연락처 본인인증과 실시간 PeopleON API 동기화는 현재 연결되지 않아 기존 관리자 확인 흐름으로 유지되며 화면에 다음 단계임을 명시했다.
