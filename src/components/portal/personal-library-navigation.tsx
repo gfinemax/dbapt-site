@@ -33,6 +33,13 @@ type PersonalLibraryNavigationProps = {
 
 const baseItemClassName = "flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-left text-sm transition-colors";
 
+const setLedgerDisclosureOpen = (isOpen: boolean) => {
+  const disclosure = document.getElementById("member-ledger-disclosure");
+  if (disclosure instanceof HTMLDetailsElement) {
+    disclosure.open = isOpen;
+  }
+};
+
 export function PersonalLibraryNavigation({ name, role }: PersonalLibraryNavigationProps) {
   const [activeSection, setActiveSection] = useState<SectionKey>("profile");
   const normalizedRole = role?.trim().toUpperCase();
@@ -44,7 +51,10 @@ export function PersonalLibraryNavigation({ name, role }: PersonalLibraryNavigat
       : `${cleanName || "오학동"} 조합원`;
 
   useEffect(() => {
-    const resetNavigation = () => setActiveSection("profile");
+    const resetNavigation = () => {
+      setActiveSection("profile");
+      setLedgerDisclosureOpen(false);
+    };
     window.addEventListener("open-portal", resetNavigation);
     return () => window.removeEventListener("open-portal", resetNavigation);
   }, []);
@@ -53,6 +63,7 @@ export function PersonalLibraryNavigation({ name, role }: PersonalLibraryNavigat
     const target = document.getElementById(targetId);
     if (!target) return;
 
+    setLedgerDisclosureOpen(key === "ledger");
     setActiveSection(key);
     target.scrollIntoView({ behavior: "smooth", block: "start" });
     target.focus({ preventScroll: true });

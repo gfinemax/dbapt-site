@@ -2709,3 +2709,18 @@
 - Authenticated mobile browser: PASS at 390 x 844. Hit testing selected the curation button rather than the underlying home link; service z-index was 70, no horizontal overflow occurred, and the drawer remained open.
 - UI/access review: PASS.
 - Residual risk: none.
+
+## Sidebar-Controlled Payment Ledger Disclosure Follow-up
+
+- Implemented: Selecting sidebar `납부내역` opens the existing complete ledger disclosure; selecting `내정보` or `개인자료` closes it. Reopening the service at its default `내정보` state also resets the disclosure closed.
+- Preserved: Native manual `전체 납부내역 보기` / `접기`, approved contribution values, member-scoped access, focus navigation, and existing shortcut routes.
+- Regression sequence: default closed → `납부내역` open → `개인자료` closed → manual open → `내정보` closed.
+- Focused tests: PASS, 2 files and 11 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 103 files and 665 tests.
+- `pnpm build`: PASS.
+- Authenticated desktop browser: PASS. `납부내역` received `aria-current="location"`, focus moved to `member-ledger`, `개인자료` then received selection and focus, no horizontal overflow or framework error overlay occurred.
+- Authenticated mobile browser: PASS at 390 x 844 with no horizontal overflow or framework error overlay.
+- Fixture boundary: The local authenticated fixture has no approved ledger entries, so the populated disclosure's automatic open/close sequence is covered by the integrated drawer test without altering account data.
+- UI/access review: PASS.
+- Residual risk: none.

@@ -113,7 +113,7 @@ export function ContributionDashboard({ dashboard, paymentNotices = [], hideSele
                     <tbody className="divide-y divide-stone-surface">{dashboard.ledgerEntries.slice(0, 3).map((entry) => <tr key={entry.id}><td className="px-3 py-2.5 text-graphite">{formatDate(entry.paidAt)}</td><td className="px-3 py-2.5 font-semibold text-charcoal-primary">{entry.stageLabel || entry.label}</td><td className="px-3 py-2.5 text-right font-semibold text-charcoal-primary">{formatMoney(entry.amount)}</td><td className="px-3 py-2.5 text-right"><span className="rounded-full bg-meadow-green/10 px-2 py-1 font-semibold text-midnight">납부 완료</span></td></tr>)}</tbody>
                   </table>
                 </div>
-              <details data-testid="contribution-ledger-disclosure" className="group mt-3">
+              <details id="member-ledger-disclosure" data-testid="contribution-ledger-disclosure" className="group mt-3">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[10px] px-1 py-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-midnight [&::-webkit-details-marker]:hidden">
                   <span className="min-w-0 text-xs text-ash">합계 {formatMoney(ledgerTotal)}</span>
                   <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-graphite"><span className="group-open:hidden">전체 납부내역 보기</span><span className="hidden group-open:inline">접기</span><ChevronDown className="size-4 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" /></span>

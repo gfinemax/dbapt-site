@@ -186,3 +186,11 @@
 - Explicitly excluded scope: No backend/model changes, no fabricated totals, no display of total planned amount, unpaid amount, payment progress, or percentage; no public exposure.
 - Candidate governing specification: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`, narrowed by the user's 2026-08-23 display decision.
 - Unanswered decision: none.
+
+# Current Request: Sidebar-Controlled Payment Ledger Disclosure
+
+- Requested feature slice: Selecting `납부내역` in the authenticated member-service sidebar opens the complete payment ledger; selecting `내정보`, `개인자료`, or another menu closes it again.
+- Preserve: native manual expand/collapse, approved accounting values, member-scoped access, role labels, section focus, and existing shortcut destinations.
+- Explicitly excluded scope: contribution API/model changes, ledger data mutation, new payment states, and public exposure.
+- Candidate governing basis: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md` and `docs/superpowers/plans/2026-08-23-member-service-fullscreen-navigation.md`.
+- Unanswered decision: none.

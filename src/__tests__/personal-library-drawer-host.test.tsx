@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalLibraryDrawerHost } from "@/components/portal/personal-library-drawer-host";
+import { buildContributionDashboardView } from "@/lib/contribution-dashboard";
 
 vi.mock("next/navigation", () => ({
   useRouter() {
@@ -60,6 +61,21 @@ describe("personal library drawer host", () => {
     render(
       <PersonalLibraryDrawerHost
         session={{ id: "member-1", loginId: "member", name: "이조합", role: "MEMBER" }}
+        contributionDashboard={buildContributionDashboardView({
+          summary: null,
+          profile: null,
+          stages: [],
+          ledgerEntries: [
+            {
+              id: "ledger-1",
+              label: "신청금 납부",
+              amount: 30_000_000,
+              paidAt: "2026-01-10T00:00:00.000Z",
+              stageLabel: "신청금(가입필증)",
+              source: "ERP",
+            },
+          ],
+        })}
       >
         <main>사업현황</main>
       </PersonalLibraryDrawerHost>,
@@ -71,19 +87,29 @@ describe("personal library drawer host", () => {
     const profileButton = within(drawer).getByRole("button", { name: "내정보" });
     const ledgerButton = within(drawer).getByRole("button", { name: "납부내역" });
     const personalButton = within(drawer).getByRole("button", { name: "개인자료" });
+    const disclosure = within(drawer).getByTestId("contribution-ledger-disclosure");
 
     expect(profileButton).toHaveAttribute("aria-current", "location");
+    expect(disclosure).not.toHaveAttribute("open");
 
     fireEvent.click(ledgerButton);
     expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: "smooth", block: "start" });
     expect(document.activeElement).toHaveAttribute("id", "member-ledger");
     expect(ledgerButton).toHaveAttribute("aria-current", "location");
     expect(profileButton).not.toHaveAttribute("aria-current");
+    expect(disclosure).toHaveAttribute("open");
 
     fireEvent.click(personalButton);
     expect(document.activeElement).toHaveAttribute("id", "member-personal-library");
     expect(personalButton).toHaveAttribute("aria-current", "location");
     expect(ledgerButton).not.toHaveAttribute("aria-current");
+    expect(disclosure).not.toHaveAttribute("open");
+
+    fireEvent.click(within(drawer).getByText("전체 납부내역 보기"));
+    expect(disclosure).toHaveAttribute("open");
+
+    fireEvent.click(profileButton);
+    expect(disclosure).not.toHaveAttribute("open");
   });
 
   it.each([

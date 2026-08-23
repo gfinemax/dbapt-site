@@ -31,3 +31,10 @@
 - [x] Replace shortcut router/close races with deterministic full-page shortcut navigation.
 - [x] Add integrated home and shared-host regression coverage for drawer persistence and shortcut behavior.
 - [x] Run focused tests, lint, the full suite, build, UI review, and authenticated desktop/mobile browser verification.
+
+## Payment Ledger Disclosure Follow-up
+
+- [x] Open the full payment-ledger disclosure when the sidebar `납부내역` item is selected.
+- [x] Close the disclosure when another in-service section is selected or the service is reopened at `내정보`.
+- [x] Preserve native manual `전체 납부내역 보기` / `접기` interaction and existing contribution data contracts.
+- [x] Add integrated regression coverage, then run focused tests, lint, the full suite, build, and authenticated desktop/mobile browser verification.

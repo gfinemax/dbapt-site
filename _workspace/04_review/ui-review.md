@@ -88,6 +88,29 @@
 - Result: PASS
 - Required action: none
 
+# UI Review: Sidebar-Controlled Payment Ledger Disclosure
+
+## Reviewed Change
+- Feature: Open the complete payment ledger from the sidebar `납부내역` item and close it when another in-service section is selected.
+- Governing plan: `docs/superpowers/plans/2026-08-23-member-service-fullscreen-navigation.md`, `Payment Ledger Disclosure Follow-up`.
+- Files or pages reviewed: authenticated member-service sidebar, contribution ledger disclosure, desktop and 390 x 844 mobile renders.
+
+## Boundary Review
+- Finding: PASS.
+- Evidence: The change only coordinates existing authenticated navigation with the existing user-scoped ledger disclosure. Contribution values, API/model contracts, roles, and route permissions are unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS.
+- Evidence: Sidebar selection reveals the same approved ledger entries already available through `전체 납부내역 보기`; it does not create or recalculate payment data.
+
+## Design And Accessibility Review
+- Finding: PASS.
+- Evidence: Native `details`/`summary` manual interaction remains available. Desktop navigation retains `aria-current="location"`, exact focus transfer, and the established selected style. Mobile retains the existing header-only navigation with no horizontal overflow or framework error overlay.
+
+## Outcome
+- Result: PASS.
+- Required action: none.
+
 ## Home Action Follow-up Review
 
 - Boundary: PASS. No access or data presentation changed.

@@ -158,3 +158,10 @@
 - Implementation boundary: event containment, stacking order, and shortcut transition behavior across existing personal-service hosts only.
 - Conflicts: none. Explicit home/close actions and all stored data/access behavior remain unchanged.
 - Planning may continue: yes.
+
+## Sidebar-Controlled Payment Ledger Disclosure Follow-up
+
+- Selected approved basis: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`, the existing collapsible ledger behavior, and `docs/superpowers/plans/2026-08-23-member-service-fullscreen-navigation.md`.
+- Implementation boundary: coordinate only the authenticated sidebar section selection with the existing native payment-ledger disclosure; preserve all stored values, access rules, API contracts, and manual disclosure controls.
+- Conflicts: none.
+- Planning may continue: yes. The user explicitly requested implementation.
