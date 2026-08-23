@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { PersonalLibraryNavigation } from "@/components/portal/personal-library-navigation";
 import { type LogEntry } from "@/components/portal/audit-logs-table";
@@ -123,15 +124,7 @@ export function PersonalLibraryDrawerHost({
       {isDrawerOpen && (
         <>
           <div
-            onClick={() => {
-              setActiveViewDoc(null);
-              setIsDrawerOpen(false);
-            }}
-            className="fixed inset-0 z-40 bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
-          />
-
-          <div
-            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[1040px] flex-col overflow-hidden border-l border-stone-surface bg-warm-canvas shadow-2xl"
+            className="fixed inset-0 z-50 flex w-full flex-col overflow-hidden bg-warm-canvas"
             aria-label={`${personalLibraryLabel} 드로어`}
           >
             <div className="flex items-center justify-between border-b border-stone-surface bg-white px-5 py-4 md:hidden">
@@ -144,23 +137,25 @@ export function PersonalLibraryDrawerHost({
                 </h2>
               </div>
 
-              <button
-                onClick={() => {
-                  setActiveViewDoc(null);
-                  setIsDrawerOpen(false);
-                }}
-                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-xs font-medium text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
-              >
-                <svg className="w-3.5 h-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                닫기
-              </button>
+              <div className="flex items-center gap-2">
+                <Link href="/" className="rounded-full bg-midnight px-3 py-1.5 text-xs font-semibold text-white">
+                  홈으로
+                </Link>
+                <button
+                  onClick={() => {
+                    setActiveViewDoc(null);
+                    setIsDrawerOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] px-3 py-1.5 text-xs font-medium text-graphite transition duration-200 hover:bg-stone-surface active:bg-[#e8e6e1] cursor-pointer"
+                >
+                  닫기
+                </button>
+              </div>
             </div>
 
             <div className="grid min-h-0 flex-1 md:grid-cols-[168px_minmax(0,1fr)]">
-              <PersonalLibraryNavigation />
-              <div className="min-w-0 overflow-y-auto px-5 pb-20 pt-6 sm:px-8">
+              <PersonalLibraryNavigation name={session?.name} role={session?.role} />
+              <div className="min-w-0 overflow-y-auto pb-16">
               {session ? (
                 <PortalShell
                   role={getPortalRole(session.role)}

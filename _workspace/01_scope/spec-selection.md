@@ -132,3 +132,10 @@
 - Implementation boundary: Logged-in member contribution presentation only; preserve current approved ledger data, API, access controls, and pending-state truthfulness.
 - Conflict: The original spec permits planned amount, unpaid amount, and progress when data exists. The user's later explicit direction supersedes that visible presentation only; compatibility fields remain in the view model and API.
 - Planning may continue: yes. The user selected visual option 1 and explicitly requested implementation.
+
+# 2026-08-23 Member Service Full-Screen Navigation
+
+- Selected approved spec: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`.
+- Implementation boundary: authenticated personal-service presentation only; preserve stored role values and existing protected data/destinations.
+- Conflicts: none.
+- Planning may continue: yes.

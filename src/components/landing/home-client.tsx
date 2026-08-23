@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { HeroSection } from "./hero-section";
 import { FeatureLinks } from "./feature-links";
 import { NoticesSection, type LandingNotice } from "./notices-section";
@@ -203,20 +204,10 @@ export function HomeClient({
           [대안 A] 우측 사이드 슬라이드 오버 (Drawer) 패널
           ========================================== */}
       {/* 백드롭 오버레이 (Dim & Blur) */}
-      {isDrawerOpen && (
-        <div
-          onClick={() => {
-            setActiveViewDoc(null);
-            setIsDrawerOpen(false);
-          }}
-          className="fixed inset-0 z-40 bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
-        />
-      )}
-
       {/* 드로어 컨테이너 (DESIGN.md 규격: Stone surface border, Warm Canvas 배경, Drawer transition) */}
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-full max-w-[1040px] bg-warm-canvas border-l border-stone-surface shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform overflow-hidden",
+          "fixed inset-0 z-50 w-full bg-warm-canvas flex flex-col transition-transform duration-300 ease-in-out transform overflow-hidden",
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         )}
         aria-label={`${personalLibraryLabel} 드로어`}
@@ -233,24 +224,26 @@ export function HomeClient({
           </div>
           
           {/* 닫기 버튼 (DESIGN.md 규격: Pill Light 스타일 응용) */}
-          <button
-            onClick={() => {
-              setActiveViewDoc(null);
-              setIsDrawerOpen(false);
-            }}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] text-xs font-medium text-graphite hover:bg-stone-surface active:bg-[#e8e6e1] transition duration-200 cursor-pointer"
-          >
-            <svg className="w-3.5 h-3.5 text-ash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            닫기
-          </button>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="rounded-full bg-midnight px-3 py-1.5 text-xs font-semibold text-white">
+              홈으로
+            </Link>
+            <button
+              onClick={() => {
+                setActiveViewDoc(null);
+                setIsDrawerOpen(false);
+              }}
+              className="flex items-center justify-center gap-1.5 rounded-full border border-stone-surface bg-[#f8f7f4] px-3 py-1.5 text-xs font-medium text-graphite transition duration-200 hover:bg-stone-surface active:bg-[#e8e6e1] cursor-pointer"
+            >
+              닫기
+            </button>
+          </div>
         </div>
 
         {/* 드로어 바디 (isDrawerMode={true}로 포털 셸 인라인 렌더링) */}
         <div className="grid min-h-0 flex-1 md:grid-cols-[168px_minmax(0,1fr)]">
-          <PersonalLibraryNavigation />
-          <div className="min-w-0 overflow-y-auto px-5 pb-20 pt-6 sm:px-8">
+          <PersonalLibraryNavigation name={session?.name} role={session?.role} />
+          <div className="min-w-0 overflow-y-auto pb-16">
           {session ? (
             <PortalShell
               role={getPortalRole(session.role)}

@@ -23,6 +23,13 @@
 - Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Unanswered decision: none.
 
+# 2026-08-23 Member Service Full-Screen Navigation
+
+- Requested feature slice: remove excess personal-service space, use member/refund-member labels, repair the populated shortcut destinations, remove the customer-center card, and add a full-screen home action.
+- Explicitly excluded scope: authentication, role-code migration, new private data, and public exposure.
+- Candidate governing specification: `docs/superpowers/specs/2026-06-14-contribution-dashboard-mvp-design.md`.
+- Unanswered decision: none.
+
 ---
 
 # Request Summary - Continuous Mobile PDF Viewer
