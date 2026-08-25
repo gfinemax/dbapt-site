@@ -25,6 +25,14 @@
 ## Outcome
 - Result: PASS
 - Required action: none
+
+## 2026-08-26 Denominator Correction Review
+
+- Feature: 동일 자격 PeopleOn 원장 대비 홈페이지 승인률
+- Boundary review: PASS. PeopleOn API는 기존과 동일한 read-only 원장 조회만 재사용한다.
+- Truthful presentation: PASS. 정식 34/86, 예비와 환불은 각자의 원장 분모만 사용하며 관계자·기타에는 퍼센트를 만들지 않는다. 원장 조회 실패 시 비율을 숨긴다.
+- Design and accessibility: PASS. 데스크톱과 모바일에서 `34 / 86명 · 39.5%`가 표시되고 기존 75.6% 구성비는 제거됐다. 수평 오버플로, 오류 오버레이, 콘솔 오류가 없다.
+- Result: PASS
 ---
 
 # UI Review: Mobile-First Login And Signup

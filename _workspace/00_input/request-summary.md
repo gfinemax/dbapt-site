@@ -241,3 +241,9 @@
 - Explicitly excluded scope: PeopleOn 원장 쓰기, 회원 승인/자격 변경 로직 변경, 인증 변경, 공개 화면 노출, 신규 API 또는 DB 스키마 추가.
 - Candidate governing specification: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
 - Unanswered decision: none. 홈페이지 승인 계정을 기준으로 하며 승인 대기, 보안 활동, 문서는 독립 지표로 유지한다.
+
+## 2026-08-25 Denominator Correction
+
+- Requested correction: 자격 유형 간 구성비를 제거하고 PeopleOn 원장 대비 동일 자격의 홈페이지 승인률을 표시한다.
+- Primary example: 정식조합원 원장 86명 중 홈페이지 승인 정식조합원 34명.
+- Excluded scope: PeopleOn 원장 변경, 계정 매칭 규칙 변경, 승인 처리 변경.

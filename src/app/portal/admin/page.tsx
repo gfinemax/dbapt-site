@@ -3,6 +3,13 @@ import { PortalShell } from "@/components/portal/portal-shell";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isDemoApprovedAccount } from "@/lib/demo-account-filter";
+import {
+  DEFAULT_PEOPLEON_MEMBERS_API_URL,
+  fetchPeopleOnMemberRows,
+  getPeopleOnApiKey,
+  getPeopleOnPopulationStats,
+  type PeopleOnPopulationStats,
+} from "@/lib/admin/member-management";
 import { serializeDocuments } from "@/lib/document-serializer";
 import { normalizeMemberType } from "@/lib/member-type";
 import { getUserContactDisplay } from "@/lib/user-contact-display";
@@ -26,6 +33,7 @@ export default async function AdminPortalPage() {
   let pendingUsers: { id: string; name: string; email: string; signupName?: string | null; signupPhone?: string | null; signupMemo?: string | null; createdAt: string }[] = [];
   let approvedSocialUsers: { id: string; name: string; email: string; role: string; memberType: string; createdAt: string }[] = [];
   let contentBookmarks: PersonalLibraryContentBookmark[] = [];
+  let peopleOnPopulationStats: PeopleOnPopulationStats | null = null;
 
   if (session) {
     try {
@@ -118,6 +126,19 @@ export default async function AdminPortalPage() {
     } catch (e) {
       console.error("Error loading admin portal data:", e);
     }
+
+    const peopleOnApiKey = getPeopleOnApiKey();
+    if (peopleOnApiKey) {
+      try {
+        const { rows } = await fetchPeopleOnMemberRows({
+          apiUrl: process.env.PEOPLEON_MEMBERS_API_URL?.trim() || DEFAULT_PEOPLEON_MEMBERS_API_URL,
+          apiKey: peopleOnApiKey,
+        });
+        peopleOnPopulationStats = getPeopleOnPopulationStats(rows);
+      } catch (e) {
+        console.error("Error loading PeopleOn population stats for admin portal:", e);
+      }
+    }
   }
 
   return (
@@ -129,6 +150,7 @@ export default async function AdminPortalPage() {
       logs={logs}
       pendingUsers={pendingUsers}
       approvedSocialUsers={approvedSocialUsers}
+      peopleOnPopulationStats={peopleOnPopulationStats}
     />
   );
 }

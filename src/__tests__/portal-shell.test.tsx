@@ -121,11 +121,17 @@ describe("portal shell", () => {
           { id: "regular-1", name: "정식회원", email: "regular@example.com", role: "MEMBER", memberType: "REGULAR", createdAt: "2026-07-22T00:00:00.000Z" },
           { id: "refund-1", name: "환불회원", email: "refund@example.com", role: "REFUND", memberType: "REFUND", createdAt: "2026-07-22T00:00:00.000Z" },
         ]}
+        peopleOnPopulationStats={{
+          registeredPeopleOnCount: 86,
+          preliminaryPeopleOnCount: 5,
+          refundPeopleOnCount: 10,
+        }}
       />,
     );
 
-    expect(screen.getByRole("img", { name: "홈페이지 승인 가입자 총 2명, 정식조합원 1명, 예비조합원 0명, 환불조합원 1명, 관계자·기타 0명" })).toBeInTheDocument();
-    expect(screen.getAllByText("1명 · 50.0%", { selector: "dd" })).toHaveLength(2);
+    expect(screen.getByRole("img", { name: "PeopleOn 정식조합원 86명 중 홈페이지 승인 1명, 가입률 1.2%" })).toBeInTheDocument();
+    expect(screen.getByText("1 / 86명 · 1.2%", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText("1 / 10명 · 10.0%", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText("문서 현황")).toBeInTheDocument();
     expect(screen.getByText("감사 로그 누적")).toBeInTheDocument();
     expect(screen.getByText("확인 필요")).toBeInTheDocument();
@@ -441,8 +447,8 @@ describe("portal shell", () => {
       />,
     );
 
-    expect(screen.getByText("1명", { selector: "strong" })).toBeInTheDocument();
-    expect(screen.getByText("1명 · 100.0%", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "홈페이지 정식조합원 승인 0명, PeopleOn 원장 확인 필요" })).toBeInTheDocument();
+    expect(screen.getByText("1명 · 원장 확인 필요", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "PeopleOn 조합원 관리" })).toHaveAttribute(
       "href",
       "/portal/admin/members",
@@ -474,10 +480,10 @@ describe("portal shell", () => {
       />,
     );
 
-    expect(screen.getByRole("img", { name: "홈페이지 승인 가입자 총 1명, 정식조합원 0명, 예비조합원 1명, 환불조합원 0명, 관계자·기타 0명" })).toBeInTheDocument();
+    expect(screen.getByText("1명 · 원장 확인 필요", { selector: "dd" })).toBeInTheDocument();
     expect(screen.queryByText("자격 구분")).not.toBeInTheDocument();
     expect(screen.queryByText("정식 조합원 (MEMBER)")).not.toBeInTheDocument();
-    expect(screen.getByText("승인된 계정의 현재 자격 구성이야.")).toBeInTheDocument();
+    expect(screen.getByText("PeopleOn 원장 인원 중 홈페이지 승인이 완료된 정식조합원 기준이야.")).toBeInTheDocument();
   });
 
   it("renders a neutral approved member composition when no account is approved", () => {
@@ -489,7 +495,8 @@ describe("portal shell", () => {
       />,
     );
 
-    expect(screen.getByRole("img", { name: "홈페이지 승인 가입자 0명" })).toBeInTheDocument();
-    expect(screen.getAllByText("0명 · 0.0%", { selector: "dd" })).toHaveLength(4);
+    expect(screen.getByRole("img", { name: "홈페이지 정식조합원 승인 0명, PeopleOn 원장 확인 필요" })).toBeInTheDocument();
+    expect(screen.getAllByText("0명 · 원장 확인 필요", { selector: "dd" })).toHaveLength(3);
+    expect(screen.getByText("승인 0명", { selector: "dd" })).toBeInTheDocument();
   });
 });

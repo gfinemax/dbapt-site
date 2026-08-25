@@ -4,7 +4,9 @@ import { MemberManagementDashboard } from "@/components/portal/member-management
 import { PersonalInformationAdminPanel } from "@/components/portal/personal-information-admin-panel";
 import {
   buildMemberManagementSnapshot,
+  DEFAULT_PEOPLEON_MEMBERS_API_URL,
   fetchPeopleOnMemberRows,
+  getPeopleOnApiKey,
   type HomepageMemberAccount,
   type PeopleOnMemberRow,
 } from "@/lib/admin/member-management";
@@ -15,19 +17,11 @@ import { normalizeMemberType } from "@/lib/member-type";
 import { getUserContactDisplay } from "@/lib/user-contact-display";
 import type { ApprovedMemberConversionUser } from "@/components/portal/approved-member-conversion-panel";
 
-const DEFAULT_PEOPLEON_MEMBERS_API_URL = "https://people-on.vercel.app/api/members/table";
-
 export const metadata: Metadata = {
   title: "조합원 관리 | 대방동 지역주택조합",
 };
 
 export const dynamic = "force-dynamic";
-
-function getPeopleOnApiKey() {
-  const multipleKeys = process.env.PEOPLEON_MEMBERS_API_KEYS?.split(",").map((key) => key.trim()).filter(Boolean);
-  if (multipleKeys?.length) return multipleKeys[0];
-  return process.env.PEOPLEON_MEMBERS_API_KEY?.trim() || "";
-}
 
 async function getHomepageMemberAccounts(): Promise<HomepageMemberAccount[]> {
   const users = await prisma.user.findMany({

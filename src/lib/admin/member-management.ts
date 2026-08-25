@@ -1,5 +1,13 @@
 import { normalizeMemberType, type MemberType } from "@/lib/member-type";
 
+export const DEFAULT_PEOPLEON_MEMBERS_API_URL = "https://people-on.vercel.app/api/members/table";
+
+export function getPeopleOnApiKey() {
+  const multipleKeys = process.env.PEOPLEON_MEMBERS_API_KEYS?.split(",").map((key) => key.trim()).filter(Boolean);
+  if (multipleKeys?.length) return multipleKeys[0];
+  return process.env.PEOPLEON_MEMBERS_API_KEY?.trim() || "";
+}
+
 export type PeopleOnMemberRow = {
   id: string;
   name: string;
@@ -62,6 +70,12 @@ export type MemberManagementSnapshot = {
     roleMismatchCount: number;
   };
   actionRows: MemberManagementActionRow[];
+};
+
+export type PeopleOnPopulationStats = {
+  registeredPeopleOnCount: number;
+  refundPeopleOnCount: number;
+  preliminaryPeopleOnCount: number;
 };
 
 export type FetchPeopleOnMemberRowsResult = {
@@ -146,6 +160,14 @@ function isTrackedPeopleOnRow(row: PeopleOnMemberRow) {
   return Boolean(getExpectedMemberType(row));
 }
 
+export function getPeopleOnPopulationStats(peopleOnRows: PeopleOnMemberRow[]): PeopleOnPopulationStats {
+  return {
+    registeredPeopleOnCount: peopleOnRows.filter((row) => row.is_registered).length,
+    refundPeopleOnCount: peopleOnRows.filter((row) => row.is_settlement_eligible).length,
+    preliminaryPeopleOnCount: peopleOnRows.filter(isPreliminaryPeopleOnRow).length,
+  };
+}
+
 function findMatchedHomepageUser(row: PeopleOnMemberRow, homepageUsers: HomepageMemberAccount[]) {
   const rowEmail = normalizeComparableText(row.email);
   if (rowEmail) {
@@ -192,6 +214,7 @@ export function buildMemberManagementSnapshot({
   homepageUsers,
 }: MemberManagementSnapshotInput): MemberManagementSnapshot {
   const trackedRows = peopleOnRows.filter(isTrackedPeopleOnRow);
+  const populationStats = getPeopleOnPopulationStats(peopleOnRows);
   const actionRows: MemberManagementActionRow[] = [];
 
   for (const row of trackedRows) {
@@ -224,9 +247,7 @@ export function buildMemberManagementSnapshot({
   return {
     generatedAt,
     stats: {
-      registeredPeopleOnCount: peopleOnRows.filter((row) => row.is_registered).length,
-      refundPeopleOnCount: peopleOnRows.filter((row) => row.is_settlement_eligible).length,
-      preliminaryPeopleOnCount: peopleOnRows.filter(isPreliminaryPeopleOnRow).length,
+      ...populationStats,
       trackedPeopleOnCount: trackedRows.length,
       homepageApprovedCount: homepageUsers.filter((user) => ["MEMBER", "REFUND", "ASSOCIATE"].includes(user.role)).length,
       homepagePendingCount: homepageUsers.filter((user) => user.role === "PENDING").length,

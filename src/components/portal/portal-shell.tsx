@@ -18,6 +18,7 @@ import { PortalHamburger } from "./portal-hamburger";
 import { buildContributionDashboardView } from "@/lib/contribution-dashboard";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
 import { normalizeMemberType } from "@/lib/member-type";
+import type { PeopleOnPopulationStats } from "@/lib/admin/member-management";
 import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 import type { PersonalLibraryContentBookmark } from "@/lib/personal-library-data";
 
@@ -111,6 +112,7 @@ type PortalShellProps = {
     memberType?: string | null;
     createdAt: string;
   }[];
+  peopleOnPopulationStats?: PeopleOnPopulationStats | null;
   isDrawerMode?: boolean;
   initialCategory?: string;
   initialSearch?: string;
@@ -129,6 +131,7 @@ export function PortalShell({
   paymentNotices = [],
   pendingUsers = [],
   approvedSocialUsers = [],
+  peopleOnPopulationStats = null,
   isDrawerMode = false,
   initialCategory = "all",
   initialSearch = "",
@@ -195,24 +198,25 @@ export function PortalShell({
       ASSOCIATE: 0,
     },
   );
-  const approvedMemberTotal = approvedSocialUsers.length;
-  const approvedMemberComposition = [
-    { key: "REGULAR", label: "정식조합원", count: approvedMemberTypeCounts.REGULAR, color: "#00ca48" },
-    { key: "PRELIMINARY", label: "예비조합원", count: approvedMemberTypeCounts.PRELIMINARY, color: "#ffbb26" },
-    { key: "REFUND", label: "환불조합원", count: approvedMemberTypeCounts.REFUND, color: "#ff3e00" },
-    { key: "ASSOCIATE", label: "관계자·기타", count: approvedMemberTypeCounts.ASSOCIATE, color: "#0090ff" },
+  const registeredPeopleOnCount = peopleOnPopulationStats?.registeredPeopleOnCount ?? null;
+  const approvedRegularCount = approvedMemberTypeCounts.REGULAR;
+  const approvedRegularWithinPopulation = registeredPeopleOnCount === null
+    ? approvedRegularCount
+    : Math.min(approvedRegularCount, registeredPeopleOnCount);
+  const regularApprovalRate = registeredPeopleOnCount && registeredPeopleOnCount > 0
+    ? (approvedRegularWithinPopulation / registeredPeopleOnCount) * 100
+    : null;
+  const regularApprovalDegrees = regularApprovalRate === null ? 0 : (regularApprovalRate / 100) * 360;
+  const approvedMemberGradient = regularApprovalRate === null
+    ? "#ece9e4"
+    : `conic-gradient(#00ca48 0deg ${regularApprovalDegrees}deg, #dedbd5 ${regularApprovalDegrees}deg 360deg)`;
+  const approvedMemberAriaLabel = registeredPeopleOnCount === null
+    ? `홈페이지 정식조합원 승인 ${approvedRegularCount}명, PeopleOn 원장 확인 필요`
+    : `PeopleOn 정식조합원 ${registeredPeopleOnCount}명 중 홈페이지 승인 ${approvedRegularCount}명, 가입률 ${(regularApprovalRate ?? 0).toFixed(1)}%`;
+  const memberProgressRows = [
+    { key: "PRELIMINARY", label: "예비조합원", approved: approvedMemberTypeCounts.PRELIMINARY, total: peopleOnPopulationStats?.preliminaryPeopleOnCount ?? null, color: "#ffbb26" },
+    { key: "REFUND", label: "환불조합원", approved: approvedMemberTypeCounts.REFUND, total: peopleOnPopulationStats?.refundPeopleOnCount ?? null, color: "#ff3e00" },
   ];
-  let approvedMemberDegrees = 0;
-  const approvedMemberGradient = approvedMemberTotal > 0
-    ? `conic-gradient(${approvedMemberComposition.map((item) => {
-      const startDegrees = approvedMemberDegrees;
-      approvedMemberDegrees += (item.count / approvedMemberTotal) * 360;
-      return `${item.color} ${startDegrees}deg ${approvedMemberDegrees}deg`;
-    }).join(", ")})`
-    : "#ece9e4";
-  const approvedMemberAriaLabel = approvedMemberTotal > 0
-    ? `홈페이지 승인 가입자 총 ${approvedMemberTotal}명, ${approvedMemberComposition.map((item) => `${item.label} ${item.count}명`).join(", ")}`
-    : "홈페이지 승인 가입자 0명";
 
   // 토스트 트리거 함수 (선언 순서 준수를 위해 이펙트 위 배치)
   const triggerLoginToast = () => {
@@ -693,17 +697,33 @@ export function PortalShell({
                             >
                               <div className="grid size-24 place-items-center rounded-full bg-white text-center shadow-[0_0_0_1px_rgba(0,0,0,0.03)] sm:size-28">
                                 <div>
-                                  <span className="block text-[10px] font-semibold text-ash">승인 가입자</span>
-                                  <strong className="mt-0.5 block text-2xl font-extrabold text-charcoal-primary">{approvedMemberTotal}명</strong>
+                                  <span className="block text-[10px] font-semibold text-ash">정식 승인</span>
+                                  <strong className="mt-0.5 block text-2xl font-extrabold text-charcoal-primary">
+                                    {registeredPeopleOnCount === null ? `${approvedRegularCount}명` : `${approvedRegularCount} / ${registeredPeopleOnCount}명`}
+                                  </strong>
+                                  {regularApprovalRate !== null && (
+                                    <span className="mt-0.5 block text-[10px] font-semibold text-meadow-green">{regularApprovalRate.toFixed(1)}%</span>
+                                  )}
                                 </div>
                               </div>
                             </div>
                             <div className="min-w-0">
-                              <h3 id="member-summary-title" className="text-base font-bold text-charcoal-primary">홈페이지 승인 가입자 현황</h3>
-                              <p className="mt-1 text-[11px] leading-5 text-ash">승인된 계정의 현재 자격 구성이야.</p>
-                              <dl className="mt-3 grid gap-x-5 gap-y-2 text-xs text-graphite sm:grid-cols-2">
-                                {approvedMemberComposition.map((item) => {
-                                  const percentage = approvedMemberTotal > 0 ? (item.count / approvedMemberTotal) * 100 : 0;
+                              <h3 id="member-summary-title" className="text-base font-bold text-charcoal-primary">정식조합원 홈페이지 가입 현황</h3>
+                              <p className="mt-1 text-[11px] leading-5 text-ash">PeopleOn 원장 인원 중 홈페이지 승인이 완료된 정식조합원 기준이야.</p>
+                              <dl className="mt-3 space-y-2 text-xs text-graphite">
+                                <div className="flex items-center justify-between gap-4">
+                                  <dt className="flex items-center gap-2">
+                                    <span className="size-2.5 rounded-full bg-meadow-green" />
+                                    정식조합원
+                                  </dt>
+                                  <dd className="whitespace-nowrap font-bold text-charcoal-primary">
+                                    {registeredPeopleOnCount === null
+                                      ? `${approvedRegularCount}명 · 원장 확인 필요`
+                                      : `${approvedRegularCount} / ${registeredPeopleOnCount}명 · ${(regularApprovalRate ?? 0).toFixed(1)}%`}
+                                  </dd>
+                                </div>
+                                {memberProgressRows.map((item) => {
+                                  const rate = item.total && item.total > 0 ? (Math.min(item.approved, item.total) / item.total) * 100 : null;
                                   return (
                                     <div key={item.key} className="flex items-center justify-between gap-4">
                                       <dt className="flex items-center gap-2">
@@ -711,11 +731,17 @@ export function PortalShell({
                                         {item.label}
                                       </dt>
                                       <dd className="whitespace-nowrap font-bold text-charcoal-primary">
-                                        {item.count}명 · {percentage.toFixed(1)}%
+                                        {item.total === null
+                                          ? `${item.approved}명 · 원장 확인 필요`
+                                          : `${item.approved} / ${item.total}명${rate === null ? "" : ` · ${rate.toFixed(1)}%`}`}
                                       </dd>
                                     </div>
                                   );
                                 })}
+                                <div className="flex items-center justify-between gap-4">
+                                  <dt className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-sky-blue" />관계자·기타</dt>
+                                  <dd className="whitespace-nowrap font-bold text-charcoal-primary">승인 {approvedMemberTypeCounts.ASSOCIATE}명</dd>
+                                </div>
                               </dl>
                             </div>
                             </div>

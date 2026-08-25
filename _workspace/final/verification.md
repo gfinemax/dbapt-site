@@ -98,6 +98,16 @@
 
 - none
 
+## 2026-08-26 Denominator Correction
+
+- Replaced cross-category composition rates with PeopleOn population-based approval progress.
+- Regular member example verified as 34 approved out of 86 registered members, 39.5%.
+- Focused tests: PASS, 3 files and 17 tests.
+- `pnpm lint`: PASS.
+- `pnpm test`: PASS, 106 files and 676 tests.
+- `pnpm build`: PASS.
+- Desktop and mobile browser checks: PASS with no overflow, error overlay, or console errors.
+
 ---
 
 # Verification - News Editor Typography Consistency (2026-08-13)

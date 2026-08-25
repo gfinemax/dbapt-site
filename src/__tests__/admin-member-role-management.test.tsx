@@ -10,6 +10,8 @@ const personalDocumentBookmarkFindManyMock = vi.fn();
 const personalContentBookmarkFindManyMock = vi.fn();
 const coopNewsFindManyMock = vi.fn();
 const freePostFindManyMock = vi.fn();
+const fetchPeopleOnMemberRowsMock = vi.fn();
+const getPeopleOnPopulationStatsMock = vi.fn();
 
 vi.mock("@/lib/auth", () => ({
   getSession: getSessionMock,
@@ -33,6 +35,13 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/document-serializer", () => ({
   serializeDocuments: vi.fn(() => []),
+}));
+
+vi.mock("@/lib/admin/member-management", () => ({
+  DEFAULT_PEOPLEON_MEMBERS_API_URL: "https://people-on.example/api/members",
+  getPeopleOnApiKey: vi.fn(() => "peopleon-key"),
+  fetchPeopleOnMemberRows: fetchPeopleOnMemberRowsMock,
+  getPeopleOnPopulationStats: getPeopleOnPopulationStatsMock,
 }));
 
 describe("admin member role management data", () => {
@@ -121,6 +130,12 @@ describe("admin member role management data", () => {
           createdAt: new Date("2026-06-01T00:00:00.000Z"),
         },
       ]);
+    fetchPeopleOnMemberRowsMock.mockResolvedValue({ rows: [{ id: "peopleon-1" }], generatedAt: "2026-08-25T00:00:00.000Z" });
+    getPeopleOnPopulationStatsMock.mockReturnValue({
+      registeredPeopleOnCount: 86,
+      preliminaryPeopleOnCount: 5,
+      refundPeopleOnCount: 10,
+    });
   });
 
   it("loads all approved member, refund, and associate accounts for role conversion even when email is missing", async () => {
@@ -158,6 +173,11 @@ describe("admin member role management data", () => {
             }),
           }),
         ],
+        peopleOnPopulationStats: {
+          registeredPeopleOnCount: 86,
+          preliminaryPeopleOnCount: 5,
+          refundPeopleOnCount: 10,
+        },
       }),
       undefined,
     );

@@ -26,3 +26,11 @@
 - Update focused portal-shell assertions for composition, independent metrics, and zero state.
 - Run focused tests, lint, the full test suite, and a production build.
 - Verify the administrator dashboard at desktop and mobile sizes, then complete the repository UI review gate.
+
+## Approved Correction: Compare Like With Like
+
+- Use PeopleOn registered-member count as the denominator for approved regular homepage accounts.
+- Draw the donut as regular homepage approval progress, not composition across unrelated member types.
+- Show preliminary and refund progress only against their matching PeopleOn populations.
+- Show associate/other as a count because no equivalent PeopleOn population is defined.
+- If PeopleOn data is unavailable, hide rates and state that the registry needs confirmation.

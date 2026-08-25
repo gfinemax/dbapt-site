@@ -209,3 +209,10 @@
 - Implementation boundary: 관리자 전용 화면에서 홈페이지 계정 상태를 읽기 전용으로 요약하고 기존 PeopleOn 조합원 관리 페이지로 이동하는 링크를 제공한다. PeopleOn 데이터 쓰기와 공개 UI 노출은 제외한다.
 - Conflicts: none.
 - Planning may continue: yes. 사용자가 가입자 구성 원형 차트 계획을 승인했다.
+
+## 2026-08-25 Denominator Correction
+
+- Governing spec remains `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`.
+- Boundary: 기존 read-only PeopleOn 원장 통계를 관리자 홈에 재사용해 같은 자격끼리만 비교한다.
+- Conflicts: none.
+- Planning may continue: yes. 사용자가 잘못된 구성비를 구체적으로 지적하고 올바른 분모를 제시했다.
