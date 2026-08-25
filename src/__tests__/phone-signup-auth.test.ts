@@ -38,16 +38,11 @@ describe("phone password signup auth", () => {
   it("validates the approved password rules", async () => {
     const { validateSignupPassword } = await import("@/lib/signup-password");
 
-    expect(validateSignupPassword("safe7821", "01012345678").valid).toBe(true);
-    expect(validateSignupPassword("safe7821!", "01012345678").valid).toBe(true);
-    expect(validateSignupPassword("abc1234", "01012345678").error).toContain("8자 이상");
-    expect(validateSignupPassword("abcdefgh", "01012345678").error).toContain("영문과 숫자");
-    expect(validateSignupPassword("12345678", "01012345678").error).toContain("영문과 숫자");
-    expect(validateSignupPassword("abcd1234", "01012345678").error).toContain("연속된 숫자");
-    expect(validateSignupPassword("aaaa1111", "01012345678").error).toContain("반복된 문자");
-    expect(validateSignupPassword("abc5678x", "01012345678").error).toContain("휴대폰 번호");
-    expect(validateSignupPassword("safe900101", "01012345678").error).toContain("생년월일");
-    expect(validateSignupPassword("safe19900101", "01012345678").error).toContain("생년월일");
+    expect(validateSignupPassword("123456", "01012345678").valid).toBe(true);
+    expect(validateSignupPassword("12345", "01012345678").error).toContain("숫자 6자리");
+    expect(validateSignupPassword("1234567", "01012345678").error).toContain("숫자 6자리");
+    expect(validateSignupPassword("abcdef", "01012345678").error).toContain("숫자 6자리");
+    expect(validateSignupPassword("12345a", "01012345678").error).toContain("숫자 6자리");
   });
 
   it("creates a pending phone-password signup with a hashed password", async () => {
@@ -55,8 +50,8 @@ describe("phone password signup auth", () => {
     const formData = new FormData();
     formData.set("signupName", "홍길동");
     formData.set("signupPhone", "010-1234-5678");
-    formData.set("signupPassword", "safe7821");
-    formData.set("signupPasswordConfirm", "safe7821");
+    formData.set("signupPassword", "123456");
+    formData.set("signupPasswordConfirm", "123456");
     formData.set("signupMemo", "101동 확인 요청");
     prismaMock.user.findFirst.mockResolvedValue(null);
     prismaMock.user.create.mockImplementation(async ({ data }) => ({ id: "pending-1", ...data }));
@@ -80,16 +75,16 @@ describe("phone password signup auth", () => {
         isActive: true,
       }),
     );
-    expect(createdData.passwordHash).not.toBe("safe7821");
-    expect(await bcrypt.compare("safe7821", createdData.passwordHash)).toBe(true);
+    expect(createdData.passwordHash).not.toBe("123456");
+    expect(await bcrypt.compare("123456", createdData.passwordHash)).toBe(true);
   });
 
   it("sets a long-lived session cookie for phone-password login", async () => {
     const { loginAction } = await import("@/lib/auth");
-    const passwordHash = await bcrypt.hash("safe7821", 10);
+    const passwordHash = await bcrypt.hash("123456", 10);
     const formData = new FormData();
     formData.set("loginId", "010-1234-5678");
-    formData.set("password", "safe7821");
+    formData.set("password", "123456");
     prismaMock.user.findUnique.mockResolvedValue({
       id: "member-1",
       loginId: "01012345678",
@@ -121,11 +116,11 @@ describe("phone password signup auth", () => {
 
   it("changes the current password when the current password is correct", async () => {
     const { changePasswordAction, createSessionToken } = await import("@/lib/auth");
-    const existingPasswordHash = await bcrypt.hash("safe7821", 10);
+    const existingPasswordHash = await bcrypt.hash("123456", 10);
     const formData = new FormData();
-    formData.set("currentPassword", "safe7821");
-    formData.set("newPassword", "fresh9081");
-    formData.set("newPasswordConfirm", "fresh9081");
+    formData.set("currentPassword", "123456");
+    formData.set("newPassword", "654321");
+    formData.set("newPasswordConfirm", "654321");
     mockSessionCookie.value = await createSessionToken({
       id: "member-1",
       loginId: "01012345678",
@@ -162,16 +157,16 @@ describe("phone password signup auth", () => {
       where: { id: "member-1" },
       data: { passwordHash: updatedPasswordHash },
     });
-    expect(updatedPasswordHash).not.toBe("fresh9081");
-    expect(await bcrypt.compare("fresh9081", updatedPasswordHash)).toBe(true);
+    expect(updatedPasswordHash).not.toBe("654321");
+    expect(await bcrypt.compare("654321", updatedPasswordHash)).toBe(true);
   });
 
   it("rejects password change when the current password is wrong", async () => {
     const { changePasswordAction, createSessionToken } = await import("@/lib/auth");
     const formData = new FormData();
-    formData.set("currentPassword", "wrong-password");
-    formData.set("newPassword", "fresh9081");
-    formData.set("newPasswordConfirm", "fresh9081");
+    formData.set("currentPassword", "000000");
+    formData.set("newPassword", "654321");
+    formData.set("newPasswordConfirm", "654321");
     mockSessionCookie.value = await createSessionToken({
       id: "member-1",
       loginId: "01012345678",
@@ -182,7 +177,7 @@ describe("phone password signup auth", () => {
       id: "member-1",
       loginId: "01012345678",
       phone: "01012345678",
-      passwordHash: await bcrypt.hash("safe7821", 10),
+      passwordHash: await bcrypt.hash("123456", 10),
       isActive: true,
     });
 
@@ -195,9 +190,9 @@ describe("phone password signup auth", () => {
   it("rejects password change for passwordless social accounts", async () => {
     const { changePasswordAction, createSessionToken } = await import("@/lib/auth");
     const formData = new FormData();
-    formData.set("currentPassword", "safe7821");
-    formData.set("newPassword", "fresh9081");
-    formData.set("newPasswordConfirm", "fresh9081");
+    formData.set("currentPassword", "123456");
+    formData.set("newPassword", "654321");
+    formData.set("newPasswordConfirm", "654321");
     mockSessionCookie.value = await createSessionToken({
       id: "google-1",
       loginId: null,
@@ -221,9 +216,9 @@ describe("phone password signup auth", () => {
   it("rejects password change when the new password confirmation does not match", async () => {
     const { changePasswordAction, createSessionToken } = await import("@/lib/auth");
     const formData = new FormData();
-    formData.set("currentPassword", "safe7821");
-    formData.set("newPassword", "fresh9081");
-    formData.set("newPasswordConfirm", "fresh9082");
+    formData.set("currentPassword", "123456");
+    formData.set("newPassword", "654321");
+    formData.set("newPasswordConfirm", "654322");
     mockSessionCookie.value = await createSessionToken({
       id: "member-1",
       loginId: "01012345678",

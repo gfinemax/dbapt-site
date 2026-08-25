@@ -325,6 +325,28 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Simplified numeric six-digit new-signup form
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-25-simplified-six-digit-signup.md`
+- Files or pages reviewed: `src/app/login/login-client.tsx`, `/login` signup mode on desktop and mobile
+
+## Boundary Review
+- Finding: PASS
+- Evidence: Signup remains approval-gated and no protected service or private data was exposed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: The compact notice states that the office verifies the member roster before approving the account; no immediate-access promise was added.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Existing Pretendard typography, warm surfaces, pill actions, labels, independent password visibility controls, and focus styles remain. Desktop and mobile checks showed no horizontal overflow or framework error overlay.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+## Reviewed Change
 - Feature: Notice mobile image width parity
 - Governing spec: `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`
 - Implementation plan: `docs/superpowers/plans/2026-07-10-notice-mobile-image-width-parity.md`

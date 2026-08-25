@@ -120,22 +120,13 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
       wide
     >
       {isSignupMode ? (
-        <div className="mx-auto mt-8 max-w-2xl">
+        <div className="mx-auto mt-6 max-w-2xl">
           <section className="soft-panel p-5 text-left sm:p-6" aria-label="신규 가입 신청 폼">
-            <div className="rounded-xl bg-[#f8f7f4] p-4 text-xs leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-              <h2 className="text-sm font-semibold text-charcoal-primary">가입 신청 절차</h2>
-              <p className="mt-2">
-                신청 후 계정은 승인 대기 상태로 접수됩니다. 승인 전에는 자료실과
-                개인 분담금 정보 열람이 제한됩니다.
-              </p>
-              <ol className="mt-3 space-y-1">
-                <li>1. 휴대폰 번호와 본인이 사용할 비밀번호를 입력합니다.</li>
-                <li>2. 사무국이 조합원 명부와 신청 정보를 대조합니다.</li>
-                <li>3. 승인 후 정식 조합원 또는 환불 조합원 권한이 부여됩니다.</li>
-              </ol>
+            <div className="rounded-xl bg-[#f8f7f4] px-4 py-3 text-xs leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+              신청서를 보내면 사무국이 조합원 명부를 확인한 뒤 계정을 승인합니다.
             </div>
 
-            <form action={signupFormAction} className="mt-5 space-y-3">
+            <form action={signupFormAction} className="mt-4 space-y-3">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupName">
                   신청자 이름
@@ -171,9 +162,12 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                     id="signupPassword"
                     name="signupPassword"
                     type={showSignupPassword ? "text" : "password"}
+                    inputMode="numeric"
+                    maxLength={6}
+                    pattern="\d{6}"
                     required
                     autoComplete="new-password"
-                    placeholder="8자 이상, 영문과 숫자 포함"
+                    placeholder="숫자 6자리"
                     className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
                   />
                   <button
@@ -197,9 +191,12 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                     id="signupPasswordConfirm"
                     name="signupPasswordConfirm"
                     type={showSignupPasswordConfirm ? "text" : "password"}
+                    inputMode="numeric"
+                    maxLength={6}
+                    pattern="\d{6}"
                     required
                     autoComplete="new-password"
-                    placeholder="비밀번호를 한 번 더 입력하세요"
+                    placeholder="비밀번호 6자리를 한 번 더 입력하세요"
                     className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
                   />
                   <button
@@ -214,12 +211,6 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   </button>
                 </div>
               </div>
-              <div className="rounded-xl bg-white px-3 py-3 text-[11px] leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                <p>비밀번호는 8자 이상으로 입력해 주세요.</p>
-                <p>영문과 숫자를 함께 사용해 주세요.</p>
-                <p>특수문자는 선택사항입니다.</p>
-                <p>휴대폰 번호, 생년월일, 연속된 숫자 등은 사용할 수 없습니다.</p>
-              </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupMemo">
                   전달 메모
@@ -227,8 +218,8 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                 <textarea
                   id="signupMemo"
                   name="signupMemo"
-                  rows={4}
-                  placeholder="동·호수, 조합원 번호 등 확인에 필요한 내용을 입력하세요"
+                  rows={2}
+                  placeholder="동·호수나 조합원 번호가 있다면 입력하세요 (선택)"
                   className="w-full resize-none rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
                 />
               </div>
@@ -242,7 +233,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   {signupState.message}
                 </div>
               )}
-              <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center">
                 <button
                   type="submit"
                   disabled={isSignupPending}

@@ -131,14 +131,13 @@ describe("role-specific portal preview pages", () => {
     expect(screen.queryByLabelText("로그인 폼")).not.toBeInTheDocument();
     expect(screen.queryByText("로그인 후 이동 경로")).not.toBeInTheDocument();
     expect(screen.queryByText("계정 권한 안내")).not.toBeInTheDocument();
-    expect(screen.getByText("가입 신청 절차")).toBeInTheDocument();
+    expect(screen.getByText("신청서를 보내면 사무국이 조합원 명부를 확인한 뒤 계정을 승인합니다.")).toBeInTheDocument();
     expect(screen.getByLabelText("신청자 이름")).toHaveAttribute("name", "signupName");
     expect(screen.getByLabelText("휴대폰 번호")).toHaveAttribute("name", "signupPhone");
     expect(screen.getByLabelText("비밀번호", { selector: 'input[name="signupPassword"]' })).toHaveAttribute("name", "signupPassword");
     expect(screen.getByLabelText("비밀번호 확인")).toHaveAttribute("name", "signupPasswordConfirm");
     expect(screen.getByLabelText("전달 메모")).toHaveAttribute("name", "signupMemo");
-    expect(screen.getByText("비밀번호는 8자 이상으로 입력해 주세요.")).toBeInTheDocument();
-    expect(screen.getByText("영문과 숫자를 함께 사용해 주세요.")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("숫자 6자리")).toHaveAttribute("pattern", "\\d{6}");
     expect(screen.getByRole("button", { name: "가입 신청하기" })).toHaveAttribute(
       "type",
       "submit",

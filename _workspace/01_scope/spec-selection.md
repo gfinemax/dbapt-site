@@ -186,3 +186,10 @@
 - Identity boundary: prefer exact `peopleon_id`; accept legacy `member_id` only when exactly one row matches. Names are display values, never identity keys.
 - Presentation boundary: mask phone, address, birth date, account, and certificate number before returning them to the browser.
 - Failure boundary: retain current website values and show a temporary connection-check state without failing the member portal.
+
+### Simplified Six-Digit Signup
+
+- Selected basis: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Boundary: Keep the existing phone-password signup and pending approval flow; simplify only its visible form and align signup/password-change validation to the user-approved numeric six-digit rule.
+- Conflict resolution: Update the operations manual from the previous eight-character rule to the newly approved six-digit rule.
+- Planning may continue: yes, based on the user's explicit clarification.

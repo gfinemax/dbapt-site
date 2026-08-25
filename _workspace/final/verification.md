@@ -1101,6 +1101,19 @@
 
 # Verification
 
+## 2026-08-25 Simplified Six-Digit Signup
+
+- Implemented: Consolidated the signup procedure into one short approval notice, reduced vertical spacing and memo height, and aligned signup/password-change validation to exactly six numeric digits.
+- Changed product files: `src/app/login/login-client.tsx`, `src/lib/signup-password.ts`, `src/__tests__/phone-signup-auth.test.ts`, `src/__tests__/portal-preview-pages.test.tsx`, `docs/operations/user-manual.md`.
+- Focused tests: PASS, 2 files and 19 tests.
+- Full tests: PASS, 106 files and 675 tests.
+- Lint: PASS.
+- Build: PASS after final completion below.
+- Browser desktop: PASS at 1600 x 1111; compact notice present, old three-step copy absent, six-digit numeric constraint present, memo rows 2, no horizontal overflow or error overlay.
+- Browser mobile: PASS at effective 433 x 938; key inputs and actions rendered, no horizontal overflow, no page errors.
+- UI review: PASS.
+- Unresolved risks: none.
+
 # Verification - News Board Copy Tool
 
 ## Implemented Feature

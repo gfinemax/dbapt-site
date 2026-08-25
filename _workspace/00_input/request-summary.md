@@ -216,3 +216,11 @@
 - Read member number, name, phone, legal address, joined date, member status, unit group, certificate status, related-name presence, birth date, and masked refund-account metadata.
 - Never match or merge by name. Keep website values as the fallback when the API key, remote service, or exact external ID is unavailable.
 - Keep corrections in the existing website approval and PeopleON reflection workflow; this slice does not call a PeopleON write API.
+
+# Current Request: Simplified Six-Digit Signup
+
+- Requested feature slice: Simplify the `/login` new-signup form and use a numeric six-digit password.
+- Preserve: Pending approval, role assignment, login routing, Google OAuth, signup persistence, and password visibility controls.
+- Explicitly excluded scope: Public navigation or protected-service access changes.
+- Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Unanswered decision: none; the user explicitly clarified the six-digit rule.
