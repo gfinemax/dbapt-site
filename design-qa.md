@@ -1,36 +1,42 @@
-# Design QA - Member Contribution Payment-First Redesign
+# Design QA: Mobile-First Login And Signup
 
-- Source visual truth: `C:/Users/finemax/.codex/generated_images/01a02a36-2331-7742-8333-ab92f1994d76/exec-0fb3f46d-6cf6-42ee-a9f7-8a88861e0c8a.png`
-- Implementation screenshots: temporary desktop, mobile, and open-drawer browser captures were generated under `_workspace/04_review/`, opened for comparison, and removed after review so generated binaries are not committed.
-- Combined comparison: a temporary 2800 x 1200 side-by-side board was opened and reviewed before cleanup.
-- Viewports: desktop 1440 x 1200; mobile override 390 x 844 (Chrome reported a 433 CSS-pixel minimum viewport); final drawer maximum width is 1040px.
-- Source pixels: 1372 x 1146. Desktop implementation pixels: 1778 x 3000. Comparison normalized both top-level surfaces into a 2800 x 1200 side-by-side board.
-- State: source visual uses illustrative populated data; browser implementation uses the current authenticated member's truthful pending state. Populated content was verified by component tests rather than fabricated in the browser.
+- Source visual truth: user-supplied current login screenshot and `_workspace/04_review/source-login-mobile.png`
+- Implementation screenshots: `_workspace/04_review/login-mobile.png`, `_workspace/04_review/signup-mobile.png`, `_workspace/04_review/signup-desktop.png`
+- Viewports: source effective 426 x 853; implementation mobile effective 433 x 938; implementation desktop effective 1600 x 1111
+- Density normalization: CSS-pixel browser captures at device scale 1; mobile comparison uses the same sub-640px responsive state, with proportional layout comparison because the connected browser exposed a 7px width difference.
+- States: logged-out login, logged-out new signup
 
-## Fidelity Review
+## Full-View Comparison Evidence
 
-- Fonts and typography: PASS. Existing Pretendard UI typography, restrained weights, large paid-amount hierarchy, and readable Korean wrapping are preserved.
-- Spacing and layout rhythm: PASS. The paid-amount board is the first dashboard surface; supporting unit/due-date data is secondary; the personal-library drawer is 1040px wide with a 168px internal sidebar, horizontal five-stage timeline, and recent-payment table.
-- Colors and visual tokens: PASS. Warm canvas, parchment inset surfaces, charcoal text, orange emphasis, and green success semantics remain within `DESIGN.md`.
-- Image and icon fidelity: PASS. The screen uses the repository's existing Lucide icon system for functional receipt, calendar, home, stage, and status cues; no fake raster asset or placeholder was introduced.
-- Copy and content: PASS. `내가 납부한 금액` is primary. Total planned amount, unpaid amount, progress, and percentage are absent from the dashboard. Pending data remains explicitly pending.
+- The source mobile state required scrolling through a desktop-derived login card and account-rights content before reaching signup.
+- The implementation moves a two-option authentication switch directly below the compact heading and hides secondary account-rights guidance on mobile.
+- Signup now begins at y=297, fits the primary submit action within the first 1075px page, and has no horizontal overflow or framework overlay.
 
-## Interaction And Accessibility
+## Focused Region Comparison Evidence
 
-- The full ledger disclosure remains keyboard-operable through native `details`/`summary`.
-- `전체 납부내역 보기` retains the existing complete-ledger interaction.
-- The drawer keeps native overlay dismissal and mobile close controls while the desktop layout gains a persistent personal-service navigation rail.
-- Current member pending state rendered without fake amounts; browser console showed no implementation error affecting the reviewed surface.
+- Form controls were inspected separately because mobile input ergonomics are the core request.
+- All four signup inputs render at 48px height and 16px font size; the submit action renders at 48px.
+- The six-digit numeric constraint, visibility controls, labels, optional memo, error/success regions, and approval copy remain present.
 
-## Comparison History
+## Required Fidelity Surfaces
 
-- Initial browser comparison found the landing-page personal-library drawer still used its local 672px implementation even though the shared host was widened.
-- Fixed the personal drawer width in the landing, about, and disclosure shells while leaving unrelated drawers unchanged.
-- The approved corrective pass replaced the earlier 768px card stack with the selected reference structure: 1040px panel, compact welcome header, left service navigation, receipt-style paid amount hero, connected stage timeline, and ledger table.
+- Fonts and typography: PASS. Existing Pretendard hierarchy is retained; mobile headline and supporting copy are reduced without changing desktop type.
+- Spacing and layout rhythm: PASS. Mobile nested-shell padding is removed, tabs and forms move above secondary guidance, and desktop signup uses two columns.
+- Colors and visual tokens: PASS. Warm canvas, parchment panels, stone inset outlines, orange eyebrow, and dark pill CTA remain unchanged.
+- Image quality and asset fidelity: PASS. This surface has no new raster or decorative assets; the existing Google mark and Lucide visibility icon remain intact.
+- Copy and content: PASS. Authentication and approval meaning is unchanged; only duplicated guidance and the redundant signup promotion are removed.
 
 ## Findings
 
-- P0/P1/P2: none.
-- P3: the live pending state intentionally omits financial figures until approved ledger data exists; its receipt illustration and layout remain present without inventing amounts.
+- No actionable P0, P1, or P2 findings remain.
+- P3: The optional memo remains visible rather than collapsible so applicants can still provide matching information without another interaction.
 
-- final result: passed
+## Comparison History
+
+- Initial source finding: mobile users reached signup only after a tall login and account-rights sequence.
+- Fix: added immediate login/signup tabs, compacted the mobile shell, hid secondary rights guidance below `md`, increased touch targets, and used desktop-only two-column signup fields.
+- Post-fix evidence: mobile login and signup screenshots show the mode switch and form above the fold; measured overflow is false and application console errors are empty.
+
+## Final Result
+
+final result: passed

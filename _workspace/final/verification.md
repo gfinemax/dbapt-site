@@ -1114,6 +1114,21 @@
 - UI review: PASS.
 - Unresolved risks: none.
 
+## 2026-08-25 Mobile-First Login And Signup Layout
+
+- Implemented: Added immediate login/signup tabs, compacted the mobile status shell, moved secondary account-rights guidance off the mobile path, increased form touch targets, and used a two-column desktop signup layout.
+- Changed product files: `src/components/landing/status-page.tsx`, `src/app/login/login-client.tsx`, `src/__tests__/portal-preview-pages.test.tsx`.
+- Focused tests: PASS, 2 files and 19 tests.
+- Full tests: PASS, 106 files and 675 tests.
+- Lint: PASS.
+- Build: PASS.
+- Browser mobile login: PASS; mode tabs render above the form, no horizontal overflow or application console errors.
+- Browser mobile signup: PASS at effective 433 x 938; form begins at y=297, all four inputs and submit action are 48px high, input font size is 16px, and page height is 1075px.
+- Browser desktop signup: PASS at effective 1600 x 1111; paired fields share rows, no overflow or error overlay.
+- Product Design QA: PASS in `design-qa.md`.
+- Repository UI review: PASS.
+- Unresolved risks: none.
+
 # Verification - News Board Copy Tool
 
 ## Implemented Feature

@@ -118,15 +118,36 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
           : "조합원 전용 포털에 오신 것을 환영합니다. 발급받은 계정으로 로그인하면 권한에 맞는 전용 화면으로 이동합니다."
       }
       wide
+      compactMobile
     >
+      <div className="mx-auto mt-5 grid max-w-sm grid-cols-2 rounded-full bg-[#f2f0ed] p-1" role="tablist" aria-label="인증 방식">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isSignupMode}
+          onClick={() => setAuthMode("login")}
+          className={`h-11 rounded-full text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 ${!isSignupMode ? "bg-white text-midnight shadow-sm" : "text-graphite hover:text-midnight"}`}
+        >
+          로그인
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isSignupMode}
+          onClick={() => setAuthMode("signup")}
+          className={`h-11 rounded-full text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 ${isSignupMode ? "bg-white text-midnight shadow-sm" : "text-graphite hover:text-midnight"}`}
+        >
+          신규 가입
+        </button>
+      </div>
       {isSignupMode ? (
-        <div className="mx-auto mt-6 max-w-2xl">
-          <section className="soft-panel p-5 text-left sm:p-6" aria-label="신규 가입 신청 폼">
+        <div className="mx-auto mt-4 max-w-2xl sm:mt-6">
+          <section className="soft-panel p-4 text-left sm:p-6" aria-label="신규 가입 신청 폼">
             <div className="rounded-xl bg-[#f8f7f4] px-4 py-3 text-xs leading-5 text-graphite shadow-[inset_0_0_0_1px_var(--stone-surface)]">
               신청서를 보내면 사무국이 조합원 명부를 확인한 뒤 계정을 승인합니다.
             </div>
 
-            <form action={signupFormAction} className="mt-4 space-y-3">
+            <form action={signupFormAction} className="mt-4 grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupName">
                   신청자 이름
@@ -137,7 +158,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   type="text"
                   required
                   placeholder="조합원 명부의 성명을 입력하세요"
-                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                    className="h-12 w-full rounded-xl border border-[#f2f0ed] bg-white px-4 text-base text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange sm:text-sm"
                 />
               </div>
               <div>
@@ -150,7 +171,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   type="tel"
                   required
                   placeholder="010-1234-5678"
-                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  className="h-12 w-full rounded-xl border border-[#f2f0ed] bg-white px-4 text-base text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange sm:text-sm"
                 />
               </div>
               <div>
@@ -168,7 +189,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                     required
                     autoComplete="new-password"
                     placeholder="숫자 6자리"
-                    className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                    className="h-12 w-full rounded-xl border border-[#f2f0ed] bg-white px-4 pr-12 text-base text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange sm:text-sm"
                   />
                   <button
                     type="button"
@@ -197,7 +218,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                     required
                     autoComplete="new-password"
                     placeholder="비밀번호 6자리를 한 번 더 입력하세요"
-                    className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                    className="h-12 w-full rounded-xl border border-[#f2f0ed] bg-white px-4 pr-12 text-base text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange sm:text-sm"
                   />
                   <button
                     type="button"
@@ -211,7 +232,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   </button>
                 </div>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label className="mb-1.5 block text-xs font-semibold text-charcoal-primary" htmlFor="signupMemo">
                   전달 메모
                 </label>
@@ -220,41 +241,34 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   name="signupMemo"
                   rows={2}
                   placeholder="동·호수나 조합원 번호가 있다면 입력하세요 (선택)"
-                  className="w-full resize-none rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  className="w-full resize-none rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-base text-charcoal-primary outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange sm:text-sm"
                 />
               </div>
               {signupState?.error && (
-                <div className="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600">
+                <div className="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-600 sm:col-span-2">
                   {signupState.error}
                 </div>
               )}
               {signupState?.success && (
-                <div className="rounded-lg bg-meadow-green/10 p-3 text-xs font-semibold text-charcoal-primary">
+                <div className="rounded-lg bg-meadow-green/10 p-3 text-xs font-semibold text-charcoal-primary sm:col-span-2">
                   {signupState.message}
                 </div>
               )}
-              <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center">
+              <div className="pt-1 sm:col-span-2">
                 <button
                   type="submit"
                   disabled={isSignupPending}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-midnight px-5 text-xs font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-full bg-midnight px-5 text-sm font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
                 >
                   {isSignupPending ? "신청 접수 중..." : "가입 신청하기"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAuthMode("login")}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-xs font-semibold text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
-                >
-                  로그인으로 돌아가기
                 </button>
               </div>
             </form>
           </section>
         </div>
       ) : (
-      <div className="mx-auto mt-8 grid max-w-5xl gap-8 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.85fr)]">
-        <section className="soft-panel p-6 text-left" aria-label="로그인 폼">
+      <div className="mx-auto mt-4 grid max-w-5xl gap-6 sm:mt-6 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.8fr)]">
+        <section className="soft-panel p-4 text-left sm:p-6" aria-label="로그인 폼">
           <h2 className="text-lg font-semibold text-charcoal-primary">로그인</h2>
           <p className="mt-1 text-xs text-graphite">인증 정보를 입력하여 조합원 포털에 접속합니다.</p>
 
@@ -269,7 +283,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                 name="loginId"
                 placeholder="휴대폰 번호 또는 아이디를 입력하세요"
                 required
-                className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 text-[14px] outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  className="h-12 w-full rounded-xl border border-[#f2f0ed] bg-white px-4 text-base outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange sm:text-sm"
               />
             </div>
             <div>
@@ -284,7 +298,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
                   placeholder="비밀번호를 입력하세요"
                   required
                   autoComplete="current-password"
-                  className="w-full rounded-xl border border-[#f2f0ed] bg-white px-4 py-3 pr-12 text-[14px] outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange"
+                  className="h-12 w-full rounded-xl border border-[#f2f0ed] bg-white px-4 pr-12 text-base outline-none transition placeholder:text-[#848281] focus:border-ember-orange focus:ring-1 focus:ring-ember-orange sm:text-sm"
                 />
                 <button
                   type="button"
@@ -352,7 +366,7 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
         </section>
 
         <section
-          className="flex flex-col gap-5 text-left"
+          className="hidden flex-col gap-5 text-left md:flex"
           aria-label="로그인 안내"
         >
           <div className="soft-panel p-5">
@@ -376,23 +390,6 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
             </div>
           </div>
 
-          <div className="soft-panel p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-charcoal-primary">처음 이용하는 조합원인가요?</h3>
-                <p className="mt-1 text-xs leading-5 text-graphite">
-                  휴대폰 번호와 비밀번호로 가입을 신청하면 사무국이 명부와 대조한 뒤 승인합니다.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAuthMode("signup")}
-                className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-midnight px-4 text-xs font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
-              >
-                신규 가입 신청
-              </button>
-            </div>
-          </div>
         </section>
       </div>
       )}

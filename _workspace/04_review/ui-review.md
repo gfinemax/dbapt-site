@@ -26,6 +26,32 @@
 - Result: PASS
 - Required action: none
 
+---
+
+# UI Review: Mobile-First Login And Signup
+
+## Reviewed Change
+- Feature: Responsive login and new-signup layout
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-25-mobile-first-login-signup-layout.md`
+- Files or pages reviewed: `src/components/landing/status-page.tsx`, `src/app/login/login-client.tsx`, `/login` desktop and mobile states
+
+## Boundary Review
+- Finding: PASS
+- Evidence: No protected content, role permission, authentication action, or public-navigation boundary changed.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Signup still states that the office verifies the member roster and approves the account; no immediate access is implied.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Login/signup tabs expose selected state, keyboard focus remains visible, mobile controls are 48px high with 16px input text, and desktop/mobile checks show no horizontal overflow or application errors.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
 # UI Review: 내정보 1차 5카드 구성
 
 ## Reviewed Change

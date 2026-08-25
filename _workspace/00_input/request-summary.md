@@ -224,3 +224,11 @@
 - Explicitly excluded scope: Public navigation or protected-service access changes.
 - Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Unanswered decision: none; the user explicitly clarified the six-digit rule.
+
+# Current Request: Mobile-First Login And Signup Layout
+
+- Requested feature slice: Improve the `/login` layout and make new signup substantially easier on mobile.
+- Preserve: Existing login, Google OAuth, six-digit signup validation, pending approval, error/success feedback, and password visibility controls.
+- Explicitly excluded scope: Authentication API, session, role, persistence, or public-navigation changes.
+- Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Unanswered decision: none; the supplied screenshot establishes the current problem state and the user explicitly requested implementation.

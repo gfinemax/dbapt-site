@@ -124,7 +124,8 @@ describe("role-specific portal preview pages", () => {
     expect(screen.getByText("관계자 및 기타 승인 계정")).toBeInTheDocument();
     expect(screen.getByText("사무국이 승인한 범위 안에서만 자료 열람이 가능합니다.")).toBeInTheDocument();
     expect(screen.queryByText("관리자 계정은 문서 등록과 감사 로그 화면으로 이동합니다.")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "신규 가입 신청" }));
+    expect(screen.getByRole("tab", { name: "로그인" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.click(screen.getByRole("tab", { name: "신규 가입" }));
 
     expect(screen.getByRole("heading", { name: "신규 가입 신청" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "조합원 로그인" })).not.toBeInTheDocument();
@@ -142,7 +143,7 @@ describe("role-specific portal preview pages", () => {
       "type",
       "submit",
     );
-    expect(screen.getByRole("button", { name: "로그인으로 돌아가기" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "신규 가입" })).toHaveAttribute("aria-selected", "true");
     expect(screen.queryByRole("button", { name: "Google 계정으로 신청하기" })).not.toBeInTheDocument();
     expect(screen.queryByText("데모 테스트 계정 정보")).not.toBeInTheDocument();
     expect(screen.queryByText("member1 / member123")).not.toBeInTheDocument();
@@ -191,7 +192,7 @@ describe("role-specific portal preview pages", () => {
 
     render(await Page({ searchParams: Promise.resolve({}) }));
 
-    fireEvent.click(screen.getByRole("button", { name: "신규 가입 신청" }));
+    fireEvent.click(screen.getByRole("tab", { name: "신규 가입" }));
 
     const signupPasswordInput = screen.getByLabelText("비밀번호", { selector: 'input[name="signupPassword"]' });
     const signupPasswordConfirmInput = screen.getByLabelText("비밀번호 확인");

@@ -193,3 +193,10 @@
 - Boundary: Keep the existing phone-password signup and pending approval flow; simplify only its visible form and align signup/password-change validation to the user-approved numeric six-digit rule.
 - Conflict resolution: Update the operations manual from the previous eight-character rule to the newly approved six-digit rule.
 - Planning may continue: yes, based on the user's explicit clarification.
+
+### Mobile-First Login And Signup Layout
+
+- Selected basis: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
+- Boundary: Reorder and compact only the `/login` presentation while preserving all existing authentication and signup contracts.
+- Conflicts: none.
+- Planning may continue: yes; the request approves responsive layout implementation.
