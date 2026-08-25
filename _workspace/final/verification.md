@@ -2801,3 +2801,24 @@
 - Identity verification: production ledger member `56` returned one UUID PeopleON link and preserved the approved paid total of 194,000,000원. No name-based persistence or merge was used.
 - Ledger validation: focused integration tests 2 passed; Oracle Cloud deployment workflow completed successfully for ledger commit `932b2c8`.
 - Production member verification: PASS. The linked account resolved to PeopleON and returned the member name, masked phone, masked legal address, status, 84㎡ unit, certificate status, and related-name data. Internal UUID display was replaced with a connection label, numeric unit groups are normalized with `㎡`, certificate suffixes use digits only, and only explicit co-owner relationships affect 공동명의 표시.
+
+---
+
+# Verification: Admin Member Composition Donut
+
+## Implemented Feature
+- 관리자 대시보드의 주 원형 차트를 홈페이지 승인 가입자 자격 구성으로 변경했다.
+- 정식, 예비, 환불, 관계자·기타의 인원과 비율, 접근성 설명과 0명 상태를 추가했다.
+- 승인 대기, 보안 활동, 문서 현황은 독립 운영 지표로 유지했다.
+- 중복되던 하단 회원 자격 요약을 제거하고 기존 PeopleOn 관리 이동 링크를 메인 요약에 유지했다.
+
+## Checks
+- `pnpm test -- src/__tests__/portal-shell.test.tsx`: PASS, 14 tests
+- `pnpm lint`: PASS
+- `pnpm test`: PASS, 106 files and 676 tests
+- `pnpm build`: PASS
+- Desktop browser: PASS, no overflow, error overlay, or console errors
+- Mobile browser: PASS, no horizontal overflow, error overlay, or console errors
+
+## Unresolved Risks Or Follow-up Specs
+- none

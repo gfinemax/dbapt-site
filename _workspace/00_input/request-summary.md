@@ -232,3 +232,12 @@
 - Explicitly excluded scope: Authentication API, session, role, persistence, or public-navigation changes.
 - Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`.
 - Unanswered decision: none; the supplied screenshot establishes the current problem state and the user explicitly requested implementation.
+
+---
+
+# 2026-08-25 Admin Member Composition Donut
+
+- Requested feature slice: 관리자 대시보드의 핵심 원형 차트를 문서 구성에서 홈페이지 승인 가입자 자격 구성으로 변경한다.
+- Explicitly excluded scope: PeopleOn 원장 쓰기, 회원 승인/자격 변경 로직 변경, 인증 변경, 공개 화면 노출, 신규 API 또는 DB 스키마 추가.
+- Candidate governing specification: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
+- Unanswered decision: none. 홈페이지 승인 계정을 기준으로 하며 승인 대기, 보안 활동, 문서는 독립 지표로 유지한다.

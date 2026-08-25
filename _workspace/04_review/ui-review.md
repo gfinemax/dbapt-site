@@ -25,7 +25,6 @@
 ## Outcome
 - Result: PASS
 - Required action: none
-
 ---
 
 # UI Review: Mobile-First Login And Signup
@@ -1404,6 +1403,32 @@
 ## Design And Accessibility Review
 - Finding: PASS.
 - Evidence: The existing warm canvas, dark primary action, modal spacing, keyboard-accessible crop target, and responsive control grid remain intact. The safe-area line is a restrained dashed white inset inside the existing crop overlay. A component test verifies the visible instructions and guide; local Chrome renders of `/news` completed at 1440 x 1000 and 390 x 844 without an error overlay or blank page. No new motion was introduced.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# UI Review: Admin Member Composition Donut
+
+## Reviewed Change
+- Feature: 관리자 홈페이지 승인 가입자 구성 원형 차트
+- Governing spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-25-admin-member-composition-donut.md`
+- Files or pages reviewed: `src/components/portal/portal-shell.tsx`, 관리자 대시보드 데스크톱 및 모바일 렌더링
+
+## Boundary Review
+- Finding: PASS
+- Evidence: 변경은 관리자 전용 PortalShell 분기에 한정되며 공개 내비게이션, 인증, 승인 처리, PeopleOn 쓰기 동작을 변경하지 않았다. 기존 `/portal/admin/members` 이동 계약도 유지했다.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: 원형 차트는 전달된 `approvedSocialUsers`의 실제 집계만 표시한다. 승인 대기, 문서, 감사 로그는 구성 비율에 섞지 않고 각 데이터 배열의 독립 수치로 표시한다.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: 지정 디자인 토큰을 유지했고 정확한 대체 텍스트, 인원·비율 범례, 0명 중립 상태를 제공한다. 데스크톱과 모바일에서 오류 오버레이·콘솔 오류·수평 오버플로가 없음을 확인했다. 모션은 변경하지 않았다.
 
 ## Outcome
 - Result: PASS

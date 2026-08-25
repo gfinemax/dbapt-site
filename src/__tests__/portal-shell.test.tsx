@@ -86,7 +86,7 @@ describe("portal shell", () => {
     );
   });
 
-  it("shows document composition as a donut chart and keeps independent admin metrics separate", () => {
+  it("shows approved member composition as a donut chart and keeps independent admin metrics separate", () => {
     render(
       <PortalShell
         role="admin"
@@ -117,10 +117,15 @@ describe("portal shell", () => {
         ]}
         logs={[{ id: "log-1" } as never]}
         pendingUsers={[]}
+        approvedSocialUsers={[
+          { id: "regular-1", name: "정식회원", email: "regular@example.com", role: "MEMBER", memberType: "REGULAR", createdAt: "2026-07-22T00:00:00.000Z" },
+          { id: "refund-1", name: "환불회원", email: "refund@example.com", role: "REFUND", memberType: "REFUND", createdAt: "2026-07-22T00:00:00.000Z" },
+        ]}
       />,
     );
 
-    expect(screen.getByRole("img", { name: "전체 문서 2건 중 의무 정보 공개 1건, 회계 및 자금 보고 1건" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "홈페이지 승인 가입자 총 2명, 정식조합원 1명, 예비조합원 0명, 환불조합원 1명, 관계자·기타 0명" })).toBeInTheDocument();
+    expect(screen.getAllByText("1명 · 50.0%", { selector: "dd" })).toHaveLength(2);
     expect(screen.getByText("문서 현황")).toBeInTheDocument();
     expect(screen.getByText("감사 로그 누적")).toBeInTheDocument();
     expect(screen.getByText("확인 필요")).toBeInTheDocument();
@@ -436,11 +441,11 @@ describe("portal shell", () => {
       />,
     );
 
-    expect(screen.getByText("총 1명")).toBeInTheDocument();
-    expect(screen.getByText("환불조합원 1명")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "회원 자격 관리로 이동" })).toHaveAttribute(
+    expect(screen.getByText("1명", { selector: "strong" })).toBeInTheDocument();
+    expect(screen.getByText("1명 · 100.0%", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "PeopleOn 조합원 관리" })).toHaveAttribute(
       "href",
-      "/portal/admin/members#approved-member-conversion",
+      "/portal/admin/members",
     );
     expect(screen.queryByText("이메일/휴대폰")).not.toBeInTheDocument();
     expect(screen.queryByText("010-1234-5678")).not.toBeInTheDocument();
@@ -469,11 +474,22 @@ describe("portal shell", () => {
       />,
     );
 
-    expect(screen.getByText("예비조합원 1명")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "홈페이지 승인 가입자 총 1명, 정식조합원 0명, 예비조합원 1명, 환불조합원 0명, 관계자·기타 0명" })).toBeInTheDocument();
     expect(screen.queryByText("자격 구분")).not.toBeInTheDocument();
     expect(screen.queryByText("정식 조합원 (MEMBER)")).not.toBeInTheDocument();
-    expect(
-      screen.getByText("자격별 현황만 요약하고, 실제 변경 작업은 전용 관리 페이지에서 처리합니다."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("승인된 계정의 현재 자격 구성이야.")).toBeInTheDocument();
+  });
+
+  it("renders a neutral approved member composition when no account is approved", () => {
+    render(
+      <PortalShell
+        role="admin"
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        approvedSocialUsers={[]}
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "홈페이지 승인 가입자 0명" })).toBeInTheDocument();
+    expect(screen.getAllByText("0명 · 0.0%", { selector: "dd" })).toHaveLength(4);
   });
 });

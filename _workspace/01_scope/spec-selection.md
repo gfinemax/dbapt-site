@@ -200,3 +200,12 @@
 - Boundary: Reorder and compact only the `/login` presentation while preserving all existing authentication and signup contracts.
 - Conflicts: none.
 - Planning may continue: yes; the request approves responsive layout implementation.
+
+---
+
+# 2026-08-25 Admin Member Composition Donut
+
+- Selected approved spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
+- Implementation boundary: 관리자 전용 화면에서 홈페이지 계정 상태를 읽기 전용으로 요약하고 기존 PeopleOn 조합원 관리 페이지로 이동하는 링크를 제공한다. PeopleOn 데이터 쓰기와 공개 UI 노출은 제외한다.
+- Conflicts: none.
+- Planning may continue: yes. 사용자가 가입자 구성 원형 차트 계획을 승인했다.

@@ -139,9 +139,6 @@ export function PortalShell({
   const isLoggedIn = !!session;
   const disclosureDocumentCount = documents.filter((document) => document.category === "DISCLOSURE").length;
   const accountingDocumentCount = documents.filter((document) => document.category === "ACCOUNTING").length;
-  const accountingDocumentDegrees = documents.length > 0
-    ? Math.max((accountingDocumentCount / documents.length) * 360, accountingDocumentCount > 0 ? 4 : 0)
-    : 0;
   const resolvedContributionDashboard =
     contributionDashboard ??
     buildContributionDashboardView({
@@ -198,6 +195,24 @@ export function PortalShell({
       ASSOCIATE: 0,
     },
   );
+  const approvedMemberTotal = approvedSocialUsers.length;
+  const approvedMemberComposition = [
+    { key: "REGULAR", label: "정식조합원", count: approvedMemberTypeCounts.REGULAR, color: "#00ca48" },
+    { key: "PRELIMINARY", label: "예비조합원", count: approvedMemberTypeCounts.PRELIMINARY, color: "#ffbb26" },
+    { key: "REFUND", label: "환불조합원", count: approvedMemberTypeCounts.REFUND, color: "#ff3e00" },
+    { key: "ASSOCIATE", label: "관계자·기타", count: approvedMemberTypeCounts.ASSOCIATE, color: "#0090ff" },
+  ];
+  let approvedMemberDegrees = 0;
+  const approvedMemberGradient = approvedMemberTotal > 0
+    ? `conic-gradient(${approvedMemberComposition.map((item) => {
+      const startDegrees = approvedMemberDegrees;
+      approvedMemberDegrees += (item.count / approvedMemberTotal) * 360;
+      return `${item.color} ${startDegrees}deg ${approvedMemberDegrees}deg`;
+    }).join(", ")})`
+    : "#ece9e4";
+  const approvedMemberAriaLabel = approvedMemberTotal > 0
+    ? `홈페이지 승인 가입자 총 ${approvedMemberTotal}명, ${approvedMemberComposition.map((item) => `${item.label} ${item.count}명`).join(", ")}`
+    : "홈페이지 승인 가입자 0명";
 
   // 토스트 트리거 함수 (선언 순서 준수를 위해 이펙트 위 배치)
   const triggerLoginToast = () => {
@@ -666,40 +681,54 @@ export function PortalShell({
                     <div className="mt-4">
                       <div>
                         <h2 className="text-xl font-semibold">관리자 대시보드 요약</h2>
-                        <p className="mt-2 text-sm text-graphite">총 정보공개 문서와 보안 감사 상태 요약입니다.</p>
-                        <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(230px,0.9fr)_minmax(220px,1.1fr)]">
-                          <section className="flex items-center gap-4 rounded-2xl border border-stone-surface bg-parchment-card/50 p-4" aria-labelledby="document-summary-title">
+                        <p className="mt-2 text-sm text-graphite">가입 승인 현황과 확인이 필요한 운영 상태를 요약합니다.</p>
+                        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(360px,1.25fr)_minmax(280px,0.75fr)]">
+                          <section className="rounded-2xl bg-parchment-card/50 p-4 shadow-[inset_0_0_0_1px_var(--stone-surface)] sm:p-5" aria-labelledby="member-summary-title">
+                            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
                             <div
                               role="img"
-                              aria-label={`전체 문서 ${documents.length}건 중 의무 정보 공개 ${disclosureDocumentCount}건, 회계 및 자금 보고 ${accountingDocumentCount}건`}
-                              className="relative grid size-28 shrink-0 place-items-center rounded-full"
-                              style={{
-                                background: documents.length > 0
-                                  ? `conic-gradient(#f4a261 0deg ${accountingDocumentDegrees}deg, #1689e8 ${accountingDocumentDegrees}deg 360deg)`
-                                  : "#ece9e4",
-                              }}
+                              aria-label={approvedMemberAriaLabel}
+                              className="relative grid size-36 shrink-0 place-items-center rounded-full sm:size-40"
+                              style={{ background: approvedMemberGradient }}
                             >
-                              <div className="grid size-[74px] place-items-center rounded-full bg-white text-center shadow-sm">
-                                <span className="text-[10px] font-semibold text-ash">전체 문서</span>
-                                <strong className="-mt-1 text-xl font-extrabold text-charcoal-primary">{documents.length}건</strong>
+                              <div className="grid size-24 place-items-center rounded-full bg-white text-center shadow-[0_0_0_1px_rgba(0,0,0,0.03)] sm:size-28">
+                                <div>
+                                  <span className="block text-[10px] font-semibold text-ash">승인 가입자</span>
+                                  <strong className="mt-0.5 block text-2xl font-extrabold text-charcoal-primary">{approvedMemberTotal}명</strong>
+                                </div>
                               </div>
                             </div>
                             <div className="min-w-0">
-                              <h3 id="document-summary-title" className="text-sm font-bold text-charcoal-primary">문서 현황</h3>
-                              <dl className="mt-3 space-y-2 text-xs text-graphite">
-                                <div className="flex items-center justify-between gap-4">
-                                  <dt className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-sky-blue" />의무 정보 공개</dt>
-                                  <dd className="font-bold text-charcoal-primary">{disclosureDocumentCount}건</dd>
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                  <dt className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-[#f4a261]" />회계 및 자금 보고</dt>
-                                  <dd className="font-bold text-charcoal-primary">{accountingDocumentCount}건</dd>
-                                </div>
+                              <h3 id="member-summary-title" className="text-base font-bold text-charcoal-primary">홈페이지 승인 가입자 현황</h3>
+                              <p className="mt-1 text-[11px] leading-5 text-ash">승인된 계정의 현재 자격 구성이야.</p>
+                              <dl className="mt-3 grid gap-x-5 gap-y-2 text-xs text-graphite sm:grid-cols-2">
+                                {approvedMemberComposition.map((item) => {
+                                  const percentage = approvedMemberTotal > 0 ? (item.count / approvedMemberTotal) * 100 : 0;
+                                  return (
+                                    <div key={item.key} className="flex items-center justify-between gap-4">
+                                      <dt className="flex items-center gap-2">
+                                        <span className="size-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                        {item.label}
+                                      </dt>
+                                      <dd className="whitespace-nowrap font-bold text-charcoal-primary">
+                                        {item.count}명 · {percentage.toFixed(1)}%
+                                      </dd>
+                                    </div>
+                                  );
+                                })}
                               </dl>
+                            </div>
                             </div>
                           </section>
 
-                          <div className="grid gap-3 sm:grid-rows-2">
+                          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                            <section className="rounded-2xl bg-white p-4 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
+                              <p className="text-xs font-semibold text-ash">승인 대기 소셜 회원</p>
+                              <div className="mt-1 flex items-end justify-between gap-3">
+                                <strong className="text-2xl font-extrabold text-ember-orange">{pendingUsers.length}명</strong>
+                                <span className="text-[10px] text-ash">확인 필요</span>
+                              </div>
+                            </section>
                             <section className="rounded-2xl border border-stone-surface bg-white p-4">
                               <p className="text-xs font-semibold text-ash">보안 활동</p>
                               <div className="mt-1 flex items-end justify-between gap-3">
@@ -708,16 +737,16 @@ export function PortalShell({
                               </div>
                             </section>
                             <section className="rounded-2xl border border-stone-surface bg-white p-4">
-                              <p className="text-xs font-semibold text-ash">승인 대기 소셜 회원</p>
+                              <p className="text-xs font-semibold text-ash">문서 현황</p>
                               <div className="mt-1 flex items-end justify-between gap-3">
-                                <strong className="text-2xl font-extrabold text-ember-orange">{pendingUsers.length}명</strong>
-                                <span className="text-[10px] text-ash">확인 필요</span>
+                                <strong className="text-2xl font-extrabold text-charcoal-primary">{documents.length}건</strong>
+                                <span className="text-right text-[10px] leading-4 text-ash">공개 {disclosureDocumentCount} · 회계 {accountingDocumentCount}</span>
                               </div>
                             </section>
                           </div>
                         </div>
                         <div className="mt-5 flex flex-wrap gap-2">
-                          <Link href="/portal/admin/members" className="inline-flex items-center rounded-full bg-midnight px-4 py-2 text-xs font-semibold text-white transition hover:bg-charcoal-primary">PeopleOn 조합원 관리</Link>
+                          <Link href="/portal/admin/members" className="inline-flex items-center rounded-full bg-midnight px-4 py-2 text-xs font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40">PeopleOn 조합원 관리</Link>
                           <Link href="/portal/admin/audit-logs" className="inline-flex items-center rounded-full border border-stone-surface bg-white px-4 py-2 text-xs font-semibold text-charcoal-primary transition hover:border-sky-blue hover:text-sky-blue">보안 감사 전체 보기</Link>
                         </div>
                       </div>
@@ -852,46 +881,6 @@ export function PortalShell({
                     </div>
                   </article>
 
-                  {/* 가입 승인 완료 회원 권한 관리 요약 */}
-                  <article className="stone-card p-6 bg-white md:col-span-2">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h2 className="text-xl font-semibold text-charcoal-primary">가입 승인 회원 자격 변경 관리</h2>
-                        <p className="mt-2 text-xs leading-5 text-graphite">
-                          자격별 현황만 요약하고, 실제 변경 작업은 전용 관리 페이지에서 처리합니다.
-                        </p>
-                      </div>
-                      <Link
-                        href="/portal/admin/members#approved-member-conversion"
-                        className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-midnight px-4 text-xs font-semibold text-white transition hover:bg-charcoal-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
-                      >
-                        회원 자격 관리로 이동
-                      </Link>
-                    </div>
-
-                    <div className="mt-5 grid gap-2 sm:grid-cols-5">
-                      <div className="rounded-xl bg-[#f8f7f4] px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                        <p className="text-[11px] font-medium text-ash">전체 승인 계정</p>
-                        <p className="mt-1 text-sm font-semibold text-charcoal-primary">총 {approvedSocialUsers.length}명</p>
-                      </div>
-                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                        <p className="text-[11px] font-medium text-ash">정식</p>
-                        <p className="mt-1 text-sm font-semibold text-meadow-green">정식조합원 {approvedMemberTypeCounts.REGULAR}명</p>
-                      </div>
-                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                        <p className="text-[11px] font-medium text-ash">예비</p>
-                        <p className="mt-1 text-sm font-semibold text-charcoal-primary">예비조합원 {approvedMemberTypeCounts.PRELIMINARY}명</p>
-                      </div>
-                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                        <p className="text-[11px] font-medium text-ash">환불</p>
-                        <p className="mt-1 text-sm font-semibold text-ember-orange">환불조합원 {approvedMemberTypeCounts.REFUND}명</p>
-                      </div>
-                      <div className="rounded-xl bg-white px-3 py-3 shadow-[inset_0_0_0_1px_var(--stone-surface)]">
-                        <p className="text-[11px] font-medium text-ash">관계자/기타</p>
-                        <p className="mt-1 text-sm font-semibold text-sky-blue">기타 승인계정 {approvedMemberTypeCounts.ASSOCIATE}명</p>
-                      </div>
-                    </div>
-                  </article>
                 </>
               )}
             </section>
