@@ -146,6 +146,75 @@ describe("personal library drawer host", () => {
     expect(within(screen.getByLabelText("박정산 개인 자료실 드로어")).getByText("박정산 환불조합원")).toBeInTheDocument();
   });
 
+  it("shows a working operations sidebar for administrators", () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(
+      <PersonalLibraryDrawerHost
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        documents={[
+          {
+            id: "disclosure-1",
+            title: "정보공개 문서",
+            description: "공개 문서",
+            category: "DISCLOSURE",
+            fileName: "disclosure.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            isStarred: false,
+            createdAt: "2026-08-20T00:00:00.000Z",
+          },
+          {
+            id: "accounting-1",
+            title: "회계 보고 문서",
+            description: "회계 문서",
+            category: "ACCOUNTING",
+            fileName: "accounting.pdf",
+            fileSize: 2048,
+            status: "APPROVED",
+            isStarred: false,
+            createdAt: "2026-08-21T00:00:00.000Z",
+          },
+        ]}
+        pendingUsers={[
+          {
+            id: "pending-1",
+            name: "승인대기",
+            email: "pending@example.com",
+            createdAt: "2026-08-22T00:00:00.000Z",
+          },
+        ]}
+      >
+        <main>사업현황</main>
+      </PersonalLibraryDrawerHost>,
+    );
+
+    act(() => window.dispatchEvent(new CustomEvent("open-portal")));
+    const drawer = screen.getByLabelText("운영 문서 관리실 드로어");
+    const nav = within(drawer).getByRole("navigation", { name: "운영 관리자 메뉴" });
+
+    expect(within(drawer).getByText("문서·회원 운영")).toBeInTheDocument();
+    expect(within(nav).queryByRole("button", { name: "납부내역" })).not.toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: "새 문서 등록" })).toHaveAttribute("href", "/portal/admin/documents/new");
+    expect(within(nav).getByRole("link", { name: "조합원 관리" })).toHaveAttribute("href", "/portal/admin/members");
+    expect(within(nav).getByRole("link", { name: /보안 감사 기록/ })).toHaveAttribute("href", "/portal/admin/audit-logs");
+    expect(within(nav).getByRole("link", { name: "공지사항 관리" })).toHaveAttribute("href", "/news?tab=notice");
+
+    fireEvent.click(within(nav).getByRole("button", { name: /가입 승인 대기/ }));
+    expect(document.activeElement).toHaveAttribute("id", "admin-signup-approvals");
+
+    fireEvent.click(within(nav).getByRole("button", { name: /회계 문서/ }));
+    expect(document.activeElement).toHaveAttribute("id", "portal-documents-section");
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: "smooth", block: "start" });
+    const documentSection = within(drawer).getByRole("region", { name: "전체 등록 문서 목록" });
+    expect(within(documentSection).getByText("회계 보고 문서")).toBeInTheDocument();
+    expect(within(documentSection).queryByText("정보공개 문서")).not.toBeInTheDocument();
+  });
+
   it("opens drawer documents in a fullscreen viewer layer outside the drawer", () => {
     render(
       <PersonalLibraryDrawerHost

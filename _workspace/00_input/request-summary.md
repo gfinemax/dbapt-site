@@ -1,4 +1,13 @@
-# Request Summary
+# 2026-08-26 Admin Operations Sidebar
+
+- Requested feature slice: Replace the authenticated administrator drawer's member-oriented sidebar with working operations navigation for dashboard, signup approvals, document management, member management, audit logs, and boards.
+- Explicitly excluded scope: No new admin capability, API, database schema, permission rule, public navigation exposure, or change to member/refund sidebar behavior.
+- Candidate governing specifications: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md` and the user's approved 2026-08-26 administrator navigation structure.
+- Unanswered decision: none.
+
+---
+
+# Previous Request Summary
 
 - Requested feature slice: 운영자 전체 등록 문서 목록에 개인 즐겨찾기, 명확한 중요 표시, 검색·상태 필터와 페이지 구분을 추가하고 조합원 개인자료실의 보관 데이터 연결과 명칭을 일관되게 정리한다.
 - Explicitly excluded scope: 공개 권한 정책 변경, 문서 스키마 변경, 새 문서 승인 절차, 감사 로그 정책 변경.

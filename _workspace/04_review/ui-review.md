@@ -358,6 +358,32 @@
 # UI Review
 
 ## Reviewed Change
+- Feature: Authenticated administrator operations sidebar
+- Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md` plus the user-approved 2026-08-26 administrator navigation structure
+- Implementation plan: `docs/superpowers/plans/2026-08-26-admin-operations-sidebar.md`
+- Files or pages reviewed: `personal-library-navigation.tsx`, `personal-library-drawer-host.tsx`, `portal-shell.tsx`, and administrator drawer regression tests
+
+## Boundary Review
+- Finding: PASS
+- Evidence: The administrator rail is rendered only for an authenticated `ADMIN` session. It reuses existing protected sections and admin routes; member/refund rails and public navigation remain unchanged.
+
+## Truthful Presentation Review
+- Finding: PASS
+- Evidence: Document and pending-user badges come from complete current props. Audit logs are intentionally not badged because the available drawer input is only a recent subset. No new data or unavailable capability is presented. The nonexistent administrator payment/personal-data shortcuts were removed, and only existing destinations are linked.
+
+## Design And Accessibility Review
+- Finding: PASS
+- Evidence: Existing warm-canvas, parchment, stone, midnight, and ember tokens are reused. In-page targets are focusable, selection uses `aria-current`, navigation has an explicit label, and the administrator desktop rail widens to 216px without changing the member rail. Focused rendered-component tests cover focus movement and category filtering. Automated live-browser login was attempted at 1440x1000 and 390x844, but the local administrator password did not match the historical seed credential; no account or database state was changed for verification.
+
+## Outcome
+- Result: PASS
+- Required action: none
+
+---
+
+# Previous UI Review
+
+## Reviewed Change
 - Feature: Simplified numeric six-digit new-signup form
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
 - Implementation plan: `docs/superpowers/plans/2026-08-25-simplified-six-digit-signup.md`

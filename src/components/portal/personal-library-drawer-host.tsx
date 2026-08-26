@@ -158,8 +158,16 @@ export function PersonalLibraryDrawerHost({
               </div>
             </div>
 
-            <div className="grid min-h-0 flex-1 md:grid-cols-[168px_minmax(0,1fr)]">
-              <PersonalLibraryNavigation name={session?.name} role={session?.role} />
+            <div className={`grid min-h-0 flex-1 ${session?.role === "ADMIN" ? "md:grid-cols-[216px_minmax(0,1fr)]" : "md:grid-cols-[168px_minmax(0,1fr)]"}`}>
+              <PersonalLibraryNavigation
+                name={session?.name}
+                role={session?.role}
+                documentCount={documents.length}
+                disclosureDocumentCount={documents.filter((document) => document.category === "DISCLOSURE").length}
+                accountingDocumentCount={documents.filter((document) => document.category === "ACCOUNTING").length}
+                pendingUserCount={pendingUsers.length}
+                onSelectDocumentCategory={setPortalCategory}
+              />
               <div className="min-w-0 overflow-y-auto pb-16">
               {session ? (
                 <PortalShell

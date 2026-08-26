@@ -1,4 +1,13 @@
-# Specification Selection
+# Specification Selection: Admin Operations Sidebar
+
+- Selected approved basis: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`, existing authenticated admin routes, and the user's explicit approval of the proposed 2026-08-26 operations sidebar.
+- Implementation boundary: Change only authenticated drawer navigation and add focus targets to existing admin sections. Reuse live document, pending-user, and audit-log inputs; preserve every existing mutation, route guard, and member/refund navigation contract.
+- Conflicts: none.
+- Planning may continue: yes. The user explicitly approved implementation after reviewing the proposed menu structure.
+
+---
+
+# Previous Specification Selection
 
 - Selected approved specs:
   - `docs/superpowers/specs/2026-05-25-daebang-housing-cooperative-portal-design.md`

@@ -1109,7 +1109,34 @@
 
 ---
 
-# Verification
+# Verification: Admin Operations Sidebar
+
+## Implemented
+- Added an authenticated `ADMIN`-specific operations rail grouped into operations, document management, management, and boards.
+- Connected dashboard, signup approvals, all documents, disclosure documents, and accounting documents to existing focusable sections; category items update the existing document table filter.
+- Reused existing new-document, member-management, audit-log, notice, and free-board routes.
+- Added live counts from current documents and pending users; omitted an audit badge because only recent logs are loaded. Added working logout through the existing auth action.
+- Preserved the member/refund sidebar and its payment-ledger disclosure behavior.
+
+## Checks Run
+- `pnpm lint`: PASS
+- `pnpm test`: PASS, 106 files and 677 tests
+- `pnpm build`: PASS, Next.js 16.2.6 production build
+- `pnpm test -- src/__tests__/personal-library-drawer-host.test.tsx`: PASS, 8 tests after the final width adjustment
+- `git diff --check`: PASS, line-ending warnings only
+- UI review: PASS
+
+## Browser Checks
+- Chromium was installed and live checks were attempted at 1440x1000 and 390x844.
+- The login page rendered without a framework overlay, but the local administrator password did not match the historical seed credential, so the protected drawer could not be reached without mutating account state.
+- Desktop/mobile protected-surface behavior is covered by rendered component tests and responsive source review; actual authenticated screenshots were not claimed.
+
+## Unresolved Risks
+- A final visual screenshot with a currently valid local administrator login remains useful, but no functional or build blocker remains.
+
+---
+
+# Previous Verification
 
 ## 2026-08-25 Simplified Six-Digit Signup
 

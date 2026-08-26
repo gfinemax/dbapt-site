@@ -678,7 +678,7 @@ export function PortalShell({
 
               {role === "admin" && (
                 <>
-                  <article className="stone-card p-6 bg-white md:col-span-2">
+                  <article id="admin-dashboard" tabIndex={-1} className="scroll-mt-6 stone-card p-6 bg-white md:col-span-2 focus:outline-none">
                     <span className="inline-flex rounded-full bg-sunburst-yellow/20 text-charcoal-primary px-3 py-1 text-xs font-semibold">
                       운영 및 승인 관리
                     </span>
@@ -780,7 +780,7 @@ export function PortalShell({
                   </article>
 
                   {/* 소셜 가입 승인 대기 관리 섹션 */}
-                  <article className="stone-card p-6 bg-white md:col-span-2">
+                  <article id="admin-signup-approvals" tabIndex={-1} className="scroll-mt-6 stone-card p-6 bg-white md:col-span-2 focus:outline-none">
                     <h2 className="text-xl font-semibold text-charcoal-primary">소셜 가입 대기 회원 승인 관리</h2>
                     <p className="mt-2 text-xs text-graphite">
                       Google OAuth를 통해 신규 가입한 사용자의 본명 및 이메일을 검토하고 알맞은 조합 권한을 부여합니다.
@@ -923,10 +923,10 @@ export function PortalShell({
 
             {/* 3. Document list for Admin */}
             {role === "admin" && (
-              <section id="portal-documents-section" className="soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl">
+              <section id="portal-documents-section" tabIndex={-1} aria-labelledby="admin-document-list-title" className="scroll-mt-6 soft-panel p-6 bg-white border border-[#f2f0ed] rounded-2xl focus:outline-none">
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-charcoal-primary">전체 등록 문서 목록</h3>
+                    <h3 id="admin-document-list-title" className="text-lg font-semibold text-charcoal-primary">전체 등록 문서 목록</h3>
                     <p className="mt-2 text-xs leading-5 text-graphite">
                       등록된 전체 문서의 세부 정보와 공개 상태를 관리합니다. 중요 표시는 전체 사용자에게, 즐겨찾기는 운영자 본인에게만 적용됩니다.
                     </p>
