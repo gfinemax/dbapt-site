@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { approveUserAction, updateSignupNameAction } from "@/lib/auth";
 import { getMemberTypeLabel, normalizeMemberType, type MemberType } from "@/lib/member-type";
@@ -96,12 +97,45 @@ export function ApprovedMemberConversionPanel({
   const [memberConversionSelections, setMemberConversionSelections] = useState<Record<string, MemberType>>({});
   const [savedSignupNames, setSavedSignupNames] = useState<Record<string, string>>({});
   const [draftSignupNames, setDraftSignupNames] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
+  const filteredUsers = useMemo(() => {
+    if (!normalizedQuery) return approvedUsers;
+
+    return approvedUsers.filter((user) => {
+      const memberType = normalizeMemberType(user.memberType, user.role);
+      return [
+        user.name,
+        user.signupName,
+        user.email,
+        user.role,
+        getRoleLabel(user.role),
+        getMemberTypeLabel(memberType, user.role),
+      ].some((value) => value?.toLocaleLowerCase("ko-KR").includes(normalizedQuery));
+    });
+  }, [approvedUsers, normalizedQuery]);
 
   return (
-    <section id="approved-member-conversion" className="stone-card mt-6 bg-white p-6">
-      <h2 className="text-xl font-semibold text-charcoal-primary">가입 승인 회원 자격 변경 관리</h2>
+    <section id="homepage-managed-members" tabIndex={-1} className="stone-card mt-6 scroll-mt-6 bg-white p-6 focus:outline-none">
+      <h2 className="text-xl font-semibold text-charcoal-primary">홈페이지 관리 회원 명단</h2>
       <p className="mt-2 text-xs leading-5 text-graphite">
         이미 가입이 승인된 회원의 자격을 정식조합원, 예비조합원, 환불조합원, 관계자/기타 승인 계정 간에 전환할 수 있습니다.
+      </p>
+
+      <label className="relative mt-5 block max-w-md" htmlFor="homepage-member-search">
+        <span className="sr-only">홈페이지 관리 회원 검색</span>
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ash" aria-hidden="true" />
+        <input
+          id="homepage-member-search"
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="이름, 이메일, 휴대폰, 권한으로 검색"
+          className="h-11 w-full rounded-full border border-stone-surface bg-[#f8f7f4] pl-10 pr-4 text-sm text-charcoal-primary outline-none transition placeholder:text-ash focus:border-charcoal-primary focus:bg-white focus:ring-2 focus:ring-charcoal-primary/10"
+        />
+      </label>
+      <p className="mt-2 text-[11px] text-ash" aria-live="polite">
+        전체 {approvedUsers.length}명 중 {filteredUsers.length}명 표시
       </p>
 
       <div className="mt-6 border-t border-[#f2f0ed] pt-4">
@@ -109,6 +143,8 @@ export function ApprovedMemberConversionPanel({
           <p className="py-6 text-center text-xs text-graphite/70">
             권한 변경이 가능한 가입 승인 회원이 존재하지 않습니다.
           </p>
+        ) : filteredUsers.length === 0 ? (
+          <p className="py-8 text-center text-xs text-graphite/70">검색 조건에 맞는 홈페이지 회원이 없습니다.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] table-fixed border-collapse text-left text-xs">
@@ -133,7 +169,7 @@ export function ApprovedMemberConversionPanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8f7f4]">
-                {approvedUsers.map((user) => {
+                {filteredUsers.map((user) => {
                   const currentMemberType = normalizeMemberType(user.memberType, user.role);
                   const selectedMemberType = memberConversionSelections[user.id] ?? currentMemberType;
                   const selectedAction =

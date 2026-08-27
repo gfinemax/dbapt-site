@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PortalShell } from "@/components/portal/portal-shell";
-import { changePasswordAction, updateSignupNameAction } from "@/lib/auth";
+import { approveUserAction, changePasswordAction, updateSignupNameAction } from "@/lib/auth";
 
 vi.mock("next/navigation", () => ({
   useRouter() {
@@ -484,6 +484,40 @@ describe("portal shell", () => {
     expect(screen.queryByText("자격 구분")).not.toBeInTheDocument();
     expect(screen.queryByText("정식 조합원 (MEMBER)")).not.toBeInTheDocument();
     expect(screen.getByText("PeopleOn 원장 인원 중 홈페이지 승인이 완료된 정식조합원 기준이야.")).toBeInTheDocument();
+  });
+
+  it("approves a pending user with preliminary or associate access and moves to the managed homepage list", async () => {
+    vi.stubGlobal("alert", vi.fn());
+    vi.mocked(approveUserAction).mockResolvedValue({ success: true, role: "MEMBER" });
+
+    render(
+      <PortalShell
+        role="admin"
+        session={{ id: "admin-1", loginId: "admin", name: "운영자", role: "ADMIN" }}
+        pendingUsers={[{
+          id: "pending-1",
+          name: "신규 가입자",
+          email: "new@example.com",
+          createdAt: "2026-08-27T00:00:00.000Z",
+        }]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "홈페이지 관리 회원 명단" })).toHaveAttribute(
+      "href",
+      "/portal/admin/members#homepage-managed-members",
+    );
+    const roleSelect = screen.getByLabelText("신규 가입자 승인 권한");
+    expect(roleSelect).toHaveValue("REGULAR");
+    expect(screen.getByRole("option", { name: "예비조합원" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "관계자/기타" })).toBeInTheDocument();
+
+    fireEvent.change(roleSelect, { target: { value: "PRELIMINARY" } });
+    fireEvent.click(screen.getByRole("button", { name: "선택 권한으로 승인" }));
+
+    await waitFor(() => {
+      expect(approveUserAction).toHaveBeenCalledWith("pending-1", "MEMBER", "PRELIMINARY");
+    });
   });
 
   it("renders a neutral approved member composition when no account is approved", () => {

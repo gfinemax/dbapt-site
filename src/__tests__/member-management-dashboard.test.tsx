@@ -85,6 +85,75 @@ describe("member management dashboard", () => {
     expect(screen.getByText("박미가입")).toBeInTheDocument();
     expect(screen.getByText("이정산")).toBeInTheDocument();
     expect(screen.getAllByText("자격 불일치").length).toBeGreaterThan(0);
+    expect(screen.getByRole("searchbox", { name: "확인 필요 조합원 검색" })).toBeInTheDocument();
+    expect(screen.getByText("전체 2명 중 2명 표시")).toBeInTheDocument();
+  });
+
+  it("filters confirmation-needed members by name, phone, qualification, and homepage status", () => {
+    render(
+      <MemberManagementDashboard
+        snapshot={{
+          generatedAt: "2026-08-27T00:00:00.000Z",
+          stats: {
+            registeredPeopleOnCount: 2,
+            refundPeopleOnCount: 1,
+            trackedPeopleOnCount: 2,
+            homepageApprovedCount: 0,
+            homepagePendingCount: 0,
+            missingHomepageCount: 1,
+            roleMismatchCount: 1,
+            preliminaryPeopleOnCount: 0,
+          },
+          actionRows: [
+            {
+              peopleOnId: "po-1",
+              peopleOnName: "강광자",
+              peopleOnPhone: "010-1234-5678",
+              peopleOnStatus: "정상",
+              expectedRole: "MEMBER",
+              expectedMemberType: "REGULAR",
+              matchStatus: "MISSING",
+              matchedUserId: null,
+              matchedUserName: null,
+              matchedUserEmail: null,
+              matchedUserRole: null,
+              matchedUserActive: null,
+              createdAt: null,
+            },
+            {
+              peopleOnId: "po-2",
+              peopleOnName: "이정산",
+              peopleOnPhone: "010-9999-0000",
+              peopleOnStatus: "환불 대상",
+              expectedRole: "REFUND",
+              expectedMemberType: "REFUND",
+              matchStatus: "ROLE_MISMATCH",
+              matchedUserId: "user-2",
+              matchedUserName: "이정산",
+              matchedUserEmail: "refund@example.com",
+              matchedUserRole: "MEMBER",
+              matchedUserActive: true,
+              createdAt: "2026-08-01T00:00:00.000Z",
+            },
+          ],
+        }}
+        syncError={null}
+        isConfigured
+      />,
+    );
+
+    const search = screen.getByRole("searchbox", { name: "확인 필요 조합원 검색" });
+    fireEvent.change(search, { target: { value: "12345678" } });
+    expect(screen.getByText("강광자")).toBeInTheDocument();
+    expect(screen.queryByText("이정산")).not.toBeInTheDocument();
+    expect(screen.getByText("전체 2명 중 1명 표시")).toBeInTheDocument();
+
+    fireEvent.change(search, { target: { value: "자격 불일치" } });
+    expect(screen.queryByText("강광자")).not.toBeInTheDocument();
+    expect(screen.getByText("이정산")).toBeInTheDocument();
+
+    fireEvent.change(search, { target: { value: "검색없음" } });
+    expect(screen.getByText("검색 조건에 맞는 확인 필요 조합원이 없습니다.")).toBeInTheDocument();
   });
 
   it("shows configuration guidance when PeopleOn API settings are missing", () => {
@@ -158,7 +227,8 @@ describe("member management dashboard", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "가입 승인 회원 자격 변경 관리" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "홈페이지 관리 회원 명단" })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "홈페이지 관리 회원 검색" })).toBeInTheDocument();
     expect(screen.getByText("가입명")).toBeInTheDocument();
     expect(screen.getByText("표시명")).toBeInTheDocument();
     expect(screen.getByText("이메일/휴대폰")).toBeInTheDocument();
@@ -168,6 +238,12 @@ describe("member management dashboard", () => {
     expect(screen.getByText("관계자/기타 승인 계정 (ASSOCIATE)")).toBeInTheDocument();
     expect(screen.getByLabelText("marie Choi 표시 명의")).toHaveValue("환불회원");
     expect(screen.getByText("marie Choi")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "홈페이지 관리 회원 검색" }), { target: { value: "관계자" } });
+    expect(screen.queryByText("marie Choi")).not.toBeInTheDocument();
+    expect(screen.getByText("관계자계정")).toBeInTheDocument();
+    expect(screen.getByText("전체 2명 중 1명 표시")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("searchbox", { name: "홈페이지 관리 회원 검색" }), { target: { value: "" } });
 
     fireEvent.change(screen.getByLabelText("marie Choi 표시 명의"), { target: { value: "최마리" } });
     fireEvent.click(screen.getAllByRole("button", { name: "표시 명의 저장" })[0]);

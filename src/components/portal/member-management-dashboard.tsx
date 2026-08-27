@@ -1,5 +1,8 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowLeft, ExternalLink, RefreshCw, Search } from "lucide-react";
 import {
   ApprovedMemberConversionPanel,
   type ApprovedMemberConversionUser,
@@ -130,6 +133,30 @@ export function MemberManagementDashboard({
   approvedSocialUsers = [],
 }: MemberManagementDashboardProps) {
   const stats = snapshot.stats;
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
+  const normalizedMemberSearchQuery = memberSearchQuery.trim().toLocaleLowerCase("ko-KR");
+  const normalizedMemberSearchDigits = normalizedMemberSearchQuery.replace(/\D/g, "");
+  const filteredActionRows = useMemo(() => {
+    if (!normalizedMemberSearchQuery) return snapshot.actionRows;
+
+    return snapshot.actionRows.filter((row) => {
+      const searchableText = [
+        row.peopleOnName,
+        row.peopleOnPhone,
+        row.peopleOnStatus,
+        expectedRoleLabel(row.expectedRole),
+        getMemberTypeLabel(row.expectedMemberType),
+        statusLabels[row.matchStatus],
+        row.matchedUserName,
+        row.matchedUserEmail,
+        row.matchedUserRole,
+      ].filter(Boolean).join(" ").toLocaleLowerCase("ko-KR");
+      const searchableDigits = searchableText.replace(/\D/g, "");
+
+      return searchableText.includes(normalizedMemberSearchQuery)
+        || Boolean(normalizedMemberSearchDigits && searchableDigits.includes(normalizedMemberSearchDigits));
+    });
+  }, [normalizedMemberSearchDigits, normalizedMemberSearchQuery, snapshot.actionRows]);
 
   return (
     <main className="min-h-screen bg-warm-canvas px-4 py-8 text-charcoal-primary sm:px-6 lg:px-8">
@@ -157,10 +184,10 @@ export function MemberManagementDashboard({
               원장 다시 확인
             </Link>
             <Link
-              href="#approved-member-conversion"
+              href="#homepage-managed-members"
               className="inline-flex items-center gap-2 rounded-full bg-[#f8f7f4] px-4 py-2 text-xs font-semibold text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
             >
-              자격 변경 관리
+              홈페이지 관리 회원 명단
               <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
@@ -197,10 +224,30 @@ export function MemberManagementDashboard({
             <p className="text-[11px] font-medium text-ash">원장 기준 시각: {formatGeneratedAt(snapshot.generatedAt)}</p>
           </div>
 
+          <div className="mt-5 flex flex-col gap-2 sm:max-w-md">
+            <label className="relative block" htmlFor="peopleon-member-search">
+              <span className="sr-only">확인 필요 조합원 검색</span>
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ash" aria-hidden="true" />
+              <input
+                id="peopleon-member-search"
+                type="search"
+                value={memberSearchQuery}
+                onChange={(event) => setMemberSearchQuery(event.target.value)}
+                placeholder="이름, 연락처, 자격, 홈페이지 상태로 검색"
+                className="h-11 w-full rounded-full border border-stone-surface bg-[#f8f7f4] pl-10 pr-4 text-sm text-charcoal-primary outline-none transition placeholder:text-ash focus:border-charcoal-primary focus:bg-white focus:ring-2 focus:ring-charcoal-primary/10"
+              />
+            </label>
+            <p className="text-[11px] text-ash" aria-live="polite">
+              전체 {snapshot.actionRows.length}명 중 {filteredActionRows.length}명 표시
+            </p>
+          </div>
+
           {snapshot.actionRows.length === 0 ? (
             <p className="py-10 text-center text-sm text-graphite/75">
               현재 미가입, 승인 대기, 자격 불일치로 확인되는 조합원이 없습니다.
             </p>
+          ) : filteredActionRows.length === 0 ? (
+            <p className="py-10 text-center text-sm text-graphite/75">검색 조건에 맞는 확인 필요 조합원이 없습니다.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="mt-2 w-full min-w-[760px] border-collapse text-left text-xs">
@@ -214,7 +261,7 @@ export function MemberManagementDashboard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f8f7f4]">
-                  {snapshot.actionRows.map((row) => (
+                  {filteredActionRows.map((row) => (
                     <ActionRow key={row.peopleOnId} row={row} />
                   ))}
                 </tbody>

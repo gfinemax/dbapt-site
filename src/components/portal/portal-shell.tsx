@@ -22,6 +22,13 @@ import type { PeopleOnPopulationStats } from "@/lib/admin/member-management";
 import type { ContributionDashboardView, ContributionSummaryView, PaymentNoticeView } from "@/lib/contribution-types";
 import type { PersonalLibraryContentBookmark } from "@/lib/personal-library-data";
 
+const signupApprovalActions = [
+  { label: "정식조합원", role: "MEMBER" as const, memberType: "REGULAR" as const },
+  { label: "예비조합원", role: "MEMBER" as const, memberType: "PRELIMINARY" as const },
+  { label: "환불조합원", role: "REFUND" as const, memberType: "REFUND" as const },
+  { label: "관계자/기타", role: "ASSOCIATE" as const, memberType: "ASSOCIATE" as const },
+];
+
 const EMPTY_DOCUMENTS: Document[] = [];
 const EMPTY_CONTENT_BOOKMARKS: PersonalLibraryContentBookmark[] = [];
 
@@ -183,6 +190,7 @@ export function PortalShell({
   const passwordFormRef = useRef<HTMLFormElement>(null);
   const [pendingSavedSignupNames, setPendingSavedSignupNames] = useState<Record<string, string>>({});
   const [pendingDraftSignupNames, setPendingDraftSignupNames] = useState<Record<string, string>>({});
+  const [pendingApprovalSelections, setPendingApprovalSelections] = useState<Record<string, string>>({});
   const [passwordChangeStatus, setPasswordChangeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const approvedMemberTypeCounts = approvedSocialUsers.reduce(
@@ -781,10 +789,20 @@ export function PortalShell({
 
                   {/* 소셜 가입 승인 대기 관리 섹션 */}
                   <article id="admin-signup-approvals" tabIndex={-1} className="scroll-mt-6 stone-card p-6 bg-white md:col-span-2 focus:outline-none">
-                    <h2 className="text-xl font-semibold text-charcoal-primary">소셜 가입 대기 회원 승인 관리</h2>
-                    <p className="mt-2 text-xs text-graphite">
-                      Google OAuth를 통해 신규 가입한 사용자의 본명 및 이메일을 검토하고 알맞은 조합 권한을 부여합니다.
-                    </p>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 className="text-xl font-semibold text-charcoal-primary">소셜 가입 대기 회원 승인 관리</h2>
+                        <p className="mt-2 text-xs text-graphite">
+                          Google OAuth를 통해 신규 가입한 사용자의 본명 및 이메일을 검토하고 알맞은 조합 권한을 부여합니다.
+                        </p>
+                      </div>
+                      <Link
+                        href="/portal/admin/members#homepage-managed-members"
+                        className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#f8f7f4] px-4 py-2 text-xs font-semibold text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-charcoal-primary focus-visible:ring-offset-2"
+                      >
+                        홈페이지 관리 회원 명단
+                      </Link>
+                    </div>
 
                     <div className="mt-6 border-t border-[#f2f0ed] pt-4">
                       {pendingUsers.length === 0 ? (
@@ -808,6 +826,8 @@ export function PortalShell({
                                 const originalSignupName = user.name || "이름 없음";
                                 const savedSignupName = pendingSavedSignupNames[user.id] ?? user.signupName ?? user.name;
                                 const displayName = pendingDraftSignupNames[user.id] ?? savedSignupName ?? "이름 없음";
+                                const selectedMemberType = pendingApprovalSelections[user.id] ?? "REGULAR";
+                                const selectedAction = signupApprovalActions.find((action) => action.memberType === selectedMemberType) ?? signupApprovalActions[0];
 
                                 return (
                                   <tr key={user.id} className="text-charcoal-primary">
@@ -867,35 +887,36 @@ export function PortalShell({
                                     )}
                                   </td>
                                   <td className="py-3.5 pr-4">{formatDate(user.createdAt)}</td>
-                                  <td className="py-3.5 text-right flex justify-end gap-2">
+                                  <td className="py-3.5 text-right">
+                                    <div className="flex flex-wrap justify-end gap-2">
+                                    <label className="sr-only" htmlFor={`approval-role-${user.id}`}>
+                                      {displayName} 승인 권한
+                                    </label>
+                                    <select
+                                      id={`approval-role-${user.id}`}
+                                      value={selectedMemberType}
+                                      onChange={(event) => setPendingApprovalSelections((previous) => ({ ...previous, [user.id]: event.target.value }))}
+                                      className="h-9 rounded-full border border-stone-surface bg-[#f8f7f4] px-3 text-[11px] font-semibold text-charcoal-primary outline-none transition focus:border-charcoal-primary focus:bg-white"
+                                    >
+                                      {signupApprovalActions.map((action) => (
+                                        <option key={action.memberType} value={action.memberType}>{action.label}</option>
+                                      ))}
+                                    </select>
                                     <Button
                                       size="sm"
                                       variant="default"
-                                      className="rounded-full h-8 px-3 text-[11px] font-semibold cursor-pointer"
+                                      className="h-9 rounded-full px-3 text-[11px] font-semibold cursor-pointer"
                                       onClick={async () => {
-                                        const res = await approveUserAction(user.id, "MEMBER");
+                                        const res = await approveUserAction(user.id, selectedAction.role, selectedAction.memberType);
                                         if (res.success) {
-                                          alert(`${user.name}님이 정식 조합원(MEMBER)으로 승인되었습니다.`);
-                                          router.refresh();
+                                          alert(`${displayName}님이 ${selectedAction.label}으로 승인되었습니다.`);
+                                          router.push("/portal/admin/members#homepage-managed-members");
                                         }
                                       }}
                                     >
-                                      정식 조합원(MEMBER) 승인
+                                      선택 권한으로 승인
                                     </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="secondary"
-                                      className="rounded-full h-8 px-3 text-[11px] font-semibold cursor-pointer"
-                                      onClick={async () => {
-                                        const res = await approveUserAction(user.id, "REFUND");
-                                        if (res.success) {
-                                          alert(`${user.name}님이 환불 조합원(REFUND)으로 승인되었습니다.`);
-                                          router.refresh();
-                                        }
-                                      }}
-                                    >
-                                      환불 조합원(REFUND) 승인
-                                    </Button>
+                                    </div>
                                   </td>
                                 </tr>
                                 );
