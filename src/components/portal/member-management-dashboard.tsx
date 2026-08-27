@@ -43,11 +43,12 @@ function formatNumber(value: number) {
 function formatGeneratedAt(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Seoul",
-  }).format(date);
+  const koreanTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  const hour = koreanTime.getUTCHours();
+  const minute = String(koreanTime.getUTCMinutes()).padStart(2, "0");
+  const period = hour < 12 ? "오전" : "오후";
+  const displayHour = hour % 12 || 12;
+  return `${koreanTime.getUTCFullYear()}. ${koreanTime.getUTCMonth() + 1}. ${koreanTime.getUTCDate()}. ${period} ${displayHour}:${minute}`;
 }
 
 function expectedRoleLabel(role: "MEMBER" | "REFUND") {

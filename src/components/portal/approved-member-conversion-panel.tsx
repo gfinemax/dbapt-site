@@ -85,7 +85,8 @@ function getRoleBadgeClass(role: string) {
 
 function formatJoinDate(dateStr: string) {
   const date = new Date(dateStr);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const koreanTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  return `${koreanTime.getUTCFullYear()}-${String(koreanTime.getUTCMonth() + 1).padStart(2, "0")}-${String(koreanTime.getUTCDate()).padStart(2, "0")}`;
 }
 
 export function ApprovedMemberConversionPanel({
