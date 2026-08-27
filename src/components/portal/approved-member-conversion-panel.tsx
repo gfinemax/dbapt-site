@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { approveUserAction, updateSignupNameAction } from "@/lib/auth";
 import { getMemberTypeLabel, normalizeMemberType, type MemberType } from "@/lib/member-type";
@@ -41,6 +41,8 @@ const memberConversionActions = [
     memberType: "ASSOCIATE" as const,
   },
 ];
+
+const MEMBERS_PER_PAGE = 20;
 
 function getRoleLabel(role: string) {
   switch (role) {
@@ -99,6 +101,7 @@ export function ApprovedMemberConversionPanel({
   const [savedSignupNames, setSavedSignupNames] = useState<Record<string, string>>({});
   const [draftSignupNames, setDraftSignupNames] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
   const filteredUsers = useMemo(() => {
     if (!normalizedQuery) return approvedUsers;
@@ -115,9 +118,12 @@ export function ApprovedMemberConversionPanel({
       ].some((value) => value?.toLocaleLowerCase("ko-KR").includes(normalizedQuery));
     });
   }, [approvedUsers, normalizedQuery]);
+  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / MEMBERS_PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * MEMBERS_PER_PAGE, currentPage * MEMBERS_PER_PAGE);
 
   return (
-    <section id="homepage-managed-members" tabIndex={-1} className="stone-card mt-6 scroll-mt-6 bg-white p-6 focus:outline-none">
+    <section id="homepage-managed-members" tabIndex={-1} role="tabpanel" className="stone-card mt-4 scroll-mt-6 bg-white p-6 focus:outline-none">
       <h2 className="text-xl font-semibold text-charcoal-primary">홈페이지 관리 회원 명단</h2>
       <p className="mt-2 text-xs leading-5 text-graphite">
         이미 가입이 승인된 회원의 자격을 정식조합원, 예비조합원, 환불조합원, 관계자/기타 승인 계정 간에 전환할 수 있습니다.
@@ -130,7 +136,10 @@ export function ApprovedMemberConversionPanel({
           id="homepage-member-search"
           type="search"
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
+          onChange={(event) => {
+            setSearchQuery(event.target.value);
+            setPage(1);
+          }}
           placeholder="이름, 이메일, 휴대폰, 권한으로 검색"
           className="h-11 w-full rounded-full border border-stone-surface bg-[#f8f7f4] pl-10 pr-4 text-sm text-charcoal-primary outline-none transition placeholder:text-ash focus:border-charcoal-primary focus:bg-white focus:ring-2 focus:ring-charcoal-primary/10"
         />
@@ -170,7 +179,7 @@ export function ApprovedMemberConversionPanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8f7f4]">
-                {filteredUsers.map((user) => {
+                {paginatedUsers.map((user) => {
                   const currentMemberType = normalizeMemberType(user.memberType, user.role);
                   const selectedMemberType = memberConversionSelections[user.id] ?? currentMemberType;
                   const selectedAction =
@@ -291,6 +300,17 @@ export function ApprovedMemberConversionPanel({
           </div>
         )}
       </div>
+      {filteredUsers.length > MEMBERS_PER_PAGE && (
+        <nav className="mt-5 flex items-center justify-center gap-3 border-t border-[#f2f0ed] pt-5" aria-label="홈페이지 관리 회원 페이지">
+          <button type="button" aria-label="이전 페이지" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-full bg-[#f8f7f4] p-2 text-graphite disabled:cursor-not-allowed disabled:opacity-35">
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <span className="text-xs font-semibold text-graphite">{currentPage} / {pageCount} 페이지</span>
+          <button type="button" aria-label="다음 페이지" disabled={currentPage === pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))} className="rounded-full bg-[#f8f7f4] p-2 text-graphite disabled:cursor-not-allowed disabled:opacity-35">
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </nav>
+      )}
     </section>
   );
 }

@@ -227,6 +227,7 @@ describe("member management dashboard", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("tab", { name: "홈페이지 관리 회원" }));
     expect(screen.getByRole("heading", { name: "홈페이지 관리 회원 명단" })).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "홈페이지 관리 회원 검색" })).toBeInTheDocument();
     expect(screen.getByText("가입명")).toBeInTheDocument();
@@ -310,6 +311,7 @@ describe("member management dashboard", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("tab", { name: "홈페이지 관리 회원" }));
     const signupNameInput = screen.getByLabelText("박용수대리곽현숙 표시 명의");
     fireEvent.change(signupNameInput, { target: { value: " 곽현숙 " } });
     fireEvent.click(screen.getByRole("button", { name: "표시 명의 저장" }));
@@ -319,5 +321,58 @@ describe("member management dashboard", () => {
     });
     expect(signupNameInput).toHaveValue("곽현숙");
     expect(screen.getByText("박용수대리곽현숙")).toBeInTheDocument();
+  });
+
+  it("separates the lists into tabs and paginates confirmation-needed members", () => {
+    const actionRows = Array.from({ length: 21 }, (_, index) => ({
+      peopleOnId: `po-${index + 1}`,
+      peopleOnName: `조합원${index + 1}`,
+      peopleOnPhone: `010-0000-${String(index + 1).padStart(4, "0")}`,
+      peopleOnStatus: "정상",
+      expectedRole: "MEMBER" as const,
+      expectedMemberType: "REGULAR",
+      matchStatus: "MISSING" as const,
+      matchedUserId: null,
+      matchedUserName: null,
+      matchedUserEmail: null,
+      matchedUserRole: null,
+      matchedUserActive: null,
+      createdAt: null,
+    }));
+
+    render(
+      <MemberManagementDashboard
+        snapshot={{
+          generatedAt: "2026-08-28T00:00:00.000Z",
+          stats: {
+            registeredPeopleOnCount: 21,
+            refundPeopleOnCount: 0,
+            trackedPeopleOnCount: 21,
+            homepageApprovedCount: 0,
+            homepagePendingCount: 0,
+            missingHomepageCount: 21,
+            roleMismatchCount: 0,
+            preliminaryPeopleOnCount: 0,
+          },
+          actionRows,
+        }}
+        syncError={null}
+        isConfigured
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: "확인 필요 조합원" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.queryByRole("heading", { name: "홈페이지 관리 회원 명단" })).not.toBeInTheDocument();
+    expect(screen.getByText("1 / 2 페이지")).toBeInTheDocument();
+    expect(screen.getByText("조합원1")).toBeInTheDocument();
+    expect(screen.queryByText("조합원21")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "다음 페이지" }));
+    expect(screen.getByText("2 / 2 페이지")).toBeInTheDocument();
+    expect(screen.getByText("조합원21")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "홈페이지 관리 회원" }));
+    expect(screen.getByRole("heading", { name: "홈페이지 관리 회원 명단" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "확인 필요 조합원" })).not.toBeInTheDocument();
   });
 });

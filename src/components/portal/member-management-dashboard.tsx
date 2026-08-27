@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, RefreshCw, Search } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
 import {
   ApprovedMemberConversionPanel,
   type ApprovedMemberConversionUser,
@@ -35,6 +35,8 @@ const statusClasses: Record<MemberMatchStatus, string> = {
   MISSING: "bg-ember-orange/10 text-ember-orange",
   ROLE_MISMATCH: "bg-sky-blue/10 text-sky-blue",
 };
+
+const MEMBERS_PER_PAGE = 20;
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("ko-KR").format(value);
@@ -135,7 +137,9 @@ export function MemberManagementDashboard({
   approvedSocialUsers = [],
 }: MemberManagementDashboardProps) {
   const stats = snapshot.stats;
+  const [activeTab, setActiveTab] = useState<"confirmation" | "homepage">("confirmation");
   const [memberSearchQuery, setMemberSearchQuery] = useState("");
+  const [memberPage, setMemberPage] = useState(1);
   const normalizedMemberSearchQuery = memberSearchQuery.trim().toLocaleLowerCase("ko-KR");
   const normalizedMemberSearchDigits = normalizedMemberSearchQuery.replace(/\D/g, "");
   const filteredActionRows = useMemo(() => {
@@ -159,6 +163,12 @@ export function MemberManagementDashboard({
         || Boolean(normalizedMemberSearchDigits && searchableDigits.includes(normalizedMemberSearchDigits));
     });
   }, [normalizedMemberSearchDigits, normalizedMemberSearchQuery, snapshot.actionRows]);
+  const memberPageCount = Math.max(1, Math.ceil(filteredActionRows.length / MEMBERS_PER_PAGE));
+  const currentMemberPage = Math.min(memberPage, memberPageCount);
+  const paginatedActionRows = filteredActionRows.slice(
+    (currentMemberPage - 1) * MEMBERS_PER_PAGE,
+    currentMemberPage * MEMBERS_PER_PAGE,
+  );
 
   return (
     <main className="min-h-screen bg-warm-canvas px-4 py-8 text-charcoal-primary sm:px-6 lg:px-8">
@@ -185,13 +195,13 @@ export function MemberManagementDashboard({
               <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
               원장 다시 확인
             </Link>
-            <Link
-              href="#homepage-managed-members"
+            <button
+              type="button"
+              onClick={() => setActiveTab("homepage")}
               className="inline-flex items-center gap-2 rounded-full bg-[#f8f7f4] px-4 py-2 text-xs font-semibold text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
             >
               홈페이지 관리 회원 명단
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -215,7 +225,28 @@ export function MemberManagementDashboard({
           <StatCard label="자격 불일치" value={stats.roleMismatchCount} tone="blue" />
         </section>
 
-        <section className="stone-card mt-6 bg-white p-6">
+        <div className="mt-6 flex gap-1 rounded-full bg-[#f2f0ed] p-1" role="tablist" aria-label="조합원 관리 명단">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "confirmation"}
+            onClick={() => setActiveTab("confirmation")}
+            className={cn("flex-1 rounded-full px-4 py-3 text-sm font-semibold transition", activeTab === "confirmation" ? "bg-midnight text-white" : "text-graphite hover:bg-white/70")}
+          >
+            확인 필요 조합원
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "homepage"}
+            onClick={() => setActiveTab("homepage")}
+            className={cn("flex-1 rounded-full px-4 py-3 text-sm font-semibold transition", activeTab === "homepage" ? "bg-midnight text-white" : "text-graphite hover:bg-white/70")}
+          >
+            홈페이지 관리 회원
+          </button>
+        </div>
+
+        {activeTab === "confirmation" ? <section className="stone-card mt-4 bg-white p-6" role="tabpanel">
           <div className="flex flex-col gap-2 border-b border-[#f2f0ed] pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">확인 필요 조합원</h2>
@@ -234,7 +265,10 @@ export function MemberManagementDashboard({
                 id="peopleon-member-search"
                 type="search"
                 value={memberSearchQuery}
-                onChange={(event) => setMemberSearchQuery(event.target.value)}
+                onChange={(event) => {
+                  setMemberSearchQuery(event.target.value);
+                  setMemberPage(1);
+                }}
                 placeholder="이름, 연락처, 자격, 홈페이지 상태로 검색"
                 className="h-11 w-full rounded-full border border-stone-surface bg-[#f8f7f4] pl-10 pr-4 text-sm text-charcoal-primary outline-none transition placeholder:text-ash focus:border-charcoal-primary focus:bg-white focus:ring-2 focus:ring-charcoal-primary/10"
               />
@@ -263,16 +297,25 @@ export function MemberManagementDashboard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f8f7f4]">
-                  {filteredActionRows.map((row) => (
+                  {paginatedActionRows.map((row) => (
                     <ActionRow key={row.peopleOnId} row={row} />
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-        </section>
-
-        <ApprovedMemberConversionPanel approvedUsers={approvedSocialUsers} />
+          {filteredActionRows.length > MEMBERS_PER_PAGE && (
+            <nav className="mt-5 flex items-center justify-center gap-3 border-t border-[#f2f0ed] pt-5" aria-label="확인 필요 조합원 페이지">
+              <button type="button" aria-label="이전 페이지" disabled={currentMemberPage === 1} onClick={() => setMemberPage((page) => Math.max(1, page - 1))} className="rounded-full bg-[#f8f7f4] p-2 text-graphite disabled:cursor-not-allowed disabled:opacity-35">
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <span className="text-xs font-semibold text-graphite">{currentMemberPage} / {memberPageCount} 페이지</span>
+              <button type="button" aria-label="다음 페이지" disabled={currentMemberPage === memberPageCount} onClick={() => setMemberPage((page) => Math.min(memberPageCount, page + 1))} className="rounded-full bg-[#f8f7f4] p-2 text-graphite disabled:cursor-not-allowed disabled:opacity-35">
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </nav>
+          )}
+        </section> : <ApprovedMemberConversionPanel approvedUsers={approvedSocialUsers} />}
       </div>
     </main>
   );
