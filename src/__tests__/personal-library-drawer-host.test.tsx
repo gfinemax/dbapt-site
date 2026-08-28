@@ -200,7 +200,9 @@ describe("personal library drawer host", () => {
     expect(within(drawer).getByText("문서·회원 운영")).toBeInTheDocument();
     expect(within(nav).queryByRole("button", { name: "납부내역" })).not.toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: "새 문서 등록" })).toHaveAttribute("href", "/portal/admin/documents/new");
-    expect(within(nav).getByRole("link", { name: "조합원 관리" })).toHaveAttribute("href", "/portal/admin/members");
+    expect(within(nav).getByRole("link", { name: "조합원 관리" })).toHaveAttribute("href", "/portal/admin/members#confirmation-needed-members");
+    expect(within(nav).getByRole("link", { name: "확인 필요 조합원" })).toHaveAttribute("href", "/portal/admin/members#confirmation-needed-members");
+    expect(within(nav).getByRole("link", { name: "홈페이지 관리 회원 명단" })).toHaveAttribute("href", "/portal/admin/members#homepage-managed-members");
     expect(within(nav).getByRole("link", { name: /보안 감사 기록/ })).toHaveAttribute("href", "/portal/admin/audit-logs");
     expect(within(nav).getByRole("link", { name: "공지사항 관리" })).toHaveAttribute("href", "/news?tab=notice");
 

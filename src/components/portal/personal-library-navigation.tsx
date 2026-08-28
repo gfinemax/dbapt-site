@@ -50,6 +50,8 @@ type PersonalLibraryNavigationProps = {
 
 const baseItemClassName = "flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-left text-sm transition-colors";
 
+const closePortal = () => window.dispatchEvent(new CustomEvent("close-portal"));
+
 const setLedgerDisclosureOpen = (isOpen: boolean) => {
   const disclosure = document.getElementById("member-ledger-disclosure");
   if (disclosure instanceof HTMLDetailsElement) {
@@ -128,14 +130,14 @@ export function PersonalLibraryNavigation({
   );
 
   return (
-    <aside className="hidden border-r border-stone-surface bg-white md:flex md:min-h-full md:flex-col md:px-3 md:py-5" aria-label="개인 자료실 사이드바">
+    <aside className="hidden border-r border-stone-surface bg-white md:flex md:h-full md:min-h-0 md:flex-col md:overflow-y-auto md:overscroll-contain md:px-3 md:py-5" aria-label="개인 자료실 사이드바">
       <div className="flex items-center gap-2 px-3 pb-5">
         <span className="flex size-8 items-center justify-center rounded-[10px] bg-ember-orange text-sm font-semibold text-white">D</span>
         <span className="text-sm font-semibold leading-5 text-charcoal-primary">{memberLabel}<span className="block text-xs font-normal text-ash">{isAdmin ? "문서·회원 운영" : "조합원 전용 서비스"}</span></span>
       </div>
       <Link
         href="/"
-        onClick={() => window.dispatchEvent(new CustomEvent("close-portal"))}
+        onClick={closePortal}
         className="mb-4 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold text-charcoal-primary ring-1 ring-inset ring-stone-surface transition-colors hover:bg-parchment-card"
       >
         <House className="size-4" aria-hidden="true" />
@@ -154,7 +156,7 @@ export function PersonalLibraryNavigation({
           <p className="px-3 pb-1.5 text-[11px] font-semibold text-ash">문서 관리</p>
           <div className="space-y-1">
             {adminButton("documents", "전체 문서", "portal-documents-section", Files, documentCount, "all")}
-            <Link href="/portal/admin/documents/new" className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><FilePlus2 className="size-4" aria-hidden="true" />새 문서 등록</Link>
+            <Link href="/portal/admin/documents/new" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><FilePlus2 className="size-4" aria-hidden="true" />새 문서 등록</Link>
             {adminButton("disclosure", "정보공개 문서", "portal-documents-section", FolderOpen, disclosureDocumentCount, "DISCLOSURE")}
             {adminButton("accounting", "회계 문서", "portal-documents-section", Calculator, accountingDocumentCount, "ACCOUNTING")}
           </div>
@@ -162,15 +164,21 @@ export function PersonalLibraryNavigation({
         <div className="mt-4 border-t border-stone-surface pt-4">
           <p className="px-3 pb-1.5 text-[11px] font-semibold text-ash">관리</p>
           <div className="space-y-1">
-            <Link href="/portal/admin/members" className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><UsersRound className="size-4" aria-hidden="true" />조합원 관리</Link>
-            <Link href="/portal/admin/audit-logs" className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><ShieldCheck className="size-4" aria-hidden="true" />보안 감사 기록</Link>
+            <div>
+              <Link href="/portal/admin/members#confirmation-needed-members" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><UsersRound className="size-4" aria-hidden="true" />조합원 관리</Link>
+              <div className="ml-7 space-y-1 border-l border-stone-surface pl-2">
+                <Link href="/portal/admin/members#confirmation-needed-members" onClick={closePortal} className="block rounded-[10px] px-3 py-2 text-xs text-graphite transition-colors hover:bg-parchment-card hover:text-charcoal-primary">확인 필요 조합원</Link>
+                <Link href="/portal/admin/members#homepage-managed-members" onClick={closePortal} className="block rounded-[10px] px-3 py-2 text-xs text-graphite transition-colors hover:bg-parchment-card hover:text-charcoal-primary">홈페이지 관리 회원 명단</Link>
+              </div>
+            </div>
+            <Link href="/portal/admin/audit-logs" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><ShieldCheck className="size-4" aria-hidden="true" />보안 감사 기록</Link>
           </div>
         </div>
         <div className="mt-4 border-t border-stone-surface pt-4">
           <p className="px-3 pb-1.5 text-[11px] font-semibold text-ash">게시판</p>
           <div className="space-y-1">
-            <Link href="/news?tab=notice" className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><Newspaper className="size-4" aria-hidden="true" />공지사항 관리</Link>
-            <Link href="/news?tab=free" className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><MessageCircle className="size-4" aria-hidden="true" />자유게시판 확인</Link>
+            <Link href="/news?tab=notice" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><Newspaper className="size-4" aria-hidden="true" />공지사항 관리</Link>
+            <Link href="/news?tab=free" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><MessageCircle className="size-4" aria-hidden="true" />자유게시판 확인</Link>
           </div>
         </div>
         <div className="mt-auto border-t border-stone-surface pt-4">

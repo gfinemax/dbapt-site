@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
 import {
@@ -140,6 +140,21 @@ export function MemberManagementDashboard({
   const [activeTab, setActiveTab] = useState<"confirmation" | "homepage">("confirmation");
   const [memberSearchQuery, setMemberSearchQuery] = useState("");
   const [memberPage, setMemberPage] = useState(1);
+
+  useEffect(() => {
+    const syncTabWithHash = () => {
+      setActiveTab(window.location.hash === "#homepage-managed-members" ? "homepage" : "confirmation");
+    };
+    syncTabWithHash();
+    window.addEventListener("hashchange", syncTabWithHash);
+    return () => window.removeEventListener("hashchange", syncTabWithHash);
+  }, []);
+
+  const selectTab = (tab: "confirmation" | "homepage") => {
+    setActiveTab(tab);
+    const hash = tab === "homepage" ? "#homepage-managed-members" : "#confirmation-needed-members";
+    window.history.replaceState(null, "", hash);
+  };
   const normalizedMemberSearchQuery = memberSearchQuery.trim().toLocaleLowerCase("ko-KR");
   const normalizedMemberSearchDigits = normalizedMemberSearchQuery.replace(/\D/g, "");
   const filteredActionRows = useMemo(() => {
@@ -197,7 +212,7 @@ export function MemberManagementDashboard({
             </Link>
             <button
               type="button"
-              onClick={() => setActiveTab("homepage")}
+              onClick={() => selectTab("homepage")}
               className="inline-flex items-center gap-2 rounded-full bg-[#f8f7f4] px-4 py-2 text-xs font-semibold text-charcoal-primary shadow-[inset_0_0_0_1px_var(--stone-surface)] transition hover:bg-stone-surface"
             >
               홈페이지 관리 회원 명단
@@ -230,7 +245,7 @@ export function MemberManagementDashboard({
             type="button"
             role="tab"
             aria-selected={activeTab === "confirmation"}
-            onClick={() => setActiveTab("confirmation")}
+            onClick={() => selectTab("confirmation")}
             className={cn("flex-1 rounded-full px-4 py-3 text-sm font-semibold transition", activeTab === "confirmation" ? "bg-midnight text-white" : "text-graphite hover:bg-white/70")}
           >
             확인 필요 조합원
@@ -239,14 +254,14 @@ export function MemberManagementDashboard({
             type="button"
             role="tab"
             aria-selected={activeTab === "homepage"}
-            onClick={() => setActiveTab("homepage")}
+            onClick={() => selectTab("homepage")}
             className={cn("flex-1 rounded-full px-4 py-3 text-sm font-semibold transition", activeTab === "homepage" ? "bg-midnight text-white" : "text-graphite hover:bg-white/70")}
           >
             홈페이지 관리 회원
           </button>
         </div>
 
-        {activeTab === "confirmation" ? <section className="stone-card mt-4 bg-white p-6" role="tabpanel">
+        {activeTab === "confirmation" ? <section id="confirmation-needed-members" className="stone-card mt-4 scroll-mt-6 bg-white p-6" role="tabpanel">
           <div className="flex flex-col gap-2 border-b border-[#f2f0ed] pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold">확인 필요 조합원</h2>

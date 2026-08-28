@@ -19,6 +19,7 @@ vi.mock("@/lib/auth", () => ({
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
+  window.history.replaceState(null, "", "/");
 });
 
 describe("member management dashboard", () => {
@@ -374,5 +375,33 @@ describe("member management dashboard", () => {
     fireEvent.click(screen.getByRole("tab", { name: "홈페이지 관리 회원" }));
     expect(screen.getByRole("heading", { name: "홈페이지 관리 회원 명단" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "확인 필요 조합원" })).not.toBeInTheDocument();
+  });
+
+  it("opens the homepage member tab from the sidebar deep-link hash", () => {
+    window.history.replaceState(null, "", "/portal/admin/members#homepage-managed-members");
+
+    render(
+      <MemberManagementDashboard
+        snapshot={{
+          generatedAt: "2026-08-28T00:00:00.000Z",
+          stats: {
+            registeredPeopleOnCount: 0,
+            refundPeopleOnCount: 0,
+            trackedPeopleOnCount: 0,
+            homepageApprovedCount: 0,
+            homepagePendingCount: 0,
+            missingHomepageCount: 0,
+            roleMismatchCount: 0,
+            preliminaryPeopleOnCount: 0,
+          },
+          actionRows: [],
+        }}
+        syncError={null}
+        isConfigured
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: "홈페이지 관리 회원" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("heading", { name: "홈페이지 관리 회원 명단" })).toBeInTheDocument();
   });
 });
