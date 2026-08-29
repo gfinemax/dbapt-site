@@ -539,7 +539,7 @@ export function PortalShell({
       <div className={cn(isDrawerMode ? "w-full px-5 py-5 sm:px-7 sm:py-6" : "site-container py-10 sm:py-14")}>
         {/* Top Badge */}
         <p className={cn("inline-flex rounded-full bg-parchment-card font-medium text-ember-orange", isDrawerMode && role === "member" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm")}>
-          {isLoggedIn ? "조합원 전용 서비스" : "포털 화면 미리보기"}
+          {isLoggedIn ? role === "admin" ? "운영자 전용 서비스" : "조합원 전용 서비스" : "포털 화면 미리보기"}
         </p>
 
         <h1 className={cn("max-w-3xl leading-tight", isDrawerMode && role === "member" ? "mt-4 text-2xl sm:text-[2rem]" : "mt-6 text-4xl sm:text-[3rem]")}>

@@ -7,7 +7,6 @@ import {
   Bell,
   Calculator,
   FileHeart,
-  FilePlus2,
   FileText,
   Files,
   FolderOpen,
@@ -46,6 +45,7 @@ type PersonalLibraryNavigationProps = {
   accountingDocumentCount?: number;
   pendingUserCount?: number;
   onSelectDocumentCategory?: (category: string) => void;
+  currentPath?: string;
 };
 
 const baseItemClassName = "flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-left text-sm transition-colors";
@@ -62,15 +62,17 @@ const setLedgerDisclosureOpen = (isOpen: boolean) => {
 export function PersonalLibraryNavigation({
   name,
   role,
-  documentCount = 0,
-  disclosureDocumentCount = 0,
-  accountingDocumentCount = 0,
-  pendingUserCount = 0,
+  documentCount,
+  disclosureDocumentCount,
+  accountingDocumentCount,
+  pendingUserCount,
   onSelectDocumentCategory,
+  currentPath = "",
 }: PersonalLibraryNavigationProps) {
   const router = useRouter();
+  const pathname = currentPath;
   const [activeSection, setActiveSection] = useState<SectionKey>("profile");
-  const [activeAdminSection, setActiveAdminSection] = useState("dashboard");
+  const [selectedAdminSection, setSelectedAdminSection] = useState("dashboard");
   const normalizedRole = role?.trim().toUpperCase();
   const cleanName = name?.trim().replace(/\s*\((?:정식조합원|환불조합원|탈퇴조합원)\)\s*$/, "");
   const memberLabel = normalizedRole === "REFUND"
@@ -89,6 +91,33 @@ export function PersonalLibraryNavigation({
     return () => window.removeEventListener("open-portal", resetNavigation);
   }, []);
 
+  useEffect(() => {
+    if (pathname !== "/portal/admin") return;
+
+    const syncWithLocation = () => {
+      const hash = window.location.hash;
+      if (hash === "#admin-signup-approvals") setSelectedAdminSection("approvals");
+      else if (hash === "#portal-documents-section") {
+        const category = new URLSearchParams(window.location.search).get("category");
+        setSelectedAdminSection(category === "DISCLOSURE" ? "disclosure" : category === "ACCOUNTING" ? "accounting" : "documents");
+      } else setSelectedAdminSection("dashboard");
+    };
+    const timeoutId = window.setTimeout(syncWithLocation, 0);
+    window.addEventListener("hashchange", syncWithLocation);
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("hashchange", syncWithLocation);
+    };
+  }, [pathname]);
+
+  const activeAdminSection = pathname === "/portal/admin/members"
+    ? "members"
+    : pathname === "/portal/admin/audit-logs"
+      ? "audit"
+      : pathname === "/portal/admin/documents/new"
+        ? "documents"
+        : selectedAdminSection;
+
   const moveToSection = (key: SectionKey, targetId: string) => {
     const target = document.getElementById(targetId);
     if (!target) return;
@@ -101,10 +130,15 @@ export function PersonalLibraryNavigation({
 
   const moveToAdminSection = (key: string, targetId: string, category?: string) => {
     const target = document.getElementById(targetId);
-    if (!target) return;
+    if (!target || (category && !onSelectDocumentCategory)) {
+      const query = category ? `?category=${category}` : "";
+      router.push(`/portal/admin${query}#${targetId}`);
+      closePortal();
+      return;
+    }
 
     if (category) onSelectDocumentCategory?.(category);
-    setActiveAdminSection(key);
+    setSelectedAdminSection(key);
     target.scrollIntoView({ behavior: "smooth", block: "start" });
     target.focus({ preventScroll: true });
   };
@@ -135,14 +169,32 @@ export function PersonalLibraryNavigation({
         <span className="flex size-8 items-center justify-center rounded-[10px] bg-ember-orange text-sm font-semibold text-white">D</span>
         <span className="text-sm font-semibold leading-5 text-charcoal-primary">{memberLabel}<span className="block text-xs font-normal text-ash">{isAdmin ? "문서·회원 운영" : "조합원 전용 서비스"}</span></span>
       </div>
-      <Link
-        href="/"
-        onClick={closePortal}
-        className="mb-4 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold text-charcoal-primary ring-1 ring-inset ring-stone-surface transition-colors hover:bg-parchment-card"
-      >
-        <House className="size-4" aria-hidden="true" />
-        홈으로
-      </Link>
+      {isAdmin ? (
+        <div className="mb-4 space-y-1">
+          <Link
+            href="/portal/admin"
+            onClick={closePortal}
+            aria-current={pathname === "/portal/admin" && activeAdminSection === "dashboard" ? "page" : undefined}
+            className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold text-charcoal-primary ring-1 ring-inset ring-stone-surface transition-colors hover:bg-parchment-card"
+          >
+            <LayoutDashboard className="size-4" aria-hidden="true" />
+            운영자 홈
+          </Link>
+          <Link href="/" onClick={closePortal} className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-xs font-medium text-graphite transition-colors hover:bg-parchment-card">
+            <House className="size-4" aria-hidden="true" />
+            사이트 홈
+          </Link>
+        </div>
+      ) : (
+        <Link
+          href="/"
+          onClick={closePortal}
+          className="mb-4 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold text-charcoal-primary ring-1 ring-inset ring-stone-surface transition-colors hover:bg-parchment-card"
+        >
+          <House className="size-4" aria-hidden="true" />
+          홈으로
+        </Link>
+      )}
       {isAdmin ? (
       <nav aria-label="운영 관리자 메뉴" className="flex min-h-0 flex-1 flex-col">
         <div>
@@ -156,7 +208,6 @@ export function PersonalLibraryNavigation({
           <p className="px-3 pb-1.5 text-[11px] font-semibold text-ash">문서 관리</p>
           <div className="space-y-1">
             {adminButton("documents", "전체 문서", "portal-documents-section", Files, documentCount, "all")}
-            <Link href="/portal/admin/documents/new" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><FilePlus2 className="size-4" aria-hidden="true" />새 문서 등록</Link>
             {adminButton("disclosure", "정보공개 문서", "portal-documents-section", FolderOpen, disclosureDocumentCount, "DISCLOSURE")}
             {adminButton("accounting", "회계 문서", "portal-documents-section", Calculator, accountingDocumentCount, "ACCOUNTING")}
           </div>
@@ -165,13 +216,13 @@ export function PersonalLibraryNavigation({
           <p className="px-3 pb-1.5 text-[11px] font-semibold text-ash">관리</p>
           <div className="space-y-1">
             <div>
-              <Link href="/portal/admin/members#confirmation-needed-members" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><UsersRound className="size-4" aria-hidden="true" />조합원 관리</Link>
+              <Link href="/portal/admin/members#confirmation-needed-members" onClick={closePortal} aria-current={activeAdminSection === "members" ? "page" : undefined} className={`${baseItemClassName} ${activeAdminSection === "members" ? "bg-parchment-card font-semibold text-ember-orange" : "text-graphite hover:bg-parchment-card"}`}><UsersRound className="size-4" aria-hidden="true" />조합원 관리</Link>
               <div className="ml-7 space-y-1 border-l border-stone-surface pl-2">
                 <Link href="/portal/admin/members#confirmation-needed-members" onClick={closePortal} className="block rounded-[10px] px-3 py-2 text-xs text-graphite transition-colors hover:bg-parchment-card hover:text-charcoal-primary">확인 필요 조합원</Link>
                 <Link href="/portal/admin/members#homepage-managed-members" onClick={closePortal} className="block rounded-[10px] px-3 py-2 text-xs text-graphite transition-colors hover:bg-parchment-card hover:text-charcoal-primary">홈페이지 관리 회원 명단</Link>
               </div>
             </div>
-            <Link href="/portal/admin/audit-logs" onClick={closePortal} className={`${baseItemClassName} text-graphite hover:bg-parchment-card`}><ShieldCheck className="size-4" aria-hidden="true" />보안 감사 기록</Link>
+            <Link href="/portal/admin/audit-logs" onClick={closePortal} aria-current={activeAdminSection === "audit" ? "page" : undefined} className={`${baseItemClassName} ${activeAdminSection === "audit" ? "bg-parchment-card font-semibold text-ember-orange" : "text-graphite hover:bg-parchment-card"}`}><ShieldCheck className="size-4" aria-hidden="true" />보안 감사 기록</Link>
           </div>
         </div>
         <div className="mt-4 border-t border-stone-surface pt-4">

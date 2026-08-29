@@ -41,6 +41,7 @@ describe("portal shell", () => {
     expect(screen.getByRole("link", { name: "+ 새 문서 등록" })).toHaveAttribute("href", "/portal/admin/documents/new");
     expect(screen.getByRole("link", { name: "보안 감사 전체 보기" })).toHaveAttribute("href", "/portal/admin/audit-logs");
     expect(screen.queryByRole("heading", { name: "최근 보안 활동" })).not.toBeInTheDocument();
+    expect(screen.getByText("운영자 전용 서비스")).toBeInTheDocument();
   });
 
   it("shows the login announcement popup after administrator login lands on the portal", async () => {

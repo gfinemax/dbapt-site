@@ -25,8 +25,12 @@ export const metadata: Metadata = {
   title: "관리자 포털 | 대방동 지역주택조합",
 };
 
-export default async function AdminPortalPage() {
+export default async function AdminPortalPage(
+  { searchParams = Promise.resolve({}) }: { searchParams?: Promise<{ category?: string }> } = {},
+) {
   const session = (await getSession()) as { id: string; loginId: string; name: string; role: string } | null;
+  const requestedCategory = (await searchParams).category;
+  const initialCategory = requestedCategory === "DISCLOSURE" || requestedCategory === "ACCOUNTING" ? requestedCategory : "all";
 
   let documents: Document[] = [];
   let logs: LogEntry[] = [];
@@ -151,6 +155,8 @@ export default async function AdminPortalPage() {
       pendingUsers={pendingUsers}
       approvedSocialUsers={approvedSocialUsers}
       peopleOnPopulationStats={peopleOnPopulationStats}
+      isDrawerMode={session?.role === "ADMIN"}
+      initialCategory={initialCategory}
     />
   );
 }

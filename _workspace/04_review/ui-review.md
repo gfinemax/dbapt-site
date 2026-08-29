@@ -1,23 +1,23 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 가입 승인 권한 선택, 조합원 관리 명단 탭 구분, 명단 검색·페이지 이동, 관리자 사이드바 명단 바로가기
-- Governing spec: `docs/superpowers/specs/2026-06-17-peopleon-member-management-mvp-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-06-17-peopleon-member-management-mvp.md`
-- Files or pages reviewed: `PortalShell`, `ApprovedMemberConversionPanel`, `MemberManagementDashboard`, `PersonalLibraryNavigation`, `/portal/admin`, `/portal/admin/members`
+- Feature: 운영자 하위 화면 공통 셸, 운영자 홈·사이트 홈 분리, 문서 등록 진입점 정리
+- Governing spec: `docs/superpowers/specs/2026-08-29-admin-workspace-navigation-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-08-29-admin-workspace-navigation.md`
+- Files or pages reviewed: `AdminWorkspaceShell`, `PersonalLibraryNavigation`, `PortalShell`, `/portal/admin`, `/portal/admin/documents/new`, `/portal/admin/members`, `/portal/admin/audit-logs`
 
 ## Boundary Review
 - Finding: PASS
-- Evidence: 관리자 전용 기존 화면과 사이드바만 변경했고 PeopleOn 읽기 계약과 MEMBER/REFUND/ASSOCIATE 권한 코드를 유지했다. 사이드바 하위 메뉴는 기존 `/portal/admin/members`의 두 탭 해시에만 연결된다. 관련 렌더링·상호작용 테스트가 통과했다.
+- Evidence: 공통 셸은 서버 레이아웃에서 인증된 ADMIN에게만 적용된다. 공개 내비게이션과 MEMBER/REFUND 서비스 메뉴, 문서 저장 및 PeopleOn 계약은 변경하지 않았다.
 
 ## Truthful Presentation Review
 - Finding: PASS
-- Evidence: 네 자격 선택은 기존 `approveUserAction` 저장 계약에 연결되고, 두 검색창과 20명 단위 페이지 이동은 실제 승인 계정과 PeopleOn 확인 필요 행 props만 사용한다. 가짜 사용자나 수치를 추가하지 않았다.
+- Evidence: 관리자 배지는 `운영자 전용 서비스`로 역할에 맞게 수정했다. `운영자 홈`과 `사이트 홈`은 실제 목적지로 분리했고 문서 등록은 기존 문서 목록의 실제 등록 버튼과 저장 후 복귀 계약을 유지한다.
 
 ## Design And Accessibility Review
 - Finding: PASS
-- Evidence: 기존 인증 운영 페이지의 두 탭·검색·페이지 이동과 모바일 무가로넘침 검증에 더해, 사이드바 링크·드로어 닫힘·해시 진입 탭 선택을 집중 컴포넌트 테스트 15개로 확인했다. 로컬 보호 URL은 데스크톱 1440×1000과 모바일 390×844에서 로그인 경계로 정상 이동하고 오류 오버레이가 없었다.
+- Evidence: 데스크톱은 고정 운영자 사이드바, 모바일은 상단 운영 메뉴와 사이트 홈을 제공한다. 현재 관리자 하위 라우트에는 `aria-current`가 적용되고 포커스 스타일과 독립 스크롤을 유지한다. 관련 컴포넌트 테스트와 전체 107파일 682테스트, lint, production build가 통과했다. 로컬 브라우저에서는 보호 라우트가 로그인 화면으로 정상 이동하고 오류 오버레이가 없음을 확인했으나, 관리자 로그인 미완료로 인증 후 화면 캡처는 수행하지 못했다.
 
 ## Outcome
 - Result: PASS
-- Required action: none
+- Required action: 인증 후 데스크톱·모바일 시각 확인은 배포 후 후속 점검으로 남긴다.
