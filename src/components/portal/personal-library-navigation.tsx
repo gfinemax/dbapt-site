@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Newspaper,
   ReceiptText,
+  RotateCcwKey,
   ShieldCheck,
   UserCheck,
   UserRound,
@@ -112,6 +113,8 @@ export function PersonalLibraryNavigation({
 
   const activeAdminSection = pathname === "/portal/admin/members"
     ? "members"
+    : pathname === "/portal/admin/account-recovery"
+      ? "account-recovery"
     : pathname === "/portal/admin/audit-logs"
       ? "audit"
       : pathname === "/portal/admin/documents/new"
@@ -222,6 +225,7 @@ export function PersonalLibraryNavigation({
                 <Link href="/portal/admin/members#homepage-managed-members" onClick={closePortal} className="block rounded-[10px] px-3 py-2 text-xs text-graphite transition-colors hover:bg-parchment-card hover:text-charcoal-primary">홈페이지 관리 회원 명단</Link>
               </div>
             </div>
+            <Link href="/portal/admin/account-recovery" onClick={closePortal} aria-current={activeAdminSection === "account-recovery" ? "page" : undefined} className={`${baseItemClassName} ${activeAdminSection === "account-recovery" ? "bg-parchment-card font-semibold text-ember-orange" : "text-graphite hover:bg-parchment-card"}`}><RotateCcwKey className="size-4" aria-hidden="true" />계정 복구 요청</Link>
             <Link href="/portal/admin/audit-logs" onClick={closePortal} aria-current={activeAdminSection === "audit" ? "page" : undefined} className={`${baseItemClassName} ${activeAdminSection === "audit" ? "bg-parchment-card font-semibold text-ember-orange" : "text-graphite hover:bg-parchment-card"}`}><ShieldCheck className="size-4" aria-hidden="true" />보안 감사 기록</Link>
           </div>
         </div>

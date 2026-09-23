@@ -53,17 +53,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (pathname === "/login" && decoded) {
-    const { role } = decoded;
-    if (role === "MEMBER") {
-      return NextResponse.redirect(new URL("/portal/member", request.url));
-    } else if (role === "REFUND") {
-      return NextResponse.redirect(new URL("/portal/refund", request.url));
-    } else if (role === "ADMIN") {
-      return NextResponse.redirect(new URL("/portal/admin", request.url));
-    }
-  }
-
   return NextResponse.next();
 }
 

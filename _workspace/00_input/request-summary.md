@@ -1,6 +1,23 @@
 # Request Summary
 
-- Requested feature slice: 운영자 전용 서비스의 모든 관리자 하위 화면에서 공통 운영 내비게이션과 복귀 동선을 유지한다. `운영자 홈`과 `사이트 홈`을 구분하고, 문서 등록은 문서 목록의 주 작업으로 집중하며, 관리자 화면 문구와 현재 위치 표시를 역할에 맞게 정리한다.
-- Explicitly excluded scope: 관리자 권한·데이터 계약 변경, 문서 업로드 저장 로직 변경, 조합원용 사이드바 개편, 공개 메뉴에 관리자 기능 노출.
-- Candidate governing specification: `docs/superpowers/specs/2026-08-29-admin-workspace-navigation-design.md`
-- Unanswered decision: none
+## Requested feature slice
+
+- Add account recovery entry points to the login experience, starting with account ID recovery and continuing to password reset.
+- Use friendly Korean guidance for members.
+- Use a single-use password-reset link that expires after 12 hours.
+- Complete password reset by replacing the password and invalidating existing login sessions.
+
+## Explicitly excluded scope
+
+- Revealing or recovering an existing plaintext password.
+- Matching an account by name alone.
+- Claiming that a message was delivered when no live contact-delivery provider is configured.
+- Changing member role, member type, refund data, or other profile data as part of password reset.
+
+## Candidate governing specification
+
+- `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+
+## Unanswered decision
+
+- none. The user selected manual SMS delivery from either an office-dedicated mobile phone or an administrator's personal mobile phone, chosen per request. The site opens the device SMS app or copies the message; it does not claim automatic delivery.

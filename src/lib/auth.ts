@@ -27,6 +27,7 @@ type SessionUser = {
   role: string;
   email?: string | null;
   image?: string | null;
+  authVersion?: number;
 };
 
 function stringField(formData: FormData, field: string) {
@@ -63,6 +64,7 @@ export async function createSessionToken(user: SessionUser) {
     role: user.role,
     email: user.email || undefined,
     image: user.image || undefined,
+    authVersion: user.authVersion ?? 0,
   });
 }
 
@@ -70,7 +72,35 @@ export async function getSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
   if (!token) return null;
-  return await decrypt(token);
+  const payload = await decrypt(token);
+  if (!payload || typeof payload.id !== "string") return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.id },
+    select: {
+      id: true,
+      loginId: true,
+      name: true,
+      signupName: true,
+      role: true,
+      email: true,
+      image: true,
+      isActive: true,
+      authVersion: true,
+    },
+  });
+  if (!user?.isActive || (user.authVersion ?? 0) !== Number(payload.authVersion ?? 0)) return null;
+
+  return {
+    ...payload,
+    id: user.id,
+    loginId: user.loginId,
+    name: getUserDisplayName(user, user.name || "조합원"),
+    role: user.role,
+    email: user.email || undefined,
+    image: user.image || undefined,
+    authVersion: user.authVersion ?? 0,
+  };
 }
 
 export async function loginAction(prevState: unknown, formData: FormData) {
@@ -240,10 +270,19 @@ export async function changePasswordAction(prevState: unknown, formData: FormDat
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash },
+      data: { passwordHash, authVersion: { increment: 1 } },
     });
 
-    return { success: true, message: "비밀번호가 변경되었습니다." };
+    const cookieStore = await cookies();
+    cookieStore.set("session", "", {
+      expires: new Date(0),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return { success: true, message: "비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요." };
   } catch (e) {
     console.error("Change password action error:", e);
     return { error: "비밀번호 변경 중 문제가 발생했습니다." };

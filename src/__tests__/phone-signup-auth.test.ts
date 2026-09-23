@@ -114,6 +114,30 @@ describe("phone password signup auth", () => {
     );
   });
 
+  it("rejects an existing session after the account auth version changes", async () => {
+    const { createSessionToken, getSession } = await import("@/lib/auth");
+    mockSessionCookie.value = await createSessionToken({
+      id: "member-1",
+      loginId: "01012345678",
+      name: "홍길동",
+      role: "MEMBER",
+      authVersion: 0,
+    });
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "member-1",
+      loginId: "01012345678",
+      name: "홍길동",
+      signupName: null,
+      role: "MEMBER",
+      email: null,
+      image: null,
+      isActive: true,
+      authVersion: 1,
+    });
+
+    expect(await getSession()).toBeNull();
+  });
+
   it("changes the current password when the current password is correct", async () => {
     const { changePasswordAction, createSessionToken } = await import("@/lib/auth");
     const existingPasswordHash = await bcrypt.hash("123456", 10);
@@ -140,7 +164,7 @@ describe("phone password signup auth", () => {
     });
 
     const result = await changePasswordAction(null, formData);
-    expect(result).toEqual({ success: true, message: "비밀번호가 변경되었습니다." });
+    expect(result).toEqual({ success: true, message: "비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요." });
     const updatedPasswordHash = prismaMock.user.update.mock.calls[0][0].data.passwordHash;
 
     expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
@@ -155,7 +179,7 @@ describe("phone password signup auth", () => {
     });
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: "member-1" },
-      data: { passwordHash: updatedPasswordHash },
+      data: { passwordHash: updatedPasswordHash, authVersion: { increment: 1 } },
     });
     expect(updatedPasswordHash).not.toBe("654321");
     expect(await bcrypt.compare("654321", updatedPasswordHash)).toBe(true);
@@ -314,6 +338,17 @@ describe("phone password signup auth", () => {
       loginId: "admin",
       name: "운영자",
       role: "ADMIN",
+    });
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: "admin-1",
+      loginId: "admin",
+      name: "운영자",
+      signupName: null,
+      role: "ADMIN",
+      email: null,
+      image: null,
+      isActive: true,
+      authVersion: 0,
     });
     prismaMock.user.updateMany.mockResolvedValue({ count: 1 });
 

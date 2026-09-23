@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatusPage } from "@/components/landing/status-page";
 import { loginAction, signupWithPhonePasswordAction } from "@/lib/auth";
@@ -327,6 +328,12 @@ export function LoginClient({ googleError = null }: LoginClientProps) {
             <Button type="submit" disabled={isPending} className="mt-2 w-full rounded-full py-6 text-[14px]">
               {isPending ? "로그인 중..." : "로그인"}
             </Button>
+
+            <div className="flex items-center justify-center gap-3 text-xs font-medium text-graphite">
+              <Link href="/account-recovery?mode=id" className="rounded-md px-1 py-1 transition hover:text-ember-orange focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40">아이디 찾기</Link>
+              <span className="text-fog" aria-hidden="true">·</span>
+              <Link href="/account-recovery?mode=password" className="rounded-md px-1 py-1 transition hover:text-ember-orange focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40">비밀번호 재설정</Link>
+            </div>
 
             <div className="relative my-5 flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">

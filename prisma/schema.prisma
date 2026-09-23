@@ -27,6 +27,7 @@ model User {
   role                     String    @default("PENDING") // PENDING(대기), MEMBER(정식), REFUND(환불), ASSOCIATE(관계자/기타), ADMIN(관리자)
   memberType               String    @default("REGULAR") // REGULAR(정식), PRELIMINARY(예비), REFUND(환불), ASSOCIATE(관계자/기타)
   isActive                 Boolean   @default(true) // 계정 활성 상태
+  authVersion              Int       @default(0) // 비밀번호 재설정/강제 로그아웃 시 증가
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 
@@ -59,6 +60,8 @@ model User {
   notificationGroupMembers         NotificationGroupMember[]
   disclosureNotificationRecipients DisclosureNotificationRecipient[]
   coopNewsComments                 CoopNewsComment[]
+  accountRecoveryRequests          AccountRecoveryRequest[]          @relation("AccountRecoveryTarget")
+  handledAccountRecoveryRequests   AccountRecoveryRequest[]          @relation("AccountRecoveryHandler")
 }
 
 // 1.1. 조합원 개인정보와 PeopleON 연결 상태
@@ -618,6 +621,34 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// 4.9 계정 아이디 찾기 및 비밀번호 재설정 요청
+model AccountRecoveryRequest {
+  id                String    @id @default(uuid())
+  userId            String
+  requestType       String // ID_LOOKUP, PASSWORD_RESET
+  status            String    @default("PENDING") // PENDING, LINK_CREATED, SENT, COMPLETED, CANCELLED, EXPIRED
+  requestPhoneLast4 String
+  deliveryMethod    String? // OFFICE_MOBILE, PERSONAL_MOBILE
+  tokenHash         String?   @unique
+  tokenExpiresAt    DateTime?
+  tokenUsedAt       DateTime?
+  handledById       String?
+  handledAt         DateTime?
+  messagePreparedAt DateTime?
+  deliveryMarkedAt  DateTime?
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user      User  @relation("AccountRecoveryTarget", fields: [userId], references: [id], onDelete: Cascade)
+  handledBy User? @relation("AccountRecoveryHandler", fields: [handledById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, requestType, createdAt])
+  @@index([handledById, handledAt])
 }
 
 // 5. 조합소식 (공지사항 및 주/월간소식)

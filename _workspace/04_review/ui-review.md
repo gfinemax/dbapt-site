@@ -1,23 +1,28 @@
 # UI Review
 
 ## Reviewed Change
-- Feature: 운영자 하위 화면 공통 셸, 운영자 홈·사이트 홈 분리, 문서 등록 진입점 정리
-- Governing spec: `docs/superpowers/specs/2026-08-29-admin-workspace-navigation-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-08-29-admin-workspace-navigation.md`
-- Files or pages reviewed: `AdminWorkspaceShell`, `PersonalLibraryNavigation`, `PortalShell`, `/portal/admin`, `/portal/admin/documents/new`, `/portal/admin/members`, `/portal/admin/audit-logs`
+
+- Feature: 사용자 계정 도움 요청과 관리자 수동 문자 안내
+- Governing spec: `docs/superpowers/specs/2026-09-24-account-recovery-manual-sms-design.md`
+- Implementation plan: `docs/superpowers/plans/2026-09-24-account-recovery-manual-sms.md`
+- Pages reviewed: `/login`, `/account-recovery`, `/reset-password/[token]`, `/portal/admin/account-recovery`
 
 ## Boundary Review
+
 - Finding: PASS
-- Evidence: 공통 셸은 서버 레이아웃에서 인증된 ADMIN에게만 적용된다. 공개 내비게이션과 MEMBER/REFUND 서비스 메뉴, 문서 저장 및 PeopleOn 계약은 변경하지 않았다.
+- Evidence: 공개 화면은 이름과 등록 휴대전화만 받고 모든 요청에 같은 접수 문구를 보여 준다. 관리자 화면은 ADMIN 세션이 없으면 `/login`으로 이동한다. 관리자 개인 휴대전화 번호와 원문 재설정 토큰은 저장하지 않는다.
 
 ## Truthful Presentation Review
+
 - Finding: PASS
-- Evidence: 관리자 배지는 `운영자 전용 서비스`로 역할에 맞게 수정했다. `운영자 홈`과 `사이트 홈`은 실제 목적지로 분리했고 문서 등록은 기존 문서 목록의 실제 등록 버튼과 저장 후 복귀 계약을 유지한다.
+- Evidence: 사이트가 문자를 자동 발송한다고 표현하지 않는다. `문자 앱 열기`, `문구 복사`, `발송 완료로 표시`를 분리하고 실제 휴대전화에서 직접 보내야 한다는 안내를 노출한다. 재설정 링크의 12시간·1회 사용 조건도 공개 화면과 관리자 문구에 일치하게 표시한다.
 
 ## Design And Accessibility Review
+
 - Finding: PASS
-- Evidence: 데스크톱은 고정 운영자 사이드바, 모바일은 상단 운영 메뉴와 사이트 홈을 제공한다. 현재 관리자 하위 라우트에는 `aria-current`가 적용되고 포커스 스타일과 독립 스크롤을 유지한다. 관련 컴포넌트 테스트와 전체 107파일 682테스트, lint, production build가 통과했다. 로컬 브라우저에서는 보호 라우트가 로그인 화면으로 정상 이동하고 오류 오버레이가 없음을 확인했으나, 관리자 로그인 미완료로 인증 후 화면 캡처는 수행하지 못했다.
+- Evidence: 2026-09-24 로컬 Codex Chrome에서 데스크톱 기본 뷰포트와 390x844 모바일 뷰포트를 확인했다. 카드와 탭, 입력 필드, 버튼, 하단 모바일 내비게이션이 겹치지 않았다. 탭 역할과 선택 상태, 입력 레이블, 경고 영역을 접근성 트리에서 확인했고 브라우저 콘솔 오류는 없었다.
 
 ## Outcome
+
 - Result: PASS
-- Required action: 인증 후 데스크톱·모바일 시각 확인은 배포 후 후속 점검으로 남긴다.
+- Remaining boundary: 실제 ADMIN 로그인 후 요청 카드에서 휴대전화 문자 앱으로 전달하는 마지막 단계는 운영 기기와 실사용 계정이 필요하므로 자동 실행하지 않았다. 해당 동작과 권한 분기는 컴포넌트·서버 액션 테스트로 검증한다.

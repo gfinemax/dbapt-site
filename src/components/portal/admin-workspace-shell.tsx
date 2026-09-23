@@ -14,6 +14,7 @@ const mobileLinks = [
   ["운영자 홈", "/portal/admin"],
   ["문서 목록", "/portal/admin#portal-documents-section"],
   ["조합원 관리", "/portal/admin/members#confirmation-needed-members"],
+  ["계정 복구 요청", "/portal/admin/account-recovery"],
   ["보안 감사 기록", "/portal/admin/audit-logs"],
   ["공지사항 관리", "/news?tab=notice"],
 ] as const;

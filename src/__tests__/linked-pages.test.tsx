@@ -9,7 +9,13 @@ vi.mock("next/navigation", () => ({
       refresh: vi.fn(),
     };
   },
+  redirect: vi.fn(),
 }));
+
+vi.mock("@/lib/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth")>();
+  return { ...actual, getSession: vi.fn(async () => null) };
+});
 
 type PageComponent = (props?: {
   searchParams?: Promise<{

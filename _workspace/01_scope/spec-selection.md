@@ -1,6 +1,20 @@
-# Spec Selection
+# Specification Selection
 
-- Selected approved spec: `docs/superpowers/specs/2026-08-29-admin-workspace-navigation-design.md`
-- Implementation boundary: 인증된 ADMIN의 `/portal/admin` 및 하위 라우트에만 공통 운영자 셸을 적용한다. 기존 문서 등록, 회원 관리, 감사 기록, 게시판 기능과 권한 계약은 유지하고 내비게이션·역할 문구·복귀 경로만 정리한다.
-- Conflicts: none
-- Planning may continue: yes. The user explicitly approved the audited navigation direction and requested implementation.
+## Selected approved spec path
+
+- `docs/superpowers/specs/2026-09-24-account-recovery-manual-sms-design.md`
+
+## Implementation boundary
+
+- Public account-help requests use exact name and registered-phone matching without exposing account existence.
+- Administrators process requests by immutable user ID, select office or personal mobile delivery, and manually send a prepared ID-help message or 12-hour one-time reset link.
+- Reset tokens are stored only as hashes, are single-use, and invalidate previous tokens and existing sessions.
+- No live Kakao/SMS provider and no administrator personal number storage are included.
+
+## Conflicts or missing decisions
+
+- none.
+
+## Whether planning may continue
+
+- Yes. The user approved the specification and explicitly requested implementation.
