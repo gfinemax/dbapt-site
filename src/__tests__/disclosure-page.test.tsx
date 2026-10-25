@@ -288,7 +288,7 @@ describe("disclosure page", () => {
     expect(screen.getByRole("button", { name: "용역 계약서" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "사업시행계획서" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "공사시행" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "실적보고서" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "분기실적보고서(조합)" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "감리 보고서" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "분양" })).toBeInTheDocument();
   });
@@ -1509,6 +1509,7 @@ describe("disclosure page", () => {
 
     expect(screen.getByRole("heading", { name: "정보공개 문서 수정" })).toBeInTheDocument();
     expect(screen.getByLabelText("문서함 세부 분류 *")).toHaveValue("실적보고서");
+    expect(within(screen.getByLabelText("문서함 세부 분류 *")).getByRole("option", { name: "분기실적보고서(조합)" })).toHaveValue("실적보고서");
     expect(within(screen.getByLabelText("문서함 세부 분류 *")).queryByRole("option", { name: "추진실적" })).not.toBeInTheDocument();
     expect(screen.getByText("현재 첨부 파일: old-report.docx")).toBeInTheDocument();
     expect(screen.getByText("현재 추가 첨부파일")).toBeInTheDocument();
@@ -1551,6 +1552,10 @@ describe("disclosure page", () => {
         ]}
       />
     );
+
+    const categoryFilter = screen.getByRole("combobox", { name: "문서함 분류" });
+    expect(categoryFilter).toHaveValue("실적보고서");
+    expect(within(categoryFilter).getByRole("option", { name: "분기실적보고서(조합)" })).toHaveValue("실적보고서");
 
     fireEvent.click(screen.getAllByRole("button", { name: "23년 1사분기_실적보고서 문서 수정" })[0]);
 

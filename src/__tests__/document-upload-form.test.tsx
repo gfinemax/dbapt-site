@@ -20,7 +20,7 @@ describe("document upload form", () => {
     expect(subCategorySelect).toHaveTextContent("회계관리규정");
     expect(subCategorySelect).toHaveTextContent("선거관리규정");
     expect(within(subCategorySelect).getByRole("option", { name: "연간자금운용계획" })).toBeInTheDocument();
-    expect(subCategorySelect).toHaveTextContent("실적보고서");
+    expect(within(subCategorySelect).getByRole("option", { name: "분기실적보고서(조합)" })).toHaveValue("실적보고서");
     expect(within(subCategorySelect).queryByRole("option", { name: "자금운용계획" })).not.toBeInTheDocument();
     expect(subCategorySelect).not.toHaveTextContent("추진실적");
 

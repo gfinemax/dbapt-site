@@ -13,6 +13,7 @@ import {
   type PdfUploadOptimizationMode,
 } from "@/lib/pdf-upload-optimization";
 import { formatViewCount, formatViewCountBaseline, formatViewCountNumber } from "@/lib/view-count";
+import { getDisclosureCategoryLabel } from "@/lib/disclosure-category-label";
 
 // ── 공개자료 문서함 분류 타입 ──
 export type MeetingCategory =
@@ -116,7 +117,7 @@ function inferCorrespondenceType(doc: Pick<RowDocType, "category" | "title" | "c
 }
 
 function categoryLabelForDoc(doc: Pick<RowDocType, "category" | "title" | "correspondenceType">) {
-  if ((doc.category as string) !== "수발신 공문" && doc.category !== "공문서") return doc.category;
+  if ((doc.category as string) !== "수발신 공문" && doc.category !== "공문서") return getDisclosureCategoryLabel(doc.category);
   const type = inferCorrespondenceType(doc);
   if (type === "수신") return "수신 공문";
   if (type === "기타") return "기타 공문";
@@ -125,7 +126,9 @@ function categoryLabelForDoc(doc: Pick<RowDocType, "category" | "title" | "corre
 
 function categoryFilterLabel(category: CategoryFilter) {
   if (category === "전체") return "전체 분류";
-  return (category as string) === "수발신 공문" || category === "공문서" ? "수신/발신/기타 공문" : category;
+  return (category as string) === "수발신 공문" || category === "공문서"
+    ? "수신/발신/기타 공문"
+    : getDisclosureCategoryLabel(category);
 }
 
 function ReplyStatusBadge({ status }: { status?: "회신 필요" | "회신 완료" | "회신 불필요" }) {
@@ -790,6 +793,7 @@ export function MeetingsTable({
         {/* 카테고리 필터 */}
         <div className="relative">
           <select
+            aria-label="문서함 분류"
             value={filterCat}
             onChange={(e) => { setFilterCat(e.target.value as CategoryFilter); setPage(1); }}
             className="appearance-none rounded-xl border border-stone-surface bg-white pl-4 pr-10 py-2.5 text-xs font-semibold text-charcoal-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-blue/30 focus:border-sky-blue cursor-pointer"
@@ -1362,7 +1366,7 @@ export function MeetingsTable({
                   >
                     {CATEGORIES.filter((category): category is MeetingCategory => category !== "전체").map((category) => (
                       <option key={category} value={category}>
-                        {category}
+                        {categoryFilterLabel(category)}
                       </option>
                     ))}
                   </select>

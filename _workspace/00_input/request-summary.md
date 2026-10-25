@@ -1,23 +1,6 @@
 # Request Summary
 
-## Requested feature slice
-
-- Add account recovery entry points to the login experience, starting with account ID recovery and continuing to password reset.
-- Use friendly Korean guidance for members.
-- Use a single-use password-reset link that expires after 12 hours.
-- Complete password reset by replacing the password and invalidating existing login sessions.
-
-## Explicitly excluded scope
-
-- Revealing or recovering an existing plaintext password.
-- Matching an account by name alone.
-- Claiming that a message was delivered when no live contact-delivery provider is configured.
-- Changing member role, member type, refund data, or other profile data as part of password reset.
-
-## Candidate governing specification
-
-- `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
-
-## Unanswered decision
-
-- none. The user selected manual SMS delivery from either an office-dedicated mobile phone or an administrator's personal mobile phone, chosen per request. The site opens the device SMS app or copies the message; it does not claim automatic delivery.
+- Requested feature slice: 공개자료 문서함에서 `실적보고서`로 표시되는 분류명을 `분기실적보고서(조합)`으로 변경한다.
+- Excluded scope: 기존 문서의 저장 분류값, 문서 제목, 권한, 검색·필터 동작, 데이터베이스 자료를 변경하지 않는다.
+- Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Unanswered decision: none

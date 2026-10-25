@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getDisclosureCategoryLabel, QUARTERLY_PERFORMANCE_REPORT_LABEL } from "@/lib/disclosure-category-label";
 import { MeetingsTable, type MeetingCategory, type CorrespondenceType } from "./meetings-table";
 import { type Document } from "@/components/portal/document-table";
 import { DocumentBookmarkButton } from "@/components/portal/document-bookmark-button";
@@ -283,7 +284,7 @@ const subMenus = {
     { label: "용역 계약서", id: "ops-1" },
     { label: "사업시행계획서", id: "ops-7" },
     { label: "공사시행", id: "ops-2" },
-    { label: "실적보고서", id: "ops-3" },
+    { label: QUARTERLY_PERFORMANCE_REPORT_LABEL, id: "ops-3" },
     { label: "감리 보고서", id: "ops-4" },
     { label: "분양", id: "ops-8" },
   ],
@@ -405,7 +406,7 @@ export function DisclosureClient({
   const getDefaultEmptyMessage = (subCategory: string) => ({
     subCategory,
     title: "아직 업로드된 자료가 없습니다.",
-    message: `관리자 포털에서 \`의무 정보 공개 자료\`의 세부 분류를 \`${subCategory}\`로 선택해 등록하면 이 카드에 최신 자료가 표시됩니다.`,
+    message: `관리자 포털에서 \`의무 정보 공개 자료\`의 세부 분류를 \`${getDisclosureCategoryLabel(subCategory)}\`로 선택해 등록하면 이 카드에 최신 자료가 표시됩니다.`,
   });
 
   const getEmptyMessage = (subCategory: string) =>
@@ -928,7 +929,7 @@ export function DisclosureClient({
                       const isEditingThisEmptyMessage = editingEmptyMessage?.subCategory === itemSubCategory;
                       const documentFolder: DisclosureDocumentFolder = {
                         id: `${item.id}-folder`,
-                        title: `${itemSubCategory} 문서함`,
+                        title: `${getDisclosureCategoryLabel(itemSubCategory)} 문서함`,
                         desc: cardContent.description,
                         date: item.date,
                         count: realDocs.length,
@@ -1146,7 +1147,7 @@ export function DisclosureClient({
                                       <div>
                                         <h4 className="text-[11px] font-bold text-charcoal-primary">빈 자료 안내문 수정</h4>
                                         <p className="mt-0.5 text-[9px] font-semibold text-ash">
-                                          {editingEmptyMessage.subCategory} 카드 안에서 바로 수정합니다.
+                                          {getDisclosureCategoryLabel(editingEmptyMessage.subCategory)} 카드 안에서 바로 수정합니다.
                                         </p>
                                       </div>
                                       <button

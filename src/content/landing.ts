@@ -54,7 +54,7 @@ export const megaMenuNavigation = [
       { label: "추가 분담금 산출", href: "/disclosure?tab=accounting", isPortalGated: true },
       { label: "계약서", href: "/disclosure?tab=operations", isPortalGated: true },
       { label: "월별 공사진행 상황", href: "/disclosure?tab=operations", isPortalGated: true },
-      { label: "실적보고서", href: "/disclosure?tab=operations", isPortalGated: true },
+      { label: "분기실적보고서(조합)", href: "/disclosure?tab=operations", isPortalGated: true },
       { label: "월간감리업무실적보고", href: "/disclosure?tab=operations", isPortalGated: true },
     ],
   },

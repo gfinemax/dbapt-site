@@ -10,6 +10,7 @@ import {
   prepareDocumentUploadFile,
   type PdfUploadOptimizationMode,
 } from "@/lib/pdf-upload-optimization";
+import { getDisclosureCategoryLabel } from "@/lib/disclosure-category-label";
 
 type DocumentUploadFormProps = {
   onSuccess?: (document?: Document) => void;
@@ -47,7 +48,7 @@ const correspondenceTypeOptions = ["수신", "발신", "기타"] as const;
 type VisibleCorrespondenceType = (typeof correspondenceTypeOptions)[number];
 
 function getSubCategoryLabel(option: string) {
-  return option === "공문서" ? "수신/발신/기타 공문" : option;
+  return option === "공문서" ? "수신/발신/기타 공문" : getDisclosureCategoryLabel(option);
 }
 
 function normalizeDefaultSubCategory(subCategory: string) {

@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { getPdfRelatedDocument } from "@/lib/document-relations";
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { getSearchQueryTerms, searchTextMatchesQuery } from "@/lib/search-normalization";
+import { getDisclosureCategoryLabel } from "@/lib/disclosure-category-label";
 
 const accessLabel: Record<LibraryAccess, string> = {
   public: "공개",
@@ -579,7 +580,7 @@ function getRealMaterialEntries(itemId: string, documents: Document[]): Material
     .map((doc) => ({
       title: doc.title,
       description: doc.description || "등록된 조합원 전용 문서입니다.",
-      meta: `${doc.subCategory || doc.category} · ${formatDate(doc.documentDate || doc.publishedAt || doc.createdAt)}`,
+      meta: `${getDisclosureCategoryLabel(doc.subCategory || doc.category)} · ${formatDate(doc.documentDate || doc.publishedAt || doc.createdAt)}`,
       isReal: true,
       document: doc,
     }));
@@ -764,7 +765,7 @@ function getMaterialEntryDateLabel(entry: MaterialEntry) {
 
 function getMaterialEntryCategoryLabel(entry: MaterialEntry) {
   if (entry.document) {
-    return entry.document.subCategory || entry.document.category;
+    return getDisclosureCategoryLabel(entry.document.subCategory || entry.document.category);
   }
   return entry.meta.split("·")[0]?.trim() || "자료실";
 }
