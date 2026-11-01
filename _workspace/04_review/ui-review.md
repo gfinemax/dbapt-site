@@ -2,25 +2,25 @@
 
 ## Reviewed Change
 
-- Feature: `실적보고서` 표시명을 `분기실적보고서(조합)`으로 변경
+- Feature: 혼합 다중 추가 첨부파일에 Excel 파일 허용
 - Governing spec: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
-- Implementation plan: `docs/superpowers/plans/2026-10-25-quarterly-performance-report-label.md`
-- Files or pages reviewed: 공개자료 내비게이션, 사업 및 감리 하위 메뉴, 문서함 분류 필터, 등록·수정 분류 옵션, 자료실 문서 분류
+- Implementation plan: `docs/superpowers/plans/2026-11-01-document-multi-attachment-excel-upload.md`
+- Files or pages reviewed: 관리자 문서 등록 폼, 정보공개 문서 수정 모달, 문서 스토리지·업로드 API
 
 ## Boundary Review
 
 - Finding: PASS
-- Evidence: 저장 분류값 `실적보고서`와 과거 별칭 `추진실적`을 그대로 인식하며, 공개 범위·로그인·문서 권한·문서 작업은 변경하지 않았다.
+- Evidence: 관리자 전용 문서 업로드 경로와 비공개 문서 버킷의 확장자·MIME 허용 목록만 넓혔다. 공개 범위, 로그인, 승인, 다운로드, 감사 로그, 알림 동작은 변경하지 않았다.
 
 ## Truthful Presentation Review
 
 - Finding: PASS
-- Evidence: 조합 공식 분기 보고서임을 표시명에 명확히 드러냈고, 새로운 자료나 기능이 있는 것처럼 표현하지 않았다.
+- Evidence: 추가 첨부 입력의 `accept` 계약과 서버 검증 문구가 PDF/HWP/HWPX/Word/Excel 허용 목록과 일치한다. 지원하지 않는 형식을 지원한다고 표시하지 않는다.
 
 ## Design And Accessibility Review
 
 - Finding: PASS
-- Evidence: 기존 컴포넌트와 스타일을 그대로 사용했다. 데스크톱 Codex 브라우저에서 새 메뉴명이 노출되는 것을 확인했고, 390x844 모바일 렌더링에서 기존 가로 스크롤 메뉴와 본문 레이아웃에 새로운 넘침이나 겹침이 없음을 확인했다. 분류 필터에는 접근 가능한 이름을 추가했다. 동작과 모션은 변경하지 않았다.
+- Evidence: 레이아웃, 스타일, 모션, 표시 문구를 변경하지 않았고 기존 접근 가능한 파일 입력을 유지했다. 사용자 제공 세로형 수정 모달과 운영 데스크톱 등록 모달에서 기존 파일 입력 레이아웃을 확인했다. 등록·수정 DOM 테스트가 추가 첨부 입력의 Excel 허용 계약을 검증한다. 로컬 Codex 브라우저는 브라우저 접근 호스트와 Windows URL 안전 확인 문제로 열지 못했으며, 실제 파일 업로드는 수행하지 않았다.
 
 ## Outcome
 

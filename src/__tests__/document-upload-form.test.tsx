@@ -26,6 +26,9 @@ describe("document upload form", () => {
 
     const fileInput = container.querySelector("#file-upload");
     expect(fileInput).toHaveAttribute("accept", ".pdf,.hwp,.hwpx,.doc,.docx");
+
+    const attachmentInput = container.querySelector("#attachment-upload");
+    expect(attachmentInput).toHaveAttribute("accept", ".pdf,.hwp,.hwpx,.doc,.docx,.xls,.xlsx");
   });
 
   it("shows correspondence type selection for correspondence documents", () => {

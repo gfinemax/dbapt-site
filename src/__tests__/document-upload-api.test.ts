@@ -100,6 +100,41 @@ describe("document upload API", () => {
     });
   });
 
+  it("creates every signed target for a mixed five-file batch that includes Excel", async () => {
+    mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    mockCreateDocumentSignedUpload.mockImplementation(async (name: string) => ({
+      path: `documents/2026-11-01/${name}`,
+      token: `${name}-token`,
+      signedUrl: `https://storage.example/${encodeURIComponent(name)}`,
+      contentType: name.endsWith(".xlsx")
+        ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        : name.endsWith(".pdf")
+          ? "application/pdf"
+          : "application/vnd.hancom.hwpx",
+    }));
+
+    const files = [
+      { name: "서울특별시 해산총회 가이드라인.hwpx", size: 1024 },
+      { name: "동작구 지역주택조합 관리준칙(전면개정).hwpx", size: 2048 },
+      { name: "조합표준회계자료.xlsx", size: 4096 },
+      { name: "국토교통부 지역주택조합 표준업무대행계약서.pdf", size: 8192 },
+      { name: "동작구 지역주택조합 관리준칙 개정 알림.hwpx", size: 16384 },
+    ];
+
+    const { POST } = await import("@/app/api/documents/upload-url/route");
+    const response = await POST(
+      new Request("http://localhost/api/documents/upload-url", {
+        method: "POST",
+        body: JSON.stringify({ files }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).uploads).toHaveLength(5);
+    expect(mockCreateDocumentSignedUpload).toHaveBeenCalledTimes(5);
+    expect(mockCreateDocumentSignedUpload).toHaveBeenCalledWith("조합표준회계자료.xlsx");
+  });
+
   it("saves metadata for files already uploaded through signed URLs", async () => {
     mockGetSession.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     mockPrisma.document.create.mockResolvedValue({
@@ -774,8 +809,8 @@ describe("document upload API", () => {
         },
         {
           id: "att-new",
-          filePath: "documents/2026-06-09/new-attachment.pdf",
-          fileName: "new-attachment.pdf",
+          filePath: "documents/2026-06-09/new-attachment.xlsx",
+          fileName: "new-attachment.xlsx",
           fileSize: 2048,
         },
       ],
@@ -795,8 +830,8 @@ describe("document upload API", () => {
           },
           appendAttachments: [
             {
-              path: "documents/2026-06-09/new-attachment.pdf",
-              name: "new-attachment.pdf",
+              path: "documents/2026-06-09/new-attachment.xlsx",
+              name: "new-attachment.xlsx",
               size: 2048,
             },
           ],
@@ -816,8 +851,8 @@ describe("document upload API", () => {
         attachments: {
           create: [
             expect.objectContaining({
-              filePath: "documents/2026-06-09/new-attachment.pdf",
-              fileName: "new-attachment.pdf",
+              filePath: "documents/2026-06-09/new-attachment.xlsx",
+              fileName: "new-attachment.xlsx",
               fileSize: 2048,
             }),
           ],
@@ -836,7 +871,7 @@ describe("document upload API", () => {
             fileName: "old-attachment.docx",
           },
           {
-            fileName: "new-attachment.pdf",
+            fileName: "new-attachment.xlsx",
           },
         ],
       },

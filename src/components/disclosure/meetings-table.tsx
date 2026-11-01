@@ -1465,6 +1465,7 @@ export function MeetingsTable({
                     id="edit-attachments"
                     type="file"
                     multiple
+                    accept=".pdf,.hwp,.hwpx,.doc,.docx,.xls,.xlsx"
                     onChange={(e) => {
                       const files = e.target.files ? Array.from(e.target.files) : [];
                       if (files.length > 10) {

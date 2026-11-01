@@ -1515,7 +1515,10 @@ describe("disclosure page", () => {
     expect(screen.getByText("현재 추가 첨부파일")).toBeInTheDocument();
     expect(screen.getByText("old-extra.pdf")).toBeInTheDocument();
     expect(screen.getByLabelText("첨부파일 선택 (본문 파일 교체)")).toBeInTheDocument();
-    expect(screen.getByLabelText("추가 첨부파일 추가 (선택, 최대 10개)")).toBeInTheDocument();
+    expect(screen.getByLabelText("추가 첨부파일 추가 (선택, 최대 10개)")).toHaveAttribute(
+      "accept",
+      ".pdf,.hwp,.hwpx,.doc,.docx,.xls,.xlsx",
+    );
   });
 
   it("lists multiple newly selected attachments together in the edit modal", () => {

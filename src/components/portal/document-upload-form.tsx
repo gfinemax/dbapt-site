@@ -595,6 +595,7 @@ export function DocumentUploadForm({
               id="attachment-upload"
               type="file"
               multiple
+              accept=".pdf,.hwp,.hwpx,.doc,.docx,.xls,.xlsx"
               onChange={(e) => {
                 if (e.target.files && e.target.files.length > 0) {
                   const filesArray = Array.from(e.target.files);

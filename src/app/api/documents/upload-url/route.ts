@@ -24,7 +24,7 @@ function validateUploadRequestFile(file: UploadRequestFile) {
   }
 
   if (!isAllowedDocumentUploadExtension(name)) {
-    return { error: "문서 파일은 PDF, HWP, HWPX, Word 파일만 업로드할 수 있습니다." };
+    return { error: "문서 파일은 PDF, HWP, HWPX, Word, Excel 파일만 업로드할 수 있습니다." };
   }
 
   return { name, size };

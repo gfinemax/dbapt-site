@@ -237,7 +237,7 @@ function validateUploadedDocumentFile(file: UploadedDocumentFile, label: string)
   }
 
   if (!isAllowedDocumentUploadExtension(name)) {
-    return { error: `${label}은 PDF, HWP, HWPX, Word 파일만 업로드할 수 있습니다.` };
+    return { error: `${label}은 PDF, HWP, HWPX, Word, Excel 파일만 업로드할 수 있습니다.` };
   }
 
   return {

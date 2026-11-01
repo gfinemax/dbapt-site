@@ -10,6 +10,8 @@ export const DOCUMENT_UPLOAD_MIME_TYPES = [
   "application/vnd.hancom.hwpx",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
 const DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
@@ -18,6 +20,8 @@ const DOCUMENT_UPLOAD_CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
   hwpx: "application/vnd.hancom.hwpx",
   doc: "application/msword",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
 let supabaseAdmin: ReturnType<typeof createClient> | null = null;
