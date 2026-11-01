@@ -38,7 +38,7 @@ describe("document upload form", () => {
     expect(correspondenceSelect).toHaveValue("수신");
     expect(correspondenceSelect).toHaveTextContent("수신");
     expect(correspondenceSelect).toHaveTextContent("발신");
-    expect(correspondenceSelect).not.toHaveTextContent("회신");
+    expect(correspondenceSelect).toHaveTextContent("회신");
   });
 
   it("normalizes the sent correspondence folder to the correspondence upload form", () => {
@@ -68,10 +68,12 @@ describe("document upload form", () => {
     expect(screen.getByLabelText("수발신 구분 *")).toHaveValue("발신");
     expect(screen.queryByLabelText("회신 대상 수신 공문 (선택)")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText("회신 공문으로 등록"));
+    fireEvent.change(screen.getByLabelText("수발신 구분 *"), { target: { value: "회신" } });
 
     const replyTargetSelect = screen.getByLabelText("회신 대상 수신 공문 (선택)");
     expect(replyTargetSelect).toHaveTextContent("동작구청 시정명령 수신 공문");
+    expect(screen.getByLabelText("회신 불필요")).toBeChecked();
+    expect(screen.getByLabelText("회신 불필요")).toBeDisabled();
   });
 
   it("allows received correspondence to be marked as not requiring a reply", () => {
@@ -135,11 +137,12 @@ describe("document upload form", () => {
 
     expect(screen.queryByLabelText("회신 대상 수신 공문 (선택)")).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("수발신 구분 *"), { target: { value: "발신" } });
-    fireEvent.click(screen.getByLabelText("회신 공문으로 등록"));
+    fireEvent.change(screen.getByLabelText("수발신 구분 *"), { target: { value: "회신" } });
 
     const replyTargetSelect = screen.getByLabelText("회신 대상 수신 공문 (선택)");
     expect(replyTargetSelect).toHaveTextContent("동작구청 시정조치 요구 공문");
     expect(replyTargetSelect).not.toHaveTextContent("서울시 제출 공문");
+    expect(screen.getByLabelText("회신 불필요")).toBeChecked();
+    expect(screen.queryByLabelText("회신기한")).not.toBeInTheDocument();
   });
 });

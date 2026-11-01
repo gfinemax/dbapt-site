@@ -1503,16 +1503,16 @@ export function MeetingsTable({
                       </label>
                       <select
                         id="edit-doc-correspondence-type"
-                        value={editingDoc.correspondenceType === "회신" ? "발신" : editingDoc.correspondenceType}
+                        value={editingDoc.correspondenceType}
                         onChange={(e) => {
-                          const nextType = e.target.value as "수신" | "발신";
+                          const nextType = e.target.value as CorrespondenceType;
                           setEditingDoc((prev) =>
                             prev
                               ? {
                                   ...prev,
                                   correspondenceType: nextType,
-                                  replyToDocumentId: "",
-                                  replyNotRequired: nextType === "수신" ? prev.replyNotRequired : false,
+                                  replyToDocumentId: nextType === "회신" ? prev.replyToDocumentId : "",
+                                  replyNotRequired: nextType === "회신" ? true : nextType === "수신" ? prev.replyNotRequired : false,
                                   replyDueDate: nextType === "수신" ? prev.replyDueDate : "",
                                 }
                               : prev
@@ -1520,37 +1520,13 @@ export function MeetingsTable({
                         }}
                         className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
                       >
-                        {(["수신", "발신"] as const).map((option) => (
+                        {(["수신", "발신", "회신"] as const).map((option) => (
                           <option key={option} value={option}>
                             {option}
                           </option>
                         ))}
                       </select>
                     </div>
-
-                    {(editingDoc.correspondenceType === "발신" || editingDoc.correspondenceType === "회신") && (
-                      <div className="flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
-                        <input
-                          id="edit-doc-is-reply-correspondence"
-                          type="checkbox"
-                          checked={editingDoc.correspondenceType === "회신"}
-                          onChange={(e) => setEditingDoc((prev) => prev ? {
-                            ...prev,
-                            correspondenceType: e.target.checked ? "회신" : "발신",
-                            replyToDocumentId: e.target.checked ? prev.replyToDocumentId : "",
-                          } : prev)}
-                          className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
-                        />
-                        <div>
-                          <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="edit-doc-is-reply-correspondence">
-                            회신 공문으로 등록
-                          </label>
-                          <p className="mt-1 text-[11px] leading-relaxed text-graphite">
-                            기존 수신 공문에 대한 회신이면 선택합니다.
-                          </p>
-                        </div>
-                      </div>
-                    )}
 
                     {editingDoc.correspondenceType === "회신" && (
                       <div>
@@ -1578,25 +1554,28 @@ export function MeetingsTable({
                       </div>
                     )}
 
-                    {editingDoc.correspondenceType === "수신" && (
+                    {(editingDoc.correspondenceType === "수신" || editingDoc.correspondenceType === "회신") && (
                       <div className="flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
                         <input
                           id="edit-doc-reply-not-required"
                           type="checkbox"
-                          checked={editingDoc.replyNotRequired}
+                          checked={editingDoc.correspondenceType === "회신" || editingDoc.replyNotRequired}
+                          disabled={editingDoc.correspondenceType === "회신"}
                           onChange={(e) => setEditingDoc((prev) => prev ? {
                             ...prev,
                             replyNotRequired: e.target.checked,
                             replyDueDate: e.target.checked ? "" : prev.replyDueDate,
                           } : prev)}
-                          className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+                          className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer disabled:cursor-default disabled:opacity-100"
                         />
                         <div>
-                          <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="edit-doc-reply-not-required">
+                          <label className={`text-xs font-bold text-charcoal-primary select-none ${editingDoc.correspondenceType === "회신" ? "cursor-default" : "cursor-pointer"}`} htmlFor="edit-doc-reply-not-required">
                             회신 불필요
                           </label>
                           <p className="mt-1 text-[11px] leading-relaxed text-graphite">
-                            별도 회신 없이 보관만 필요한 수신 공문일 때 선택합니다.
+                            {editingDoc.correspondenceType === "회신"
+                              ? "회신 공문으로 등록하면 추가 회신이 필요 없는 상태로 자동 선택됩니다."
+                              : "별도 회신 없이 보관만 필요한 수신 공문일 때 선택합니다."}
                           </p>
                         </div>
                       </div>

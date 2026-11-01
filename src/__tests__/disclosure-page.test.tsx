@@ -875,7 +875,7 @@ describe("disclosure page", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "+ 신규 문서 등록" }));
-    fireEvent.click(screen.getByLabelText("회신 공문으로 등록"));
+    fireEvent.change(screen.getByLabelText("수발신 구분 *"), { target: { value: "회신" } });
 
     const targetSelect = screen.getByLabelText("회신 대상 수신 공문 (선택)");
     expect(within(targetSelect).getByRole("option", { name: "회신 필요 대상 수신 공문" })).toBeInTheDocument();
@@ -1162,6 +1162,50 @@ describe("disclosure page", () => {
     ));
     expect(routerRefresh).toHaveBeenCalled();
     expect(await screen.findAllByText("회신 불필요")).not.toHaveLength(0);
+  });
+
+  it("selects reply-not-required when an admin changes correspondence type to reply", () => {
+    render(
+      <MeetingsTable
+        isLoggedIn
+        role="ADMIN"
+        documents={[
+          {
+            id: "received-to-reply",
+            title: "회신 전환 대상 공문",
+            description: "회신 구분 선택 테스트",
+            category: "DISCLOSURE",
+            subCategory: "수발신 공문",
+            correspondenceType: "수신",
+            replyNotRequired: false,
+            fileName: "received.pdf",
+            fileSize: 1024,
+            status: "APPROVED",
+            publishedAt: "2026-11-01T00:00:00.000Z",
+            documentDate: "2026-11-01T00:00:00.000Z",
+            createdAt: "2026-11-01T00:00:00.000Z",
+            attachments: [],
+          },
+        ]}
+        router={{ push: vi.fn(), refresh: vi.fn() } as never}
+        initialFilterCat="수발신 공문"
+        initialCorrespondenceTypes={["수신"]}
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "회신 전환 대상 공문 문서 수정" })[0]);
+
+    const correspondenceSelect = screen.getByLabelText("수발신 구분 *");
+    expect(correspondenceSelect).toHaveTextContent("회신");
+
+    fireEvent.change(correspondenceSelect, { target: { value: "회신" } });
+
+    expect(correspondenceSelect).toHaveValue("회신");
+    expect(screen.getByLabelText("회신 불필요")).toBeChecked();
+    expect(screen.getByLabelText("회신 불필요")).toBeDisabled();
+    expect(screen.getByLabelText("회신 대상 수신 공문 (선택)")).toBeInTheDocument();
+    expect(screen.queryByLabelText("회신기한")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("회신 공문으로 등록")).not.toBeInTheDocument();
   });
 
   it("shows received and sent correspondence as separate category filters", () => {

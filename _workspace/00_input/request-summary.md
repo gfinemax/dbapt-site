@@ -1,6 +1,6 @@
 # Request Summary
 
-- Requested feature slice: 문서 수정 화면에서 PDF, HWPX, XLSX 등 여러 추가 첨부파일을 함께 선택했을 때 전체 업로드가 실패하는 문제를 수정한다.
-- Excluded scope: 기존 저장 문서·첨부파일, 문서 공개 권한, 감사 로그, PDF 최적화 정책, 파일 개수·용량 제한은 변경하지 않는다.
-- Candidate governing specification: `docs/superpowers/specs/2026-05-28-daebang-auth-and-document-disclosure-design.md`
+- Requested feature slice: `수발신 구분`에 `회신`을 추가하고, `회신` 선택 시 `회신 불필요`가 자동 선택되도록 한다.
+- Excluded scope: 데이터베이스 스키마, 공개 범위, 알림, 회신 완료 계산은 변경하지 않는다.
+- Candidate governing specification: `docs/superpowers/specs/2026-11-01-correspondence-reply-selection-design.md`
 - Unanswered decision: none

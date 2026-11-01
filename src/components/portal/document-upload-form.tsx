@@ -44,7 +44,7 @@ const disclosureSubCategoryOptions = [
   "감리 보고서",
 ];
 
-const correspondenceTypeOptions = ["수신", "발신", "기타"] as const;
+const correspondenceTypeOptions = ["수신", "발신", "회신", "기타"] as const;
 type VisibleCorrespondenceType = (typeof correspondenceTypeOptions)[number];
 
 function getSubCategoryLabel(option: string) {
@@ -129,7 +129,6 @@ export function DocumentUploadForm({
   const [success, setSuccess] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
   const [correspondenceType, setCorrespondenceType] = useState<VisibleCorrespondenceType>(() => getDefaultCorrespondenceType(defaultSubCategory));
-  const [isReplyCorrespondence, setIsReplyCorrespondence] = useState(false);
   const [replyToDocumentId, setReplyToDocumentId] = useState("");
   const [replyNotRequired, setReplyNotRequired] = useState(false);
   const [replyDueDate, setReplyDueDate] = useState("");
@@ -147,7 +146,6 @@ export function DocumentUploadForm({
     setCategory(defaultCategory);
     setSubCategory(normalizeDefaultSubCategory(defaultSubCategory));
     setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
-    setIsReplyCorrespondence(false);
     setReplyToDocumentId("");
     setReplyNotRequired(false);
     setReplyDueDate("");
@@ -216,8 +214,8 @@ export function DocumentUploadForm({
           description,
           category,
           subCategory: category === "DISCLOSURE" ? subCategory : "",
-          correspondenceType: isCorrespondenceDocument ? (isReplyCorrespondence ? "회신" : correspondenceType) : null,
-          replyToDocumentId: isCorrespondenceDocument && isReplyCorrespondence ? replyToDocumentId || null : null,
+          correspondenceType: isCorrespondenceDocument ? correspondenceType : null,
+          replyToDocumentId: isCorrespondenceDocument && correspondenceType === "회신" ? replyToDocumentId || null : null,
           replyNotRequired: isCorrespondenceDocument && correspondenceType === "수신" ? replyNotRequired : false,
           replyDueDate: isCorrespondenceDocument && correspondenceType === "수신" && !replyNotRequired ? replyDueDate || null : null,
           documentDate,
@@ -261,7 +259,6 @@ export function DocumentUploadForm({
       setPdfOptimizationMode("auto");
       setIsStarred(false);
       setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
-      setIsReplyCorrespondence(false);
       setReplyToDocumentId("");
       setReplyNotRequired(false);
       setReplyDueDate("");
@@ -343,7 +340,7 @@ export function DocumentUploadForm({
                 } else {
                   setSubCategory(normalizeDefaultSubCategory(defaultSubCategory || "총회 의사록"));
                   setCorrespondenceType(getDefaultCorrespondenceType(defaultSubCategory));
-                  setIsReplyCorrespondence(false);
+                  setReplyToDocumentId("");
                 }
               }}
               className="w-full rounded-xl border border-[#f2f0ed] bg-[#fbfaf9] px-4 py-2.5 text-sm outline-none transition focus:bg-white focus:border-ember-orange"
@@ -385,11 +382,13 @@ export function DocumentUploadForm({
                 onChange={(e) => {
                   const nextType = e.target.value as VisibleCorrespondenceType;
                   setCorrespondenceType(nextType);
-                  if (nextType !== "발신") {
-                    setIsReplyCorrespondence(false);
+                  if (nextType !== "회신") {
                     setReplyToDocumentId("");
                   }
-                  if (nextType !== "수신") {
+                  if (nextType === "회신") {
+                    setReplyNotRequired(true);
+                    setReplyDueDate("");
+                  } else if (nextType !== "수신") {
                     setReplyNotRequired(false);
                     setReplyDueDate("");
                   }
@@ -405,47 +404,27 @@ export function DocumentUploadForm({
             </div>
           )}
 
-          {isCorrespondenceDocument && correspondenceType === "발신" && (
-            <div className="sm:col-span-2 flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
-              <input
-                id="upload-is-reply-correspondence"
-                type="checkbox"
-                checked={isReplyCorrespondence}
-                onChange={(e) => {
-                  setIsReplyCorrespondence(e.target.checked);
-                  if (!e.target.checked) setReplyToDocumentId("");
-                }}
-                className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
-              />
-              <div>
-                <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="upload-is-reply-correspondence">
-                  회신 공문으로 등록
-                </label>
-                <p className="mt-1 text-[11px] leading-relaxed text-graphite">
-                  기존 수신 공문에 대한 회신이면 선택합니다.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {isCorrespondenceDocument && correspondenceType === "수신" && (
+          {isCorrespondenceDocument && (correspondenceType === "수신" || correspondenceType === "회신") && (
             <div className="sm:col-span-2 flex items-start gap-2 rounded-xl border border-stone-surface bg-[#fbfaf9] px-3 py-2.5">
               <input
                 id="upload-reply-not-required"
                 type="checkbox"
-                checked={replyNotRequired}
+                checked={correspondenceType === "회신" || replyNotRequired}
+                disabled={correspondenceType === "회신"}
                 onChange={(e) => {
                   setReplyNotRequired(e.target.checked);
                   if (e.target.checked) setReplyDueDate("");
                 }}
-                className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer"
+                className="mt-0.5 size-4 rounded border-[#f2f0ed] text-ember-orange focus:ring-ember-orange cursor-pointer disabled:cursor-default disabled:opacity-100"
               />
               <div>
-                <label className="text-xs font-bold text-charcoal-primary select-none cursor-pointer" htmlFor="upload-reply-not-required">
+                <label className={`text-xs font-bold text-charcoal-primary select-none ${correspondenceType === "회신" ? "cursor-default" : "cursor-pointer"}`} htmlFor="upload-reply-not-required">
                   회신 불필요
                 </label>
                 <p className="mt-1 text-[11px] leading-relaxed text-graphite">
-                  행정 안내처럼 별도 회신이 필요 없는 수신 공문일 때 선택합니다.
+                  {correspondenceType === "회신"
+                    ? "회신 공문으로 등록하면 추가 회신이 필요 없는 상태로 자동 선택됩니다."
+                    : "행정 안내처럼 별도 회신이 필요 없는 수신 공문일 때 선택합니다."}
                 </p>
               </div>
             </div>
@@ -466,7 +445,7 @@ export function DocumentUploadForm({
             </div>
           )}
 
-          {isCorrespondenceDocument && correspondenceType === "발신" && isReplyCorrespondence && (
+          {isCorrespondenceDocument && correspondenceType === "회신" && (
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-charcoal-primary mb-1.5" htmlFor="upload-reply-target">
                 회신 대상 수신 공문 (선택)
