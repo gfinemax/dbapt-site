@@ -1,5 +1,6 @@
 import type { NewsDisplayAuthorName } from "@/lib/news-display-author";
 import type { FreePostType } from "@/lib/free-post-type";
+import type { NaverMapDraft } from "@/lib/news/naver-map";
 
 type FreeBoardPostPayloadInput = {
   title: string;
@@ -12,6 +13,7 @@ type FreeBoardPostPayloadInput = {
   attachmentName?: string | null;
   attachmentSize?: number | null;
   youtubeUrl?: string;
+  naverMap?: NaverMapDraft | null;
   socialImagePath?: string | null;
   registeredAt?: string;
   isPublicShareEnabled?: boolean;
@@ -52,6 +54,7 @@ export function buildFreeBoardPostCreatePayload({
   attachmentName,
   attachmentSize,
   youtubeUrl,
+  naverMap,
   socialImagePath,
   registeredAt,
   isPublicShareEnabled,
@@ -65,6 +68,7 @@ export function buildFreeBoardPostCreatePayload({
     attachmentName: attachmentName ?? null,
     attachmentSize: attachmentSize ?? null,
     ...(youtubeUrl !== undefined ? { youtubeUrl: youtubeUrl || null } : {}),
+    ...(naverMap !== undefined ? { naverMap } : {}),
     ...(isAdmin && socialImagePath !== undefined ? { socialImagePath: socialImagePath || null } : {}),
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),
@@ -84,6 +88,7 @@ export function buildFreeBoardPostUpdatePayload({
   attachmentName,
   attachmentSize,
   youtubeUrl,
+  naverMap,
   socialImagePath,
   registeredAt,
   isPublicShareEnabled,
@@ -98,6 +103,7 @@ export function buildFreeBoardPostUpdatePayload({
     attachmentName: attachmentName ?? null,
     attachmentSize: attachmentSize ?? null,
     ...(youtubeUrl !== undefined ? { youtubeUrl: youtubeUrl || null } : {}),
+    ...(naverMap !== undefined ? { naverMap } : {}),
     ...(isAdmin && socialImagePath !== undefined ? { socialImagePath: socialImagePath || null } : {}),
     ...(isAdmin ? { displayAuthorName } : {}),
     ...(isAdmin && registeredAt ? { registeredAt } : {}),

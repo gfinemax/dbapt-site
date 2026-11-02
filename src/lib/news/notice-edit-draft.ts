@@ -4,6 +4,7 @@ import {
 } from "@/lib/news-display-author";
 import { toKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import type { CoopNewsView } from "@/lib/news/types";
+import { buildNaverMapDraft, type NaverMapDraft } from "@/lib/news/naver-map";
 
 export type NoticeEditDraft = {
   title: string;
@@ -16,6 +17,7 @@ export type NoticeEditDraft = {
   displayAuthorName: NewsDisplayAuthorName;
   registeredAt: string;
   youtubeUrl: string;
+  naverMap: NaverMapDraft;
 };
 
 export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
@@ -39,6 +41,7 @@ export function buildNoticeEditDraft(notice: CoopNewsView): NoticeEditDraft {
         ? (displayAuthorName as NewsDisplayAuthorName)
         : "운영자",
     youtubeUrl: notice.youtubeVideoId ? `https://youtu.be/${notice.youtubeVideoId}` : "",
+    naverMap: buildNaverMapDraft(notice),
   };
 }
 

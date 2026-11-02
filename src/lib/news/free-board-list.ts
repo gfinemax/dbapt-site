@@ -35,6 +35,11 @@ export type FreeBoardPostListItem = {
   attachmentSize: number | null;
   socialImagePath: string | null;
   youtubeVideoId: string | null;
+  naverMapUrl: string | null;
+  naverMapTitle: string | null;
+  naverMapPlaceId: string | null;
+  naverMapLat: number | null;
+  naverMapLng: number | null;
   isPublicShareEnabled: boolean;
   publicShareEnabledAt: string | null;
   author: NewsUserView;
@@ -103,6 +108,11 @@ export function buildFreeBoardPostList(
         attachmentSize: post.attachmentSize ?? null,
         socialImagePath: post.socialImagePath ?? null,
         youtubeVideoId: post.youtubeVideoId ?? null,
+        naverMapUrl: post.naverMapUrl ?? null,
+        naverMapTitle: post.naverMapTitle ?? null,
+        naverMapPlaceId: post.naverMapPlaceId ?? null,
+        naverMapLat: post.naverMapLat ?? null,
+        naverMapLng: post.naverMapLng ?? null,
         isPublicShareEnabled: !!post.isPublicShareEnabled,
         publicShareEnabledAt: post.publicShareEnabledAt ?? null,
         author: { ...post.author, displayAuthorName: post.displayAuthorName },

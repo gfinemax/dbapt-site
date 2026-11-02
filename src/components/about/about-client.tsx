@@ -4,55 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { loadNaverMapSdk } from "@/lib/naver-map-sdk";
 
 type AboutClientProps = {
   onOpenPortal?: (category?: string, search?: string) => void;
 };
 
 type TabId = "greetings" | "commitment" | "history" | "organization" | "location";
-
-declare global {
-  interface Window {
-    naver?: NaverMapsNamespace;
-  }
-}
-
-type NaverMapInstance = unknown;
-
-type NaverLatLngInstance = unknown;
-
-type NaverMarkerInstance = unknown;
-
-type NaverMapsNamespace = {
-  maps: {
-    LatLng: new (lat: number, lng: number) => NaverLatLngInstance;
-    Map: new (
-      element: HTMLElement,
-      options: {
-        center: NaverLatLngInstance;
-        zoom: number;
-        minZoom: number;
-        scaleControl: boolean;
-        mapDataControl: boolean;
-        zoomControl: boolean;
-        zoomControlOptions: {
-          position: unknown;
-        };
-      },
-    ) => NaverMapInstance;
-    Marker: new (options: {
-      position: NaverLatLngInstance;
-      map: NaverMapInstance;
-      title: string;
-    }) => NaverMarkerInstance;
-    InfoWindow: new (options: { content: string }) => {
-      open: (map: NaverMapInstance, marker: NaverMarkerInstance) => void;
-    };
-    Position: {
-      TOP_RIGHT: unknown;
-    };
-  };
-};
 
 // [사업추진 전체 경과보고 일람 데이터 전문]
 const fullHistoryData = [
@@ -203,8 +161,6 @@ const officeAddress = "서울시 동작구 여의대방로 36길 102-11";
 const officeCoordinates = { lat: 37.5081729325679, lng: 126.931781205943 };
 const naverMapUrl =
   "https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%8F%99%EC%9E%91%EA%B5%AC%20%EC%97%AC%EC%9D%98%EB%8C%80%EB%B0%A9%EB%A1%9C36%EA%B8%B8%20102-11";
-const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
-const naverMapSdkScriptId = "naver-map-sdk";
 const locationGuidePanelId = "dbapt-office-location-guide";
 const districtPlanNoticeSearch = "서울특별시 고시 제2022-291호";
 const districtPlanNoticeLibraryHref = `/library?category=permits&q=${encodeURIComponent(districtPlanNoticeSearch)}`;
@@ -241,16 +197,15 @@ const walkingGuideSteps = [
 
 function NaverMapPanel() {
   const mapElementRef = useRef<HTMLDivElement>(null);
-  const [mapError, setMapError] = useState(naverMapClientId ? "" : "네이버 지도 API 키 설정이 필요합니다.");
+  const [mapError, setMapError] = useState("");
 
   useEffect(() => {
-    if (!naverMapClientId || !mapElementRef.current) return;
+    if (!mapElementRef.current) return;
 
     let cancelled = false;
 
-    const renderMap = () => {
-      const naver = window.naver;
-      if (cancelled || !naver?.maps || !mapElementRef.current) return;
+    void loadNaverMapSdk().then((naver) => {
+      if (cancelled || !mapElementRef.current) return;
 
       const officeCenter = new naver.maps.LatLng(officeCoordinates.lat, officeCoordinates.lng);
       const map = new naver.maps.Map(mapElementRef.current, {
@@ -276,37 +231,14 @@ function NaverMapPanel() {
       infoWindow.open(map, marker);
 
       setMapError("");
-    };
-
-    if (window.naver?.maps) {
-      renderMap();
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const existingScript = document.getElementById(naverMapSdkScriptId) as HTMLScriptElement | null;
-    const script = existingScript ?? document.createElement("script");
-
-    const handleLoad = () => renderMap();
-    const handleError = () => {
-      if (!cancelled) setMapError("네이버 지도를 불러오지 못했습니다.");
-    };
-
-    script.addEventListener("load", handleLoad);
-    script.addEventListener("error", handleError);
-
-    if (!existingScript) {
-      script.id = naverMapSdkScriptId;
-      script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(naverMapClientId)}`;
-      script.async = true;
-      document.head.appendChild(script);
-    }
+    }).catch((error: unknown) => {
+      if (!cancelled) {
+        setMapError(error instanceof Error ? error.message : "네이버 지도를 불러오지 못했습니다.");
+      }
+    });
 
     return () => {
       cancelled = true;
-      script.removeEventListener("load", handleLoad);
-      script.removeEventListener("error", handleError);
     };
   }, []);
 

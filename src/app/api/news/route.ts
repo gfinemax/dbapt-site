@@ -7,6 +7,7 @@ import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
 import { parseYouTubeVideoId } from "@/lib/news/youtube";
+import { parseNaverMapInput } from "@/lib/news/naver-map";
 
 function parseYouTubeInput(value: unknown) {
   if (value === undefined || value === null || value === "") return { ok: true as const, value: null };
@@ -119,6 +120,7 @@ export async function POST(request: Request) {
       displayAuthorName,
       registeredAt,
       youtubeUrl,
+      naverMap,
     } = body;
 
     if (hasCreatedAtInput(body)) {
@@ -149,6 +151,8 @@ export async function POST(request: Request) {
     }
     const parsedYouTube = parseYouTubeInput(youtubeUrl);
     if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
+    const parsedNaverMap = parseNaverMapInput(naverMap);
+    if (!parsedNaverMap.ok) return NextResponse.json({ error: parsedNaverMap.error }, { status: 400 });
 
     const news = await prisma.coopNews.create({
       data: {
@@ -165,6 +169,7 @@ export async function POST(request: Request) {
         ...(parsedRegisteredAt ? { registeredAt: parsedRegisteredAt } : {}),
         authorId: session.id,
         youtubeVideoId: parsedYouTube.value,
+        ...parsedNaverMap.value,
       },
       include: {
         author: {
@@ -213,6 +218,7 @@ export async function PATCH(request: Request) {
       displayAuthorName,
       registeredAt,
       youtubeUrl,
+      naverMap,
     } = body;
 
     if (hasCreatedAtInput(body)) {
@@ -238,6 +244,10 @@ export async function PATCH(request: Request) {
     }
     const parsedYouTube = parseYouTubeInput(youtubeUrl);
     if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
+    const parsedNaverMap = naverMap === undefined ? null : parseNaverMapInput(naverMap);
+    if (parsedNaverMap && !parsedNaverMap.ok) {
+      return NextResponse.json({ error: parsedNaverMap.error }, { status: 400 });
+    }
 
     const news = await prisma.coopNews.update({
       where: { id },
@@ -256,6 +266,7 @@ export async function PATCH(request: Request) {
           ? { displayAuthorName: parsedDisplayAuthorName.value }
           : {}),
         ...(youtubeUrl !== undefined ? { youtubeVideoId: parsedYouTube.value } : {}),
+        ...(parsedNaverMap?.ok ? parsedNaverMap.value : {}),
       },
       include: {
         author: {

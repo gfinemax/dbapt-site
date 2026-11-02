@@ -44,6 +44,13 @@ import { toKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { uploadPublicFile } from "@/lib/news/public-upload";
 import { copyFreeBoardOpenChatAnnouncement } from "@/lib/news/free-board-openchat";
 import { YouTubeVideoPlayer } from "./youtube-video-player";
+import { NaverMapField } from "./naver-map-field";
+import { NaverMapCard } from "./naver-map-card";
+import {
+  buildNaverMapDraft,
+  EMPTY_NAVER_MAP_DRAFT,
+  type NaverMapDraft,
+} from "@/lib/news/naver-map";
 import type { FreePostView, NewsSessionView, NewsUserView } from "@/lib/news/types";
 import type { CommentReactionSummaryItem } from "@/lib/news/comment-reactions";
 import { formatViewCount, formatViewCountBaseline, formatViewCountNumber } from "@/lib/view-count";
@@ -292,6 +299,7 @@ export function FreeBoard({
   const [writeTitle, setWriteTitle] = useState("");
   const [writeContent, setWriteContent] = useState("");
   const [writeYouTubeUrl, setWriteYouTubeUrl] = useState("");
+  const [writeNaverMap, setWriteNaverMap] = useState<NaverMapDraft>(EMPTY_NAVER_MAP_DRAFT);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPost, setEditingPost] = useState<FreeBoardPostListItem | null>(null);
   const [writeIsStarred, setWriteIsStarred] = useState(false);
@@ -313,6 +321,7 @@ export function FreeBoard({
     setWriteTitle("");
     setWriteContent("");
     setWriteYouTubeUrl("");
+    setWriteNaverMap({ ...EMPTY_NAVER_MAP_DRAFT });
     setWriteIsStarred(false);
     setWriteIsPublicShareEnabled(false);
     setWritePostType("FREE");
@@ -337,6 +346,7 @@ export function FreeBoard({
       writeTitle.trim() ||
       getPlainNoticeText(writeContent).trim() ||
       writeYouTubeUrl.trim() ||
+      writeNaverMap.url.trim() ||
       writeAttachmentPath ||
       writeSocialImagePath ||
       writeSocialImageFile ||
@@ -360,6 +370,7 @@ export function FreeBoard({
     setWriteTitle(post.title);
     setWriteContent(post.content);
     setWriteYouTubeUrl(post.youtubeVideoId ? `https://youtu.be/${post.youtubeVideoId}` : "");
+    setWriteNaverMap(buildNaverMapDraft(post));
     setWritePostType(normalizeFreePostType(post.postType, isAdmin));
     setWriteIsStarred(!!post.isStarred);
     setWriteIsPublicShareEnabled(!!post.isPublicShareEnabled);
@@ -543,6 +554,7 @@ export function FreeBoard({
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
             youtubeUrl: writeYouTubeUrl,
+            naverMap: writeNaverMap,
             socialImagePath,
             registeredAt: writeRegisteredAt,
             isPublicShareEnabled: writeIsPublicShareEnabled,
@@ -573,6 +585,7 @@ export function FreeBoard({
             attachmentName: writeAttachmentName,
             attachmentSize: writeAttachmentSize,
             youtubeUrl: writeYouTubeUrl,
+            naverMap: writeNaverMap,
             socialImagePath,
             registeredAt: writeRegisteredAt,
             isPublicShareEnabled: writeIsPublicShareEnabled,
@@ -879,6 +892,7 @@ export function FreeBoard({
           />
           <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
         </div>
+        <NaverMapField id="free-post-map" value={writeNaverMap} onChange={setWriteNaverMap} />
       </section>
 
       <section
@@ -1396,6 +1410,13 @@ export function FreeBoard({
                   <span>댓글 {focusedPost.commentCount}개</span>
                 </div>
                 <YouTubeVideoPlayer videoId={focusedPost.youtubeVideoId} title={focusedPost.title} />
+                <NaverMapCard
+                  url={focusedPost.naverMapUrl}
+                  title={focusedPost.naverMapTitle}
+                  placeId={focusedPost.naverMapPlaceId}
+                  lat={focusedPost.naverMapLat}
+                  lng={focusedPost.naverMapLng}
+                />
                 {focusedPost.attachmentPath && focusedPost.attachmentName && (
                   <div className="flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-sky-blue/20 bg-sky-blue/10 p-2 text-[11px] text-sky-blue">
                     <div className="flex min-w-0 flex-1 items-center gap-2 px-1 font-extrabold">
@@ -1797,6 +1818,8 @@ export function FreeBoard({
                       />
                       <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
                     </div>
+
+                    <NaverMapField id="free-post-create-map" value={writeNaverMap} onChange={setWriteNaverMap} />
 
                     <section
                       aria-label="게시글 설정"

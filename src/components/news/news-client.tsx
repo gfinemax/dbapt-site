@@ -74,6 +74,9 @@ import { CoopNewsletter } from "./coop-newsletter";
 import { DevelopmentLog } from "./development-log";
 import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notice-rich-editor";
 import { YouTubeVideoPlayer } from "./youtube-video-player";
+import { NaverMapField } from "./naver-map-field";
+import { NaverMapCard } from "./naver-map-card";
+import { EMPTY_NAVER_MAP_DRAFT, type NaverMapDraft } from "@/lib/news/naver-map";
 
 type NewsClientProps = {
   session?: NewsSessionView | null;
@@ -165,6 +168,7 @@ export function NewsClient({
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editYouTubeUrl, setEditYouTubeUrl] = useState("");
+  const [editNaverMap, setEditNaverMap] = useState<NaverMapDraft>(EMPTY_NAVER_MAP_DRAFT);
   const [editAttachmentPath, setEditAttachmentPath] = useState<string | null>(null);
   const [editAttachmentName, setEditAttachmentName] = useState<string | null>(null);
   const [editAttachmentSize, setEditAttachmentSize] = useState<number | null>(null);
@@ -299,6 +303,7 @@ export function NewsClient({
     setEditTitle(draft.title);
     setEditContent(draft.content);
     setEditYouTubeUrl(draft.youtubeUrl);
+    setEditNaverMap(draft.naverMap);
     setEditAttachmentPath(draft.attachmentPath);
     setEditAttachmentName(draft.attachmentName);
     setEditAttachmentSize(draft.attachmentSize);
@@ -354,6 +359,7 @@ export function NewsClient({
           isStarred: editIsStarred,
           displayAuthorName: editDisplayAuthorName,
           youtubeUrl: editYouTubeUrl,
+          naverMap: editNaverMap,
         })),
       });
 
@@ -1020,6 +1026,7 @@ export function NewsClient({
                     />
                     <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
                   </div>
+                  <NaverMapField id="edit-notice-map" value={editNaverMap} onChange={setEditNaverMap} />
 
                   <div className="space-y-1.5">
                     <label htmlFor="edit-notice-registered-at" className="text-[11px] font-bold text-charcoal-primary font-mono block">
@@ -1208,6 +1215,13 @@ export function NewsClient({
                     )}
                     <NoticeRichContent content={activeViewNotice.content} />
                     <YouTubeVideoPlayer videoId={activeViewNotice.youtubeVideoId} title={activeViewNotice.title} />
+                    <NaverMapCard
+                      url={activeViewNotice.naverMapUrl}
+                      title={activeViewNotice.naverMapTitle}
+                      placeId={activeViewNotice.naverMapPlaceId}
+                      lat={activeViewNotice.naverMapLat}
+                      lng={activeViewNotice.naverMapLng}
+                    />
                   </div>
                   {activeViewNotice.attachmentPath && (
                     <a

@@ -7,6 +7,7 @@ import { summarizeCommentReactions } from "@/lib/news/comment-reactions";
 import { parseKoreaDateTimeLocalValue } from "@/lib/news/korea-date-time";
 import { loadContentReactionSummaries } from "@/lib/server/content-reaction-summaries";
 import { parseYouTubeVideoId } from "@/lib/news/youtube";
+import { parseNaverMapInput } from "@/lib/news/naver-map";
 
 function parseYouTubeInput(value: unknown) {
   if (value === undefined || value === null || value === "") return { ok: true as const, value: null };
@@ -156,6 +157,7 @@ export async function POST(request: Request) {
       isPublicShareEnabled,
       socialImagePath,
       youtubeUrl,
+      naverMap,
     } = body; // 만약 postId가 존재하면 댓글 추가로 판별
     const parsedDisplayAuthorName = session.role === "ADMIN"
       ? parseNewsDisplayAuthorName(displayAuthorName)
@@ -232,6 +234,8 @@ export async function POST(request: Request) {
       const publicShareEnabled = session.role === "ADMIN" ? !!isPublicShareEnabled : false;
       const parsedYouTube = parseYouTubeInput(youtubeUrl);
       if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
+      const parsedNaverMap = parseNaverMapInput(naverMap);
+      if (!parsedNaverMap.ok) return NextResponse.json({ error: parsedNaverMap.error }, { status: 400 });
 
       const post = await prisma.freePost.create({
         data: {
@@ -249,6 +253,7 @@ export async function POST(request: Request) {
           ...normalizeFreePostAttachment(body),
           ...(parsedRegisteredAt && session.role === "ADMIN" ? { registeredAt: parsedRegisteredAt } : {}),
           youtubeVideoId: parsedYouTube.value,
+          ...parsedNaverMap.value,
         },
       });
 
@@ -315,7 +320,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { postId, commentId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled, socialImagePath, youtubeUrl } = body;
+    const { postId, commentId, title, content, isStarred, postType, displayAuthorName, registeredAt, isPublicShareEnabled, socialImagePath, youtubeUrl, naverMap } = body;
 
     if (commentId) {
       const commentContent = typeof content === "string" ? content.trim() : "";
@@ -417,6 +422,11 @@ export async function PATCH(request: Request) {
       publicShareEnabledAt?: Date | null;
       socialImagePath?: string | null;
       youtubeVideoId?: string | null;
+      naverMapUrl?: string | null;
+      naverMapTitle?: string | null;
+      naverMapPlaceId?: string | null;
+      naverMapLat?: number | null;
+      naverMapLng?: number | null;
     } = {
       title,
       content,
@@ -429,6 +439,11 @@ export async function PATCH(request: Request) {
       const parsedYouTube = parseYouTubeInput(youtubeUrl);
       if (!parsedYouTube.ok) return NextResponse.json({ error: "올바른 유튜브 주소를 입력해 주세요." }, { status: 400 });
       updateData.youtubeVideoId = parsedYouTube.value;
+    }
+    if (naverMap !== undefined) {
+      const parsedNaverMap = parseNaverMapInput(naverMap);
+      if (!parsedNaverMap.ok) return NextResponse.json({ error: parsedNaverMap.error }, { status: 400 });
+      Object.assign(updateData, parsedNaverMap.value);
     }
     if (session.role === "ADMIN") {
       const parsedDisplayAuthorName = parseNewsDisplayAuthorName(displayAuthorName);

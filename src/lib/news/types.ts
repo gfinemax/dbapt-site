@@ -47,6 +47,11 @@ export type CoopNewsView = {
   attachmentName?: string | null;
   attachmentSize?: number | null;
   youtubeVideoId?: string | null;
+  naverMapUrl?: string | null;
+  naverMapTitle?: string | null;
+  naverMapPlaceId?: string | null;
+  naverMapLat?: number | null;
+  naverMapLng?: number | null;
   displayAuthorName?: string | null;
   registeredAt?: string;
   createdAt: string;
@@ -75,6 +80,11 @@ export type FreePostView = {
   attachmentName?: string | null;
   attachmentSize?: number | null;
   youtubeVideoId?: string | null;
+  naverMapUrl?: string | null;
+  naverMapTitle?: string | null;
+  naverMapPlaceId?: string | null;
+  naverMapLat?: number | null;
+  naverMapLng?: number | null;
   registeredAt?: string;
   createdAt: string;
   updatedAt?: string;

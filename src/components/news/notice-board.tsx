@@ -31,6 +31,9 @@ import { NoticeRichContent, NoticeRichEditor, getPlainNoticeText } from "./notic
 import { PersonalBookmarkButton } from "./personal-bookmark-button";
 import { ContentShareActions } from "./content-share-actions";
 import { YouTubeVideoPlayer } from "./youtube-video-player";
+import { NaverMapField } from "./naver-map-field";
+import { NaverMapCard } from "./naver-map-card";
+import { EMPTY_NAVER_MAP_DRAFT, type NaverMapDraft } from "@/lib/news/naver-map";
 
 type NoticeBoardProps = {
   isLoggedIn: boolean;
@@ -105,6 +108,7 @@ export function NoticeBoard({
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadContent, setUploadContent] = useState("");
   const [uploadYouTubeUrl, setUploadYouTubeUrl] = useState("");
+  const [uploadNaverMap, setUploadNaverMap] = useState<NaverMapDraft>(EMPTY_NAVER_MAP_DRAFT);
   const [uploadAttachmentFile, setUploadAttachmentFile] = useState<File | null>(null);
   const [uploadSocialImageFile, setUploadSocialImageFile] = useState<File | null>(null);
   const [uploadSocialImageSourceFile, setUploadSocialImageSourceFile] = useState<File | null>(null);
@@ -160,6 +164,7 @@ export function NoticeBoard({
           isStarred: uploadIsStarred,
           displayAuthorName: uploadDisplayAuthorName,
           youtubeUrl: uploadYouTubeUrl,
+          naverMap: uploadNaverMap,
         }),
       });
 
@@ -172,6 +177,7 @@ export function NoticeBoard({
       setUploadTitle("");
       setUploadContent("");
       setUploadYouTubeUrl("");
+      setUploadNaverMap({ ...EMPTY_NAVER_MAP_DRAFT });
       setUploadAttachmentFile(null);
       setUploadSocialImageFile(null);
       setUploadSocialImageSourceFile(null);
@@ -678,6 +684,13 @@ export function NoticeBoard({
                 )}
                 <NoticeRichContent content={activeViewNotice.content} />
                 <YouTubeVideoPlayer videoId={activeViewNotice.youtubeVideoId} title={activeViewNotice.title} />
+                <NaverMapCard
+                  url={activeViewNotice.naverMapUrl}
+                  title={activeViewNotice.naverMapTitle}
+                  placeId={activeViewNotice.naverMapPlaceId}
+                  lat={activeViewNotice.naverMapLat}
+                  lng={activeViewNotice.naverMapLng}
+                />
               </div>
               {activeViewNotice.attachmentPath && (
                 <a
@@ -907,6 +920,8 @@ export function NoticeBoard({
                 />
                 <p className="text-[10px] text-ash">유튜브 공개 또는 일부 공개 영상 주소를 입력하면 게시글에서 바로 재생돼.</p>
               </div>
+
+              <NaverMapField id="notice-map" value={uploadNaverMap} onChange={setUploadNaverMap} />
 
               <div className="space-y-1.5">
                 <label htmlFor="notice-attachment-file" className="text-[11px] font-bold text-charcoal-primary font-mono block">

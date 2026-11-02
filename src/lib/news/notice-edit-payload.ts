@@ -1,4 +1,5 @@
 import type { NewsDisplayAuthorName } from "@/lib/news-display-author";
+import type { NaverMapDraft } from "@/lib/news/naver-map";
 
 type NoticeEditPayloadInput = {
   id: string;
@@ -12,6 +13,7 @@ type NoticeEditPayloadInput = {
   displayAuthorName: NewsDisplayAuthorName;
   registeredAt?: string;
   youtubeUrl?: string;
+  naverMap?: NaverMapDraft | null;
 };
 
 export function buildNoticeEditPayload({
@@ -26,6 +28,7 @@ export function buildNoticeEditPayload({
   displayAuthorName,
   registeredAt,
   youtubeUrl,
+  naverMap,
 }: NoticeEditPayloadInput) {
   return {
     id,
@@ -40,5 +43,6 @@ export function buildNoticeEditPayload({
     isStarred,
     displayAuthorName,
     ...(youtubeUrl !== undefined ? { youtubeUrl: youtubeUrl || null } : {}),
+    ...(naverMap !== undefined ? { naverMap } : {}),
   };
 }

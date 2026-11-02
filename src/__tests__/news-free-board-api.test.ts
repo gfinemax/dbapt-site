@@ -21,6 +21,11 @@ describe("free board API helpers", () => {
         attachmentPath: "/uploads/free.pdf",
         attachmentName: "free.pdf",
         attachmentSize: 2048,
+        naverMap: {
+          url: "https://map.naver.com/p/directions/-/x,y,%ED%94%BC%EC%9E%90%ED%97%9B,11625116,PLACE_POI/-/car",
+          lat: 37.5,
+          lng: 126.9,
+        },
         registeredAt: "2026-06-20T12:00",
         isPublicShareEnabled: true,
       }),
@@ -32,6 +37,11 @@ describe("free board API helpers", () => {
       attachmentPath: "/uploads/free.pdf",
       attachmentName: "free.pdf",
       attachmentSize: 2048,
+      naverMap: {
+        url: "https://map.naver.com/p/directions/-/x,y,%ED%94%BC%EC%9E%90%ED%97%9B,11625116,PLACE_POI/-/car",
+        lat: 37.5,
+        lng: 126.9,
+      },
     });
 
     expect(
