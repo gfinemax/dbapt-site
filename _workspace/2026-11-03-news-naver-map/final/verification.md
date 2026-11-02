@@ -19,10 +19,16 @@
 - Prisma schema: `pnpm exec prisma validate` passed
 - Diff hygiene: `git diff --check` passed (line-ending conversion warnings only)
 - Environment contract: `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` is configured in the local `.env`
-- UI review: `FIX` because desktop/mobile browser rendering could not be completed
+- Production migration: `pnpm exec prisma migrate deploy` applied `20261103013000_add_news_naver_map_fields`; a follow-up `pnpm exec prisma migrate status` reported `Database schema is up to date!`
+- Git publication: commit `ca4ce5b1f4f15f3bc20475ebda0f5e8fe66aa4c0` is on `origin/main`
+- Vercel deployment: production deployment `dpl_DS1QW3KHMrx7c7s9GXbPEr7obs6v` for the same commit is `READY` with alias `dbapt-site.vercel.app`
+- Production HTTP checks: `/news`, `/news?tab=notice`, and `/news?tab=free` returned HTTP 200
+- Production API check: `/api/news?category=NOTICE` returned HTTP 200 and exposed all five structured Naver map fields; unauthenticated `/api/news/free` returned the expected HTTP 401
+- Browser layout checks: production notice desktop at 1440px and free-board mobile at 390px rendered without visible layout breakage; the mobile login gate appeared normally
+- UI review: `FIX` because the authenticated editor and a post containing map data were not available for feature-specific live rendering
 
 ## Unresolved Risks
 
-- Codex browser access host was unavailable. The Windows browser fallback stopped because it could not determine the current URL with enough confidence. Desktop and mobile visual verification remains outstanding.
-- No production migration or deployment was executed.
-- Because the required UI review did not reach `PASS`, this task was not committed or pushed.
+- The Vercel connection can read deployment status but returned 403 for project environment-variable inventory and protected URL fetch. Production presence of `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` was therefore not independently enumerated.
+- No production test post was created. Authenticated registration/editing and the actual Naver SDK map card remain visually unverified on desktop and mobile.
+- The UI review remains `FIX` until that feature-specific live check is completed; database migration, Git publication, deployment readiness, public page responses, and the public notice API contract are verified separately above.
